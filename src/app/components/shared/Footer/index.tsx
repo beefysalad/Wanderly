@@ -1,4 +1,4 @@
-import React from "react";
+import { getAppVersion } from "@/lib/helper";
 
 const Footer = () => {
   return (
@@ -15,7 +15,7 @@ const Footer = () => {
             About
           </a>
           <span className='text-slate-600'>|</span>
-          <span className='text-slate-400'>v1.0.0</span>
+          <span className='text-slate-400'>{getAppVersion()}</span>
         </div>
       </div>
     </footer>

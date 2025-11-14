@@ -1,13 +1,13 @@
 "use client";
-import { LogIn, MapPin, UserPlus, Users, Zap } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
-import AuthModal from "../Modal/AuthModal";
-import Footer from "../Footer";
-import Header from "../Header";
-import QuickJoinModal from "../Modal/QuickJoinModal";
-import PulseBackground from "./PulseBackground";
+import Footer from "../../shared/Footer";
+import Header from "../../shared/Header";
+import AuthModal from "../../shared/Modal/AuthModal";
+import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 import FloatingPanels from "./FloatingPanels";
 import HeroSection from "./HeroSection";
+import PulseBackground from "./PulseBackground";
 
 export interface IUserCredentials {
   email: string;
@@ -25,7 +25,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
 
   return (
-    <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative flex flex-col'>
+    <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative flex flex-col'>
       <PulseBackground />
       {/* Content */}
       <div className='relative z-10 flex-1 flex flex-col overflow-y-auto'>
@@ -33,7 +33,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
           setAuthDefaultTab={setAuthDefaultTab}
           setShowAuthModal={setShowAuthModal}
         />
-        <section className='px-4 md:px-8 flex-1 flex md:items-center justify-center mt-16'>
+        <section className='px-4 md:px-8 flex-1 flex items-center md:items-start justify-center sm:mt-24 mt-14'>
           <div className='w-full max-w-7xl'>
             <div className='grid md:grid-cols-2 gap-12 items-center'>
               <div className='space-y-6 relative'>
@@ -70,7 +70,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                 >
                   <button
                     onClick={() => setShowQuickJoinModal(true)}
-                    className='text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4 transition'
+                    className='text-sm text-amber-400 hover:text-amber-300 cursor-pointer transition'
                   >
                     Quick Join as Guest (View Only)
                   </button>
