@@ -6,7 +6,7 @@ const FloatingPanels = () => {
     <div className='hidden md:block'>
       <div className='space-y-4'>
         <div
-          className='bg-linaear-to-br from-purple-900/40 to-violet-900/40 border border-amber-500/30 rounded-lg p-6 backdrop-blur-sm animate-float'
+          className='bg-linear-to-br from-purple-900/40 to-violet-900/40 border border-amber-500/30 rounded-lg p-6 backdrop-blur-sm animate-float'
           style={{ animationDelay: "0s" }}
         >
           <div className='flex gap-4'>

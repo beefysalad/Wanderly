@@ -20,7 +20,7 @@ const Header = ({ setAuthDefaultTab, setShowAuthModal }: IHeaderProps) => {
             <h1 className='text-2xl font-bold bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
               Wanderly
             </h1>
-            <p className='text-xs text-slate-400'>By Ptrck for Ptrck</p>
+            <p className='text-xs text-slate-400'>Plan your trip</p>
           </div>
         </div>
         <nav className='flex gap-3 items-center'>
@@ -56,7 +56,7 @@ const Header = ({ setAuthDefaultTab, setShowAuthModal }: IHeaderProps) => {
             <h1 className='text-xl font-bold bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
               Wanderly
             </h1>
-            <p className='text-[10px] text-slate-400'>By Ptrck for Ptrck</p>
+            <p className='text-[10px] text-slate-400'>Plan your trip</p>
           </div>
         </div>
       </header>

@@ -13,7 +13,7 @@ const HeroSection = () => {
       </div>
 
       <div className='space-y-4 animate-slide-in-left'>
-        <h2 className='text-5xl md:text-4xl font-bold leading-tight'>
+        <h2 className='text-5xl md:text-4xl font-bold leading-tight text-center md:text-start'>
           Plan Your Adventures{" "}
           <span className='bg-linear-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
             Together
