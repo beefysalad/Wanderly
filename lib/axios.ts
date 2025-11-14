@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getToken } from "./helper";
 
 // Create axios instance
 const api = axios.create({
@@ -8,6 +9,10 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

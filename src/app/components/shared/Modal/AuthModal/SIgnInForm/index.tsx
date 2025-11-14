@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, LogIn, Mail } from "lucide-react";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { loginSchema, TLoginSchema } from "../authZod";
+import { auth } from "@/lib/firebase";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { Loader2, Lock, LogIn, Mail } from "lucide-react";
+import { Fragment } from "react";
+import { useForm } from "react-hook-form";
+import { syncUser } from "../authAction";
+import { loginSchema, TLoginSchema } from "../authZod";
 
 const SignInForm = () => {
   const form = useForm<TLoginSchema>({
@@ -15,12 +19,27 @@ const SignInForm = () => {
       password: "",
     },
   });
-  const onLoginSubmit = (data: TLoginSchema) => {
-    console.log(data);
-  };
+  const signInMutation = useMutation({
+    mutationFn: async (values: TLoginSchema) => {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+    },
+    onSuccess: async () => {
+      await syncUser();
+    },
+    onError: (error) => {
+      console.error("Sign in Error", error);
+    },
+  });
+
+  const onSubmit = (values: TLoginSchema) => signInMutation.mutate(values);
   return (
-    <form onSubmit={form.handleSubmit(onLoginSubmit)} className='space-y-5'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-5'>
       <div className='space-y-2'>
+        {signInMutation.error ? (
+          <div className='p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm'>
+            {(signInMutation.error as Error).message}
+          </div>
+        ) : null}
         <Label
           htmlFor='login-email'
           className={`${
@@ -78,10 +97,20 @@ const SignInForm = () => {
 
       <Button
         type='submit'
+        disabled={signInMutation.isPending}
         className='w-full bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
       >
-        <LogIn className='w-5 h-5' />
-        Sign In
+        {signInMutation.isPending ? (
+          <Fragment>
+            <Loader2 className='w-4 h-4 animate-spin' />
+            <p>Signing in...</p>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <LogIn className='w-5 h-5' />
+            Sign In
+          </Fragment>
+        )}
       </Button>
     </form>
   );
