@@ -1,10 +1,10 @@
 "use client";
 import { LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
-import Footer from "../Footer";
-import Header from "../Header";
-import AuthModal from "../Modal/AuthModal";
-import QuickJoinModal from "../Modal/QuickJoinModal";
+import Footer from "../../shared/Footer";
+import Header from "../../shared/Header";
+import AuthModal from "../../shared/Modal/AuthModal";
+import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 import FloatingPanels from "./FloatingPanels";
 import HeroSection from "./HeroSection";
 import PulseBackground from "./PulseBackground";

@@ -1,6 +1,6 @@
 "use client";
 
-import LandingPage from "./components/LandingPage";
+import LandingPage from "./components/pages/LandingPage";
 
 export default function Home() {
   const handleQuickJoin = (code: string, guestName: string) => {
