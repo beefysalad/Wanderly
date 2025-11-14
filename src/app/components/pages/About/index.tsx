@@ -4,11 +4,11 @@ import Link from "next/link";
 
 const AboutComponent = () => {
   return (
-    <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
+    <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
       <div className='fixed inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute top-0 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse-slow'></div>
+        <div className='absolute top-0 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl'></div>
         <div
-          className='absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse-slow'
+          className='absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl'
           style={{ animationDelay: "1s" }}
         ></div>
       </div>
@@ -16,7 +16,7 @@ const AboutComponent = () => {
       <div className='relative z-10'>
         <section className='px-4 md:px-8 py-12 md:py-20 max-w-4xl mx-auto'>
           <div className='space-y-12'>
-            <div className='text-center space-y-4 animate-slide-in-down'>
+            <div className='text-center space-y-4'>
               <h2 className='text-3xl md:text-5xl font-bold'>
                 The Story Behind{" "}
                 <span className='bg-linear-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
@@ -28,21 +28,23 @@ const AboutComponent = () => {
               </p>
             </div>
 
-            <div className='bg-linear-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-8 md:p-12 backdrop-blur-sm space-y-6 animate-slide-in-up shadow-2xl'>
+            <div className='bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-8 md:p-12 backdrop-blur-sm space-y-6 shadow-2xl'>
               <div className='space-y-4'>
                 <p className='text-slate-200 leading-relaxed text-lg'>
-                  I created Wanderly because I got tired of coordinating group
-                  trips through scattered messages, spreadsheets, and forgotten
-                  deadlines. As someone who loves traveling with friends, I
-                  realized we needed a single source of truth—a place where
-                  everyone stays synchronized without the chaos.
+                  I created Wanderly because planning group trips can be
+                  messy&mdash;scattered messages, spreadsheets, and missed
+                  deadlines make it hard to stay organized. While I&apos;m just
+                  starting my own travel adventures next year, I realized we
+                  needed a single source of truth&mdash;a place where everyone
+                  in a group stays synchronized without the chaos.
                 </p>
                 <p className='text-slate-200 leading-relaxed text-lg'>
-                  Every trip I took, the same problems surfaced:
-                  &quot;Who&apos;s paying for what?&quot; ,&quot;What time is
+                  Even before my first trip, I noticed the same issues pop up:
+                  &quot;Who&apos;s paying for what?&quot;, &quot;What time is
                   the activity again?&quot;, &quot;Did everyone see the
-                  schedule?&quot; So I decided to build a solution that tackles
-                  all of this in one beautiful, intuitive platform.
+                  schedule?&quot;. I built Wanderly to solve all of this in one
+                  beautiful, intuitive platform, making group trip planning
+                  effortless from day one.
                 </p>
               </div>
 
