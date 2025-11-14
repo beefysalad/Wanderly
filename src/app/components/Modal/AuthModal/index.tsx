@@ -159,7 +159,7 @@ const AuthModal = ({ onClose, defaultTab = "signin" }: IAuthModalProps) => {
 
               <Button
                 type='submit'
-                className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
+                className='w-full bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
               >
                 <LogIn className='w-5 h-5' />
                 Sign In
@@ -265,7 +265,7 @@ const AuthModal = ({ onClose, defaultTab = "signin" }: IAuthModalProps) => {
 
               <div className='space-y-2'>
                 <Label
-                  htmlFor='signup-password'
+                  htmlFor='confirm-password'
                   className={`${
                     signUpForm.formState.errors.confirmPassword
                       ? "text-red-400"
@@ -295,7 +295,7 @@ const AuthModal = ({ onClose, defaultTab = "signin" }: IAuthModalProps) => {
 
               <Button
                 type='submit'
-                className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
+                className='w-full bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
               >
                 <UserPlus className='w-5 h-5' />
                 Sign Up

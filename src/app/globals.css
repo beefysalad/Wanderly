@@ -259,3 +259,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+html,
+body {
+  background: #020617;
+  overscroll-behavior-y: none;
+}

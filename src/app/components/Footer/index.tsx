@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className='relative z-10 px-4 md:px-8 py-4 border-t border-white/10 bg-white/5 backdrop-blur-xl'>
       <div className='max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-sm'>
         <p className='text-slate-400'>
-          © 2025 Wanderly. Made by Ptrick for Ptrick
+          © 2025 Wanderly. Made by Ptrck for Ptrck
         </p>
         <div className='flex gap-4'>
           <a
