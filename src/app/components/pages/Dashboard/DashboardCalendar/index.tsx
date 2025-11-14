@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { getDaysInMonth, getFirstDayOfMonth } from "@/lib/helper";
 import { Group, Trip } from "@/src/shared/types";
-import { group } from "console";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 

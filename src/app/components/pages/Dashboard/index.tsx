@@ -23,6 +23,8 @@ import DashboardHeader from "./DashboardHeader";
 import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
+import CreateGroupModal from "../../shared/Modal/CreateGroupModal";
+import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
 
 const DashboardComponent = () => {
   const router = useRouter();
@@ -126,20 +128,13 @@ const DashboardComponent = () => {
         </div>
       </div>
 
-      {/* {showCreateModal && (
-        <CreateGroupModal
-          onCreateGroup={handleCreateGroup}
-          onClose={() => setShowCreateModal(false)}
-        />
+      {showCreateModal && (
+        <CreateGroupModal onClose={() => setShowCreateModal(false)} />
       )}
 
       {showJoinModal && (
-        <JoinGroupModal
-          onClose={() => setShowJoinModal(false)}
-          onJoin={handleJoinGroup}
-          currentUser={currentUser}
-        />
-      )} */}
+        <JoinGroupModal onClose={() => setShowJoinModal(false)} />
+      )}
     </main>
   );
 };

@@ -6,11 +6,11 @@ import { useForm } from "react-hook-form";
 import { codeSchema, TCodeSchema } from "../quickJoinZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-interface IGrouoCodeForm {
+interface IGroupCodeForm {
   onClose: () => void;
   setStep: React.Dispatch<React.SetStateAction<"code" | "name">>;
 }
-const GroupCodeForm = ({ onClose, setStep }: IGrouoCodeForm) => {
+const GroupCodeForm = ({ onClose, setStep }: IGroupCodeForm) => {
   const form = useForm<TCodeSchema>({
     resolver: zodResolver(codeSchema),
     defaultValues: {
