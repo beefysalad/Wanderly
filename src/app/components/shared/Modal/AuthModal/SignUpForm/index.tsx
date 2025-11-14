@@ -1,13 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, UserIcon, UserPlus } from "lucide-react";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { registrationSchema, TRegistrationSchema } from "../authZod";
+import { auth } from "@/lib/firebase";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { Loader2, Lock, Mail, UserIcon, UserPlus } from "lucide-react";
+import { Fragment } from "react";
+import { useForm } from "react-hook-form";
+import { syncUser } from "../authAction";
+import { registrationSchema, TRegistrationSchema } from "../authZod";
 
 const SignUpForm = () => {
+  const queryClient = useQueryClient();
   const form = useForm<TRegistrationSchema>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -17,12 +22,31 @@ const SignUpForm = () => {
       confirmPassword: "",
     },
   });
-  const onSignUpSubmit = (data: TRegistrationSchema) => {
-    console.log(data);
-  };
+  const registerMutation = useMutation({
+    mutationFn: async (values: TRegistrationSchema) => {
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      await updateProfile(cred.user, { displayName: values.name });
+
+      await syncUser();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["current-user"], data);
+    },
+  });
+  const onSubmit = (values: TRegistrationSchema) =>
+    registerMutation.mutate(values);
   return (
-    <form onSubmit={form.handleSubmit(onSignUpSubmit)} className='space-y-5'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-5'>
       <div className='space-y-2'>
+        {registerMutation.error ? (
+          <div className='p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm'>
+            {(registerMutation.error as Error).message}
+          </div>
+        ) : null}
         <Label
           htmlFor='name'
           className={`${
@@ -138,10 +162,19 @@ const SignUpForm = () => {
 
       <Button
         type='submit'
+        disabled={registerMutation.isPending}
         className='w-full bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2'
       >
-        <UserPlus className='w-5 h-5' />
-        Sign Up
+        {registerMutation.isPending ? (
+          <Fragment>
+            <Loader2 className='w-4 h-4 animate-spin' /> <p>Signing up...</p>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <UserPlus className='w-5 h-5' />
+            Sign Up
+          </Fragment>
+        )}
       </Button>
     </form>
   );

@@ -1,3 +1,5 @@
+import { getAuth } from "firebase/auth";
+
 const APP_VERSION = "1.0.0";
 
 export function getEnvironment() {
@@ -11,4 +13,13 @@ export function isDev() {
 
 export function getAppVersion() {
   return `v${APP_VERSION}`;
+}
+
+export function getToken() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+  return user.getIdToken();
 }
