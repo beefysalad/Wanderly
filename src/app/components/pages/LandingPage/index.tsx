@@ -57,7 +57,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                       setAuthDefaultTab("signin");
                       setShowAuthModal(true);
                     }}
-                    className='px-6 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm'
+                    className='px-6 py-2.5 bg-orange-600 hover:bg-orange-700 border border-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50'
                   >
                     <LogIn className='w-4 h-4' />
                     Login
@@ -99,7 +99,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                 setAuthDefaultTab("signin");
                 setShowAuthModal(true);
               }}
-              className='w-full px-6 py-3 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700 border border-slate-600 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 text-sm'
+              className='w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 border border-orange-500 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 text-sm shadow-lg shadow-orange-500/30'
             >
               <LogIn className='w-4 h-4' />
               Login

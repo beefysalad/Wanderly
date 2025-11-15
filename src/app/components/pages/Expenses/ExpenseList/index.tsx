@@ -144,15 +144,15 @@ const ExpensesList = ({
     <div className='space-y-6'>
       <div className='grid grid-cols-2 gap-4'>
         <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
+          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
             My Expenses
           </p>
-          <p className='text-2xl font-bold text-slate-900 dark:text-white'>
+          <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
             ₱{myExpenses.toFixed(2)}
           </p>
         </div>
         <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
+          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
             Total Expenses
           </p>
           <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
@@ -183,10 +183,10 @@ const ExpensesList = ({
                   <button
                     key={expense.id}
                     onClick={() => setSelectedExpense(expense)}
-                    className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all hover:shadow-md'
+                    className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md'
                   >
                     <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
+                      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
                         {categoryEmojis[
                           expense.category as keyof typeof categoryEmojis
                         ] || "📌"}
@@ -197,7 +197,7 @@ const ExpensesList = ({
                             {expense.description}
                           </h4>
                           {allPaid && (
-                            <span className='text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 flex items-center gap-1 w-fit'>
+                            <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
                               <CheckCircle className='w-3 h-3' />
                               Settled
                             </span>

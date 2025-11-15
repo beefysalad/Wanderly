@@ -359,7 +359,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                 setSelectedDate(null);
                 setShowActivityModal(true);
               }}
-              className='col-span-2 sm:col-span-1 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all text-sm font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-100'
+              className='col-span-2 sm:col-span-1 px-4 py-2.5 rounded-lg bg-white hover:bg-orange-50 text-orange-600 border border-orange-200 hover:border-orange-300 transition-all text-sm font-medium flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98]'
             >
               <Plus className='w-4 h-4' />
               Add Activity
@@ -369,25 +369,26 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               onClick={() =>
                 router.push(`/group/${groupId}/trip/${tripId}/expenses`)
               }
-              className='px-5 py-3 rounded-xl bg-white border-2 border-amber-200 text-slate-700 hover:bg-amber-50 hover:border-amber-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2'
+              className='px-4 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
             >
-              <span>💰</span> Expenses
+              <span className='text-base'>💰</span>
+              <span className='hidden sm:inline'>Expenses</span>
             </button>
 
             {activeTab === "schedule" && (
               <button
                 onClick={handleExportSchedule}
                 disabled={isExporting || !trip}
-                className='px-5 py-3 rounded-xl bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
+                className='px-4 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
               >
                 <Download className='w-4 h-4' />
-                {isExporting ? "Exporting..." : "Export"}
+                <span className='hidden sm:inline'>{isExporting ? "Exporting..." : "Export"}</span>
               </button>
             )}
 
             <button
               onClick={() => setShowDeleteModal(true)}
-              className='px-5 py-3 rounded-xl bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2'
+              className='px-4 py-2.5 rounded-lg bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
             >
               <Trash2 className='w-4 h-4' />
               <span className='hidden sm:inline'>Delete</span>

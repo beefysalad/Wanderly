@@ -249,7 +249,7 @@ const AddExpenseModal = ({
                     members.length > 0
                   }
                   onChange={toggleSelectAll}
-                  className='w-4 h-4 rounded border-slate-300 text-emerald-600'
+                  className='w-4 h-4 rounded border-slate-300 text-orange-600'
                 />
                 <span className='text-sm font-medium text-slate-700 dark:text-slate-300'>
                   {form.watch("splitWith").length === members.length &&
@@ -269,7 +269,7 @@ const AddExpenseModal = ({
                     type='checkbox'
                     checked={form.watch("splitWith").includes(member)}
                     onChange={() => toggleMember(member)}
-                    className='w-4 h-4 rounded border-slate-300 text-emerald-600'
+                    className='w-4 h-4 rounded border-slate-300 text-orange-600'
                   />
                   <span className='text-sm text-slate-700 dark:text-slate-300'>
                     {member}
@@ -413,7 +413,7 @@ const AddExpenseModal = ({
               createExpenseMutation.isPending ||
               updateExpenseMutation.isPending
             }
-            className='w-full mt-6 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='w-full mt-6 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
           >
             {createExpenseMutation.isPending || updateExpenseMutation.isPending
               ? "Saving..."

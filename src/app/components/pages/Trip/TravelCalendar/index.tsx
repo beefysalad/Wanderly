@@ -72,7 +72,7 @@ const TravelCalendar = ({
                     })}
                   </p>
                 </div>
-                <span className='text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full'>
+                <span className='text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full'>
                   {dayActivities.length} events
                 </span>
               </div>
@@ -82,7 +82,7 @@ const TravelCalendar = ({
                   {dayActivities.slice(0, 3).map((activity) => (
                     <div
                       key={activity.id}
-                      className='text-sm p-2 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer'
+                      className='text-sm p-2 bg-slate-50 rounded-lg border border-slate-100 hover:border-orange-300 hover:shadow-sm transition-all cursor-pointer'
                       onClick={() => onViewActivity(activity)}
                     >
                       <div className='flex items-start justify-between gap-2'>
@@ -111,8 +111,8 @@ const TravelCalendar = ({
                             onClick={() => onToggleDone(activity.id)}
                             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
                               activity.done
-                                ? "bg-green-500 border-green-500 text-white"
-                                : "border-slate-300 hover:border-green-500"
+                                ? "bg-orange-500 border-orange-500 text-white"
+                                : "border-slate-300 hover:border-orange-500"
                             }`}
                             title={activity.done ? "Mark as incomplete" : "Mark as done"}
                           >
@@ -122,7 +122,7 @@ const TravelCalendar = ({
                           </button>
                           <button
                             onClick={() => onEditActivity(activity)}
-                            className='p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700 transition-colors'
+                            className='p-1.5 hover:bg-orange-50 rounded text-orange-600 hover:text-orange-700 transition-colors'
                             title='Edit activity'
                           >
                             <Pencil className='w-3.5 h-3.5' />
@@ -154,7 +154,7 @@ const TravelCalendar = ({
                 onClick={() => onOpenAddModal(date)}
                 variant='outline'
                 size='sm'
-                className='w-full text-blue-600 border-blue-200 hover:bg-blue-50'
+                className='w-full text-orange-600 border-orange-200 hover:bg-orange-50'
               >
                 <Plus className='w-4 h-4 mr-1' />
                 Add Event

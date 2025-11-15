@@ -234,7 +234,7 @@ const ActivityModal = ({
             <button
               type='submit'
               disabled={isLoading}
-              className='flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              className='flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {isLoading
                 ? editingActivity

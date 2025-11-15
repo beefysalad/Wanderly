@@ -91,7 +91,7 @@ const ProfileComponent = () => {
                     <span className='text-sm sm:text-base'>{email}</span>
                   </div>
                   {emailVerified ? (
-                    <div className='flex items-center gap-2 text-emerald-200 bg-emerald-500/20 px-3 py-1 rounded-full'>
+                    <div className='flex items-center gap-2 text-orange-200 bg-orange-500/20 px-3 py-1 rounded-full'>
                       <CheckCircle2 className='w-4 h-4' />
                       <span className='text-xs sm:text-sm font-medium'>Verified</span>
                     </div>
@@ -140,8 +140,8 @@ const ProfileComponent = () => {
                     <div className='flex items-center gap-2'>
                       {emailVerified ? (
                         <>
-                          <CheckCircle2 className='w-4 h-4 text-emerald-500' />
-                          <p className='text-sm font-medium text-emerald-600'>
+                          <CheckCircle2 className='w-4 h-4 text-orange-500' />
+                          <p className='text-sm font-medium text-orange-600'>
                             Verified
                           </p>
                         </>

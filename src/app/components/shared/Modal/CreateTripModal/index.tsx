@@ -70,7 +70,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
         {isLoading && (
           <div className='absolute inset-0 bg-white/90 dark:bg-slate-800/90 rounded-lg flex items-center justify-center z-10'>
             <div className='text-center'>
-              <div className='w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3'></div>
+              <div className='w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3'></div>
               <p className='text-slate-700 dark:text-slate-300 font-medium'>
                 {createTrip.isPending ? "Creating trip..." : "Redirecting..."}
               </p>
@@ -191,7 +191,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
             <button
               type='submit'
               disabled={isLoading}
-              className='flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              className='flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {isLoading
                 ? createTrip.isPending

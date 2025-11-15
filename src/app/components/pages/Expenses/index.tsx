@@ -89,7 +89,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     return (
       <main className='min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 dark:text-slate-400'>Loading...</p>
         </div>
       </main>
@@ -257,7 +257,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                         <p className='text-lg font-bold text-emerald-600'>
                           ₱{log.amount.toFixed(2)}
                         </p>
-                        <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 font-medium'>
+                        <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium'>
                           Paid
                         </span>
                       </div>

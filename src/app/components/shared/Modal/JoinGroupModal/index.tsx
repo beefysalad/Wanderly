@@ -76,7 +76,7 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
                 className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border ${
                   form.formState.errors.groupCode
                     ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                    : "border-slate-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
+                    : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
                 }`}
               />
               <p className='text-xs text-slate-500'>

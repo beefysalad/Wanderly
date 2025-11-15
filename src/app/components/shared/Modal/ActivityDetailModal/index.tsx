@@ -30,14 +30,14 @@ const ActivityDetailModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className='sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl'>
+        <div className='sticky top-0 bg-gradient-to-r from-orange-600 to-orange-700 p-6 rounded-t-2xl'>
           <div className='flex items-start justify-between mb-4'>
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 <div
                   className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
                     activity.done
-                      ? "bg-green-500 border-green-500 text-white"
+                      ? "bg-orange-500 border-orange-500 text-white"
                       : "bg-white/20 border-white/30 text-white"
                   }`}
                 >
@@ -55,7 +55,7 @@ const ActivityDetailModal = ({
                   >
                     {activity.title}
                   </h2>
-                  <p className='text-blue-100 text-sm'>
+                  <p className='text-orange-100 text-sm'>
                     {activityDate.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -163,7 +163,7 @@ const ActivityDetailModal = ({
               onClick={onToggleDone}
               className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
                 activity.done
-                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30"
+                  ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/30"
                   : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
               }`}
             >

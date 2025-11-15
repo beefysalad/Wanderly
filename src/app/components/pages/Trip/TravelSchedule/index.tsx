@@ -124,7 +124,7 @@ const TravelSchedule = ({
                   dayActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className='p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer'
+                      className='p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-orange-300 hover:shadow-sm transition-all cursor-pointer'
                       onClick={() => onViewActivity(activity)}
                     >
                       <div className='flex items-start justify-between'>
@@ -137,8 +137,8 @@ const TravelSchedule = ({
                               }}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                                 activity.done
-                                  ? "bg-green-500 border-green-500 text-white"
-                                  : "border-slate-300 hover:border-green-500"
+                                  ? "bg-orange-500 border-orange-500 text-white"
+                                  : "border-slate-300 hover:border-orange-500"
                               }`}
                             >
                               {activity.done && (
@@ -175,7 +175,7 @@ const TravelSchedule = ({
                             onClick={() => onEditActivity(activity)}
                             variant='ghost'
                             size='sm'
-                            className='text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                            className='text-orange-500 hover:text-orange-700 hover:bg-orange-50'
                             title='Edit activity'
                           >
                             <Pencil className='w-4 h-4' />
