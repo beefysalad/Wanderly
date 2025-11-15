@@ -71,7 +71,7 @@ export function transformTrip(
  * Transforms Prisma Activity model to TypeScript Activity interface
  */
 export function transformActivity(
-  prismaActivity: Prisma.ActivityGetPayload<{}>
+  prismaActivity: Prisma.ActivityGetPayload<Record<string, never>>
 ): Activity {
   return {
     id: prismaActivity.id,
