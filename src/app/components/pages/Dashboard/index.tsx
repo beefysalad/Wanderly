@@ -1,30 +1,16 @@
-import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
-import { getDaysInMonth, getFirstDayOfMonth } from "@/lib/helper";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
+import type { Trip } from "@/src/shared/types/index";
 import { signOut } from "firebase/auth";
-import {
-  CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Code2,
-  Compass,
-  LogOut,
-  Plus,
-  Settings,
-  Sparkles,
-  Users,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import type { User, Group, Trip } from "@/src/shared/types/index";
-import { GROUPS } from "./dummdata";
-import DashboardHeader from "./DashboardHeader";
+import { useState } from "react";
+import CreateGroupModal from "../../shared/Modal/CreateGroupModal";
+import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
 import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
-import CreateGroupModal from "../../shared/Modal/CreateGroupModal";
-import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
+import DashboardHeader from "./DashboardHeader";
+import { GROUPS } from "./dummdata";
 
 const DashboardComponent = () => {
   const router = useRouter();
@@ -46,7 +32,7 @@ const DashboardComponent = () => {
   };
   if (loading) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+      <main className='min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading your groups...</p>

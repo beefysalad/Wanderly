@@ -18,6 +18,7 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
       location: "",
       startDate: "",
       tripName: "",
+      status: "planning",
     },
   });
   const onSubmit = (values: TCreateTripSchema) => console.log(values);
@@ -61,7 +62,20 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
               className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
             />
           </div>
-
+          <div>
+            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
+              Status
+            </label>
+            <select
+              {...form.register("status")}
+              className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+            >
+              <option value='planning'>Planning</option>
+              <option value='finalized'>Finalized</option>
+              <option value='ongoing'>Ongoing</option>
+              <option value='cancelled'>Cancelled</option>
+            </select>
+          </div>
           <div className='grid grid-cols-2 gap-3'>
             <div>
               <Label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
@@ -70,7 +84,8 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
               <Input
                 type='date'
                 {...form.register("startDate")}
-                className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className='w-full min-w-0 h-10 px-2 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [-webkit-appearance:none] [appearance:none]'
+                style={{ WebkitAppearance: "none", appearance: "none" }}
               />
             </div>
             <div>
@@ -80,7 +95,8 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
               <Input
                 type='date'
                 {...form.register("endDate")}
-                className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className='w-full min-w-0 h-10 px-2 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [-webkit-appearance:none] [appearance:none]'
+                style={{ WebkitAppearance: "none", appearance: "none" }}
               />
             </div>
           </div>

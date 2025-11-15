@@ -5,6 +5,7 @@ import { createGroupSchema, TCreateGroupSchema } from "./createGroupZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface ICreateGroupModalProps {
   onClose: () => void;
@@ -21,10 +22,16 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
       <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto'>
         {/* Header */}
-        <div className='flex items-center justify-between mb-6'>
-          <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
-            Create Group
-          </h2>
+        <div className='pb-6 border-b border-slate-200 flex items-center justify-between mb-6'>
+          <div>
+            <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
+              Create Group
+            </h2>
+            <p className='text-sm text-slate-600 mt-1'>
+              Create group and share with friends
+            </p>
+          </div>
+
           <button
             onClick={onClose}
             className='p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors'
@@ -65,19 +72,19 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
 
           {/* Buttons */}
           <div className='flex gap-3 pt-4'>
-            <button
+            <Button
               type='button'
               onClick={onClose}
               className='flex-1 px-4 py-2 border bg-slate-150 border-slate-300 rounded-lg text-slate-700  font-medium hover:bg-slate-200  transition-colors'
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type='submit'
-              className='flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors'
+              className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
             >
               Create
-            </button>
+            </Button>
           </div>
         </form>
       </div>
