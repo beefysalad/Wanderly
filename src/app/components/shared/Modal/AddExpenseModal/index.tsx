@@ -5,6 +5,7 @@ import { expenseSchema, TExpenseSchema } from "./addExpenseZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { HelpCircle, Upload, X } from "lucide-react";
 import Image from "next/image";
+import { Input } from "@/components/ui/input";
 
 interface IAddExpenseModalProps {
   members: string[];
@@ -52,7 +53,7 @@ const AddExpenseModal = ({
   };
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg max-w-md w-full max-h-screen overflow-y-auto'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg max-w-md w-full max-h-[70vh] md:max-h-screen overflow-y-auto overflow-x-hidden'>
         <div className='flex items-center justify-between p-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800'>
           <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
             {editingExpense ? "Edit Expense" : "Add Expense"}
@@ -71,10 +72,11 @@ const AddExpenseModal = ({
             <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
               Date
             </label>
-            <input
+            <Input
               type='date'
               {...form.register("date")}
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white'
+              className='w-full min-w-0 h-10 px-2 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [-webkit-appearance:none] [appearance:none]'
+              style={{ WebkitAppearance: "none", appearance: "none" }}
             />
           </div>
 
