@@ -132,7 +132,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
         {activeTab === "expenses" ? (
           <ExpensesList
             expenses={expenses}
-            members={group.members || []}
+            members={group.memberEmails || []}
             onDeleteExpense={handleDeleteExpense}
             onUpdateExpense={handleUpdateExpense}
             onEditExpense={handleEditExpense}
@@ -214,7 +214,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
 
       {showAddModal && (
         <AddExpenseModal
-          members={group.members || []}
+          members={group.memberEmails || []}
           onAddExpense={handleAddExpense}
           onClose={handleCloseModal}
           editingExpense={editingExpense || undefined}
