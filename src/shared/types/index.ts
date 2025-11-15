@@ -2,13 +2,12 @@ export interface Group {
   id: string;
   name: string;
   code: string;
-  members?: string[]; // <= make optional
-  trips?: Trip[]; // <= make optional
+  trips?: Trip[];
   createdAt: string;
-  createdBy: string; // <= make optional
-  isGuest?: boolean;
-  guestId?: string;
+  createdBy?: string;
+  createdByEmail?: string;
   memberEmails?: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
 }
 
 export interface Trip {
@@ -21,6 +20,7 @@ export interface Trip {
   createdAt: string;
   location?: string; // Added optional location field
   status?: "planning" | "finalized" | "ongoing" | "cancelled"; // Trip status
+  createdBy?: string; // Creator name or email
 }
 export interface User {
   id: string;
@@ -41,16 +41,6 @@ export interface Activity {
   done: boolean;
 }
 
-export interface TripGroup {
-  id: string;
-  name: string;
-  code: string;
-  startDate: string;
-  endDate: string;
-  activities: Activity[];
-  createdAt: string;
-}
-
 export interface Expense {
   id: string;
   groupId: string;
@@ -61,7 +51,7 @@ export interface Expense {
   date: string;
   category?: string;
   splitWith?: string[]; // members who should split this expense
-  paymentMethod?: "bank" | "maya" | "gcash";
+  paymentMethod?: "cash" | "bank" | "maya" | "gcash";
   accountNumber?: string;
   bankName?: string; // for bank transfer
   accountName?: string; // for all payment methods
@@ -78,5 +68,5 @@ export interface PaymentLog {
   payee: string; // who received payment
   amount: number;
   timestamp: string;
-  paymentMethod?: "bank" | "maya" | "gcash";
+  paymentMethod?: "cash" | "bank" | "maya" | "gcash";
 }

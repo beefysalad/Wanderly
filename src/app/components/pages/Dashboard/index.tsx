@@ -10,17 +10,17 @@ import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
 import DashboardHeader from "./DashboardHeader";
-import { GROUPS } from "./dummdata";
+import { useGroups } from "@/src/hooks/useGroups";
 
 const DashboardComponent = () => {
   const router = useRouter();
 
-  const [loading, setLoading] = useState<boolean>(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCalendar, setShowCalendar] = useState(true);
   const { user } = useCurrentUser();
-  const groups = GROUPS;
+  const { data: groupsData, isLoading: loading } = useGroups();
+  const groups = groupsData?.groups || [];
   const handleLogout = async () => {
     await signOut(auth);
   };
@@ -30,6 +30,7 @@ const DashboardComponent = () => {
   const handleNavigateToGroup = (groupId: string) => {
     router.push(`/group/${groupId}`);
   };
+
   if (loading) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center'>
@@ -75,10 +76,34 @@ const DashboardComponent = () => {
   };
   const getTripsForDate = (date: Date) => {
     const allTrips = getAllTripsWithGroups();
+
+    // Normalize the input date to midnight (remove time component)
+    const normalizedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
     return allTrips.filter((trip) => {
       const startDate = new Date(trip.startDate);
       const endDate = new Date(trip.endDate);
-      return date >= startDate && date <= endDate;
+
+      // Normalize trip dates to midnight (remove time component)
+      const normalizedStartDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      );
+      const normalizedEndDate = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate()
+      );
+
+      return (
+        normalizedDate >= normalizedStartDate &&
+        normalizedDate <= normalizedEndDate
+      );
     });
   };
 

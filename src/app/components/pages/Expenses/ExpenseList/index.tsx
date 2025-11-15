@@ -1,14 +1,20 @@
 "use client";
 import { Expense } from "@/src/shared/types";
 import { CheckCircle } from "lucide-react";
-import React, { useState } from "react";
-import ExpenseDetailModal from "../../../shared/Modal/ExpenseDetailModal";
+import React from "react";
+import api from "@/lib/axios";
+import { useQueryClient } from "@tanstack/react-query";
+
 interface IExpensesListProps {
   expenses: Expense[];
   members: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
+  tripId: string;
+  groupId: string;
   onDeleteExpense: (id: string) => void;
   onUpdateExpense: (expense: Expense) => void;
   onEditExpense: (expense: Expense) => void;
+  onSelectExpense: (expense: Expense) => void;
   currentUser?: string;
 }
 const categoryEmojis = {
@@ -21,12 +27,21 @@ const categoryEmojis = {
 const ExpensesList = ({
   expenses,
   members,
+  memberNames,
+  tripId,
+  groupId,
   onDeleteExpense,
   onEditExpense,
   onUpdateExpense,
+  onSelectExpense,
   currentUser,
 }: IExpensesListProps) => {
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const queryClient = useQueryClient();
+
+  // Helper function to get display name from email
+  const getDisplayName = (email: string): string => {
+    return memberNames?.[email] || email.split("@")[0];
+  };
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
     const date = new Date(expense.date).toLocaleDateString("en-US", {
@@ -55,45 +70,71 @@ const ExpensesList = ({
       return sum + exp.amount / splitCount;
     }, 0);
 
-  const handleMarkPaid = (expenseId: string, memberId: string) => {
+  const handleMarkPaid = async (expenseId: string, memberId: string) => {
     const expense = expenses.find((e) => e.id === expenseId);
     if (!expense) return;
 
     const paidMembers = expense.paidMembers || [];
-    const updatedPaidMembers = paidMembers.includes(memberId)
+    const isPaid = paidMembers.includes(memberId);
+    const newPaidMembers = isPaid
       ? paidMembers.filter((m) => m !== memberId)
       : [...paidMembers, memberId];
 
-    onUpdateExpense({ ...expense, paidMembers: updatedPaidMembers });
-  };
+    // Optimistically update the expense in the cache
+    queryClient.setQueryData<{ expenses: Expense[] }>(
+      ["expenses", tripId],
+      (old) => {
+        if (!old) return old;
+        return {
+          expenses: old.expenses.map((e) =>
+            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e
+          ),
+        };
+      }
+    );
 
-  const handleEdit = () => {
-    if (selectedExpense) {
-      onEditExpense(selectedExpense);
-      setSelectedExpense(null);
+    try {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: memberId,
+        isPaid: !isPaid,
+        createPaymentLog: true,
+      });
+
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<{ expenses: Expense[] }>(
+        ["expenses", tripId],
+        (old) => {
+          if (!old) return old;
+          return {
+            expenses: old.expenses.map((e) =>
+              e.id === expenseId ? expense : e
+            ),
+          };
+        }
+      );
+      console.error("Failed to mark expense as paid:", error);
     }
   };
 
-  const handleDelete = () => {
-    if (selectedExpense) {
-      onDeleteExpense(selectedExpense.id);
-      setSelectedExpense(null);
-    }
-  };
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 gap-4'>
         <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
+          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
             My Expenses
           </p>
-          <p className='text-2xl font-bold text-slate-900 dark:text-white'>
+          <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
             ₱{myExpenses.toFixed(2)}
           </p>
         </div>
         <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
-            Total Expenses
+          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
+            Total Trip Expenses
           </p>
           <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
             ₱{totalSpent.toFixed(2)}
@@ -122,11 +163,11 @@ const ExpensesList = ({
                 return (
                   <button
                     key={expense.id}
-                    onClick={() => setSelectedExpense(expense)}
-                    className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all hover:shadow-md'
+                    onClick={() => onSelectExpense(expense)}
+                    className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md'
                   >
                     <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
+                      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
                         {categoryEmojis[
                           expense.category as keyof typeof categoryEmojis
                         ] || "📌"}
@@ -137,14 +178,15 @@ const ExpensesList = ({
                             {expense.description}
                           </h4>
                           {allPaid && (
-                            <span className='text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 flex items-center gap-1 w-fit'>
+                            <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
                               <CheckCircle className='w-3 h-3' />
                               Settled
                             </span>
                           )}
                         </div>
                         <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
-                          Paid by <strong>{expense.paidBy}</strong>
+                          Paid by{" "}
+                          <strong>{getDisplayName(expense.paidBy)}</strong>
                           {paidCount > 0 && totalOwed > 0 && (
                             <span className='ml-1 sm:ml-2 text-emerald-600 dark:text-emerald-400'>
                               • {paidCount}/{totalOwed} paid
@@ -169,20 +211,6 @@ const ExpensesList = ({
             </div>
           </div>
         ))
-      )}
-
-      {selectedExpense && (
-        <ExpenseDetailModal
-          expense={selectedExpense}
-          members={members}
-          onClose={() => setSelectedExpense(null)}
-          onMarkPaid={(memberId) =>
-            handleMarkPaid(selectedExpense.id, memberId)
-          }
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          currentUser={currentUser}
-        />
       )}
     </div>
   );

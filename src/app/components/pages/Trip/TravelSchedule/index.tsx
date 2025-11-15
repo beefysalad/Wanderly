@@ -1,7 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
-import { ChevronDown, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Trash2,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import React, { useState } from "react";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface ITravelScheduleProps {
   startDate: Date;
@@ -11,6 +18,8 @@ interface ITravelScheduleProps {
   onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
   onDeleteActivity: (id: string) => void;
   onToggleDone: (id: string) => void;
+  onEditActivity: (activity: Activity) => void;
+  onViewActivity: (activity: Activity) => void;
   tripName?: string;
 }
 const TravelSchedule = ({
@@ -22,8 +31,12 @@ const TravelSchedule = ({
   onUpdateActivity,
   startDate,
   tripName,
+  onEditActivity,
+  onViewActivity,
 }: ITravelScheduleProps) => {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const daysPerPage = 7; // Show 7 days per page
 
   const getDaysInRange = () => {
     const days = [];
@@ -45,46 +58,57 @@ const TravelSchedule = ({
     setExpandedDays(newExpanded);
   };
 
-  const days = getDaysInRange();
+  const allDays = getDaysInRange();
+  const totalPages = Math.ceil(allDays.length / daysPerPage);
+  const startIndex = (currentPage - 1) * daysPerPage;
+  const endIndex = startIndex + daysPerPage;
+  const days = allDays.slice(startIndex, endIndex);
+
+  const handlePrevious = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
   return (
     <div className='space-y-4'>
-      {tripName && (
-        <div className='bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg p-6 shadow-lg'>
-          <h1 className='text-2xl font-bold mb-2'>{tripName}</h1>
-          <p className='text-amber-50'>
-            {startDate.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}{" "}
-            -{" "}
-            {endDate.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </p>
-        </div>
-      )}
-      <h2 className='text-lg font-semibold text-slate-900'>Daily Schedule</h2>
+      <div className='flex items-center justify-between'>
+        <h2 className='text-lg font-semibold text-slate-900'>Daily Schedule</h2>
+        {totalPages > 1 && (
+          <span className='text-sm text-slate-600'>
+            Page {currentPage} of {totalPages}
+          </span>
+        )}
+      </div>
       {days.map((date, dayIndex) => {
-        const dayActivities = activities.filter((a) => {
-          const actDate = new Date(a.date);
-          return (
-            actDate.getFullYear() === date.getFullYear() &&
-            actDate.getMonth() === date.getMonth() &&
-            actDate.getDate() === date.getDate()
-          );
-        });
-        const isExpanded = expandedDays.has(dayIndex);
+        // Use the original index for expandedDays tracking
+        const originalIndex = startIndex + dayIndex;
+        const dayActivities = activities
+          .filter((a) => {
+            const actDate = new Date(a.date);
+            return (
+              actDate.getFullYear() === date.getFullYear() &&
+              actDate.getMonth() === date.getMonth() &&
+              actDate.getDate() === date.getDate()
+            );
+          })
+          .sort((a, b) => {
+            // Sort by startTime, activities without time go to the end
+            if (!a.startTime && !b.startTime) return 0;
+            if (!a.startTime) return 1;
+            if (!b.startTime) return -1;
+            return a.startTime.localeCompare(b.startTime);
+          });
+        const isExpanded = expandedDays.has(originalIndex);
 
         return (
           <div
-            key={dayIndex}
-            className='bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow'
+            key={originalIndex}
+            className='bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-shadow'
           >
             <button
-              onClick={() => toggleDay(dayIndex)}
+              onClick={() => toggleDay(originalIndex)}
               className='w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors'
             >
               <div className='flex items-center gap-4'>
@@ -119,17 +143,21 @@ const TravelSchedule = ({
                   dayActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className='p-4 bg-slate-50 rounded-lg border border-slate-200'
+                      className='p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-orange-300 hover:shadow-sm transition-all cursor-pointer'
+                      onClick={() => onViewActivity(activity)}
                     >
                       <div className='flex items-start justify-between'>
                         <div className='flex-1'>
                           <div className='flex items-center gap-2'>
                             <button
-                              onClick={() => onToggleDone(activity.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleDone(activity.id);
+                              }}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                                 activity.done
-                                  ? "bg-green-500 border-green-500 text-white"
-                                  : "border-slate-300 hover:border-green-500"
+                                  ? "bg-orange-500 border-orange-500 text-white"
+                                  : "border-slate-300 hover:border-orange-500"
                               }`}
                             >
                               {activity.done && (
@@ -148,24 +176,40 @@ const TravelSchedule = ({
                           </div>
                           {activity.startTime && (
                             <p className='text-sm text-slate-600 mt-2 ml-7'>
-                              ⏰ {activity.startTime}
-                              {activity.endTime && ` - ${activity.endTime}`}
+                              ⏰ {formatTime12Hour(activity.startTime)}
+                              {activity.endTime &&
+                                ` - ${formatTime12Hour(activity.endTime)}`}
                             </p>
                           )}
                           {activity.notes && (
-                            <p className='text-sm text-slate-600 mt-2 ml-7'>
+                            <p className='text-sm text-slate-600 mt-2 ml-7 line-clamp-2'>
                               {activity.notes}
                             </p>
                           )}
                         </div>
-                        <Button
-                          onClick={() => onDeleteActivity(activity.id)}
-                          variant='ghost'
-                          size='sm'
-                          className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                        <div
+                          className='flex items-center gap-1'
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Trash2 className='w-4 h-4' />
-                        </Button>
+                          <Button
+                            onClick={() => onEditActivity(activity)}
+                            variant='ghost'
+                            size='sm'
+                            className='text-orange-500 hover:text-orange-700 hover:bg-orange-50'
+                            title='Edit activity'
+                          >
+                            <Pencil className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            onClick={() => onDeleteActivity(activity.id)}
+                            variant='ghost'
+                            size='sm'
+                            className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                            title='Delete activity'
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -175,6 +219,30 @@ const TravelSchedule = ({
           </div>
         );
       })}
+
+      {totalPages > 1 && (
+        <div className='flex items-center justify-center gap-2 pt-4'>
+          <button
+            onClick={handlePrevious}
+            disabled={currentPage === 1}
+            className='px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md'
+          >
+            <ChevronLeft className='w-4 h-4' />
+            Previous
+          </button>
+          <span className='px-4 py-2 text-sm font-medium text-slate-600'>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            className='px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md'
+          >
+            Next
+            <ChevronRight className='w-4 h-4' />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,8 +1,21 @@
 "use client";
 
+import { Calendar, DollarSign, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Header from "../../shared/Header";
+import AuthModal from "../../shared/Modal/AuthModal";
+import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 const AboutComponent = () => {
+  const router = useRouter();
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
+    "signin"
+  );
+  const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
+
   return (
     <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
       <div className='fixed inset-0 overflow-hidden pointer-events-none'>
@@ -14,100 +27,218 @@ const AboutComponent = () => {
       </div>
 
       <div className='relative z-10'>
-        <section className='px-4 md:px-8 py-12 md:py-20 max-w-4xl mx-auto'>
-          <div className='space-y-12'>
+        <Header
+          setAuthDefaultTab={setAuthDefaultTab}
+          setShowAuthModal={setShowAuthModal}
+          setShowQuickJoinModal={setShowQuickJoinModal}
+        />
+        <div className='max-w-4xl mx-auto px-4 py-8'>
+          <div className='space-y-8'>
+            {/* Header */}
             <div className='text-center space-y-4'>
-              <h2 className='text-3xl md:text-5xl font-bold'>
-                The Story Behind{" "}
-                <span className='bg-linear-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
+              <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-4 shadow-lg'>
+                <Sparkles className='w-10 h-10 text-white' />
+              </div>
+              <h1 className='text-4xl md:text-5xl font-bold text-white'>
+                About{" "}
+                <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
                   Wanderly
                 </span>
-              </h2>
-              <p className='text-slate-300 text-lg md:text-xl'>
-                Why I built this tool for travelers like you
+              </h1>
+              <p className='text-lg text-slate-300 max-w-2xl mx-auto'>
+                The all-in-one platform for seamless group trip planning
               </p>
             </div>
 
-            <div className='bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-8 md:p-12 backdrop-blur-sm space-y-6 shadow-2xl'>
-              <div className='space-y-4'>
-                <p className='text-slate-200 leading-relaxed text-lg'>
-                  I created Wanderly because planning group trips can be
-                  messy&mdash;scattered messages, spreadsheets, and missed
-                  deadlines make it hard to stay organized. While I&apos;m just
-                  starting my own travel adventures next year, I realized we
-                  needed a single source of truth&mdash;a place where everyone
-                  in a group stays synchronized without the chaos.
-                </p>
-                <p className='text-slate-200 leading-relaxed text-lg'>
-                  Even before my first trip, I noticed the same issues pop up:
-                  &quot;Who&apos;s paying for what?&quot;, &quot;What time is
-                  the activity again?&quot;, &quot;Did everyone see the
-                  schedule?&quot;. I built Wanderly to solve all of this in one
-                  beautiful, intuitive platform, making group trip planning
-                  effortless from day one.
-                </p>
-              </div>
+            {/* Main Content Card */}
+            <div className='bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-6 sm:p-8 md:p-10 backdrop-blur-sm shadow-2xl'>
+              <div className='space-y-8'>
+                {/* Story Section */}
+                <div className='space-y-6'>
+                  <h2 className='text-2xl md:text-3xl font-bold text-white'>
+                    Why Wanderly Exists
+                  </h2>
+                  <div className='space-y-4 text-slate-200 leading-relaxed'>
+                    <p className='text-base md:text-lg'>
+                      Planning group trips shouldn&apos;t be complicated. Yet
+                      we&apos;ve all been there&mdash;scattered messages across
+                      multiple apps, confusing spreadsheets, and the constant
+                      back-and-forth of &quot;Who&apos;s paying for what?&quot;
+                      and &quot;What time is that activity again?&quot;
+                    </p>
+                    <p className='text-base md:text-lg'>
+                      Wanderly was built to solve these problems in one
+                      beautiful, intuitive platform. No more juggling between
+                      different tools or losing track of important details.
+                      Everything your group needs is right here, organized and
+                      accessible to everyone.
+                    </p>
+                  </div>
+                </div>
 
-              <div className='pt-6 border-t border-amber-500/20 space-y-4'>
-                <h3 className='text-xl font-semibold text-amber-400'>
-                  What Makes Wanderly Different
-                </h3>
-                <ul className='space-y-3 text-slate-300'>
-                  <li className='flex gap-3 items-start'>
-                    <span className='text-orange-400 font-bold flex-shrink-0 text-xl'>
-                      ✓
-                    </span>
-                    <span className='text-lg'>
-                      Real-time collaboration with zero setup friction
-                    </span>
-                  </li>
-                  <li className='flex gap-3 items-start'>
-                    <span className='text-orange-400 font-bold flex-shrink-0 text-xl'>
-                      ✓
-                    </span>
-                    <span className='text-lg'>
-                      Expense tracking so no one forgets who paid for what
-                    </span>
-                  </li>
-                  <li className='flex gap-3 items-start'>
-                    <span className='text-orange-400 font-bold flex-shrink-0 text-xl'>
-                      ✓
-                    </span>
-                    <span className='text-lg'>
-                      Beautiful calendar and schedule views that just work
-                    </span>
-                  </li>
-                  <li className='flex gap-3 items-start'>
-                    <span className='text-orange-400 font-bold flex-shrink-0 text-xl'>
-                      ✓
-                    </span>
-                    <span className='text-lg'>
-                      Built specifically for group travel, not generic project
-                      management
-                    </span>
-                  </li>
-                </ul>
-              </div>
+                {/* Features Grid */}
+                <div className='pt-8 border-t border-amber-500/20'>
+                  <h3 className='text-xl md:text-2xl font-bold text-white mb-6'>
+                    What Makes Wanderly Special
+                  </h3>
+                  <div className='grid md:grid-cols-2 gap-4'>
+                    <div className='p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all'>
+                      <div className='flex items-start gap-4'>
+                        <div className='p-2 bg-amber-500/20 rounded-lg'>
+                          <Users className='w-6 h-6 text-amber-400' />
+                        </div>
+                        <div>
+                          <h4 className='font-semibold text-white mb-1'>
+                            Group Collaboration
+                          </h4>
+                          <p className='text-sm text-slate-300'>
+                            Create groups, invite friends, and plan together in
+                            real-time. Everyone stays on the same page.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-              <div className='pt-6 border-t border-amber-500/20'>
-                <p className='text-slate-400 italic text-lg leading-relaxed'>
-                  Whether you&apos;re planning a weekend getaway or a month-long
-                  adventure, Wanderly makes it seamless. Start your next trip
-                  today and experience the difference.
-                </p>
-              </div>
+                    <div className='p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all'>
+                      <div className='flex items-start gap-4'>
+                        <div className='p-2 bg-amber-500/20 rounded-lg'>
+                          <Calendar className='w-6 h-6 text-amber-400' />
+                        </div>
+                        <div>
+                          <h4 className='font-semibold text-white mb-1'>
+                            Smart Scheduling & Calendar Integration
+                          </h4>
+                          <p className='text-sm text-slate-300'>
+                            Visual calendar and schedule views make it easy to
+                            see your entire trip at a glance. Export your
+                            schedule to Google Calendar, Apple Calendar, or
+                            Outlook with one click.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-              <div className='pt-8 text-center'>
-                <Link href={"/"}>
-                  <p className='inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-amber-500/50'>
-                    Get Started with Wanderly
-                  </p>
-                </Link>
+                    <div className='p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all'>
+                      <div className='flex items-start gap-4'>
+                        <div className='p-2 bg-amber-500/20 rounded-lg'>
+                          <DollarSign className='w-6 h-6 text-amber-400' />
+                        </div>
+                        <div>
+                          <h4 className='font-semibold text-white mb-1'>
+                            Expense Tracking
+                          </h4>
+                          <p className='text-sm text-slate-300'>
+                            Track who paid for what, split expenses fairly, and
+                            keep a complete payment history. No more confusion.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all'>
+                      <div className='flex items-start gap-4'>
+                        <div className='p-2 bg-amber-500/20 rounded-lg'>
+                          <Sparkles className='w-6 h-6 text-amber-400' />
+                        </div>
+                        <div>
+                          <h4 className='font-semibold text-white mb-1'>
+                            Made for Travel
+                          </h4>
+                          <p className='text-sm text-slate-300'>
+                            Built specifically for group travel, not adapted
+                            from generic project management tools. Every feature
+                            is travel-focused.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Creator & Status Section */}
+                <div className='pt-8 border-t border-amber-500/20 space-y-6'>
+                  <div className='space-y-4'>
+                    <h3 className='text-xl md:text-2xl font-bold text-white'>
+                      About the Creator
+                    </h3>
+                    <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
+                      I&apos;m a seasoned software engineer who, honestly,
+                      hasn&apos;t been much of a traveler. But lately, I&apos;ve
+                      been planning to change that and start exploring the
+                      world. As I began planning my first trips, I quickly
+                      realized how messy group trip planning can be&mdash;and I
+                      knew I could build something better.
+                    </p>
+                    <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
+                      That&apos;s how Wanderly was born. It&apos;s the tool I
+                      wish existed when I started planning my adventures, built
+                      with the precision and care that comes from years of
+                      engineering experience, combined with the fresh
+                      perspective of someone new to the travel planning world.
+                    </p>
+                  </div>
+
+                  <div className='p-5 bg-amber-500/10 backdrop-blur-sm rounded-xl border border-amber-500/30 space-y-3'>
+                    <div className='flex items-center gap-2'>
+                      <span className='px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-semibold rounded-full border border-amber-500/30'>
+                        BETA
+                      </span>
+                      <h4 className='font-semibold text-white'>
+                        Currently in Beta
+                      </h4>
+                    </div>
+                    <p className='text-sm text-slate-300 leading-relaxed'>
+                      Wanderly is currently in beta. I&apos;m actively improving
+                      it based on user feedback and fixing bugs as they come up.
+                      Your experience matters, and I&apos;m committed to making
+                      this the best group trip planning tool out there.
+                    </p>
+                    <p className='text-sm text-slate-300 leading-relaxed'>
+                      <span className='font-medium text-amber-300'>
+                        Mobile app coming soon!
+                      </span>{" "}
+                      Once Wanderly has enough users, I&apos;ll be developing
+                      native mobile apps for iOS and Android to make trip
+                      planning even more convenient on the go.
+                    </p>
+                  </div>
+                </div>
+
+                {/* CTA Section */}
+                <div className='pt-8 border-t border-amber-500/20'>
+                  <div className='text-center space-y-6'>
+                    <p className='text-lg text-slate-300 font-medium'>
+                      Ready to plan your next adventure?
+                    </p>
+                    <Link href={"/"}>
+                      <button className='px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 flex items-center justify-center gap-2 active:scale-[0.98] transform mx-auto'>
+                        <Sparkles className='w-5 h-5' />
+                        <span>Get Started with Wanderly</span>
+                      </button>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          defaultTab={authDefaultTab}
+        />
+      )}
+      {showQuickJoinModal && (
+        <QuickJoinModal
+          onClose={() => setShowQuickJoinModal(false)}
+          onJoin={(code: string, guestName: string) => {
+            // Handle quick join if needed
+            console.log("Quick join:", code, guestName);
+          }}
+        />
+      )}
     </main>
   );
 };

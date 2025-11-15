@@ -24,7 +24,7 @@ const DashboardHeader = ({
               My Travel Groups
             </h2>
             <p className='text-xs sm:text-sm text-slate-600 mt-1 flex items-center gap-2 truncate'>
-              <span className='w-2 h-2 bg-green-500 rounded-full flex-shrink-0'></span>
+              <span className='w-2 h-2 bg-orange-500 rounded-full flex-shrink-0'></span>
               <span className='truncate'>{userEmail}</span>
             </p>
           </div>

@@ -8,13 +8,6 @@ const Footer = () => {
           © 2025 Wanderly. Made by Ptrck for Ptrck
         </p>
         <div className='flex gap-4'>
-          <a
-            href='/about'
-            className='text-slate-400 hover:text-amber-400 transition-colors'
-          >
-            About
-          </a>
-          <span className='text-slate-600'>|</span>
           <span className='text-slate-400'>{getAppVersion()}</span>
         </div>
       </div>

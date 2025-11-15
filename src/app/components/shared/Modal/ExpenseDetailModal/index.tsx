@@ -2,10 +2,11 @@
 import { Expense } from "@/src/shared/types";
 import { CheckCircle, Copy, Download, Pencil, Trash2, X } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
   onClose: () => void;
   onMarkPaid: (memberId: string) => void;
   onEdit: () => void;
@@ -23,6 +24,7 @@ const categoryEmojis = {
 const ExpenseDetailModal = ({
   expense,
   members,
+  memberNames,
   onClose,
   onDelete,
   onEdit,
@@ -30,6 +32,19 @@ const ExpenseDetailModal = ({
   currentUser,
 }: IExpenseDetailModalProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Helper function to get display name from email
+  const getDisplayName = (email: string): string => {
+    return memberNames?.[email] || email.split("@")[0];
+  };
+
+  useEffect(() => {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -53,9 +68,10 @@ const ExpenseDetailModal = ({
   const splitCount = expense.splitWith?.length || members.length;
   const perPersonAmount = expense.amount / splitCount;
   const paidMembers = expense.paidMembers || [];
+  
   return (
     <div
-      className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'
+      className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]'
       onClick={onClose}
     >
       <div
@@ -76,7 +92,7 @@ const ExpenseDetailModal = ({
                   <h2 className='text-2xl font-bold text-white'>
                     {expense.description}
                   </h2>
-                  <p className='text-emerald-100 text-sm'>
+                  <p className='text-orange-100 text-sm'>
                     {new Date(expense.date).toLocaleDateString("en-US", {
                       month: "long",
                       day: "numeric",
@@ -135,7 +151,7 @@ const ExpenseDetailModal = ({
             </p>
             <div className='bg-slate-50 dark:bg-slate-700 rounded-lg p-3'>
               <p className='font-semibold text-slate-900 dark:text-white'>
-                {expense.paidBy}
+                {getDisplayName(expense.paidBy)}
               </p>
             </div>
           </div>
@@ -157,17 +173,17 @@ const ExpenseDetailModal = ({
                     key={member}
                     className={`flex items-center justify-between p-3 rounded-lg border-2 ${
                       hasPaid || isPayer
-                        ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                        ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
                         : "bg-slate-50 dark:bg-slate-700 border-red-500 dark:border-red-600"
                     }`}
                   >
                     <div className='flex items-center gap-3'>
-                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white font-semibold'>
+                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold'>
                         {member[0].toUpperCase()}
                       </div>
                       <div>
                         <p className='font-medium text-slate-900 dark:text-white'>
-                          {member}
+                          {getDisplayName(member)}
                           {isCurrentUser && " (You)"}
                         </p>
                         <p className='text-sm text-slate-600 dark:text-slate-400'>
@@ -177,18 +193,18 @@ const ExpenseDetailModal = ({
                     </div>
                     <div>
                       {isPayer ? (
-                        <span className='text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium'>
+                        <span className='text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 font-medium'>
                           Payer
                         </span>
                       ) : hasPaid ? (
-                        <div className='flex items-center gap-1 text-emerald-600 dark:text-emerald-400'>
+                        <div className='flex items-center gap-1 text-orange-600 dark:text-orange-400'>
                           <CheckCircle className='w-5 h-5' />
                           <span className='text-sm font-medium'>Paid</span>
                         </div>
                       ) : (
                         <button
                           onClick={() => onMarkPaid(member)}
-                          className='px-3 py-1 text-sm rounded-full border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors font-medium'
+                          className='px-3 py-1 text-sm rounded-full border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors font-medium'
                         >
                           Mark as Paid
                         </button>
@@ -206,15 +222,17 @@ const ExpenseDetailModal = ({
               <p className='text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-3'>
                 Payment Details
               </p>
-              <div className='bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg p-4 border border-emerald-200 dark:border-emerald-800'>
+              <div className='bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800'>
                 <div className='space-y-3'>
                   <div className='flex items-center gap-2'>
                     <span className='text-2xl'>
+                      {expense.paymentMethod === "cash" && "💵"}
                       {expense.paymentMethod === "bank" && "🏦"}
                       {expense.paymentMethod === "maya" && "💳"}
                       {expense.paymentMethod === "gcash" && "💰"}
                     </span>
                     <p className='font-semibold text-slate-900 dark:text-white'>
+                      {expense.paymentMethod === "cash" && "Cash"}
                       {expense.paymentMethod === "bank" && "Bank Transfer"}
                       {expense.paymentMethod === "maya" && "Maya"}
                       {expense.paymentMethod === "gcash" && "GCash"}
@@ -233,11 +251,11 @@ const ExpenseDetailModal = ({
                           onClick={() =>
                             copyToClipboard(expense.accountNumber!, "account")
                           }
-                          className='p-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors'
+                          className='p-2 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors'
                           title='Copy account number'
                         >
                           {copiedId === "account" ? (
-                            <CheckCircle className='w-5 h-5 text-emerald-600' />
+                            <CheckCircle className='w-5 h-5 text-orange-600' />
                           ) : (
                             <Copy className='w-5 h-5 text-slate-600 dark:text-slate-400' />
                           )}

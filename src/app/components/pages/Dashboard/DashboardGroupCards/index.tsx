@@ -34,7 +34,7 @@ const DashboardGroupCards = ({
             <button
               key={group.id}
               onClick={() => handleNavigateToGroup(group.id)}
-              className='group bg-white rounded-2xl p-6 border border-slate-200 hover:border-amber-400 hover:shadow-xl transition-all duration-300 text-left hover:scale-[1.02] active:scale-[0.98]'
+              className='group bg-white rounded-2xl p-6 border border-slate-200 hover:border-orange-400 hover:shadow-xl transition-all duration-300 text-left hover:scale-[1.02] active:scale-[0.98] shadow-lg'
             >
               <div className='flex items-start justify-between mb-4'>
                 <div className='w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform'>
@@ -61,7 +61,7 @@ const DashboardGroupCards = ({
                 <div className='flex items-center gap-1.5'>
                   <Users className='w-4 h-4 text-amber-500' />
                   <span className='font-medium'>
-                    {group.members?.length || 0}
+                    {group.memberEmails?.length || 0}
                   </span>
                   <span>members</span>
                 </div>
