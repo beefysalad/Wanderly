@@ -8,6 +8,7 @@ import BottomNav from "./BottomNav";
 import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
 import { getStatusBadge } from "@/lib/helper";
+import ActivityModal from "../../shared/Modal/ActivityModal";
 
 interface ITripComponent {
   tripId: string;
@@ -222,18 +223,14 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* {showActivityModal && (
-        <ImprovedActivityModal
+      {showActivityModal && (
+        <ActivityModal
           startDate={startDate}
           endDate={endDate}
           preSelectedDate={selectedDate}
           isDateLocked={selectedDate !== null}
           onAddActivity={(activity) => {
-            addActivity(
-              selectedDate
-                ? { ...activity, date: selectedDate.toISOString() }
-                : activity
-            );
+            addActivity();
             setShowActivityModal(false);
             setSelectedDate(null);
           }}
@@ -242,7 +239,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             setSelectedDate(null);
           }}
         />
-      )} */}
+      )}
     </main>
   );
 };
