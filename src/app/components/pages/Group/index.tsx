@@ -22,7 +22,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
+  const goBack = () => {
+    router.push("/dashboard");
+  };
   const handleLeaveGroup = () => {
     console.log("LEAVE");
   };
@@ -55,7 +57,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             This group doesnt exist or has been removed.
           </p>
           <button
-            onClick={handleLeaveGroup}
+            onClick={goBack}
             className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
           >
             Go Home
@@ -142,8 +144,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         </div>
       </div>
 
-      {showCreateTripModal && (
-        <CreateTripModal onClose={() => setShowCreateTripModal(false)} />
+      {showCreateTripModal && group && (
+        <CreateTripModal
+          groupId={group.id}
+          onClose={() => setShowCreateTripModal(false)}
+        />
       )}
     </main>
   );

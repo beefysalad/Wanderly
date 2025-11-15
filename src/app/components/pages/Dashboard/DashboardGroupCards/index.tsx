@@ -61,7 +61,7 @@ const DashboardGroupCards = ({
                 <div className='flex items-center gap-1.5'>
                   <Users className='w-4 h-4 text-amber-500' />
                   <span className='font-medium'>
-                    {group.members?.length || 0}
+                    {group.memberEmails?.length || 0}
                   </span>
                   <span>members</span>
                 </div>

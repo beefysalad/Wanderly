@@ -1,16 +1,24 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { createTripSchema, TCreateTripSchema } from "./createTripZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useCreateTrip } from "@/src/hooks/useTrips";
+import { useRouter } from "next/navigation";
 
 interface ICreateTripModal {
+  groupId: string;
   onClose: () => void;
 }
-const CreateTripModal = ({ onClose }: ICreateTripModal) => {
+const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const createTrip = useCreateTrip(groupId);
+
   const form = useForm<TCreateTripSchema>({
     resolver: zodResolver(createTripSchema),
     defaultValues: {
@@ -21,17 +29,62 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
       status: "planning",
     },
   });
-  const onSubmit = (values: TCreateTripSchema) => console.log(values);
+
+  const onSubmit = async (values: TCreateTripSchema) => {
+    try {
+      setError(null);
+      const result = await createTrip.mutateAsync({
+        tripName: values.tripName,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        location: values.location,
+        status: values.status,
+      });
+
+      // Show navigating state
+      setIsNavigating(true);
+
+      // Wait a moment for cache to update and show feedback
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Navigate to the new trip
+      if (result.trip) {
+        router.push(`/group/${groupId}/trip/${result.trip.id}`);
+        // Close modal after navigation
+        onClose();
+      }
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error || err?.message || "Failed to create trip";
+      setError(message);
+      setIsNavigating(false);
+    }
+  };
+
+  const isLoading = createTrip.isPending || isNavigating;
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-sm w-full p-6'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-sm w-full p-6 relative'>
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className='absolute inset-0 bg-white/90 dark:bg-slate-800/90 rounded-lg flex items-center justify-center z-10'>
+            <div className='text-center'>
+              <div className='w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3'></div>
+              <p className='text-slate-700 dark:text-slate-300 font-medium'>
+                {createTrip.isPending ? "Creating trip..." : "Redirecting..."}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className='flex items-center justify-between mb-4'>
           <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
             Create Trip
           </h2>
           <button
             onClick={onClose}
-            className='text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            disabled={isLoading}
+            className='text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed'
           >
             <X className='w-5 h-5' />
           </button>
@@ -101,23 +154,49 @@ const CreateTripModal = ({ onClose }: ICreateTripModal) => {
             </div>
           </div>
 
-          {/* {error && (
-            <p className='text-red-600 dark:text-red-400 text-sm'>{error}</p>
-          )} */}
+          {/* Error Message */}
+          {error && (
+            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+              {error}
+            </div>
+          )}
+
+          {/* Form Errors */}
+          {form.formState.errors.tripName && (
+            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+              {form.formState.errors.tripName.message}
+            </div>
+          )}
+          {form.formState.errors.startDate && (
+            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+              {form.formState.errors.startDate.message}
+            </div>
+          )}
+          {form.formState.errors.endDate && (
+            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+              {form.formState.errors.endDate.message}
+            </div>
+          )}
 
           <div className='flex gap-3 pt-4'>
             <button
               type='button'
               onClick={onClose}
-              className='flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors'
+              disabled={isLoading}
+              className='flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             >
               Cancel
             </button>
             <button
               type='submit'
-              className='flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors'
+              disabled={isLoading}
+              className='flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              Create
+              {isLoading
+                ? createTrip.isPending
+                  ? "Creating..."
+                  : "Redirecting..."
+                : "Create"}
             </button>
           </div>
         </form>

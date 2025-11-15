@@ -2,12 +2,9 @@ export interface Group {
   id: string;
   name: string;
   code: string;
-  members?: string[]; // <= make optional
-  trips?: Trip[]; // <= make optional
+  trips?: Trip[];
   createdAt: string;
-  createdBy: string; // <= make optional
-  isGuest?: boolean;
-  guestId?: string;
+  createdBy?: string;
   memberEmails?: string[];
 }
 
@@ -39,16 +36,6 @@ export interface Activity {
   endTime?: string;
   notes?: string;
   done: boolean;
-}
-
-export interface TripGroup {
-  id: string;
-  name: string;
-  code: string;
-  startDate: string;
-  endDate: string;
-  activities: Activity[];
-  createdAt: string;
 }
 
 export interface Expense {
