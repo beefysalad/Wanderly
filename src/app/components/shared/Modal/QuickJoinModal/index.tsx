@@ -12,6 +12,7 @@ interface IQuickJoinModalProps {
 
 const QuickJoinModal = ({ onClose, onJoin }: IQuickJoinModalProps) => {
   const [step, setStep] = useState<"code" | "name">("code");
+  const [groupCode, setGroupCode] = useState<string>("");
 
   return (
     <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
@@ -35,9 +36,13 @@ const QuickJoinModal = ({ onClose, onJoin }: IQuickJoinModalProps) => {
         {/* Form */}
         <div className='p-6'>
           {step === "code" ? (
-            <GroupCodeForm onClose={onClose} setStep={setStep} />
+            <GroupCodeForm
+              onClose={onClose}
+              setStep={setStep}
+              setGroupCode={setGroupCode}
+            />
           ) : (
-            <GuestNameForm setStep={setStep} />
+            <GuestNameForm setStep={setStep} groupCode={groupCode} />
           )}
         </div>
       </div>

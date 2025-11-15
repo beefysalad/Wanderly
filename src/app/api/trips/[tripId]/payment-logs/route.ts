@@ -1,13 +1,17 @@
-import { AuthContext, withAuth } from "@/lib/auth/with-auth";
+import {
+  withOptionalAuth,
+  type OptionalAuthContext,
+} from "@/lib/auth/with-auth";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import {
   listPaymentLogsService,
+  listPaymentLogsForGuestService,
   createPaymentLogService,
 } from "./services";
 import { transformPaymentLog } from "../expenses/transformers";
 
-async function handler(req: NextRequest, auth: AuthContext) {
+async function handler(req: NextRequest, context: OptionalAuthContext) {
   try {
     // Extract tripId from URL path: /api/trips/[tripId]/payment-logs
     const pathParts = req.nextUrl.pathname.split("/");
@@ -21,14 +25,29 @@ async function handler(req: NextRequest, auth: AuthContext) {
     }
 
     if (req.method === "GET") {
-      const paymentLogs = await listPaymentLogsService(
-        auth.decodedToken,
-        tripId
-      );
+      let paymentLogs;
+      if (context.isGuest && context.groupCode) {
+        paymentLogs = await listPaymentLogsForGuestService(
+          context.groupCode,
+          tripId
+        );
+      } else {
+        paymentLogs = await listPaymentLogsService(
+          context.decodedToken,
+          tripId
+        );
+      }
       const transformedLogs = paymentLogs.map(transformPaymentLog);
 
       return NextResponse.json({ paymentLogs: transformedLogs });
     } else if (req.method === "POST") {
+      // POST requires authentication
+      if (context.isGuest) {
+        return NextResponse.json(
+          { error: "Guest access not allowed for creating payment logs" },
+          { status: 403 }
+        );
+      }
       const body = await req.json();
       const { expenseId, payerEmail, payeeEmail, amount, paymentMethod } =
         body;
@@ -41,7 +60,7 @@ async function handler(req: NextRequest, auth: AuthContext) {
       }
 
       const paymentLog = await createPaymentLogService(
-        auth.decodedToken,
+        context.decodedToken,
         tripId,
         {
           expenseId,
@@ -87,6 +106,6 @@ async function handler(req: NextRequest, auth: AuthContext) {
   }
 }
 
-export const GET = withAuth(handler);
-export const POST = withAuth(handler);
+export const GET = withOptionalAuth(handler);
+export const POST = withOptionalAuth(handler);
 

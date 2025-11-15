@@ -1,14 +1,18 @@
-import { AuthContext, withAuth } from "@/lib/auth/with-auth";
+import {
+  withOptionalAuth,
+  type OptionalAuthContext,
+} from "@/lib/auth/with-auth";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import {
   listExpensesService,
+  listExpensesForGuestService,
   createExpenseService,
 } from "./services";
 import { transformExpense } from "./transformers";
 import { PaymentMethod } from "@prisma/client";
 
-async function handler(req: NextRequest, auth: AuthContext) {
+async function handler(req: NextRequest, context: OptionalAuthContext) {
   try {
     // Extract tripId from URL path: /api/trips/[tripId]/expenses
     const pathParts = req.nextUrl.pathname.split("/");
@@ -22,11 +26,23 @@ async function handler(req: NextRequest, auth: AuthContext) {
     }
 
     if (req.method === "GET") {
-      const expenses = await listExpensesService(auth.decodedToken, tripId);
+      let expenses;
+      if (context.isGuest && context.groupCode) {
+        expenses = await listExpensesForGuestService(context.groupCode, tripId);
+      } else {
+        expenses = await listExpensesService(context.decodedToken, tripId);
+      }
       const transformedExpenses = expenses.map(transformExpense);
 
       return NextResponse.json({ expenses: transformedExpenses });
     } else if (req.method === "POST") {
+      // POST requires authentication
+      if (context.isGuest) {
+        return NextResponse.json(
+          { error: "Guest access not allowed for creating expenses" },
+          { status: 403 }
+        );
+      }
       const body = await req.json();
       const {
         paidBy,
@@ -49,7 +65,7 @@ async function handler(req: NextRequest, auth: AuthContext) {
         );
       }
 
-      const expense = await createExpenseService(auth.decodedToken, tripId, {
+      const expense = await createExpenseService(context.decodedToken, tripId, {
         paidBy,
         amount: Number(amount),
         description,
@@ -95,6 +111,6 @@ async function handler(req: NextRequest, auth: AuthContext) {
   }
 }
 
-export const GET = withAuth(handler);
-export const POST = withAuth(handler);
+export const GET = withOptionalAuth(handler);
+export const POST = withOptionalAuth(handler);
 

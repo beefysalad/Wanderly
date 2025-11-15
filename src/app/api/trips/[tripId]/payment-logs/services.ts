@@ -106,6 +106,76 @@ export async function listPaymentLogsService(
 }
 
 /**
+ * Verifies guest has access to a trip using group code
+ */
+async function verifyTripAccessForGuest(
+  groupCode: string,
+  tripId: string
+): Promise<{ trip: { groupId: string } }> {
+  // Get trip with group
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: { id: true, code: true },
+      },
+    },
+  });
+
+  if (!trip) {
+    throw new Error("Trip not found");
+  }
+
+  // Verify group code matches
+  if (trip.group.code !== groupCode.toUpperCase()) {
+    throw new Error("Invalid group code");
+  }
+
+  return { trip: { groupId: trip.groupId } };
+}
+
+/**
+ * Lists all payment logs for a trip (guest access)
+ */
+export async function listPaymentLogsForGuestService(
+  groupCode: string,
+  tripId: string
+) {
+  await verifyTripAccessForGuest(groupCode, tripId);
+
+  const paymentLogs = await prisma.paymentLog.findMany({
+    where: { tripId },
+    include: {
+      payer: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      payee: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      expense: {
+        select: {
+          id: true,
+          description: true,
+        },
+      },
+    },
+    orderBy: {
+      timestamp: "desc",
+    },
+  });
+
+  return paymentLogs;
+}
+
+/**
  * Creates a payment log when a member marks an expense as paid
  */
 export async function createPaymentLogService(

@@ -1,7 +1,14 @@
 "use client";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups } from "@/src/hooks/useGroups";
-import { ArrowLeft, Mail, Calendar, CheckCircle2, XCircle, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -13,7 +20,10 @@ const ProfileComponent = () => {
 
   // Calculate statistics
   const totalGroups = groups.length;
-  const totalTrips = groups.reduce((acc, group) => acc + (group.trips?.length || 0), 0);
+  const totalTrips = groups.reduce(
+    (acc, group) => acc + (group.trips?.length || 0),
+    0
+  );
 
   if (loading) {
     return (
@@ -30,7 +40,9 @@ const ProfileComponent = () => {
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
         <div className='text-center'>
-          <p className='text-slate-600 font-medium'>Please sign in to view your profile</p>
+          <p className='text-slate-600 font-medium'>
+            Please sign in to view your profile
+          </p>
         </div>
       </main>
     );
@@ -50,7 +62,7 @@ const ProfileComponent = () => {
         {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className='mb-6 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 font-medium'
+          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
         >
           <ArrowLeft className='w-5 h-5' />
           Back to Dashboard
@@ -93,12 +105,16 @@ const ProfileComponent = () => {
                   {emailVerified ? (
                     <div className='flex items-center gap-2 text-orange-200 bg-orange-500/20 px-3 py-1 rounded-full'>
                       <CheckCircle2 className='w-4 h-4' />
-                      <span className='text-xs sm:text-sm font-medium'>Verified</span>
+                      <span className='text-xs sm:text-sm font-medium'>
+                        Verified
+                      </span>
                     </div>
                   ) : (
                     <div className='flex items-center gap-2 text-amber-200 bg-amber-500/20 px-3 py-1 rounded-full'>
                       <XCircle className='w-4 h-4' />
-                      <span className='text-xs sm:text-sm font-medium'>Unverified</span>
+                      <span className='text-xs sm:text-sm font-medium'>
+                        Unverified
+                      </span>
                     </div>
                   )}
                 </div>
@@ -118,11 +134,15 @@ const ProfileComponent = () => {
                 <div className='space-y-3'>
                   <div>
                     <p className='text-xs text-slate-500 mb-1'>Email Address</p>
-                    <p className='text-sm font-medium text-slate-900'>{email}</p>
+                    <p className='text-sm font-medium text-slate-900'>
+                      {email}
+                    </p>
                   </div>
                   {accountCreated && (
                     <div>
-                      <p className='text-xs text-slate-500 mb-1'>Member Since</p>
+                      <p className='text-xs text-slate-500 mb-1'>
+                        Member Since
+                      </p>
                       <div className='flex items-center gap-2'>
                         <Calendar className='w-4 h-4 text-slate-400' />
                         <p className='text-sm font-medium text-slate-900'>
@@ -166,12 +186,18 @@ const ProfileComponent = () => {
                 </h3>
                 <div className='space-y-4'>
                   <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
-                    <span className='text-sm text-slate-600'>Travel Groups</span>
-                    <span className='text-2xl font-bold text-amber-600'>{totalGroups}</span>
+                    <span className='text-sm text-slate-600'>
+                      Travel Groups
+                    </span>
+                    <span className='text-2xl font-bold text-amber-600'>
+                      {totalGroups}
+                    </span>
                   </div>
                   <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
                     <span className='text-sm text-slate-600'>Total Trips</span>
-                    <span className='text-2xl font-bold text-orange-600'>{totalTrips}</span>
+                    <span className='text-2xl font-bold text-orange-600'>
+                      {totalTrips}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -186,15 +212,16 @@ const ProfileComponent = () => {
           </h3>
           <div className='space-y-3 text-sm text-slate-600'>
             <p>
-              Your profile information is managed through your authentication provider.
-              To update your name or profile picture, please update your account settings
-              with your authentication provider.
+              Your profile information is managed through your authentication
+              provider. To update your name or profile picture, please update
+              your account settings with your authentication provider.
             </p>
             {!emailVerified && (
               <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4'>
                 <p className='text-sm text-amber-800'>
-                  <strong>Email Verification:</strong> Your email address has not been
-                  verified. Please check your inbox for a verification email.
+                  <strong>Email Verification:</strong> Your email address has
+                  not been verified. Please check your inbox for a verification
+                  email.
                 </p>
               </div>
             )}
@@ -206,4 +233,3 @@ const ProfileComponent = () => {
 };
 
 export default ProfileComponent;
-

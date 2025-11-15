@@ -11,16 +11,20 @@ interface IExpensesListProps {
   memberNames?: Record<string, string>; // email -> name mapping
   tripId: string;
   groupId: string;
-  onDeleteExpense: (id: string) => void;
-  onUpdateExpense: (expense: Expense) => void;
-  onEditExpense: (expense: Expense) => void;
-  onSelectExpense: (expense: Expense) => void;
+  onDeleteExpense?: (id: string) => void;
+  onUpdateExpense?: (expense: Expense) => void;
+  onEditExpense?: (expense: Expense) => void;
+  onSelectExpense?: (expense: Expense) => void;
   currentUser?: string;
+  readOnly?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  paymentLogs?: any[]; // For guest view to calculate settled status
 }
-const categoryEmojis = {
+const categoryEmojis: Record<string, string> = {
   accommodation: "🏨",
   food: "🍽️",
   transportation: "🚗",
+  transport: "🚗", // alias for transportation
   activities: "🎯",
   other: "📌",
 };
@@ -35,6 +39,8 @@ const ExpensesList = ({
   onUpdateExpense,
   onSelectExpense,
   currentUser,
+  readOnly = false,
+  paymentLogs = [],
 }: IExpensesListProps) => {
   const queryClient = useQueryClient();
 
@@ -71,6 +77,8 @@ const ExpensesList = ({
     }, 0);
 
   const handleMarkPaid = async (expenseId: string, memberId: string) => {
+    if (readOnly) return;
+
     const expense = expenses.find((e) => e.id === expenseId);
     if (!expense) return;
 
@@ -121,6 +129,19 @@ const ExpensesList = ({
     }
   };
 
+  // Helper to check if expense is settled (for guest view)
+  const isExpenseSettled = (expense: Expense) => {
+    if (readOnly && paymentLogs.length > 0) {
+      const totalPaid = paymentLogs
+        .filter((log) => log.expenseId === expense.id)
+        .reduce((sum, log) => sum + log.amount, 0);
+      return totalPaid >= expense.amount;
+    }
+    const splitCount = expense.splitWith?.length || members.length;
+    const totalOwed = splitCount - 1; // excluding payer
+    return (expense.paidMembers?.length || 0) === totalOwed;
+  };
+
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 gap-4'>
@@ -158,19 +179,31 @@ const ExpensesList = ({
                 const perPersonAmount = expense.amount / splitCount;
                 const paidCount = expense.paidMembers?.length || 0;
                 const totalOwed = splitCount - 1; // excluding payer
-                const allPaid = expense.paidMembers?.length === totalOwed;
+                const allPaid = readOnly
+                  ? isExpenseSettled(expense)
+                  : expense.paidMembers?.length === totalOwed;
+
+                const Component =
+                  readOnly && !onSelectExpense ? "div" : "button";
+                const onClick = onSelectExpense
+                  ? () => onSelectExpense(expense)
+                  : undefined;
 
                 return (
-                  <button
+                  <Component
                     key={expense.id}
-                    onClick={() => onSelectExpense(expense)}
-                    className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md'
+                    onClick={onClick}
+                    className={`w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 ${
+                      onSelectExpense
+                        ? "hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md cursor-pointer"
+                        : ""
+                    }`}
                   >
                     <div className='flex items-start gap-3'>
                       <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
-                        {categoryEmojis[
-                          expense.category as keyof typeof categoryEmojis
-                        ] || "📌"}
+                        {expense.category
+                          ? categoryEmojis[expense.category] || "📌"
+                          : "📌"}
                       </div>
                       <div className='flex-1 text-left min-w-0'>
                         <div className='flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1'>
@@ -205,7 +238,7 @@ const ExpensesList = ({
                         )}
                       </div>
                     </div>
-                  </button>
+                  </Component>
                 );
               })}
             </div>

@@ -52,7 +52,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
       <div className='max-w-4xl mx-auto'>
         <button
           onClick={() => router.back()}
-          className='mb-6 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 font-medium'
+          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
         >
           <ArrowLeft className='w-5 h-5' />
           Back
@@ -81,13 +81,13 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
                   className='bg-gray-50 border border-gray-200 rounded-xl p-6 hover:bg-gray-100 hover:border-amber-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/10'
                 >
                   <div className='flex items-center gap-4'>
-                      <div
-                        className={`w-16 h-16 ${getAvatarColor(
-                          index
-                        )} rounded-full flex items-center justify-center text-white text-xl font-bold`}
-                      >
-                        {getInitials(email)}
-                      </div>
+                    <div
+                      className={`w-16 h-16 ${getAvatarColor(
+                        index
+                      )} rounded-full flex items-center justify-center text-white text-xl font-bold`}
+                    >
+                      {getInitials(email)}
+                    </div>
 
                     <div className='flex-1'>
                       <div className='flex items-center gap-2 mb-1'>

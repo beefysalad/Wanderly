@@ -8,13 +8,14 @@ interface ITravelCalendarProps {
   startDate: Date;
   endDate: Date;
   activities: Activity[];
-  onAddActivity: (activity: Omit<Activity, "id">) => void;
-  onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
-  onDeleteActivity: (id: string) => void;
-  onToggleDone: (id: string) => void;
-  onOpenAddModal: (date: Date) => void;
-  onEditActivity: (activity: Activity) => void;
-  onViewActivity: (activity: Activity) => void;
+  onAddActivity?: (activity: Omit<Activity, "id">) => void;
+  onUpdateActivity?: (id: string, updates: Partial<Activity>) => void;
+  onDeleteActivity?: (id: string) => void;
+  onToggleDone?: (id: string) => void;
+  onOpenAddModal?: (date: Date) => void;
+  onEditActivity?: (activity: Activity) => void;
+  onViewActivity?: (activity: Activity) => void;
+  readOnly?: boolean;
 }
 const TravelCalendar = ({
   activities,
@@ -22,6 +23,7 @@ const TravelCalendar = ({
   onOpenAddModal,
   startDate,
   onViewActivity,
+  readOnly = false,
 }: ITravelCalendarProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const daysPerPage = 9; // 3x3 grid on desktop, fewer on mobile
@@ -108,8 +110,10 @@ const TravelCalendar = ({
                   {dayActivities.slice(0, 3).map((activity) => (
                     <div
                       key={activity.id}
-                      className='text-sm p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-orange-300 hover:shadow-sm transition-all cursor-pointer'
-                      onClick={() => onViewActivity(activity)}
+                      className={`text-sm p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-orange-300 hover:shadow-sm transition-all ${
+                        onViewActivity ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => onViewActivity?.(activity)}
                     >
                       <p
                         className={`font-medium ${
@@ -141,15 +145,17 @@ const TravelCalendar = ({
                 </p>
               )}
 
-              <Button
-                onClick={() => onOpenAddModal(date)}
-                variant='outline'
-                size='sm'
-                className='w-full text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600'
-              >
-                <Plus className='w-4 h-4 mr-1' />
-                Add Events
-              </Button>
+              {!readOnly && onOpenAddModal && (
+                <Button
+                  onClick={() => onOpenAddModal(date)}
+                  variant='outline'
+                  size='sm'
+                  className='w-full text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600'
+                >
+                  <Plus className='w-4 h-4 mr-1' />
+                  Add Events
+                </Button>
+              )}
             </div>
           );
         })}

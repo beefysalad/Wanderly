@@ -3,21 +3,24 @@ import { Expense } from "@/src/shared/types";
 import { CheckCircle, Copy, Download, Pencil, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
+import ConfirmDeleteModal from "../ConfirmDeleteModal";
 interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
   onClose: () => void;
-  onMarkPaid: (memberId: string) => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onMarkPaid?: (memberId: string) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   currentUser?: string;
+  readOnly?: boolean;
 }
 
-const categoryEmojis = {
+const categoryEmojis: Record<string, string> = {
   accommodation: "🏨",
   food: "🍽️",
   transportation: "🚗",
+  transport: "🚗", // alias for transportation
   activities: "🎯",
   other: "📌",
 };
@@ -30,8 +33,11 @@ const ExpenseDetailModal = ({
   onEdit,
   onMarkPaid,
   currentUser,
+  readOnly = false,
 }: IExpenseDetailModalProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
@@ -52,23 +58,38 @@ const ExpenseDetailModal = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const downloadQRCode = () => {
+  const downloadQRCode = async () => {
     if (!expense.qrImage) return;
 
-    const link = document.createElement("a");
-    link.href = expense.qrImage;
-    link.download = `payment-qr-${expense.description
-      .replace(/\s+/g, "-")
-      .toLowerCase()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(expense.qrImage);
+      const blob = await response.blob();
+
+      // Create a blob URL
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `payment-qr-${expense.description
+        .replace(/\s+/g, "-")
+        .toLowerCase()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download image:", error);
+    }
   };
 
   const splitCount = expense.splitWith?.length || members.length;
   const perPersonAmount = expense.amount / splitCount;
   const paidMembers = expense.paidMembers || [];
-  
+
   return (
     <div
       className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]'
@@ -84,9 +105,9 @@ const ExpenseDetailModal = ({
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 <span className='text-4xl'>
-                  {categoryEmojis[
-                    expense.category as keyof typeof categoryEmojis
-                  ] || "📌"}
+                  {expense.category
+                    ? categoryEmojis[expense.category] || "📌"
+                    : "📌"}
                 </span>
                 <div>
                   <h2 className='text-2xl font-bold text-white'>
@@ -103,26 +124,24 @@ const ExpenseDetailModal = ({
               </div>
             </div>
             <div className='flex items-center gap-2'>
-              <button
-                onClick={onEdit}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Edit expense'
-              >
-                <Pencil className='w-5 h-5' />
-              </button>
-              <button
-                onClick={() => {
-                  if (
-                    confirm("Are you sure you want to delete this expense?")
-                  ) {
-                    onDelete();
-                  }
-                }}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Delete expense'
-              >
-                <Trash2 className='w-5 h-5' />
-              </button>
+              {!readOnly && onEdit && (
+                <button
+                  onClick={onEdit}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Edit expense'
+                >
+                  <Pencil className='w-5 h-5' />
+                </button>
+              )}
+              {!readOnly && onDelete && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Delete expense'
+                >
+                  <Trash2 className='w-5 h-5' />
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
@@ -201,13 +220,17 @@ const ExpenseDetailModal = ({
                           <CheckCircle className='w-5 h-5' />
                           <span className='text-sm font-medium'>Paid</span>
                         </div>
-                      ) : (
+                      ) : !readOnly && onMarkPaid ? (
                         <button
                           onClick={() => onMarkPaid(member)}
                           className='px-3 py-1 text-sm rounded-full border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors font-medium'
                         >
                           Mark as Paid
                         </button>
+                      ) : (
+                        <span className='text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium'>
+                          Unpaid
+                        </span>
                       )}
                     </div>
                   </div>
@@ -280,7 +303,10 @@ const ExpenseDetailModal = ({
                       <Image
                         src={expense.qrImage || "/placeholder.svg"}
                         alt='Payment QR Code'
-                        className='w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-slate-600 mx-auto bg-white'
+                        width={192}
+                        height={192}
+                        className='w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-slate-600 mx-auto bg-white cursor-pointer hover:opacity-80 transition-opacity'
+                        onClick={() => setShowImageModal(true)}
                       />
                     </div>
                   )}
@@ -290,6 +316,44 @@ const ExpenseDetailModal = ({
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && onDelete && (
+        <ConfirmDeleteModal
+          title='Delete Expense'
+          message={`Are you sure you want to delete "${expense.description}"? This action cannot be undone.`}
+          onConfirm={() => {
+            onDelete();
+            setShowDeleteConfirm(false);
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+          confirmText='Delete'
+          cancelText='Cancel'
+        />
+      )}
+
+      {showImageModal && expense.qrImage && (
+        <div
+          className='fixed inset-0 bg-black/90 backdrop-blur-sm z-[10000] flex items-center justify-center p-4'
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className='relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center'>
+            <button
+              onClick={() => setShowImageModal(false)}
+              className='absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white z-10'
+            >
+              <X className='w-6 h-6' />
+            </button>
+            <Image
+              src={expense.qrImage}
+              alt='QR Code - Full View'
+              width={800}
+              height={800}
+              className='max-w-full max-h-full object-contain rounded-lg'
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

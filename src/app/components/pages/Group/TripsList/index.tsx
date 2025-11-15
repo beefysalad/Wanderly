@@ -1,37 +1,54 @@
 import { getStatusBadge } from "@/lib/helper";
-import { Group } from "@/src/shared/types";
+import { Group, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ITripsListComponent {
-  group: Group;
-  onUpdateGroup: () => void;
+  group?: Group;
+  trips?: Trip[];
+  groupId: string;
+  onUpdateGroup?: () => void;
+  readOnly?: boolean;
 }
-const TripsListComponent = ({ group, onUpdateGroup }: ITripsListComponent) => {
+const TripsListComponent = ({
+  group,
+  trips,
+  groupId,
+  onUpdateGroup,
+  readOnly = false,
+}: ITripsListComponent) => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const tripsPerPage = 4;
 
+  const tripsList = trips || group?.trips || [];
+
   const handleSelectTrip = (tripId: string) => {
-    router.push(`/group/${group.id}/trip/${tripId}`);
+    if (readOnly) {
+      router.push(`/guest/group/${groupId}/trip/${tripId}`);
+    } else {
+      router.push(`/group/${groupId}/trip/${tripId}`);
+    }
   };
 
-  if (!group.trips || group.trips.length === 0) {
+  if (!tripsList || tripsList.length === 0) {
     return (
       <div className='bg-white rounded-2xl p-6 sm:p-8 text-center shadow-lg border border-slate-200'>
         <p className='text-slate-600 mb-4'>No trips yet</p>
         <p className='text-sm text-slate-500'>
-          Create your first trip to get started
+          {readOnly
+            ? "This group doesn't have any trips yet"
+            : "Create your first trip to get started"}
         </p>
       </div>
     );
   }
 
-  const totalPages = Math.ceil(group.trips.length / tripsPerPage);
+  const totalPages = Math.ceil(tripsList.length / tripsPerPage);
   const startIndex = (currentPage - 1) * tripsPerPage;
   const endIndex = startIndex + tripsPerPage;
-  const currentTrips = group.trips.slice(startIndex, endIndex);
+  const currentTrips = tripsList.slice(startIndex, endIndex);
 
   const handlePrevious = () => {
     setCurrentPage((prev) => Math.max(1, prev - 1));

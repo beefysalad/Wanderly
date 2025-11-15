@@ -51,8 +51,6 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const unsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
   const settledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
 
-  const loading = loadingGroup || loadingExpenses || loadingLogs;
-
   const handleDeleteExpense = async (expenseId: string) => {
     if (!expenseId) return;
     try {
@@ -149,10 +147,10 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     setShowAddModal(true);
   };
 
-  if (loading) {
+  if (loadingGroup) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8'>
+        <div className='text-center'>
           <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-700 font-medium'>Loading expenses...</p>
         </div>
@@ -282,22 +280,38 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
 
             <div className='relative z-10'>
               {activeTab === "expenses" ? (
-                <ExpensesList
-                  expenses={
-                    expenseSubTab === "settled"
-                      ? settledExpenses
-                      : unsettledExpenses
-                  }
-                  members={group.memberEmails || []}
-                  memberNames={group.memberNames}
-                  tripId={tripId}
-                  groupId={groupId}
-                  onDeleteExpense={handleDeleteExpense}
-                  onUpdateExpense={handleUpdateExpense}
-                  onEditExpense={handleEditExpense}
-                  onSelectExpense={setSelectedExpense}
-                  currentUser={user?.email ?? ""}
-                />
+                loadingExpenses ? (
+                  <div className='text-center py-12'>
+                    <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                    <p className='text-slate-600 font-medium'>
+                      Loading expenses...
+                    </p>
+                  </div>
+                ) : (
+                  <ExpensesList
+                    expenses={
+                      expenseSubTab === "settled"
+                        ? settledExpenses
+                        : unsettledExpenses
+                    }
+                    members={group.memberEmails || []}
+                    memberNames={group.memberNames}
+                    tripId={tripId}
+                    groupId={groupId}
+                    onDeleteExpense={handleDeleteExpense}
+                    onUpdateExpense={handleUpdateExpense}
+                    onEditExpense={handleEditExpense}
+                    onSelectExpense={setSelectedExpense}
+                    currentUser={user?.email ?? ""}
+                  />
+                )
+              ) : loadingLogs ? (
+                <div className='text-center py-12'>
+                  <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                  <p className='text-slate-600 font-medium'>
+                    Loading payment logs...
+                  </p>
+                </div>
               ) : (
                 <div className='space-y-3'>
                   {paymentLogs.length === 0 ? (
@@ -385,6 +399,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           tripId={tripId}
           groupId={groupId}
           members={group.memberEmails || []}
+          memberNames={group.memberNames}
           onAddExpense={handleAddExpense}
           onClose={handleCloseModal}
           editingExpense={editingExpense || undefined}
