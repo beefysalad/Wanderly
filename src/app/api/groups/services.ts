@@ -190,6 +190,13 @@ export async function listGroupsService(token: DecodedIdToken) {
           trips: {
             include: {
               activities: true,
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
         },

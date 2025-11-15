@@ -2,7 +2,8 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { PaymentMethod, Decimal } from "@prisma/client/runtime/library";
+import { PaymentMethod } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -115,7 +116,7 @@ export async function createPaymentLogService(
     payerEmail: string; // who paid
     payeeEmail: string; // who received payment (the person who originally paid)
     amount: number;
-    paymentMethod?: "bank" | "maya" | "gcash";
+    paymentMethod?: PaymentMethod;
   }
 ) {
   const { trip } = await verifyTripAccess(token, tripId);
@@ -134,11 +135,9 @@ export async function createPaymentLogService(
   const payerId = await getUserIdFromEmail(data.payerEmail);
   const payeeId = await getUserIdFromEmail(data.payeeEmail);
 
-  // Use expense payment method if not provided
+  // Use provided payment method, or fall back to expense payment method
   const paymentMethod: PaymentMethod | null =
-    data.paymentMethod && data.paymentMethod !== "cash"
-      ? (data.paymentMethod as PaymentMethod)
-      : expense.paymentMethod;
+    data.paymentMethod ?? expense.paymentMethod;
 
   // Create payment log
   const paymentLog = await prisma.paymentLog.create({

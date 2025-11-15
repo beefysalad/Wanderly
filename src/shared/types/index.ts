@@ -49,7 +49,7 @@ export interface Expense {
   date: string;
   category?: string;
   splitWith?: string[]; // members who should split this expense
-  paymentMethod?: "bank" | "maya" | "gcash";
+  paymentMethod?: "cash" | "bank" | "maya" | "gcash";
   accountNumber?: string;
   bankName?: string; // for bank transfer
   accountName?: string; // for all payment methods

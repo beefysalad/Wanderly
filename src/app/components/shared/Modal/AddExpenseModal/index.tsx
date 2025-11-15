@@ -80,9 +80,9 @@ const AddExpenseModal = ({
           date: new Date(values.date).toISOString(),
           category: values.category || undefined,
           paymentMethod:
-            values.paymentMethod && values.paymentMethod !== ""
-              ? (values.paymentMethod as "cash" | "bank" | "maya" | "gcash")
-              : undefined,
+            values.paymentMethod === "" || !values.paymentMethod
+              ? undefined
+              : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
           accountNumber: values.accountNumber || undefined,
           bankName: values.bankName || undefined,
           accountName: values.accountName || undefined,
@@ -97,9 +97,9 @@ const AddExpenseModal = ({
           date: new Date(values.date).toISOString(),
           category: values.category || undefined,
           paymentMethod:
-            values.paymentMethod && values.paymentMethod !== ""
-              ? (values.paymentMethod as "cash" | "bank" | "maya" | "gcash")
-              : undefined,
+            values.paymentMethod === "" || !values.paymentMethod
+              ? undefined
+              : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
           accountNumber: values.accountNumber || undefined,
           bankName: values.bankName || undefined,
           accountName: values.accountName || undefined,
