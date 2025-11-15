@@ -17,6 +17,7 @@ interface IExpensesListProps {
   onSelectExpense?: (expense: Expense) => void;
   currentUser?: string;
   readOnly?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paymentLogs?: any[]; // For guest view to calculate settled status
 }
 const categoryEmojis: Record<string, string> = {
@@ -77,7 +78,7 @@ const ExpensesList = ({
 
   const handleMarkPaid = async (expenseId: string, memberId: string) => {
     if (readOnly) return;
-    
+
     const expense = expenses.find((e) => e.id === expenseId);
     if (!expense) return;
 
@@ -182,7 +183,8 @@ const ExpensesList = ({
                   ? isExpenseSettled(expense)
                   : expense.paidMembers?.length === totalOwed;
 
-                const Component = readOnly && !onSelectExpense ? "div" : "button";
+                const Component =
+                  readOnly && !onSelectExpense ? "div" : "button";
                 const onClick = onSelectExpense
                   ? () => onSelectExpense(expense)
                   : undefined;
@@ -199,7 +201,9 @@ const ExpensesList = ({
                   >
                     <div className='flex items-start gap-3'>
                       <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
-                        {expense.category ? (categoryEmojis[expense.category] || "📌") : "📌"}
+                        {expense.category
+                          ? categoryEmojis[expense.category] || "📌"
+                          : "📌"}
                       </div>
                       <div className='flex-1 text-left min-w-0'>
                         <div className='flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1'>
