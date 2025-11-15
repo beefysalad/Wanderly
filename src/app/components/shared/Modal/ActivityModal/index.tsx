@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { activitySchema, TActivitySchema } from "./activityAddZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Clock, FileText, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface IActivityModal {
   startDate: Date;
@@ -117,20 +118,22 @@ const ActivityModal = ({
             </label>
             <div className='flex gap-2'>
               <div className='flex-1'>
-                <input
+                <Input
                   type='time'
                   {...form.register("startTime")}
                   placeholder='Start'
                   className='w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  style={{ WebkitAppearance: "none", appearance: "none" }}
                 />
               </div>
               <div className='flex items-center text-slate-500'>—</div>
               <div className='flex-1'>
-                <input
+                <Input
                   type='time'
                   {...form.register("endTime")}
                   placeholder='End'
                   className='w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  style={{ WebkitAppearance: "none", appearance: "none" }}
                 />
               </div>
             </div>
