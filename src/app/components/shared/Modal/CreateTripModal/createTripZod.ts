@@ -8,6 +8,7 @@ export const createTripSchema = z
     endDate: z.string().min(1, "End date is required"),
 
     location: z.string().trim().optional(),
+    status: z.enum(["planning", "finalized", "ongoing", "cancelled"]),
   })
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
     message: "Start date must be before end date",

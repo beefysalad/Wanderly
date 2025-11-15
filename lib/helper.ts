@@ -30,3 +30,42 @@ export function getDaysInMonth(year: number, month: number) {
 export function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
+export function getStatusBadge(status?: string) {
+  switch (status) {
+    case "planning":
+      return {
+        bg: "bg-blue-100",
+        text: "text-blue-700",
+        border: "border-blue-200",
+        label: "Planning",
+      };
+    case "finalized":
+      return {
+        bg: "bg-green-100",
+        text: "text-green-700",
+        border: "border-green-200",
+        label: "Finalized",
+      };
+    case "ongoing":
+      return {
+        bg: "bg-amber-100",
+        text: "text-amber-700",
+        border: "border-amber-200",
+        label: "Ongoing",
+      };
+    case "cancelled":
+      return {
+        bg: "bg-red-100",
+        text: "text-red-700",
+        border: "border-red-200",
+        label: "Cancelled",
+      };
+    default:
+      return {
+        bg: "bg-slate-100",
+        text: "text-slate-700",
+        border: "border-slate-200",
+        label: "Planning",
+      };
+  }
+}

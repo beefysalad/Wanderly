@@ -1,3 +1,4 @@
+import { getStatusBadge } from "@/lib/helper";
 import { Group } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -10,8 +11,8 @@ const TripsListComponent = ({ group, onUpdateGroup }: ITripsListComponent) => {
   const router = useRouter();
 
   const handleSelectTrip = (tripId: string) => {
-    // router.push(`/group/${group.id}/trip/${tripId}`);
-    alert("NAVIFATING");
+    router.push(`/group/${group.id}/trip/${tripId}`);
+    // alert("NAVIFATING");
   };
   return (
     <div>
@@ -24,31 +25,44 @@ const TripsListComponent = ({ group, onUpdateGroup }: ITripsListComponent) => {
         </div>
       ) : (
         <div className='space-y-4'>
-          {group.trips.map((trip) => (
-            <button
-              key={trip.id}
-              onClick={() => handleSelectTrip(trip.id)}
-              className='w-full text-left p-5 bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-slate-100 hover:border-amber-200 transform hover:-translate-y-1'
-            >
-              <h3 className='font-bold text-lg text-slate-900'>{trip.name}</h3>
-              <p className='text-sm text-slate-600 mt-2 flex items-center gap-2'>
-                <span>📅</span>
-                {new Date(trip.startDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}{" "}
-                -{" "}
-                {new Date(trip.endDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-              <p className='text-sm text-slate-500 mt-2 bg-slate-50 px-3 py-1 rounded-lg inline-block'>
-                {trip.activities?.length || 0}{" "}
-                {trip.activities?.length === 1 ? "activity" : "activities"}
-              </p>
-            </button>
-          ))}
+          {group.trips.map((trip) => {
+            const statusBadge = getStatusBadge(trip.status);
+
+            return (
+              <button
+                key={trip.id}
+                onClick={() => handleSelectTrip(trip.id)}
+                className='w-full text-left p-5 bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-slate-100 hover:border-amber-200 transform hover:-translate-y-1'
+              >
+                <div className='flex items-start justify-between mb-2'>
+                  <h3 className='font-bold text-lg text-slate-900'>
+                    {trip.name}
+                  </h3>
+                  <span
+                    className={`${statusBadge.bg} ${statusBadge.text} text-xs font-semibold px-2.5 py-1 rounded-full`}
+                  >
+                    {statusBadge.label}
+                  </span>
+                </div>
+                <p className='text-sm text-slate-600 mt-2 flex items-center gap-2'>
+                  <span>📅</span>
+                  {new Date(trip.startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  -{" "}
+                  {new Date(trip.endDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className='text-sm text-slate-500 mt-2 bg-slate-50 px-3 py-1 rounded-lg inline-block'>
+                  {trip.activities?.length || 0}{" "}
+                  {trip.activities?.length === 1 ? "activity" : "activities"}
+                </p>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

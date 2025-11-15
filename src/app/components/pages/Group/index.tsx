@@ -104,7 +104,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             Create New Trip
           </button>
 
-          <div className='grid grid-cols-3 gap-3 mt-4'>
+          <div className='grid grid-cols-2 gap-2 mt-4'>
             <button
               onClick={() => router.push(`/group/${group.id}/members`)}
               className='px-4 py-5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-slate-200 group'
@@ -112,20 +112,14 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               <span className='text-3xl group-hover:scale-110 transition-transform'>
                 👥
               </span>
-              <span className='text-slate-700 font-semibold'>Members</span>
-              <span className='text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full min-w-[2rem]'>
-                {group.members?.length || 0}
+              <span className='text-slate-700 font-semibold'>
+                Members{" "}
+                <span className='text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full min-w-[2rem]'>
+                  {group.members?.length || 0}
+                </span>
               </span>
             </button>
-            <button
-              onClick={() => router.push(`/group/${group.id}/expenses`)}
-              className='px-4 py-5 rounded-xl bg-gradient-to-br from-green-50 to-emerald-100 hover:from-green-100 hover:to-emerald-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-green-200 group'
-            >
-              <span className='text-3xl group-hover:scale-110 transition-transform'>
-                💰
-              </span>
-              <span className='text-green-700 font-semibold'>Expenses</span>
-            </button>
+
             <button
               onClick={handleLeaveGroup}
               className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
@@ -142,7 +136,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           <h2 className='text-2xl font-bold text-slate-900 mb-4 px-1'>
             Your Trips
           </h2>
-          {/* TODO: */}
+
           <TripsListComponent group={group} onUpdateGroup={handleUpdateGroup} />
         </div>
       </div>

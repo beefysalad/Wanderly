@@ -7,6 +7,7 @@ export const GROUPS = [
     endDate: "2025-11-24T00:00:00.000Z",
     activities: [],
     createdAt: "2025-11-12T12:21:07.947Z",
+    createdBy: "Patrick",
   },
   {
     id: "1762950323482",
@@ -24,6 +25,7 @@ export const GROUPS = [
       },
     ],
     createdAt: "2025-11-12T12:25:23.482Z",
+    createdBy: "Patrick",
     members: ["Patrick", "Patrick 2"],
   },
   {
@@ -43,6 +45,7 @@ export const GROUPS = [
       },
     ],
     createdAt: "2025-11-12T12:47:22.934Z",
+    createdBy: "Patrick",
     memberEmails: ["jpatrickzephyr@gmail.com", "new@user4.com"],
   },
   {
@@ -52,6 +55,7 @@ export const GROUPS = [
     members: [],
     trips: [],
     createdAt: "2025-11-12T12:57:10.397Z",
+    createdBy: "Patrick",
   },
   {
     id: "1762952486361",
@@ -60,6 +64,7 @@ export const GROUPS = [
     members: ["Patrick"],
     trips: [],
     createdAt: "2025-11-12T13:01:26.361Z",
+    createdBy: "Patrick",
   },
   {
     id: "1762952598927",
@@ -85,6 +90,7 @@ export const GROUPS = [
           },
         ],
         createdAt: "2025-11-13T19:41:19.815Z",
+
         location: "Bulacan",
       },
       {
@@ -98,6 +104,7 @@ export const GROUPS = [
         location: "Paris",
       },
     ],
+    createdBy: "Patrick",
     createdAt: "2025-11-12T13:03:18.927Z",
     creatorEmail: "jpatrickzephyr@gmail.com",
     memberEmails: ["super@admin.com", "new@user.com"],
@@ -120,6 +127,7 @@ export const GROUPS = [
       },
     ],
     createdAt: "2025-11-12T14:34:45.524Z",
+    createdBy: "Patrick",
     creatorEmail: "jpatrickzephyr@gmail.com",
   },
   {
@@ -131,5 +139,44 @@ export const GROUPS = [
     createdAt: "2025-11-14T10:10:48.184Z",
     creatorEmail: "jpatrickzephyr@gmail.com",
     memberEmails: ["jpatrickzephyr@gmail.com"],
+    createdBy: "Patrick",
+  },
+];
+
+export const USERS = [
+  {
+    id: "1762954542078",
+    email: "jpatrickzephyr@gmail.com",
+    name: "patrick",
+    password: "test123",
+    createdAt: "2025-11-12T13:35:42.078Z",
+  },
+  {
+    id: "1762972250649",
+    email: "super@admin.com",
+    name: "patrick",
+    password: "test123",
+    createdAt: "2025-11-12T18:30:50.649Z",
+  },
+  {
+    id: "1763063008923",
+    email: "new@user.com",
+    name: "patrick",
+    password: "test123",
+    createdAt: "2025-11-13T19:43:28.923Z",
+  },
+  {
+    id: "1763129239518",
+    email: "new@user4.com",
+    name: "patrick",
+    password: "test12345",
+    createdAt: "2025-11-14T14:07:19.518Z",
+  },
+  {
+    id: "1763147479400",
+    email: "new3@user.com",
+    name: "patrick",
+    password: "test1234",
+    createdAt: "2025-11-14T19:11:19.400Z",
   },
 ];
