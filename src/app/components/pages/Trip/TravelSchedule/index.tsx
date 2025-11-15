@@ -14,13 +14,14 @@ interface ITravelScheduleProps {
   startDate: Date;
   endDate: Date;
   activities: Activity[];
-  onAddActivity: (activity: Omit<Activity, "id">) => void;
-  onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
-  onDeleteActivity: (id: string) => void;
-  onToggleDone: (id: string) => void;
-  onEditActivity: (activity: Activity) => void;
-  onViewActivity: (activity: Activity) => void;
+  onAddActivity?: (activity: Omit<Activity, "id">) => void;
+  onUpdateActivity?: (id: string, updates: Partial<Activity>) => void;
+  onDeleteActivity?: (id: string) => void;
+  onToggleDone?: (id: string) => void;
+  onEditActivity?: (activity: Activity) => void;
+  onViewActivity?: (activity: Activity) => void;
   tripName?: string;
+  readOnly?: boolean;
 }
 const TravelSchedule = ({
   activities,
@@ -33,6 +34,7 @@ const TravelSchedule = ({
   tripName,
   onEditActivity,
   onViewActivity,
+  readOnly = false,
 }: ITravelScheduleProps) => {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -143,27 +145,44 @@ const TravelSchedule = ({
                   dayActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className='p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-orange-300 hover:shadow-sm transition-all cursor-pointer'
-                      onClick={() => onViewActivity(activity)}
+                      className={`p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-orange-300 hover:shadow-sm transition-all ${
+                        onViewActivity ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => onViewActivity?.(activity)}
                     >
                       <div className='flex items-start justify-between'>
                         <div className='flex-1'>
                           <div className='flex items-center gap-2'>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleDone(activity.id);
-                              }}
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                                activity.done
-                                  ? "bg-orange-500 border-orange-500 text-white"
-                                  : "border-slate-300 hover:border-orange-500"
-                              }`}
-                            >
-                              {activity.done && (
-                                <span className='text-xs'>✓</span>
-                              )}
-                            </button>
+                            {!readOnly && onToggleDone && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleDone(activity.id);
+                                }}
+                                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                                  activity.done
+                                    ? "bg-orange-500 border-orange-500 text-white"
+                                    : "border-slate-300 hover:border-orange-500"
+                                }`}
+                              >
+                                {activity.done && (
+                                  <span className='text-xs'>✓</span>
+                                )}
+                              </button>
+                            )}
+                            {readOnly && (
+                              <span
+                                className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                                  activity.done
+                                    ? "bg-orange-500 text-white"
+                                    : "bg-slate-200"
+                                }`}
+                              >
+                                {activity.done && (
+                                  <span className='text-xs'>✓</span>
+                                )}
+                              </span>
+                            )}
                             <h4
                               className={`font-medium ${
                                 activity.done
@@ -187,29 +206,35 @@ const TravelSchedule = ({
                             </p>
                           )}
                         </div>
-                        <div
-                          className='flex items-center gap-1'
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            onClick={() => onEditActivity(activity)}
-                            variant='ghost'
-                            size='sm'
-                            className='text-orange-500 hover:text-orange-700 hover:bg-orange-50'
-                            title='Edit activity'
+                        {!readOnly && (
+                          <div
+                            className='flex items-center gap-1'
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Pencil className='w-4 h-4' />
-                          </Button>
-                          <Button
-                            onClick={() => onDeleteActivity(activity.id)}
-                            variant='ghost'
-                            size='sm'
-                            className='text-red-500 hover:text-red-700 hover:bg-red-50'
-                            title='Delete activity'
-                          >
-                            <Trash2 className='w-4 h-4' />
-                          </Button>
-                        </div>
+                            {onEditActivity && (
+                              <Button
+                                onClick={() => onEditActivity(activity)}
+                                variant='ghost'
+                                size='sm'
+                                className='text-orange-500 hover:text-orange-700 hover:bg-orange-50'
+                                title='Edit activity'
+                              >
+                                <Pencil className='w-4 h-4' />
+                              </Button>
+                            )}
+                            {onDeleteActivity && (
+                              <Button
+                                onClick={() => onDeleteActivity(activity.id)}
+                                variant='ghost'
+                                size='sm'
+                                className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                                title='Delete activity'
+                              >
+                                <Trash2 className='w-4 h-4' />
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))

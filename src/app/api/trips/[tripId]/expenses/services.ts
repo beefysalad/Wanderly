@@ -135,6 +135,83 @@ export async function listExpensesService(
 }
 
 /**
+ * Verifies guest has access to a trip using group code
+ */
+async function verifyTripAccessForGuest(
+  groupCode: string,
+  tripId: string
+): Promise<{ trip: { groupId: string } }> {
+  // Get trip with group
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: { id: true, code: true },
+      },
+    },
+  });
+
+  if (!trip) {
+    throw new Error("Trip not found");
+  }
+
+  // Verify group code matches
+  if (trip.group.code !== groupCode.toUpperCase()) {
+    throw new Error("Invalid group code");
+  }
+
+  return { trip: { groupId: trip.groupId } };
+}
+
+/**
+ * Lists all expenses for a trip (guest access)
+ */
+export async function listExpensesForGuestService(
+  groupCode: string,
+  tripId: string
+) {
+  await verifyTripAccessForGuest(groupCode, tripId);
+
+  const expenses = await prisma.expense.findMany({
+    where: { tripId },
+    include: {
+      paidBy: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      splits: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
+      payments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+  });
+
+  return expenses;
+}
+
+/**
  * Gets a single expense by ID
  */
 export async function getExpenseByIdService(

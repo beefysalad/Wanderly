@@ -33,7 +33,7 @@ export function AuthGuard({
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
-        <Spinner label='Loading...' />
+        {/* <Spinner label='Loading...' /> */}
       </div>
     );
   }

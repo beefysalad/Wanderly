@@ -361,3 +361,64 @@ export async function deleteGroupService(
 
   logger.info("Group deleted", { groupId, deletedBy: user.id });
 }
+
+/**
+ * Gets a group by ID for guest access (validates group code)
+ */
+export async function getGroupByIdForGuestService(
+  groupCode: string,
+  groupId: string
+) {
+  // Find group by ID
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: {
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+      trips: {
+        include: {
+          activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  if (!group) {
+    throw new Error("Group not found");
+  }
+
+  // Validate group code matches
+  if (group.code !== groupCode) {
+    throw new Error("Invalid group code");
+  }
+
+  logger.info("Guest accessed group", { groupId: group.id, code: groupCode });
+
+  return group;
+}

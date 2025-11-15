@@ -6,9 +6,10 @@ import { formatTime12Hour } from "@/lib/utils";
 interface IActivityDetailModal {
   activity: Activity;
   onClose: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onToggleDone: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onToggleDone?: () => void;
+  readOnly?: boolean;
 }
 
 const ActivityDetailModal = ({
@@ -17,6 +18,7 @@ const ActivityDetailModal = ({
   onEdit,
   onDelete,
   onToggleDone,
+  readOnly = false,
 }: IActivityDetailModal) => {
   const activityDate = new Date(activity.date);
 
@@ -67,20 +69,24 @@ const ActivityDetailModal = ({
               </div>
             </div>
             <div className='flex items-center gap-2'>
-              <button
-                onClick={onEdit}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Edit activity'
-              >
-                <Pencil className='w-5 h-5' />
-              </button>
-              <button
-                onClick={onDelete}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Delete activity'
-              >
-                <Trash2 className='w-5 h-5' />
-              </button>
+              {!readOnly && onEdit && (
+                <button
+                  onClick={onEdit}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Edit activity'
+                >
+                  <Pencil className='w-5 h-5' />
+                </button>
+              )}
+              {!readOnly && onDelete && (
+                <button
+                  onClick={onDelete}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Delete activity'
+                >
+                  <Trash2 className='w-5 h-5' />
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
@@ -158,18 +164,20 @@ const ActivityDetailModal = ({
           )}
 
           {/* Status */}
-          <div className='pt-4 border-t border-slate-200 dark:border-slate-700'>
-            <button
-              onClick={onToggleDone}
-              className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
-                activity.done
-                  ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/30"
-                  : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-              }`}
-            >
-              {activity.done ? "✓ Mark as Incomplete" : "Mark as Done"}
-            </button>
-          </div>
+          {!readOnly && onToggleDone && (
+            <div className='pt-4 border-t border-slate-200 dark:border-slate-700'>
+              <button
+                onClick={onToggleDone}
+                className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
+                  activity.done
+                    ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/30"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                }`}
+              >
+                {activity.done ? "✓ Mark as Incomplete" : "Mark as Done"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

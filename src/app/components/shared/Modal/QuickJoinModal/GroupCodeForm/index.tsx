@@ -9,8 +9,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 interface IGroupCodeForm {
   onClose: () => void;
   setStep: React.Dispatch<React.SetStateAction<"code" | "name">>;
+  setGroupCode: React.Dispatch<React.SetStateAction<string>>;
 }
-const GroupCodeForm = ({ onClose, setStep }: IGroupCodeForm) => {
+const GroupCodeForm = ({
+  onClose,
+  setStep,
+  setGroupCode,
+}: IGroupCodeForm) => {
   const form = useForm<TCodeSchema>({
     resolver: zodResolver(codeSchema),
     defaultValues: {
@@ -18,7 +23,7 @@ const GroupCodeForm = ({ onClose, setStep }: IGroupCodeForm) => {
     },
   });
   const onSubmit = (data: TCodeSchema) => {
-    console.log(data);
+    setGroupCode(data.code);
     setStep("name");
   };
   return (

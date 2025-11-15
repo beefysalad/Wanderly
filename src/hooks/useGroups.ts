@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Group } from "@/src/shared/types";
+import { getGuestSession } from "@/lib/guest-session";
 
 interface GroupsResponse {
   groups: Group[];
@@ -43,6 +44,24 @@ export function useGroup(groupId: string | null) {
       return response.data;
     },
     enabled: !!groupId,
+  });
+}
+
+/**
+ * Query hook to fetch a group as a guest (with polling for real-time updates)
+ */
+export function useGroupAsGuest(groupId: string | null) {
+  const guestSession = getGuestSession();
+
+  return useQuery<Group>({
+    queryKey: ["groups", groupId, "guest"],
+    queryFn: async () => {
+      if (!groupId) throw new Error("Group ID is required");
+      const response = await api.get<Group>(`/groups/${groupId}/guest`);
+      return response.data;
+    },
+    enabled: !!groupId && !!guestSession,
+    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
   });
 }
 
@@ -117,4 +136,3 @@ export function useDeleteGroup() {
     },
   });
 }
-

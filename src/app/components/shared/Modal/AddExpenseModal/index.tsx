@@ -16,6 +16,7 @@ interface IAddExpenseModalProps {
   tripId: string;
   groupId: string;
   members: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
   onAddExpense: () => void;
   onClose: () => void;
   editingExpense?: Expense;
@@ -24,10 +25,15 @@ const AddExpenseModal = ({
   tripId,
   groupId,
   members,
+  memberNames,
   onAddExpense,
   onClose,
   editingExpense,
 }: IAddExpenseModalProps) => {
+  // Helper function to get display name from email
+  const getDisplayName = (email: string): string => {
+    return memberNames?.[email] || email.split("@")[0];
+  };
   const [mounted, setMounted] = useState(false);
   const createExpenseMutation = useCreateExpense(tripId, groupId);
   const updateExpenseMutation = useUpdateExpense(
@@ -198,7 +204,7 @@ const AddExpenseModal = ({
             >
               {members.map((member) => (
                 <option key={member} value={member}>
-                  {member}
+                  {getDisplayName(member)}
                 </option>
               ))}
             </select>
@@ -286,7 +292,7 @@ const AddExpenseModal = ({
                     className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
                   />
                   <span className='text-sm text-slate-700'>
-                    {member}
+                    {getDisplayName(member)}
                   </span>
                 </label>
               ))}

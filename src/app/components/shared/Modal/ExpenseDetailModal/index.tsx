@@ -3,21 +3,24 @@ import { Expense } from "@/src/shared/types";
 import { CheckCircle, Copy, Download, Pencil, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
+import ConfirmDeleteModal from "../ConfirmDeleteModal";
 interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
   onClose: () => void;
-  onMarkPaid: (memberId: string) => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onMarkPaid?: (memberId: string) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   currentUser?: string;
+  readOnly?: boolean;
 }
 
-const categoryEmojis = {
+const categoryEmojis: Record<string, string> = {
   accommodation: "🏨",
   food: "🍽️",
   transportation: "🚗",
+  transport: "🚗", // alias for transportation
   activities: "🎯",
   other: "📌",
 };
@@ -30,8 +33,10 @@ const ExpenseDetailModal = ({
   onEdit,
   onMarkPaid,
   currentUser,
+  readOnly = false,
 }: IExpenseDetailModalProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
@@ -84,9 +89,7 @@ const ExpenseDetailModal = ({
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 <span className='text-4xl'>
-                  {categoryEmojis[
-                    expense.category as keyof typeof categoryEmojis
-                  ] || "📌"}
+                  {expense.category ? (categoryEmojis[expense.category] || "📌") : "📌"}
                 </span>
                 <div>
                   <h2 className='text-2xl font-bold text-white'>
@@ -103,26 +106,24 @@ const ExpenseDetailModal = ({
               </div>
             </div>
             <div className='flex items-center gap-2'>
-              <button
-                onClick={onEdit}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Edit expense'
-              >
-                <Pencil className='w-5 h-5' />
-              </button>
-              <button
-                onClick={() => {
-                  if (
-                    confirm("Are you sure you want to delete this expense?")
-                  ) {
-                    onDelete();
-                  }
-                }}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
-                title='Delete expense'
-              >
-                <Trash2 className='w-5 h-5' />
-              </button>
+              {!readOnly && onEdit && (
+                <button
+                  onClick={onEdit}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Edit expense'
+                >
+                  <Pencil className='w-5 h-5' />
+                </button>
+              )}
+              {!readOnly && onDelete && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  title='Delete expense'
+                >
+                  <Trash2 className='w-5 h-5' />
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
@@ -201,13 +202,17 @@ const ExpenseDetailModal = ({
                           <CheckCircle className='w-5 h-5' />
                           <span className='text-sm font-medium'>Paid</span>
                         </div>
-                      ) : (
+                      ) : !readOnly && onMarkPaid ? (
                         <button
                           onClick={() => onMarkPaid(member)}
                           className='px-3 py-1 text-sm rounded-full border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors font-medium'
                         >
                           Mark as Paid
                         </button>
+                      ) : (
+                        <span className='text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium'>
+                          Unpaid
+                        </span>
                       )}
                     </div>
                   </div>
@@ -290,6 +295,20 @@ const ExpenseDetailModal = ({
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && onDelete && (
+        <ConfirmDeleteModal
+          title='Delete Expense'
+          message={`Are you sure you want to delete "${expense.description}"? This action cannot be undone.`}
+          onConfirm={() => {
+            onDelete();
+            setShowDeleteConfirm(false);
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+          confirmText='Delete'
+          cancelText='Cancel'
+        />
+      )}
     </div>
   );
 };

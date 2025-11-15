@@ -184,7 +184,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             Your Trips
           </h2>
 
-          <TripsListComponent group={group} onUpdateGroup={handleUpdateGroup} />
+          <TripsListComponent
+            group={group}
+            groupId={group.id}
+            onUpdateGroup={handleUpdateGroup}
+          />
         </div>
       </div>
 
