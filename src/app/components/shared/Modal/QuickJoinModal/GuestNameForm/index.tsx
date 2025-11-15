@@ -53,6 +53,7 @@ const GuestNameForm = ({ setStep, groupCode }: IGuestNameForm) => {
 
       // Navigate to guest group page
       router.push(`/guest/group/${groupId}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Error joining group as guest:", err);
       console.error("Error details:", {
