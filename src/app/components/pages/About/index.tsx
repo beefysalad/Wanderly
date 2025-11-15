@@ -1,9 +1,9 @@
 "use client";
 
+import { Calendar, DollarSign, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowLeft, Sparkles, Users, Calendar, DollarSign } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Header from "../../shared/Header";
 import AuthModal from "../../shared/Modal/AuthModal";
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
@@ -33,14 +33,6 @@ const AboutComponent = () => {
           setShowQuickJoinModal={setShowQuickJoinModal}
         />
         <div className='max-w-4xl mx-auto px-4 py-8'>
-          <button
-            onClick={() => router.back()}
-            className='mb-6 p-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white transition-all flex items-center justify-center border border-white/20'
-            aria-label='Go back'
-          >
-            <ArrowLeft className='w-5 h-5' />
-          </button>
-
           <div className='space-y-8'>
             {/* Header */}
             <div className='text-center space-y-4'>
