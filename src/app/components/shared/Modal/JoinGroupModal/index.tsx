@@ -35,11 +35,10 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
       if (result.group) {
         router.push(`/group/${result.group.id}`);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const message =
-        err?.response?.data?.error ||
-        err?.message ||
-        "Failed to join group";
+        err?.response?.data?.error || err?.message || "Failed to join group";
       setError(message);
     }
   };
