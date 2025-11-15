@@ -46,3 +46,21 @@ export function useCreateTrip(groupId: string) {
     },
   });
 }
+
+/**
+ * Mutation hook to delete a trip
+ */
+export function useDeleteTrip(groupId: string, tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, void>({
+    mutationFn: async () => {
+      await api.delete(`/groups/${groupId}/trips/${tripId}`);
+    },
+    onSuccess: () => {
+      // Invalidate group query to refetch without deleted trip
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+}

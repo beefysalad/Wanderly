@@ -1,5 +1,5 @@
 "use client";
-import { Trip } from "@/src/shared/types";
+import { Trip, Activity, Group } from "@/src/shared/types";
 import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,7 +8,12 @@ import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
 import { getStatusBadge } from "@/lib/helper";
 import ActivityModal from "../../shared/Modal/ActivityModal";
+import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
+import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useGroup } from "@/src/hooks/useGroups";
+import { useDeleteTrip } from "@/src/hooks/useTrips";
+import api from "@/lib/axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ITripComponent {
   tripId: string;
@@ -23,26 +28,220 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     "calendar"
   );
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
+  const [showActivityDetailModal, setShowActivityDetailModal] =
+    useState<boolean>(false);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showDeleteActivityModal, setShowDeleteActivityModal] =
+    useState<boolean>(false);
+  const [activityToDelete, setActivityToDelete] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
+  const deleteTrip = useDeleteTrip(groupId, tripId);
+  const queryClient = useQueryClient();
+
+  const handleDeleteTrip = async () => {
+    try {
+      await deleteTrip.mutateAsync();
+      router.push(`/group/${groupId}`);
+    } catch (err) {
+      setShowDeleteModal(false);
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete trip. Please try again."
+      );
+    }
+  };
+
+  const handleUpdateActivity = async (
+    id: string,
+    updates: Partial<Activity>
+  ) => {
+    try {
+      await api.patch(`/trips/${tripId}/activities/${id}`, updates);
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to update activity. Please try again."
+      );
+    }
+  };
+
+  const handleDeleteActivity = async () => {
+    if (!activityToDelete) return;
+
+    try {
+      await api.delete(`/trips/${tripId}/activities/${activityToDelete}`);
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      setShowDeleteActivityModal(false);
+      setActivityToDelete(null);
+    } catch (err) {
+      setShowDeleteActivityModal(false);
+      setActivityToDelete(null);
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete activity. Please try again."
+      );
+    }
+  };
+
+  const openDeleteActivityModal = (id: string) => {
+    setActivityToDelete(id);
+    setShowDeleteActivityModal(true);
+  };
+
+  const handleToggleDone = async (id: string) => {
+    if (!trip) return;
+    const activity = trip.activities?.find((a) => a.id === id);
+    if (!activity) return;
+
+    const newDoneState = !activity.done;
+    const previousState = activity.done;
+
+    // Optimistically update the cache immediately
+    queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+      if (!old) return old;
+      return {
+        group: {
+          ...old.group,
+          trips: old.group.trips?.map((t) => {
+            if (t.id !== tripId) return t;
+            return {
+              ...t,
+              activities: t.activities?.map((a) =>
+                a.id === id ? { ...a, done: newDoneState } : a
+              ),
+            };
+          }),
+        },
+      };
+    });
+
+    try {
+      await api.patch(`/trips/${tripId}/activities/${id}`, {
+        done: newDoneState,
+      });
+      // Silently refetch in the background to sync with server
+      queryClient.refetchQueries({
+        queryKey: ["groups", groupId],
+        type: "active",
+      });
+    } catch (err) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+        if (!old) return old;
+        return {
+          group: {
+            ...old.group,
+            trips: old.group.trips?.map((t) => {
+              if (t.id !== tripId) return t;
+              return {
+                ...t,
+                activities: t.activities?.map((a) =>
+                  a.id === id ? { ...a, done: previousState } : a
+                ),
+              };
+            }),
+          },
+        };
+      });
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to update activity. Please try again."
+      );
+    }
+  };
 
   const addActivity = () => {
-    console.log("ADD ACTIVITY");
+    // Activity creation is handled by ActivityModal
   };
-  const updateActivity = () => {
-    console.log("UPDATE ACTIVITY");
+  const updateActivity = (id: string, updates: Partial<Activity>) => {
+    handleUpdateActivity(id, updates);
   };
-  const deleteActivity = () => {
-    console.log("DELETE");
+  const deleteActivity = (id: string) => {
+    openDeleteActivityModal(id);
   };
-  const toggleDone = () => {
-    console.log("DONE");
+  const toggleDone = (id: string) => {
+    handleToggleDone(id);
   };
-  const handleStatusChange = (
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity);
+    setShowActivityDetailModal(false);
+    setShowActivityModal(true);
+  };
+
+  const handleViewActivity = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setShowActivityDetailModal(true);
+  };
+  const handleStatusChange = async (
     newStatus: "planning" | "finalized" | "ongoing" | "cancelled"
   ) => {
-    // handleUpdateTrip({ status: newStatus })
+    if (!trip) return;
+
+    const previousStatus = trip.status || "planning";
+
+    // Optimistically update the cache
+    queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+      if (!old) return old;
+      return {
+        group: {
+          ...old.group,
+          trips: old.group.trips?.map((t) => {
+            if (t.id !== tripId) return t;
+            return {
+              ...t,
+              status: newStatus,
+            };
+          }),
+        },
+      };
+    });
+
     setIsEditingStatus(false);
+
+    try {
+      await api.patch(`/groups/${groupId}/trips/${tripId}`, {
+        status: newStatus,
+      });
+      // Silently refetch in the background to sync with server
+      queryClient.refetchQueries({
+        queryKey: ["groups", groupId],
+        type: "active",
+      });
+    } catch (err) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+        if (!old) return old;
+        return {
+          group: {
+            ...old.group,
+            trips: old.group.trips?.map((t) => {
+              if (t.id !== tripId) return t;
+              return {
+                ...t,
+                status: previousStatus,
+              };
+            }),
+          },
+        };
+      });
+      setIsEditingStatus(true); // Keep editing mode open on error
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to update trip status. Please try again."
+      );
+    }
   };
 
   if (loading) {
@@ -163,7 +362,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             )}
 
             <button
-              onClick={() => {}} //TODO:
+              onClick={() => setShowDeleteModal(true)}
               className='px-5 py-3 rounded-xl bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2'
             >
               <Trash2 className='w-4 h-4' />
@@ -185,8 +384,11 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               onUpdateActivity={updateActivity}
               onDeleteActivity={deleteActivity}
               onToggleDone={toggleDone}
+              onEditActivity={handleEditActivity}
+              onViewActivity={handleViewActivity}
               onOpenAddModal={(date) => {
                 setSelectedDate(date);
+                setEditingActivity(null);
                 setShowActivityModal(true);
               }}
             />
@@ -199,6 +401,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               onUpdateActivity={updateActivity}
               onDeleteActivity={deleteActivity}
               onToggleDone={toggleDone}
+              onEditActivity={handleEditActivity}
+              onViewActivity={handleViewActivity}
               tripName={trip.name}
             />
           )}
@@ -209,18 +413,68 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
       {showActivityModal && (
         <ActivityModal
+          tripId={tripId}
+          groupId={groupId}
           startDate={startDate}
           endDate={endDate}
           preSelectedDate={selectedDate}
           isDateLocked={selectedDate !== null}
-          onAddActivity={(activity) => {
-            addActivity();
-            setShowActivityModal(false);
-            setSelectedDate(null);
-          }}
+          editingActivity={editingActivity}
           onClose={() => {
             setShowActivityModal(false);
             setSelectedDate(null);
+            setEditingActivity(null);
+          }}
+        />
+      )}
+
+      {showDeleteModal && (
+        <ConfirmDeleteModal
+          title='Delete Trip'
+          message='Are you sure you want to delete this trip? This action cannot be undone. All activities and expenses associated with this trip will also be deleted.'
+          onConfirm={handleDeleteTrip}
+          onCancel={() => setShowDeleteModal(false)}
+          isDeleting={deleteTrip.isPending}
+          confirmText='Delete Trip'
+        />
+      )}
+
+      {showDeleteActivityModal && (
+        <ConfirmDeleteModal
+          title='Delete Activity'
+          message='Are you sure you want to delete this activity? This action cannot be undone.'
+          onConfirm={handleDeleteActivity}
+          onCancel={() => {
+            setShowDeleteActivityModal(false);
+            setActivityToDelete(null);
+          }}
+          isDeleting={false}
+          confirmText='Delete Activity'
+        />
+      )}
+
+      {showActivityDetailModal && selectedActivity && (
+        <ActivityDetailModal
+          activity={
+            trip?.activities?.find((a) => a.id === selectedActivity.id) ||
+            selectedActivity
+          }
+          onClose={() => {
+            setShowActivityDetailModal(false);
+            setSelectedActivity(null);
+          }}
+          onEdit={() => handleEditActivity(selectedActivity)}
+          onDelete={() => {
+            setShowActivityDetailModal(false);
+            openDeleteActivityModal(selectedActivity.id);
+          }}
+          onToggleDone={() => {
+            toggleDone(selectedActivity.id);
+            // Update the selected activity state optimistically
+            setSelectedActivity({
+              ...selectedActivity,
+              done: !selectedActivity.done,
+            });
           }}
         />
       )}

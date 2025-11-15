@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import React from "react";
 
 interface ITravelCalendarProps {
@@ -12,6 +12,8 @@ interface ITravelCalendarProps {
   onDeleteActivity: (id: string) => void;
   onToggleDone: (id: string) => void;
   onOpenAddModal: (date: Date) => void;
+  onEditActivity: (activity: Activity) => void;
+  onViewActivity: (activity: Activity) => void;
 }
 const TravelCalendar = ({
   activities,
@@ -22,6 +24,8 @@ const TravelCalendar = ({
   onToggleDone,
   onUpdateActivity,
   startDate,
+  onEditActivity,
+  onViewActivity,
 }: ITravelCalendarProps) => {
   const getDaysInRange = () => {
     const days = [];
@@ -77,11 +81,18 @@ const TravelCalendar = ({
                   {dayActivities.slice(0, 3).map((activity) => (
                     <div
                       key={activity.id}
-                      className='text-sm p-2 bg-slate-50 rounded-lg border border-slate-100'
+                      className='text-sm p-2 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer'
+                      onClick={() => onViewActivity(activity)}
                     >
-                      <div className='flex items-start justify-between'>
+                      <div className='flex items-start justify-between gap-2'>
                         <div className='flex-1'>
-                          <p className='font-medium text-slate-900'>
+                          <p
+                            className={`font-medium ${
+                              activity.done
+                                ? "line-through text-slate-500"
+                                : "text-slate-900"
+                            }`}
+                          >
                             {activity.title}
                           </p>
                           {activity.startTime && (
@@ -91,16 +102,38 @@ const TravelCalendar = ({
                             </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => onToggleDone(activity.id)}
-                          className={`ml-2 text-xs px-2 py-1 rounded ${
-                            activity.done
-                              ? "bg-green-100 text-green-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
+                        <div
+                          className='flex items-center gap-1'
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {activity.done ? "✓" : "○"}
-                        </button>
+                          <button
+                            onClick={() => onToggleDone(activity.id)}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              activity.done
+                                ? "bg-green-500 border-green-500 text-white"
+                                : "border-slate-300 hover:border-green-500"
+                            }`}
+                            title={activity.done ? "Mark as incomplete" : "Mark as done"}
+                          >
+                            {activity.done && (
+                              <span className='text-[10px] leading-none'>✓</span>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => onEditActivity(activity)}
+                            className='p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700 transition-colors'
+                            title='Edit activity'
+                          >
+                            <Pencil className='w-3.5 h-3.5' />
+                          </button>
+                          <button
+                            onClick={() => onDeleteActivity(activity.id)}
+                            className='p-1.5 hover:bg-red-50 rounded text-red-600 hover:text-red-700 transition-colors'
+                            title='Delete activity'
+                          >
+                            <Trash2 className='w-3.5 h-3.5' />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

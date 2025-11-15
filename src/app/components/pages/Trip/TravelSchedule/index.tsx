@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown, Trash2, Pencil } from "lucide-react";
 import React, { useState } from "react";
 
 interface ITravelScheduleProps {
@@ -11,6 +11,8 @@ interface ITravelScheduleProps {
   onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
   onDeleteActivity: (id: string) => void;
   onToggleDone: (id: string) => void;
+  onEditActivity: (activity: Activity) => void;
+  onViewActivity: (activity: Activity) => void;
   tripName?: string;
 }
 const TravelSchedule = ({
@@ -22,6 +24,8 @@ const TravelSchedule = ({
   onUpdateActivity,
   startDate,
   tripName,
+  onEditActivity,
+  onViewActivity,
 }: ITravelScheduleProps) => {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
 
@@ -119,13 +123,17 @@ const TravelSchedule = ({
                   dayActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className='p-4 bg-slate-50 rounded-lg border border-slate-200'
+                      className='p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer'
+                      onClick={() => onViewActivity(activity)}
                     >
                       <div className='flex items-start justify-between'>
                         <div className='flex-1'>
                           <div className='flex items-center gap-2'>
                             <button
-                              onClick={() => onToggleDone(activity.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleDone(activity.id);
+                              }}
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                                 activity.done
                                   ? "bg-green-500 border-green-500 text-white"
@@ -153,19 +161,34 @@ const TravelSchedule = ({
                             </p>
                           )}
                           {activity.notes && (
-                            <p className='text-sm text-slate-600 mt-2 ml-7'>
+                            <p className='text-sm text-slate-600 mt-2 ml-7 line-clamp-2'>
                               {activity.notes}
                             </p>
                           )}
                         </div>
-                        <Button
-                          onClick={() => onDeleteActivity(activity.id)}
-                          variant='ghost'
-                          size='sm'
-                          className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                        <div
+                          className='flex items-center gap-1'
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Trash2 className='w-4 h-4' />
-                        </Button>
+                          <Button
+                            onClick={() => onEditActivity(activity)}
+                            variant='ghost'
+                            size='sm'
+                            className='text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                            title='Edit activity'
+                          >
+                            <Pencil className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            onClick={() => onDeleteActivity(activity.id)}
+                            variant='ghost'
+                            size='sm'
+                            className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                            title='Delete activity'
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))
