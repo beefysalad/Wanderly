@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import ExpensesList from "./ExpenseList";
 import AddExpenseModal from "../../shared/Modal/AddExpenseModal";
+import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
@@ -34,6 +35,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   );
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
 
   // Filter expenses by settled status
@@ -61,6 +63,68 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
     } catch (error) {
       console.error("Failed to delete expense:", error);
+    }
+  };
+
+  const handleMarkPaid = async (expenseId: string, memberId: string) => {
+    const expense = expenses.find((e) => e.id === expenseId);
+    if (!expense) return;
+
+    const paidMembers = expense.paidMembers || [];
+    const isPaid = paidMembers.includes(memberId);
+    const newPaidMembers = isPaid
+      ? paidMembers.filter((m) => m !== memberId)
+      : [...paidMembers, memberId];
+
+    // Optimistically update the expense in the cache
+    queryClient.setQueryData<{ expenses: Expense[] }>(
+      ["expenses", tripId],
+      (old) => {
+        if (!old) return old;
+        return {
+          expenses: old.expenses.map((e) =>
+            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e
+          ),
+        };
+      }
+    );
+
+    // Also update selectedExpense if it's the one being modified
+    if (selectedExpense?.id === expenseId) {
+      setSelectedExpense({
+        ...selectedExpense,
+        paidMembers: newPaidMembers,
+      });
+    }
+
+    try {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: memberId,
+        isPaid: !isPaid,
+        createPaymentLog: true,
+      });
+
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<{ expenses: Expense[] }>(
+        ["expenses", tripId],
+        (old) => {
+          if (!old) return old;
+          return {
+            expenses: old.expenses.map((e) =>
+              e.id === expenseId ? expense : e
+            ),
+          };
+        }
+      );
+      if (selectedExpense?.id === expenseId) {
+        setSelectedExpense(expense);
+      }
+      console.error("Failed to mark expense as paid:", error);
     }
   };
 
@@ -120,197 +184,202 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     );
   }
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-20'>
-      <div className='max-w-4xl mx-auto px-4 py-6'>
-        <div className='mb-8'>
-          {/* Header Card with Integrated Back Button */}
-          <div className='bg-gradient-to-br from-white via-orange-50/50 to-amber-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 sm:p-8 relative overflow-hidden mb-6'>
-            {/* Glassmorphism overlay */}
-            <div className='absolute inset-0 bg-white/60 backdrop-blur-md -z-0'></div>
-            <div className='relative z-10'>
-              <div className='flex items-start gap-4 mb-4'>
-                <button
-                  onClick={() => router.back()}
-                  className='p-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
-                  aria-label='Go back'
-                >
-                  <ArrowLeft className='w-5 h-5' />
-                </button>
-                <div className='flex-1 min-w-0'>
-                  <h1 className='text-3xl sm:text-4xl font-bold text-slate-900 leading-tight mb-2'>
-                    Expenses
-                  </h1>
-                  <p className='text-sm sm:text-base text-slate-600 flex items-center gap-2'>
-                    <span className='text-lg'>📅</span>
-                    <span>{trip.name}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-5 mb-6'>
-            <div className='flex gap-3 mb-4'>
-              <button
-                onClick={() => setActiveTab("expenses")}
-                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === "expenses"
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                    : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                }`}
-              >
-                Expenses
-              </button>
-              <button
-                onClick={() => setActiveTab("logs")}
-                className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
-                  activeTab === "logs"
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                    : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                }`}
-              >
-                <Receipt className='w-4 h-4' />
-                Logs ({paymentLogs.length})
-              </button>
-            </div>
-
-            {activeTab === "expenses" && (
-              <>
-                <div className='flex gap-3 mb-4'>
+    <>
+      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-20'>
+        <div className='max-w-4xl mx-auto px-4 py-6'>
+          <div className='mb-8'>
+            {/* Header Card with Integrated Back Button */}
+            <div className='bg-gradient-to-br from-white via-orange-50/50 to-amber-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 sm:p-8 relative overflow-hidden mb-6'>
+              {/* Glassmorphism overlay */}
+              <div className='absolute inset-0 bg-white/60 backdrop-blur-md -z-0'></div>
+              <div className='relative z-10'>
+                <div className='flex items-start gap-4 mb-4'>
                   <button
-                    onClick={() => setExpenseSubTab("unsettled")}
-                    className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                      expenseSubTab === "unsettled"
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                        : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                    }`}
+                    onClick={() => router.back()}
+                    className='p-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
+                    aria-label='Go back'
                   >
-                    Unsettled ({unsettledExpenses.length})
+                    <ArrowLeft className='w-5 h-5' />
                   </button>
-                  <button
-                    onClick={() => setExpenseSubTab("settled")}
-                    className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                      expenseSubTab === "settled"
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                        : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                    }`}
-                  >
-                    Settled ({settledExpenses.length})
-                  </button>
-                </div>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className='w-full px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
-                >
-                  <Plus className='w-5 h-5' />
-                  <span>Add Expense</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Content Area Card */}
-        <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-6 relative overflow-hidden'>
-          {/* Glassmorphism overlay */}
-          <div className='absolute inset-0 bg-white/60 backdrop-blur-sm -z-0'></div>
-          <div className='relative z-10'>
-            {activeTab === "expenses" ? (
-              <ExpensesList
-                expenses={
-                  expenseSubTab === "settled"
-                    ? settledExpenses
-                    : unsettledExpenses
-                }
-                members={group.memberEmails || []}
-                tripId={tripId}
-                groupId={groupId}
-                onDeleteExpense={handleDeleteExpense}
-                onUpdateExpense={handleUpdateExpense}
-                onEditExpense={handleEditExpense}
-                currentUser={user?.email ?? ""}
-              />
-            ) : (
-              <div className='space-y-3'>
-                {paymentLogs.length === 0 ? (
-                  <div className='bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-white/50'>
-                    <Receipt className='w-16 h-16 text-slate-300 mx-auto mb-3' />
-                    <p className='text-slate-500 font-medium'>
-                      No payment logs yet
-                    </p>
-                    <p className='text-sm text-slate-400 mt-1'>
-                      Payment history will appear here
+                  <div className='flex-1 min-w-0'>
+                    <h1 className='text-3xl sm:text-4xl font-bold text-slate-900 leading-tight mb-2'>
+                      Expenses
+                    </h1>
+                    <p className='text-sm sm:text-base text-slate-600 flex items-center gap-2'>
+                      <span className='text-lg'>📅</span>
+                      <span>{trip.name}</span>
                     </p>
                   </div>
-                ) : (
-                  paymentLogs
-                    .sort(
-                      (a, b) =>
-                        new Date(b.timestamp).getTime() -
-                        new Date(a.timestamp).getTime()
-                    )
-                    .map((log) => (
-                      <div
-                        key={log.id}
-                        className='bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50 hover:shadow-xl transition-shadow'
-                      >
-                        <div className='flex items-start justify-between gap-4'>
-                          <div className='flex-1'>
-                            <div className='flex items-center gap-2 mb-2'>
-                              <span className='text-2xl'>
-                                {log.paymentMethod === "cash" && "💵"}
-                                {log.paymentMethod === "bank" && "🏦"}
-                                {log.paymentMethod === "maya" && "💳"}
-                                {log.paymentMethod === "gcash" && "💰"}
-                                {!log.paymentMethod && "💵"}
-                              </span>
-                              <div>
-                                <p className='font-semibold text-slate-900'>
-                                  {log.expenseDescription}
-                                </p>
-                                <p className='text-xs text-slate-500'>
-                                  {new Date(log.timestamp).toLocaleString(
-                                    "en-US",
-                                    {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    }
-                                  )}
-                                </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-5 mb-6'>
+              <div className='flex gap-3 mb-4'>
+                <button
+                  onClick={() => setActiveTab("expenses")}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
+                    activeTab === "expenses"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                      : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
+                  }`}
+                >
+                  Expenses
+                </button>
+                <button
+                  onClick={() => setActiveTab("logs")}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                    activeTab === "logs"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                      : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
+                  }`}
+                >
+                  <Receipt className='w-4 h-4' />
+                  Logs ({paymentLogs.length})
+                </button>
+              </div>
+
+              {activeTab === "expenses" && (
+                <>
+                  <div className='flex gap-3 mb-4'>
+                    <button
+                      onClick={() => setExpenseSubTab("unsettled")}
+                      className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                        expenseSubTab === "unsettled"
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                          : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
+                      }`}
+                    >
+                      Unsettled ({unsettledExpenses.length})
+                    </button>
+                    <button
+                      onClick={() => setExpenseSubTab("settled")}
+                      className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                        expenseSubTab === "settled"
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                          : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
+                      }`}
+                    >
+                      Settled ({settledExpenses.length})
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className='w-full px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
+                  >
+                    <Plus className='w-5 h-5' />
+                    <span>Add Expense</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Content Area Card */}
+          <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-6 relative overflow-hidden'>
+            {/* Glassmorphism overlay */}
+            <div className='absolute inset-0 bg-white/60 backdrop-blur-sm -z-0'></div>
+            <div className='relative z-10'>
+              {activeTab === "expenses" ? (
+                <ExpensesList
+                  expenses={
+                    expenseSubTab === "settled"
+                      ? settledExpenses
+                      : unsettledExpenses
+                  }
+                  members={group.memberEmails || []}
+                  memberNames={group.memberNames}
+                  tripId={tripId}
+                  groupId={groupId}
+                  onDeleteExpense={handleDeleteExpense}
+                  onUpdateExpense={handleUpdateExpense}
+                  onEditExpense={handleEditExpense}
+                  onSelectExpense={setSelectedExpense}
+                  currentUser={user?.email ?? ""}
+                />
+              ) : (
+                <div className='space-y-3'>
+                  {paymentLogs.length === 0 ? (
+                    <div className='bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-white/50'>
+                      <Receipt className='w-16 h-16 text-slate-300 mx-auto mb-3' />
+                      <p className='text-slate-500 font-medium'>
+                        No payment logs yet
+                      </p>
+                      <p className='text-sm text-slate-400 mt-1'>
+                        Payment history will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    paymentLogs
+                      .sort(
+                        (a, b) =>
+                          new Date(b.timestamp).getTime() -
+                          new Date(a.timestamp).getTime()
+                      )
+                      .map((log) => (
+                        <div
+                          key={log.id}
+                          className='bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50 hover:shadow-xl transition-shadow'
+                        >
+                          <div className='flex items-start justify-between gap-4'>
+                            <div className='flex-1'>
+                              <div className='flex items-center gap-2 mb-2'>
+                                <span className='text-2xl'>
+                                  {log.paymentMethod === "cash" && "💵"}
+                                  {log.paymentMethod === "bank" && "🏦"}
+                                  {log.paymentMethod === "maya" && "💳"}
+                                  {log.paymentMethod === "gcash" && "💰"}
+                                  {!log.paymentMethod && "💵"}
+                                </span>
+                                <div>
+                                  <p className='font-semibold text-slate-900'>
+                                    {log.expenseDescription}
+                                  </p>
+                                  <p className='text-xs text-slate-500'>
+                                    {new Date(log.timestamp).toLocaleString(
+                                      "en-US",
+                                      {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                      }
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className='flex items-center gap-2 text-sm'>
+                                <span className='font-medium text-slate-700'>
+                                  {log.payer}
+                                </span>
+                                <span className='text-slate-400'>→</span>
+                                <span className='font-medium text-slate-700'>
+                                  {log.payee}
+                                </span>
                               </div>
                             </div>
-                            <div className='flex items-center gap-2 text-sm'>
-                              <span className='font-medium text-slate-700'>
-                                {log.payer}
-                              </span>
-                              <span className='text-slate-400'>→</span>
-                              <span className='font-medium text-slate-700'>
-                                {log.payee}
+                            <div className='text-right'>
+                              <p className='text-lg font-bold text-emerald-600'>
+                                ₱{log.amount.toFixed(2)}
+                              </p>
+                              <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium'>
+                                Paid
                               </span>
                             </div>
                           </div>
-                          <div className='text-right'>
-                            <p className='text-lg font-bold text-emerald-600'>
-                              ₱{log.amount.toFixed(2)}
-                            </p>
-                            <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium'>
-                              Paid
-                            </span>
-                          </div>
                         </div>
-                      </div>
-                    ))
-                )}
-              </div>
-            )}
+                      ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
+      {/* Render modals outside main to avoid container constraints */}
       {showAddModal && (
         <AddExpenseModal
           tripId={tripId}
@@ -321,7 +390,29 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           editingExpense={editingExpense || undefined}
         />
       )}
-    </main>
+
+      {selectedExpense && (
+        <ExpenseDetailModal
+          expense={selectedExpense}
+          members={group.memberEmails || []}
+          memberNames={group.memberNames}
+          onClose={() => setSelectedExpense(null)}
+          onMarkPaid={(memberId) => {
+            handleMarkPaid(selectedExpense.id, memberId);
+          }}
+          onEdit={() => {
+            setEditingExpense(selectedExpense);
+            setSelectedExpense(null);
+            setShowAddModal(true);
+          }}
+          onDelete={() => {
+            handleDeleteExpense(selectedExpense.id);
+            setSelectedExpense(null);
+          }}
+          currentUser={user?.email ?? ""}
+        />
+      )}
+    </>
   );
 };
 

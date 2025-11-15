@@ -64,19 +64,25 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
         {/* Form */}
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
           {/* Group Name */}
-          <div>
+          <div className='space-y-2'>
             <Label
               htmlFor='groupName'
-              className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'
+              className={`${
+                form.formState.errors.groupName
+                  ? "text-red-500"
+                  : "text-slate-700 dark:text-slate-300"
+              } transition-colors`}
             >
-              Group Name
+              {form.formState.errors.groupName
+                ? form.formState.errors.groupName.message
+                : "Group Name"}
             </Label>
             <Input
               id='groupName'
               type='text'
               {...form.register("groupName")}
               placeholder='e.g., Our Adventure 2025'
-              className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border ${
+              className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
                 form.formState.errors.groupName
                   ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
                   : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
@@ -84,12 +90,7 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
             />
           </div>
 
-          {/* Error Messages */}
-          {form.formState.errors.groupName && (
-            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
-              {form.formState.errors.groupName.message}
-            </div>
-          )}
+          {/* General Error Message */}
           {error && (
             <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
               {error}

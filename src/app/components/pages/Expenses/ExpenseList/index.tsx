@@ -1,19 +1,20 @@
 "use client";
 import { Expense } from "@/src/shared/types";
 import { CheckCircle } from "lucide-react";
-import React, { useState } from "react";
-import ExpenseDetailModal from "../../../shared/Modal/ExpenseDetailModal";
+import React from "react";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface IExpensesListProps {
   expenses: Expense[];
   members: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
   tripId: string;
   groupId: string;
   onDeleteExpense: (id: string) => void;
   onUpdateExpense: (expense: Expense) => void;
   onEditExpense: (expense: Expense) => void;
+  onSelectExpense: (expense: Expense) => void;
   currentUser?: string;
 }
 const categoryEmojis = {
@@ -26,15 +27,21 @@ const categoryEmojis = {
 const ExpensesList = ({
   expenses,
   members,
+  memberNames,
   tripId,
   groupId,
   onDeleteExpense,
   onEditExpense,
   onUpdateExpense,
+  onSelectExpense,
   currentUser,
 }: IExpensesListProps) => {
   const queryClient = useQueryClient();
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+
+  // Helper function to get display name from email
+  const getDisplayName = (email: string): string => {
+    return memberNames?.[email] || email.split("@")[0];
+  };
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
     const date = new Date(expense.date).toLocaleDateString("en-US", {
@@ -80,21 +87,11 @@ const ExpensesList = ({
         if (!old) return old;
         return {
           expenses: old.expenses.map((e) =>
-            e.id === expenseId
-              ? { ...e, paidMembers: newPaidMembers }
-              : e
+            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e
           ),
         };
       }
     );
-
-    // Update selectedExpense if it's the one being modified
-    if (selectedExpense?.id === expenseId) {
-      setSelectedExpense({
-        ...selectedExpense,
-        paidMembers: newPaidMembers,
-      });
-    }
 
     try {
       await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
@@ -120,26 +117,10 @@ const ExpensesList = ({
           };
         }
       );
-      if (selectedExpense?.id === expenseId) {
-        setSelectedExpense(expense);
-      }
       console.error("Failed to mark expense as paid:", error);
     }
   };
 
-  const handleEdit = () => {
-    if (selectedExpense) {
-      onEditExpense(selectedExpense);
-      setSelectedExpense(null);
-    }
-  };
-
-  const handleDelete = () => {
-    if (selectedExpense) {
-      onDeleteExpense(selectedExpense.id);
-      setSelectedExpense(null);
-    }
-  };
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 gap-4'>
@@ -153,7 +134,7 @@ const ExpensesList = ({
         </div>
         <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
           <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
-            Total Expenses
+            Total Trip Expenses
           </p>
           <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
             ₱{totalSpent.toFixed(2)}
@@ -182,7 +163,7 @@ const ExpensesList = ({
                 return (
                   <button
                     key={expense.id}
-                    onClick={() => setSelectedExpense(expense)}
+                    onClick={() => onSelectExpense(expense)}
                     className='w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md'
                   >
                     <div className='flex items-start gap-3'>
@@ -204,7 +185,8 @@ const ExpensesList = ({
                           )}
                         </div>
                         <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
-                          Paid by <strong>{expense.paidBy}</strong>
+                          Paid by{" "}
+                          <strong>{getDisplayName(expense.paidBy)}</strong>
                           {paidCount > 0 && totalOwed > 0 && (
                             <span className='ml-1 sm:ml-2 text-emerald-600 dark:text-emerald-400'>
                               • {paidCount}/{totalOwed} paid
@@ -229,20 +211,6 @@ const ExpensesList = ({
             </div>
           </div>
         ))
-      )}
-
-      {selectedExpense && (
-        <ExpenseDetailModal
-          expense={selectedExpense}
-          members={members}
-          onClose={() => setSelectedExpense(null)}
-          onMarkPaid={(memberId) =>
-            handleMarkPaid(selectedExpense.id, memberId)
-          }
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          currentUser={currentUser}
-        />
       )}
     </div>
   );

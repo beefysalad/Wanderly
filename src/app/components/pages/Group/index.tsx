@@ -4,17 +4,27 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import CreateTripModal from "../../shared/Modal/CreateTripModal";
 import TripsListComponent from "./TripsList";
-import { useGroup } from "@/src/hooks/useGroups";
+import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
+import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 interface IGroupComponent {
   param: string;
 }
 const GroupComponent = ({ param }: IGroupComponent) => {
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { data: groupData, isLoading, error } = useGroup(param);
   const group = groupData?.group || null;
+  const leaveGroup = useLeaveGroup();
+  const deleteGroup = useDeleteGroup();
+  const { user } = useCurrentUser();
+
+  const isCreator = group && user?.email && group.createdByEmail === user.email;
+
   const copyCode = () => {
     if (group) {
       navigator.clipboard.writeText(group.code);
@@ -25,8 +35,25 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const goBack = () => {
     router.push("/dashboard");
   };
-  const handleLeaveGroup = () => {
-    console.log("LEAVE");
+  const handleLeaveGroup = async () => {
+    if (!group) return;
+    try {
+      await leaveGroup.mutateAsync(group.id);
+      setShowLeaveModal(false);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to leave group:", error);
+    }
+  };
+  const handleDeleteGroup = async () => {
+    if (!group) return;
+    try {
+      await deleteGroup.mutateAsync(group.id);
+      setShowDeleteModal(false);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to delete group:", error);
+    }
   };
   const handleUpdateGroup = () => {
     console.log("HANDLE");
@@ -128,15 +155,27 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               </span>
             </button>
 
-            <button
-              onClick={handleLeaveGroup}
-              className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
-            >
-              <span className='text-3xl group-hover:scale-110 transition-transform'>
-                🚪
-              </span>
-              <span className='text-red-600 font-semibold'>Leave</span>
-            </button>
+            {isCreator ? (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
+              >
+                <span className='text-3xl group-hover:scale-110 transition-transform'>
+                  🗑️
+                </span>
+                <span className='text-red-600 font-semibold'>Delete</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowLeaveModal(true)}
+                className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
+              >
+                <span className='text-3xl group-hover:scale-110 transition-transform'>
+                  👋
+                </span>
+                <span className='text-red-600 font-semibold'>Leave</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -153,6 +192,30 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         <CreateTripModal
           groupId={group.id}
           onClose={() => setShowCreateTripModal(false)}
+        />
+      )}
+
+      {showLeaveModal && group && (
+        <ConfirmDeleteModal
+          title='Leave Group'
+          message={`Are you sure you want to leave "${group.name}"? You will lose access to all trips and expenses in this group.`}
+          onConfirm={handleLeaveGroup}
+          onCancel={() => setShowLeaveModal(false)}
+          isDeleting={leaveGroup.isPending}
+          confirmText='Leave Group'
+          cancelText='Cancel'
+        />
+      )}
+
+      {showDeleteModal && group && (
+        <ConfirmDeleteModal
+          title='Delete Group'
+          message={`Are you sure you want to delete "${group.name}"? This will permanently delete the group, all trips, activities, and expenses. This action cannot be undone.`}
+          onConfirm={handleDeleteGroup}
+          onCancel={() => setShowDeleteModal(false)}
+          isDeleting={deleteGroup.isPending}
+          confirmText='Delete Group'
+          cancelText='Cancel'
         />
       )}
     </main>

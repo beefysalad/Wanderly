@@ -65,15 +65,24 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
         <div className='p-6'>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-5'>
             <div className='space-y-2'>
-              <Label htmlFor='code' className='text-slate-700'>
-                Group Code
+              <Label
+                htmlFor='code'
+                className={`${
+                  form.formState.errors.groupCode
+                    ? "text-red-500"
+                    : "text-slate-700"
+                } transition-colors`}
+              >
+                {form.formState.errors.groupCode
+                  ? form.formState.errors.groupCode.message
+                  : "Group Code"}
               </Label>
               <Input
                 id='code'
                 type='text'
                 placeholder='e.g., ABC123'
                 {...form.register("groupCode")}
-                className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border ${
+                className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
                   form.formState.errors.groupCode
                     ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
                     : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
@@ -84,12 +93,7 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
               </p>
             </div>
 
-            {/* Error Messages */}
-            {form.formState.errors.groupCode && (
-              <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
-                {form.formState.errors.groupCode.message}
-              </div>
-            )}
+            {/* General Error Message */}
             {error && (
               <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
                 {error}

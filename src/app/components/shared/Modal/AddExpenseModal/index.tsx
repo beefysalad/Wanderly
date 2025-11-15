@@ -1,5 +1,6 @@
 import { Expense } from "@/src/shared/types";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { expenseSchema, TExpenseSchema } from "./addExpenseZod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,12 +28,22 @@ const AddExpenseModal = ({
   onClose,
   editingExpense,
 }: IAddExpenseModalProps) => {
+  const [mounted, setMounted] = useState(false);
   const createExpenseMutation = useCreateExpense(tripId, groupId);
   const updateExpenseMutation = useUpdateExpense(
     tripId,
     editingExpense?.id || "",
     groupId
   );
+
+  useEffect(() => {
+    setMounted(true);
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   const form = useForm<TExpenseSchema>({
     resolver: zodResolver(expenseSchema),
@@ -144,43 +155,46 @@ const AddExpenseModal = ({
     //   reader.readAsDataURL(file)
     // }
   };
-  return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg max-w-md w-full max-h-[70vh] md:max-h-screen overflow-y-auto overflow-x-hidden'>
-        <div className='flex items-center justify-between p-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800'>
-          <h2 className='text-lg font-semibold text-slate-900 dark:text-white'>
+
+  const modalContent = (
+    <div className='fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4'>
+      <div className='relative bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in duration-200'>
+        {/* Header */}
+        <div className='flex items-center justify-between p-6 border-b border-slate-200 sticky top-0 bg-white'>
+          <h2 className='text-2xl font-bold text-slate-900'>
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </h2>
           <button
             onClick={onClose}
-            className='p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors'
+            className='p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600 hover:text-slate-900'
+            aria-label='Close modal'
           >
             <X className='w-5 h-5' />
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className='p-4 space-y-4'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='p-6 space-y-4 overflow-y-auto flex-1'>
           {/* Date */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+            <label className='block text-sm font-medium text-slate-700 mb-1'>
               Date
             </label>
             <Input
               type='date'
               {...form.register("date")}
-              className='w-full min-w-0 h-10 px-2 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [-webkit-appearance:none] [appearance:none]'
+              className='w-full min-w-0 h-10 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 [-webkit-appearance:none] [appearance:none]'
               style={{ WebkitAppearance: "none", appearance: "none" }}
             />
           </div>
 
           {/* Paid By */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+            <label className='block text-sm font-medium text-slate-700 mb-1'>
               Paid By *
             </label>
             <select
               {...form.register("paidBy")}
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white'
+              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
             >
               {members.map((member) => (
                 <option key={member} value={member}>
@@ -192,7 +206,7 @@ const AddExpenseModal = ({
 
           {/* Amount */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+            <label className='block text-sm font-medium text-slate-700 mb-1'>
               Amount (PHP) *
             </label>
             <input
@@ -200,31 +214,31 @@ const AddExpenseModal = ({
               step='0.01'
               {...form.register("amount")}
               placeholder='0.00'
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400'
+              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+            <label className='block text-sm font-medium text-slate-700 mb-1'>
               Description *
             </label>
             <input
               type='text'
               {...form.register("description")}
               placeholder='e.g., Hotel booking, Restaurant'
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400'
+              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+            <label className='block text-sm font-medium text-slate-700 mb-1'>
               Category
             </label>
             <select
               {...form.register("category")}
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white'
+              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
             >
               <option value='accommodation'>🏨 Accommodation</option>
               <option value='food'>🍽️ Food & Dining</option>
@@ -236,12 +250,12 @@ const AddExpenseModal = ({
 
           {/* Split With */}
           <div>
-            <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
+            <label className='block text-sm font-medium text-slate-700 mb-2'>
               Split Among (who should pay back?)
             </label>
             <div className='space-y-2'>
               {/* Select All / Unselect All */}
-              <label className='flex items-center gap-2 cursor-pointer pb-2 border-b border-slate-200 dark:border-slate-700'>
+              <label className='flex items-center gap-2 cursor-pointer pb-2 border-b border-slate-200'>
                 <input
                   type='checkbox'
                   checked={
@@ -249,9 +263,9 @@ const AddExpenseModal = ({
                     members.length > 0
                   }
                   onChange={toggleSelectAll}
-                  className='w-4 h-4 rounded border-slate-300 text-orange-600'
+                  className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
                 />
-                <span className='text-sm font-medium text-slate-700 dark:text-slate-300'>
+                <span className='text-sm font-medium text-slate-700'>
                   {form.watch("splitWith").length === members.length &&
                   members.length > 0
                     ? "Unselect All"
@@ -269,9 +283,9 @@ const AddExpenseModal = ({
                     type='checkbox'
                     checked={form.watch("splitWith").includes(member)}
                     onChange={() => toggleMember(member)}
-                    className='w-4 h-4 rounded border-slate-300 text-orange-600'
+                    className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
                   />
-                  <span className='text-sm text-slate-700 dark:text-slate-300'>
+                  <span className='text-sm text-slate-700'>
                     {member}
                   </span>
                 </label>
@@ -280,9 +294,9 @@ const AddExpenseModal = ({
           </div>
 
           {/* Payment Method Section */}
-          <div className='pt-4 border-t border-slate-200 dark:border-slate-700'>
+          <div className='pt-4 border-t border-slate-200'>
             <div className='flex items-center gap-2 mb-2'>
-              <label className='block text-sm font-medium text-slate-700 dark:text-slate-300'>
+              <label className='block text-sm font-medium text-slate-700'>
                 Preferred Payment Method
               </label>
               <div className='group relative'>
@@ -312,7 +326,7 @@ const AddExpenseModal = ({
                   form.setValue("qrImage", "");
                 },
               })}
-              className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-3'
+              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 mb-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
             >
               <option value=''>Select payment method</option>
               <option value='cash'>💵 Cash</option>
@@ -326,20 +340,20 @@ const AddExpenseModal = ({
                 <div className='space-y-3'>
                   {form.watch("paymentMethod") === "bank" && (
                   <div>
-                    <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+                    <label className='block text-sm font-medium text-slate-700 mb-1'>
                       Bank Name *
                     </label>
                     <input
                       type='text'
                       {...form.register("bankName")}
                       placeholder='e.g., BDO, BPI, Metrobank'
-                      className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400'
+                      className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+                  <label className='block text-sm font-medium text-slate-700 mb-1'>
                     Account Name{" "}
                     {form.watch("paymentMethod") === "bank"
                       ? "*"
@@ -349,30 +363,30 @@ const AddExpenseModal = ({
                     type='text'
                     {...form.register("accountName")}
                     placeholder='Full name on account'
-                    className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400'
+                    className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
                   />
                 </div>
 
                 {/* Account Number */}
                 <div>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+                  <label className='block text-sm font-medium text-slate-700 mb-1'>
                     Account Number
                   </label>
                   <input
                     type='text'
                     {...form.register("accountNumber")}
                     placeholder={`Enter account number`}
-                    className='w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400'
+                    className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
                   />
                 </div>
 
                 {/* QR Code Upload */}
                 <div>
-                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1'>
+                  <label className='block text-sm font-medium text-slate-700 mb-1'>
                     QR Code (Optional)
                   </label>
                   <div className='flex items-center gap-2'>
-                    <label className='flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors'>
+                    <label className='flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors'>
                       <Upload className='w-4 h-4' />
                       <span className='text-sm'>
                         {form.watch("qrImage") ? "Change QR" : "Upload QR"}
@@ -407,24 +421,32 @@ const AddExpenseModal = ({
           </div>
 
           {/* Submit */}
-          <button
-            type='submit'
-            disabled={
-              createExpenseMutation.isPending ||
-              updateExpenseMutation.isPending
-            }
-            className='w-full mt-6 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            {createExpenseMutation.isPending || updateExpenseMutation.isPending
-              ? "Saving..."
-              : editingExpense
-                ? "Update Expense"
-                : "Add Expense"}
-          </button>
+          <div className='pt-4 border-t border-slate-200'>
+            <button
+              type='submit'
+              disabled={
+                createExpenseMutation.isPending ||
+                updateExpenseMutation.isPending
+              }
+              className='w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              {createExpenseMutation.isPending || updateExpenseMutation.isPending
+                ? "Saving..."
+                : editingExpense
+                  ? "Update Expense"
+                  : "Add Expense"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
+
+  if (!mounted || typeof window === "undefined") {
+    return null;
+  }
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AddExpenseModal;

@@ -5,7 +5,9 @@ export interface Group {
   trips?: Trip[];
   createdAt: string;
   createdBy?: string;
+  createdByEmail?: string;
   memberEmails?: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
 }
 
 export interface Trip {

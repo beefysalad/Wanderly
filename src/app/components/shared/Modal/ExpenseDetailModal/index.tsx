@@ -2,10 +2,11 @@
 import { Expense } from "@/src/shared/types";
 import { CheckCircle, Copy, Download, Pencil, Trash2, X } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
+  memberNames?: Record<string, string>; // email -> name mapping
   onClose: () => void;
   onMarkPaid: (memberId: string) => void;
   onEdit: () => void;
@@ -23,6 +24,7 @@ const categoryEmojis = {
 const ExpenseDetailModal = ({
   expense,
   members,
+  memberNames,
   onClose,
   onDelete,
   onEdit,
@@ -30,6 +32,19 @@ const ExpenseDetailModal = ({
   currentUser,
 }: IExpenseDetailModalProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Helper function to get display name from email
+  const getDisplayName = (email: string): string => {
+    return memberNames?.[email] || email.split("@")[0];
+  };
+
+  useEffect(() => {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -53,9 +68,10 @@ const ExpenseDetailModal = ({
   const splitCount = expense.splitWith?.length || members.length;
   const perPersonAmount = expense.amount / splitCount;
   const paidMembers = expense.paidMembers || [];
+  
   return (
     <div
-      className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'
+      className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]'
       onClick={onClose}
     >
       <div
@@ -135,7 +151,7 @@ const ExpenseDetailModal = ({
             </p>
             <div className='bg-slate-50 dark:bg-slate-700 rounded-lg p-3'>
               <p className='font-semibold text-slate-900 dark:text-white'>
-                {expense.paidBy}
+                {getDisplayName(expense.paidBy)}
               </p>
             </div>
           </div>
@@ -167,7 +183,7 @@ const ExpenseDetailModal = ({
                       </div>
                       <div>
                         <p className='font-medium text-slate-900 dark:text-white'>
-                          {member}
+                          {getDisplayName(member)}
                           {isCurrentUser && " (You)"}
                         </p>
                         <p className='text-sm text-slate-600 dark:text-slate-400'>

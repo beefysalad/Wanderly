@@ -82,3 +82,39 @@ export function useJoinGroup() {
   });
 }
 
+/**
+ * Mutation hook to leave a group
+ */
+export function useLeaveGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: async (groupId) => {
+      await api.post(`/groups/${groupId}/leave`);
+    },
+    onSuccess: (_, groupId) => {
+      // Invalidate groups list and specific group
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    },
+  });
+}
+
+/**
+ * Mutation hook to delete a group (creator only)
+ */
+export function useDeleteGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: async (groupId) => {
+      await api.delete(`/groups/${groupId}`);
+    },
+    onSuccess: (_, groupId) => {
+      // Invalidate groups list and remove specific group from cache
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.removeQueries({ queryKey: ["groups", groupId] });
+    },
+  });
+}
+

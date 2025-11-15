@@ -55,13 +55,21 @@ type TripWithRelations =
  * Transforms Prisma Group model to TypeScript Group interface
  */
 export function transformGroup(prismaGroup: GroupWithRelations): Group {
+  // Create email -> name mapping
+  const memberNames: Record<string, string> = {};
+  prismaGroup.members.forEach((m) => {
+    memberNames[m.user.email] = m.user.name || m.user.email.split("@")[0];
+  });
+
   return {
     id: prismaGroup.id,
     name: prismaGroup.name,
     code: prismaGroup.code,
     createdAt: prismaGroup.createdAt.toISOString(),
     createdBy: prismaGroup.creator.name || prismaGroup.creator.email,
+    createdByEmail: prismaGroup.creator.email,
     memberEmails: prismaGroup.members.map((m) => m.user.email),
+    memberNames,
     trips: prismaGroup.trips.map(transformTrip),
   };
 }

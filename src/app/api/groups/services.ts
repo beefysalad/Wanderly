@@ -280,3 +280,84 @@ export async function getGroupByIdService(
 
   return group;
 }
+
+/**
+ * Removes a user from a group (leaves the group)
+ */
+export async function leaveGroupService(
+  token: DecodedIdToken,
+  groupId: string
+) {
+  const user = await getOrCreateUser(token);
+
+  // Verify user is a member of the group
+  const membership = await prisma.groupMember.findUnique({
+    where: {
+      groupId_userId: {
+        groupId,
+        userId: user.id,
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new Error("User is not a member of this group");
+  }
+
+  // Check if user is the creator
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { createdById: true },
+  });
+
+  if (!group) {
+    throw new Error("Group not found");
+  }
+
+  if (group.createdById === user.id) {
+    throw new Error("Group creator cannot leave the group");
+  }
+
+  // Remove the membership
+  await prisma.groupMember.delete({
+    where: {
+      groupId_userId: {
+        groupId,
+        userId: user.id,
+      },
+    },
+  });
+
+  logger.info("User left group", { userId: user.id, groupId });
+}
+
+/**
+ * Deletes a group (only creator can delete)
+ */
+export async function deleteGroupService(
+  token: DecodedIdToken,
+  groupId: string
+) {
+  const user = await getOrCreateUser(token);
+
+  // Verify group exists and user is the creator
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { createdById: true },
+  });
+
+  if (!group) {
+    throw new Error("Group not found");
+  }
+
+  if (group.createdById !== user.id) {
+    throw new Error("Only the group creator can delete the group");
+  }
+
+  // Delete the group (cascade will handle members, trips, expenses, etc.)
+  await prisma.group.delete({
+    where: { id: groupId },
+  });
+
+  logger.info("Group deleted", { groupId, deletedBy: user.id });
+}
