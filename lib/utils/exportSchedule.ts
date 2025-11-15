@@ -413,3 +413,178 @@ function wrapText(
 
   return lines.length > 0 ? lines : [text];
 }
+
+/**
+ * Escape text for ICS format (escape commas, semicolons, newlines, backslashes)
+ */
+function escapeICSText(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\\/g, "\\\\") // Escape backslashes first
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "");
+}
+
+/**
+ * Generate a unique UID for ICS events
+ */
+function generateEventUID(activityId: string, tripId: string): string {
+  // Format: wanderly-{tripId}-{activityId}@wanderly.app
+  return `wanderly-${tripId}-${activityId}@wanderly.app`;
+}
+
+/**
+ * Format date and time for ICS format (YYYYMMDDTHHmmssZ)
+ * @param date - Date object (local time)
+ * @param time - Optional time string in HH:mm format (local time)
+ * @returns Formatted date string in ICS format (UTC)
+ */
+function formatICSDateTime(date: Date, time?: string): string {
+  // Use local date components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  if (!time) {
+    // All-day event format: YYYYMMDD
+    return `${year}${month}${day}`;
+  }
+
+  // For timed events, create a Date object with the local date and time
+  // then convert to UTC for ICS format
+  const [hours, minutes] = time.split(":").map(Number);
+  const localDate = new Date(date);
+  localDate.setHours(hours, minutes, 0, 0);
+  
+  // Convert to UTC
+  const utcYear = localDate.getUTCFullYear();
+  const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
+  const utcDay = String(localDate.getUTCDate()).padStart(2, "0");
+  const utcHours = String(localDate.getUTCHours()).padStart(2, "0");
+  const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, "0");
+  const utcSeconds = "00";
+
+  // Timed event format: YYYYMMDDTHHmmssZ
+  return `${utcYear}${utcMonth}${utcDay}T${utcHours}${utcMinutes}${utcSeconds}Z`;
+}
+
+/**
+ * Format date for all-day events in ICS format (YYYYMMDD)
+ * Uses local date components (not UTC) for all-day events
+ */
+function formatICSDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
+}
+
+/**
+ * Exports schedule as .ics calendar file
+ */
+export function exportScheduleToICS({
+  trip,
+  activities,
+}: ExportScheduleOptions): void {
+  const lines: string[] = [];
+
+  // Calendar header
+  lines.push("BEGIN:VCALENDAR");
+  lines.push("VERSION:2.0");
+  lines.push("PRODID:-//Wanderly//Travel Schedule//EN");
+  lines.push("CALSCALE:GREGORIAN");
+  lines.push("METHOD:PUBLISH");
+
+  // Add trip name as calendar name
+  const calendarName = escapeICSText(trip.name);
+  lines.push(`X-WR-CALNAME:${calendarName}`);
+
+  // Current timestamp for DTSTAMP (use current time in UTC)
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+  // Add each activity as a VEVENT
+  for (const activity of activities) {
+    lines.push("BEGIN:VEVENT");
+
+    // UID (unique identifier)
+    const uid = generateEventUID(activity.id, trip.id);
+    lines.push(`UID:${uid}`);
+
+    // DTSTAMP (when the event was created/modified)
+    lines.push(`DTSTAMP:${dtstamp}`);
+
+    // Date handling
+    const activityDate = new Date(activity.date);
+    
+    if (activity.startTime) {
+      // Timed event
+      const dtstart = formatICSDateTime(activityDate, activity.startTime);
+      lines.push(`DTSTART:${dtstart}`);
+
+      if (activity.endTime) {
+        const dtend = formatICSDateTime(activityDate, activity.endTime);
+        lines.push(`DTEND:${dtend}`);
+      } else {
+        // If no end time, default to 1 hour after start
+        const [hours, minutes] = activity.startTime.split(":").map(Number);
+        const endHours = (hours + 1) % 24;
+        const endTimeStr = `${String(endHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        const dtend = formatICSDateTime(activityDate, endTimeStr);
+        lines.push(`DTEND:${dtend}`);
+      }
+    } else {
+      // All-day event
+      const dateStr = formatICSDate(activityDate);
+      lines.push(`DTSTART;VALUE=DATE:${dateStr}`);
+      lines.push(`DTEND;VALUE=DATE:${dateStr}`);
+    }
+
+    // SUMMARY (title)
+    const summary = escapeICSText(activity.title);
+    lines.push(`SUMMARY:${summary}`);
+
+    // DESCRIPTION (notes if available)
+    if (activity.notes) {
+      const description = escapeICSText(activity.notes);
+      lines.push(`DESCRIPTION:${description}`);
+    }
+
+    // LOCATION (trip location if available)
+    if (trip.location) {
+      const location = escapeICSText(trip.location);
+      lines.push(`LOCATION:${location}`);
+    }
+
+    // STATUS (CANCELLED if done, otherwise CONFIRMED)
+    if (activity.done) {
+      lines.push("STATUS:CANCELLED");
+    } else {
+      lines.push("STATUS:CONFIRMED");
+    }
+
+    // SEQUENCE (for versioning, start at 0)
+    lines.push("SEQUENCE:0");
+
+    lines.push("END:VEVENT");
+  }
+
+  // Calendar footer
+  lines.push("END:VCALENDAR");
+
+  // Join lines with CRLF (required by ICS format)
+  const icsContent = lines.join("\r\n");
+
+  // Create blob and download
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${trip.name.replace(/[^a-z0-9]/gi, "_")}_schedule.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

@@ -1,4 +1,4 @@
-import { MapPin, Users, Zap } from "lucide-react";
+import { MapPin, Users, Zap, Calendar } from "lucide-react";
 import React, { Fragment } from "react";
 
 const HeroSection = () => {
@@ -51,6 +51,14 @@ const HeroSection = () => {
           </div>
           <p className='text-slate-300 text-sm'>
             Real-time updates and activity management
+          </p>
+        </div>
+        <div className='flex gap-3 items-start'>
+          <div className='w-8 h-8 bg-linear-to-br from-orange-500/20 to-amber-500/20 rounded-lg flex items-center justify-center shrink-0'>
+            <Calendar className='w-4 h-4 text-orange-400' />
+          </div>
+          <p className='text-slate-300 text-sm'>
+            Export to your phone calendar (Google, Apple, Outlook)
           </p>
         </div>
       </div>

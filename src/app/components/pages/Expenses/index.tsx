@@ -215,7 +215,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
             </div>
 
             {/* Tab Navigation */}
-            <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-5 mb-6'>
+            <div className='rounded-2xl p-4 sm:p-5 mb-6'>
               <div className='flex gap-3 mb-4'>
                 <button
                   onClick={() => setActiveTab("expenses")}
@@ -277,9 +277,9 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           </div>
 
           {/* Content Area Card */}
-          <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-6 relative overflow-hidden'>
+          <div className='rounded-2xl  p-4 sm:p-6 relative overflow-hidden'>
             {/* Glassmorphism overlay */}
-            <div className='absolute inset-0 bg-white/60 backdrop-blur-sm -z-0'></div>
+
             <div className='relative z-10'>
               {activeTab === "expenses" ? (
                 <ExpensesList

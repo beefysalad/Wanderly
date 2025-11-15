@@ -14,7 +14,11 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
-import { exportScheduleToPNG } from "@/lib/utils/exportSchedule";
+import {
+  exportScheduleToPNG,
+  exportScheduleToICS,
+} from "@/lib/utils/exportSchedule";
+import { ChevronDown } from "lucide-react";
 
 interface ITripComponent {
   tripId: string;
@@ -42,6 +46,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
 
@@ -59,15 +64,23 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     }
   };
 
-  const handleExportSchedule = async () => {
+  const handleExportSchedule = async (format: "png" | "ics") => {
     if (!trip) return;
 
     setIsExporting(true);
+    setShowExportMenu(false);
     try {
-      await exportScheduleToPNG({
-        trip,
-        activities: trip.activities || [],
-      });
+      if (format === "png") {
+        await exportScheduleToPNG({
+          trip,
+          activities: trip.activities || [],
+        });
+      } else {
+        exportScheduleToICS({
+          trip,
+          activities: trip.activities || [],
+        });
+      }
     } catch (error) {
       console.error("Failed to export schedule:", error);
       alert(
@@ -317,7 +330,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               <div className='flex items-start gap-4 mb-4'>
                 <button
                   onClick={() => router.back()}
-                  className='p-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
+                  className='cursor-pointer p-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
                   aria-label='Go back'
                 >
                   <ArrowLeft className='w-5 h-5' />
@@ -383,7 +396,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           </div>
 
           {/* Action Buttons Group */}
-          <div className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-5 mt-6'>
+          <div className='rounded-2xl  p-4 sm:p-5 mt-6'>
             <div className='flex flex-col sm:flex-row gap-3'>
               {/* Primary Action Button */}
               <button
@@ -410,16 +423,49 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                 </button>
 
                 {activeTab === "schedule" && (
-                  <button
-                    onClick={handleExportSchedule}
-                    disabled={isExporting || !trip}
-                    className='flex-1 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
-                  >
-                    <Download className='w-4 h-4' />
-                    <span className='hidden sm:inline'>
-                      {isExporting ? "Exporting..." : "Export"}
-                    </span>
-                  </button>
+                  <div className='relative flex-1'>
+                    <button
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      disabled={isExporting || !trip}
+                      className='w-full px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
+                    >
+                      <Download className='w-4 h-4' />
+                      <span className='hidden sm:inline'>
+                        {isExporting ? "Exporting..." : "Export"}
+                      </span>
+                      <ChevronDown className='w-4 h-4' />
+                    </button>
+                    {showExportMenu && (
+                      <>
+                        <div
+                          className='fixed inset-0 z-10'
+                          onClick={() => setShowExportMenu(false)}
+                        />
+                        <div className='absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-20'>
+                          <button
+                            onClick={() => handleExportSchedule("png")}
+                            disabled={isExporting}
+                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed'
+                          >
+                            <Download className='w-4 h-4 text-slate-600' />
+                            <span className='text-slate-700 font-medium'>
+                              Export as PNG
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => handleExportSchedule("ics")}
+                            disabled={isExporting}
+                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed border-t border-slate-100'
+                          >
+                            <span className='text-lg'>📅</span>
+                            <span className='text-slate-700 font-medium'>
+                              Export as Calendar (.ics)
+                            </span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
 
                 <button
@@ -437,10 +483,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         {/* Content Area Card */}
         <div
           id='schedule-export-container'
-          className='bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-4 sm:p-6 relative overflow-hidden'
+          className='p-4 sm:p-6 relative overflow-hidden'
         >
-          {/* Glassmorphism overlay */}
-          <div className='absolute inset-0 bg-white/60 backdrop-blur-sm -z-0'></div>
           <div className='relative z-10'>
             {activeTab === "calendar" ? (
               <TravelCalendar

@@ -114,12 +114,13 @@ const AboutComponent = () => {
                         </div>
                         <div>
                           <h4 className='font-semibold text-white mb-1'>
-                            Smart Scheduling
+                            Smart Scheduling & Calendar Integration
                           </h4>
                           <p className='text-sm text-slate-300'>
                             Visual calendar and schedule views make it easy to
-                            see your entire trip at a glance. Never miss an
-                            activity.
+                            see your entire trip at a glance. Export your
+                            schedule to Google Calendar, Apple Calendar, or
+                            Outlook with one click.
                           </p>
                         </div>
                       </div>
