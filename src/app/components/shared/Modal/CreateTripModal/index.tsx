@@ -53,6 +53,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
         // Close modal after navigation
         onClose();
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const message =
         err?.response?.data?.error || err?.message || "Failed to create trip";
