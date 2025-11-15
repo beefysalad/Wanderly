@@ -37,6 +37,7 @@ const ExpenseDetailModal = ({
 }: IExpenseDetailModalProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
@@ -57,23 +58,38 @@ const ExpenseDetailModal = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const downloadQRCode = () => {
+  const downloadQRCode = async () => {
     if (!expense.qrImage) return;
 
-    const link = document.createElement("a");
-    link.href = expense.qrImage;
-    link.download = `payment-qr-${expense.description
-      .replace(/\s+/g, "-")
-      .toLowerCase()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(expense.qrImage);
+      const blob = await response.blob();
+
+      // Create a blob URL
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `payment-qr-${expense.description
+        .replace(/\s+/g, "-")
+        .toLowerCase()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download image:", error);
+    }
   };
 
   const splitCount = expense.splitWith?.length || members.length;
   const perPersonAmount = expense.amount / splitCount;
   const paidMembers = expense.paidMembers || [];
-  
+
   return (
     <div
       className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]'
@@ -89,7 +105,9 @@ const ExpenseDetailModal = ({
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 <span className='text-4xl'>
-                  {expense.category ? (categoryEmojis[expense.category] || "📌") : "📌"}
+                  {expense.category
+                    ? categoryEmojis[expense.category] || "📌"
+                    : "📌"}
                 </span>
                 <div>
                   <h2 className='text-2xl font-bold text-white'>
@@ -285,7 +303,10 @@ const ExpenseDetailModal = ({
                       <Image
                         src={expense.qrImage || "/placeholder.svg"}
                         alt='Payment QR Code'
-                        className='w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-slate-600 mx-auto bg-white'
+                        width={192}
+                        height={192}
+                        className='w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-slate-600 mx-auto bg-white cursor-pointer hover:opacity-80 transition-opacity'
+                        onClick={() => setShowImageModal(true)}
                       />
                     </div>
                   )}
@@ -308,6 +329,30 @@ const ExpenseDetailModal = ({
           confirmText='Delete'
           cancelText='Cancel'
         />
+      )}
+
+      {showImageModal && expense.qrImage && (
+        <div
+          className='fixed inset-0 bg-black/90 backdrop-blur-sm z-[10000] flex items-center justify-center p-4'
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className='relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center'>
+            <button
+              onClick={() => setShowImageModal(false)}
+              className='absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white z-10'
+            >
+              <X className='w-6 h-6' />
+            </button>
+            <Image
+              src={expense.qrImage}
+              alt='QR Code - Full View'
+              width={800}
+              height={800}
+              className='max-w-full max-h-full object-contain rounded-lg'
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

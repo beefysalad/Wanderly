@@ -4,13 +4,11 @@ import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { expenseSchema, TExpenseSchema } from "./addExpenseZod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HelpCircle, Upload, X } from "lucide-react";
+import { HelpCircle, Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
-import {
-  useCreateExpense,
-  useUpdateExpense,
-} from "@/src/hooks/useExpenses";
+import { useCreateExpense, useUpdateExpense } from "@/src/hooks/useExpenses";
+import api from "@/lib/axios";
 
 interface IAddExpenseModalProps {
   tripId: string;
@@ -35,6 +33,9 @@ const AddExpenseModal = ({
     return memberNames?.[email] || email.split("@")[0];
   };
   const [mounted, setMounted] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
   const createExpenseMutation = useCreateExpense(tripId, groupId);
   const updateExpenseMutation = useUpdateExpense(
     tripId,
@@ -141,7 +142,7 @@ const AddExpenseModal = ({
   const toggleSelectAll = () => {
     const currentSplitWith = form.getValues("splitWith");
     const allSelected = currentSplitWith.length === members.length;
-    
+
     if (allSelected) {
       // Unselect all
       form.setValue("splitWith", []);
@@ -151,15 +152,52 @@ const AddExpenseModal = ({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // const file = e.target.files?.[0]
-    // if (file) {
-    //   const reader = new FileReader()
-    //   reader.onloadend = () => {
-    //     setQrImage(reader.result as string)
-    //   }
-    //   reader.readAsDataURL(file)
-    // }
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setUploadError("File must be an image");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setUploadError("File size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await api.post<{ url: string; publicId: string }>(
+        "/upload/image",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Set the Cloudinary URL in the form
+      form.setValue("qrImage", response.data.url);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Failed to upload image:", error);
+      setUploadError(
+        error.response?.data?.error ||
+          "Failed to upload image. Please try again."
+      );
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const modalContent = (
@@ -179,7 +217,10 @@ const AddExpenseModal = ({
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className='p-6 space-y-4 overflow-y-auto flex-1'>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='p-6 space-y-4 overflow-y-auto flex-1'
+        >
           {/* Date */}
           <div>
             <label className='block text-sm font-medium text-slate-700 mb-1'>
@@ -278,7 +319,7 @@ const AddExpenseModal = ({
                     : "Select All"}
                 </span>
               </label>
-              
+
               {/* Individual member checkboxes */}
               {members.map((member) => (
                 <label
@@ -345,85 +386,113 @@ const AddExpenseModal = ({
               form.watch("paymentMethod") !== "cash" && (
                 <div className='space-y-3'>
                   {form.watch("paymentMethod") === "bank" && (
+                    <div>
+                      <label className='block text-sm font-medium text-slate-700 mb-1'>
+                        Bank Name *
+                      </label>
+                      <input
+                        type='text'
+                        {...form.register("bankName")}
+                        placeholder='e.g., BDO, BPI, Metrobank'
+                        className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <label className='block text-sm font-medium text-slate-700 mb-1'>
-                      Bank Name *
+                      Account Name{" "}
+                      {form.watch("paymentMethod") === "bank"
+                        ? "*"
+                        : "(Optional)"}
                     </label>
                     <input
                       type='text'
-                      {...form.register("bankName")}
-                      placeholder='e.g., BDO, BPI, Metrobank'
+                      {...form.register("accountName")}
+                      placeholder='Full name on account'
                       className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
                     />
                   </div>
-                )}
 
-                <div>
-                  <label className='block text-sm font-medium text-slate-700 mb-1'>
-                    Account Name{" "}
-                    {form.watch("paymentMethod") === "bank"
-                      ? "*"
-                      : "(Optional)"}
-                  </label>
-                  <input
-                    type='text'
-                    {...form.register("accountName")}
-                    placeholder='Full name on account'
-                    className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                  />
-                </div>
-
-                {/* Account Number */}
-                <div>
-                  <label className='block text-sm font-medium text-slate-700 mb-1'>
-                    Account Number
-                  </label>
-                  <input
-                    type='text'
-                    {...form.register("accountNumber")}
-                    placeholder={`Enter account number`}
-                    className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                  />
-                </div>
-
-                {/* QR Code Upload */}
-                <div>
-                  <label className='block text-sm font-medium text-slate-700 mb-1'>
-                    QR Code (Optional)
-                  </label>
-                  <div className='flex items-center gap-2'>
-                    <label className='flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors'>
-                      <Upload className='w-4 h-4' />
-                      <span className='text-sm'>
-                        {form.watch("qrImage") ? "Change QR" : "Upload QR"}
-                      </span>
-                      <input
-                        type='file'
-                        accept='image/*'
-                        onChange={handleImageUpload}
-                        className='hidden'
-                      />
+                  {/* Account Number */}
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-1'>
+                      Account Number
                     </label>
+                    <input
+                      type='text'
+                      {...form.register("accountNumber")}
+                      placeholder={`Enter account number`}
+                      className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                    />
                   </div>
-                  {form.watch("qrImage") && (
-                    <div className='mt-2 relative'>
-                      <Image
-                        src={form.watch("qrImage") || "/placeholder.svg"}
-                        alt='QR Code'
-                        className='w-32 h-32 object-contain rounded border'
-                      />
-                      <button
-                        type='button'
-                        onClick={() => form.setValue("qrImage", "")}
-                        className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600'
+
+                  {/* QR Code Upload */}
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-1'>
+                      QR Code (Optional)
+                    </label>
+                    <div className='flex items-center gap-2'>
+                      <label
+                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 transition-colors ${
+                          uploadingImage
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer hover:bg-slate-50"
+                        }`}
                       >
-                        <X className='w-3 h-3' />
-                      </button>
+                        {uploadingImage ? (
+                          <>
+                            <Loader2 className='w-4 h-4 animate-spin' />
+                            <span className='text-sm'>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className='w-4 h-4' />
+                            <span className='text-sm'>
+                              {form.watch("qrImage")
+                                ? "Change QR"
+                                : "Upload QR"}
+                            </span>
+                          </>
+                        )}
+                        <input
+                          type='file'
+                          accept='image/*'
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                          className='hidden'
+                        />
+                      </label>
                     </div>
-                  )}
+                    {uploadError && (
+                      <p className='mt-2 text-sm text-red-600'>{uploadError}</p>
+                    )}
+                    {form.watch("qrImage") && (
+                      <div className='mt-2 relative'>
+                        <Image
+                          src={form.watch("qrImage") || "/placeholder.svg"}
+                          alt='QR Code'
+                          width={128}
+                          height={128}
+                          className='w-32 h-32 object-contain rounded border cursor-pointer hover:opacity-80 transition-opacity'
+                          onClick={() => setShowImageModal(true)}
+                        />
+                        <button
+                          type='button'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            form.setValue("qrImage", "");
+                            setUploadError(null);
+                          }}
+                          className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10'
+                        >
+                          <X className='w-3 h-3' />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Submit */}
@@ -436,11 +505,12 @@ const AddExpenseModal = ({
               }
               className='w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {createExpenseMutation.isPending || updateExpenseMutation.isPending
+              {createExpenseMutation.isPending ||
+              updateExpenseMutation.isPending
                 ? "Saving..."
                 : editingExpense
-                  ? "Update Expense"
-                  : "Add Expense"}
+                ? "Update Expense"
+                : "Add Expense"}
             </button>
           </div>
         </form>
@@ -452,7 +522,37 @@ const AddExpenseModal = ({
     return null;
   }
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {showImageModal &&
+        form.watch("qrImage") &&
+        createPortal(
+          <div
+            className='fixed inset-0 bg-black/90 backdrop-blur-sm z-[10000] flex items-center justify-center p-4'
+            onClick={() => setShowImageModal(false)}
+          >
+            <div className='relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center'>
+              <button
+                onClick={() => setShowImageModal(false)}
+                className='absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white z-10'
+              >
+                <X className='w-6 h-6' />
+              </button>
+              <Image
+                src={form.watch("qrImage") || "/placeholder.svg"}
+                alt='QR Code - Full View'
+                width={800}
+                height={800}
+                className='max-w-full max-h-full object-contain rounded-lg'
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
 };
 
 export default AddExpenseModal;
