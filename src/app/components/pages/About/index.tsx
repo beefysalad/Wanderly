@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowLeft, Sparkles, Users, Calendar, DollarSign } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Header from "../../shared/Header";
+import AuthModal from "../../shared/Modal/AuthModal";
+import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 const AboutComponent = () => {
   const router = useRouter();
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
+    "signin"
+  );
+  const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
 
   return (
     <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
@@ -18,6 +27,11 @@ const AboutComponent = () => {
       </div>
 
       <div className='relative z-10'>
+        <Header
+          setAuthDefaultTab={setAuthDefaultTab}
+          setShowAuthModal={setShowAuthModal}
+          setShowQuickJoinModal={setShowQuickJoinModal}
+        />
         <div className='max-w-4xl mx-auto px-4 py-8'>
           <button
             onClick={() => router.back()}
@@ -216,6 +230,22 @@ const AboutComponent = () => {
           </div>
         </div>
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          defaultTab={authDefaultTab}
+        />
+      )}
+      {showQuickJoinModal && (
+        <QuickJoinModal
+          onClose={() => setShowQuickJoinModal(false)}
+          onJoin={(code: string, guestName: string) => {
+            // Handle quick join if needed
+            console.log("Quick join:", code, guestName);
+          }}
+        />
+      )}
     </main>
   );
 };

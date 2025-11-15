@@ -132,6 +132,13 @@ export async function updateTripService(
     },
     include: {
       activities: true,
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
