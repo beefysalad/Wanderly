@@ -3,9 +3,14 @@ import { Expense } from "@/src/shared/types";
 import { CheckCircle } from "lucide-react";
 import React, { useState } from "react";
 import ExpenseDetailModal from "../../../shared/Modal/ExpenseDetailModal";
+import api from "@/lib/axios";
+import { useQueryClient } from "@tanstack/react-query";
+
 interface IExpensesListProps {
   expenses: Expense[];
   members: string[];
+  tripId: string;
+  groupId: string;
   onDeleteExpense: (id: string) => void;
   onUpdateExpense: (expense: Expense) => void;
   onEditExpense: (expense: Expense) => void;
@@ -21,11 +26,14 @@ const categoryEmojis = {
 const ExpensesList = ({
   expenses,
   members,
+  tripId,
+  groupId,
   onDeleteExpense,
   onEditExpense,
   onUpdateExpense,
   currentUser,
 }: IExpensesListProps) => {
+  const queryClient = useQueryClient();
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
@@ -55,16 +63,68 @@ const ExpensesList = ({
       return sum + exp.amount / splitCount;
     }, 0);
 
-  const handleMarkPaid = (expenseId: string, memberId: string) => {
+  const handleMarkPaid = async (expenseId: string, memberId: string) => {
     const expense = expenses.find((e) => e.id === expenseId);
     if (!expense) return;
 
     const paidMembers = expense.paidMembers || [];
-    const updatedPaidMembers = paidMembers.includes(memberId)
+    const isPaid = paidMembers.includes(memberId);
+    const newPaidMembers = isPaid
       ? paidMembers.filter((m) => m !== memberId)
       : [...paidMembers, memberId];
 
-    onUpdateExpense({ ...expense, paidMembers: updatedPaidMembers });
+    // Optimistically update the expense in the cache
+    queryClient.setQueryData<{ expenses: Expense[] }>(
+      ["expenses", tripId],
+      (old) => {
+        if (!old) return old;
+        return {
+          expenses: old.expenses.map((e) =>
+            e.id === expenseId
+              ? { ...e, paidMembers: newPaidMembers }
+              : e
+          ),
+        };
+      }
+    );
+
+    // Update selectedExpense if it's the one being modified
+    if (selectedExpense?.id === expenseId) {
+      setSelectedExpense({
+        ...selectedExpense,
+        paidMembers: newPaidMembers,
+      });
+    }
+
+    try {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: memberId,
+        isPaid: !isPaid,
+        createPaymentLog: true,
+      });
+
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData<{ expenses: Expense[] }>(
+        ["expenses", tripId],
+        (old) => {
+          if (!old) return old;
+          return {
+            expenses: old.expenses.map((e) =>
+              e.id === expenseId ? expense : e
+            ),
+          };
+        }
+      );
+      if (selectedExpense?.id === expenseId) {
+        setSelectedExpense(expense);
+      }
+      console.error("Failed to mark expense as paid:", error);
+    }
   };
 
   const handleEdit = () => {

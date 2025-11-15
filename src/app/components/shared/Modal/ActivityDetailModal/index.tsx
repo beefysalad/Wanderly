@@ -1,6 +1,7 @@
 import { Activity } from "@/src/shared/types";
 import { Calendar, Clock, FileText, Pencil, Trash2, X } from "lucide-react";
 import React from "react";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface IActivityDetailModal {
   activity: Activity;
@@ -102,10 +103,12 @@ const ActivityDetailModal = ({
                 </p>
                 <p className='text-slate-900 dark:text-white'>
                   {activity.startTime && activity.endTime
-                    ? `${activity.startTime} - ${activity.endTime}`
+                    ? `${formatTime12Hour(
+                        activity.startTime
+                      )} - ${formatTime12Hour(activity.endTime)}`
                     : activity.startTime
-                    ? `Starts at ${activity.startTime}`
-                    : `Ends at ${activity.endTime}`}
+                    ? `Starts at ${formatTime12Hour(activity.startTime)}`
+                    : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
                 </p>
               </div>
             </div>

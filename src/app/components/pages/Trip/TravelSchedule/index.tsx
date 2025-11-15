@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
 import { ChevronDown, Trash2, Pencil } from "lucide-react";
 import React, { useState } from "react";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface ITravelScheduleProps {
   startDate: Date;
@@ -156,8 +157,8 @@ const TravelSchedule = ({
                           </div>
                           {activity.startTime && (
                             <p className='text-sm text-slate-600 mt-2 ml-7'>
-                              ⏰ {activity.startTime}
-                              {activity.endTime && ` - ${activity.endTime}`}
+                              ⏰ {formatTime12Hour(activity.startTime)}
+                              {activity.endTime && ` - ${formatTime12Hour(activity.endTime)}`}
                             </p>
                           )}
                           {activity.notes && (

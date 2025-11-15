@@ -1,12 +1,15 @@
 "use client";
-import { Expense, PaymentLog, Trip } from "@/src/shared/types";
+import { Expense, Trip } from "@/src/shared/types";
 import { ArrowLeft, Plus, Receipt } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ExpensesList from "./ExpenseList";
 import AddExpenseModal from "../../shared/Modal/AddExpenseModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
+import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
+import api from "@/lib/axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface IExpensesComponent {
   groupId: string;
@@ -14,48 +17,73 @@ interface IExpensesComponent {
 }
 const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const router = useRouter();
-  const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const queryClient = useQueryClient();
+  const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
+  const { data: expensesData, isLoading: loadingExpenses } =
+    useExpenses(tripId);
+  const { data: paymentLogsData, isLoading: loadingLogs } =
+    usePaymentLogs(tripId);
+
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [paymentLogs, setPaymentLogs] = useState<PaymentLog[]>([]);
+  const expenses = expensesData?.expenses || [];
+  const paymentLogs = paymentLogsData?.paymentLogs || [];
   const [activeTab, setActiveTab] = useState<"expenses" | "logs">("expenses");
+  const [expenseSubTab, setExpenseSubTab] = useState<"unsettled" | "settled">(
+    "unsettled"
+  );
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
 
-  const handleDeleteExpense = () => {
-    console.log("DELETE");
+  // Filter expenses by settled status
+  const isExpenseSettled = (expense: Expense) => {
+    const splitWith = expense.splitWith || [];
+    const paidMembers = expense.paidMembers || [];
+    // An expense is settled if all members who should split have paid (or are the payer)
+    return splitWith.every(
+      (member) => member === expense.paidBy || paidMembers.includes(member)
+    );
   };
+
+  const unsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
+  const settledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
+
+  const loading = loadingGroup || loadingExpenses || loadingLogs;
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!expenseId) return;
+    try {
+      await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+    }
+  };
+
   const handleUpdateExpense = () => {
-    console.log("DELETE");
+    // This is handled by the ExpenseList component when marking as paid
+    // The actual update is done via API call in ExpenseList
   };
 
   const handleAddExpense = () => {
-    console.log("DELETE");
+    // This is handled by AddExpenseModal
+    setShowAddModal(false);
+    setEditingExpense(null);
   };
+
   const handleCloseModal = () => {
     setShowAddModal(false);
     setEditingExpense(null);
   };
+
   const handleEditExpense = (expense: Expense) => {
     setEditingExpense(expense);
     setShowAddModal(true);
   };
-
-  useEffect(() => {
-    // Expenses and payment logs are still stored in localStorage for now
-    // TODO: Move to API when expense endpoints are created
-    const savedExpenses = localStorage.getItem(`expenses-${tripId}`);
-    if (savedExpenses) {
-      setExpenses(JSON.parse(savedExpenses));
-    }
-
-    const savedLogs = localStorage.getItem(`payment-logs-${tripId}`);
-    if (savedLogs) {
-      setPaymentLogs(JSON.parse(savedLogs));
-    }
-  }, [tripId]);
 
   if (loading) {
     return (
@@ -119,24 +147,52 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           </div>
 
           {activeTab === "expenses" && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className='px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all text-sm font-medium flex items-center gap-2 shadow-md'
-            >
-              <Plus className='w-4 h-4' />
-              Add Expense
-            </button>
+            <>
+              <div className='flex gap-2 mb-4'>
+                <button
+                  onClick={() => setExpenseSubTab("unsettled")}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    expenseSubTab === "unsettled"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
+                      : "bg-white text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Unsettled ({unsettledExpenses.length})
+                </button>
+                <button
+                  onClick={() => setExpenseSubTab("settled")}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    expenseSubTab === "settled"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
+                      : "bg-white text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Settled ({settledExpenses.length})
+                </button>
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className='px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all text-sm font-medium flex items-center gap-2 shadow-md'
+              >
+                <Plus className='w-4 h-4' />
+                Add Expense
+              </button>
+            </>
           )}
         </div>
 
         {activeTab === "expenses" ? (
           <ExpensesList
-            expenses={expenses}
+            expenses={
+              expenseSubTab === "settled" ? settledExpenses : unsettledExpenses
+            }
             members={group.memberEmails || []}
+            tripId={tripId}
+            groupId={groupId}
             onDeleteExpense={handleDeleteExpense}
             onUpdateExpense={handleUpdateExpense}
             onEditExpense={handleEditExpense}
-            currentUser={user?.displayName ?? ""}
+            currentUser={user?.email ?? ""}
           />
         ) : (
           <div className='space-y-3'>
@@ -166,6 +222,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-2'>
                           <span className='text-2xl'>
+                            {log.paymentMethod === "cash" && "💵"}
                             {log.paymentMethod === "bank" && "🏦"}
                             {log.paymentMethod === "maya" && "💳"}
                             {log.paymentMethod === "gcash" && "💰"}
@@ -214,6 +271,8 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
 
       {showAddModal && (
         <AddExpenseModal
+          tripId={tripId}
+          groupId={groupId}
           members={group.memberEmails || []}
           onAddExpense={handleAddExpense}
           onClose={handleCloseModal}

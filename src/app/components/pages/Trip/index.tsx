@@ -14,6 +14,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { exportScheduleToPNG } from "@/lib/utils/exportSchedule";
 
 interface ITripComponent {
   tripId: string;
@@ -40,6 +41,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
 
@@ -54,6 +56,27 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           ? err.message
           : "Failed to delete trip. Please try again."
       );
+    }
+  };
+
+  const handleExportSchedule = async () => {
+    if (!trip) return;
+
+    setIsExporting(true);
+    try {
+      await exportScheduleToPNG({
+        trip,
+        activities: trip.activities || [],
+      });
+    } catch (error) {
+      console.error("Failed to export schedule:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to export schedule. Please try again."
+      );
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -353,11 +376,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
             {activeTab === "schedule" && (
               <button
-                onClick={() => {}} //TODO:
-                className='px-5 py-3 rounded-xl bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2'
+                onClick={handleExportSchedule}
+                disabled={isExporting || !trip}
+                className='px-5 py-3 rounded-xl bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 <Download className='w-4 h-4' />
-                Export
+                {isExporting ? "Exporting..." : "Export"}
               </button>
             )}
 

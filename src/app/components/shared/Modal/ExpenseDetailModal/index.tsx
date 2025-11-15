@@ -210,11 +210,13 @@ const ExpenseDetailModal = ({
                 <div className='space-y-3'>
                   <div className='flex items-center gap-2'>
                     <span className='text-2xl'>
+                      {expense.paymentMethod === "cash" && "💵"}
                       {expense.paymentMethod === "bank" && "🏦"}
                       {expense.paymentMethod === "maya" && "💳"}
                       {expense.paymentMethod === "gcash" && "💰"}
                     </span>
                     <p className='font-semibold text-slate-900 dark:text-white'>
+                      {expense.paymentMethod === "cash" && "Cash"}
                       {expense.paymentMethod === "bank" && "Bank Transfer"}
                       {expense.paymentMethod === "maya" && "Maya"}
                       {expense.paymentMethod === "gcash" && "GCash"}

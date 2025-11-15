@@ -76,10 +76,34 @@ const DashboardComponent = () => {
   };
   const getTripsForDate = (date: Date) => {
     const allTrips = getAllTripsWithGroups();
+
+    // Normalize the input date to midnight (remove time component)
+    const normalizedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
     return allTrips.filter((trip) => {
       const startDate = new Date(trip.startDate);
       const endDate = new Date(trip.endDate);
-      return date >= startDate && date <= endDate;
+
+      // Normalize trip dates to midnight (remove time component)
+      const normalizedStartDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      );
+      const normalizedEndDate = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate()
+      );
+
+      return (
+        normalizedDate >= normalizedStartDate &&
+        normalizedDate <= normalizedEndDate
+      );
     });
   };
 

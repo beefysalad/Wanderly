@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import React from "react";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface ITravelCalendarProps {
   startDate: Date;
@@ -97,8 +98,8 @@ const TravelCalendar = ({
                           </p>
                           {activity.startTime && (
                             <p className='text-xs text-slate-500 mt-1'>
-                              {activity.startTime}
-                              {activity.endTime && ` - ${activity.endTime}`}
+                              {formatTime12Hour(activity.startTime)}
+                              {activity.endTime && ` - ${formatTime12Hour(activity.endTime)}`}
                             </p>
                           )}
                         </div>

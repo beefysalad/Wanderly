@@ -65,5 +65,5 @@ export interface PaymentLog {
   payee: string; // who received payment
   amount: number;
   timestamp: string;
-  paymentMethod?: "bank" | "maya" | "gcash";
+  paymentMethod?: "cash" | "bank" | "maya" | "gcash";
 }
