@@ -1,14 +1,14 @@
 "use client";
-import { Group, Trip } from "@/src/shared/types";
+import { Trip } from "@/src/shared/types";
 import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { GROUPS } from "../Dashboard/dummdata";
+import { useState } from "react";
 import BottomNav from "./BottomNav";
 import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
 import { getStatusBadge } from "@/lib/helper";
 import ActivityModal from "../../shared/Modal/ActivityModal";
+import { useGroup } from "@/src/hooks/useGroups";
 
 interface ITripComponent {
   tripId: string;
@@ -16,14 +16,14 @@ interface ITripComponent {
 }
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
-  const [group, setGroup] = useState<Group | null>(null);
-  const [trip, setTrip] = useState<Trip | null>(null);
+  const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const group = groupData?.group || null;
+  const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
     "calendar"
   );
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(false);
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
 
   const addActivity = () => {
@@ -44,22 +44,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     // handleUpdateTrip({ status: newStatus })
     setIsEditingStatus(false);
   };
-
-  useEffect(() => {
-    const savedGroups = GROUPS;
-    if (savedGroups) {
-      const groups = savedGroups;
-      const foundGroup = groups.find((g: Group) => g.id === groupId);
-      if (foundGroup) {
-        setGroup(foundGroup);
-        const foundTrip = foundGroup.trips?.find((t: Trip) => t.id === tripId);
-        if (foundTrip) {
-          setTrip(foundTrip);
-        }
-      }
-    }
-    setLoading(false);
-  }, [groupId, tripId]);
 
   if (loading) {
     return (

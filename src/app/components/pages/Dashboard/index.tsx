@@ -10,17 +10,17 @@ import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
 import DashboardHeader from "./DashboardHeader";
-import { GROUPS } from "./dummdata";
+import { useGroups } from "@/src/hooks/useGroups";
 
 const DashboardComponent = () => {
   const router = useRouter();
 
-  const [loading, setLoading] = useState<boolean>(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCalendar, setShowCalendar] = useState(true);
   const { user } = useCurrentUser();
-  const groups = GROUPS;
+  const { data: groupsData, isLoading: loading } = useGroups();
+  const groups = groupsData?.groups || [];
   const handleLogout = async () => {
     await signOut(auth);
   };
@@ -30,6 +30,7 @@ const DashboardComponent = () => {
   const handleNavigateToGroup = (groupId: string) => {
     router.push(`/group/${groupId}`);
   };
+
   if (loading) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center'>

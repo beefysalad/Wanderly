@@ -1,23 +1,48 @@
 import { X } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { joinGroupSchema, TJoinGroupSchema } from "./joinGroupZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useJoinGroup } from "@/src/hooks/useGroups";
+import { useRouter } from "next/navigation";
 
 interface IJoinGroupModalProps {
   onClose: () => void;
 }
 const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const joinGroup = useJoinGroup();
+
   const form = useForm<TJoinGroupSchema>({
     resolver: zodResolver(joinGroupSchema),
     defaultValues: {
       groupCode: "",
     },
   });
-  const onSubmit = (values: TJoinGroupSchema) => console.log(values);
+
+  const onSubmit = async (values: TJoinGroupSchema) => {
+    try {
+      setError(null);
+      const result = await joinGroup.mutateAsync({
+        groupCode: values.groupCode,
+      });
+      onClose();
+      // Navigate to the joined group
+      if (result.group) {
+        router.push(`/group/${result.group.id}`);
+      }
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to join group";
+      setError(message);
+    }
+  };
   return (
     <div className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
       <div className='bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in duration-200'>
@@ -60,16 +85,22 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
               </p>
             </div>
 
-            {/* Error Message */}
+            {/* Error Messages */}
             {form.formState.errors.groupCode && (
               <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
                 {form.formState.errors.groupCode.message}
+              </div>
+            )}
+            {error && (
+              <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+                {error}
               </div>
             )}
             <div className='flex gap-3 pt-4'>
               <Button
                 type='button'
                 onClick={onClose}
+                disabled={joinGroup.isPending}
                 variant='outline'
                 className='flex-1 bg-transparent'
               >
@@ -77,9 +108,10 @@ const JoinGroupModal = ({ onClose }: IJoinGroupModalProps) => {
               </Button>
               <Button
                 type='submit'
-                className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                disabled={joinGroup.isPending}
+                className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Create
+                {joinGroup.isPending ? "Joining..." : "Join"}
               </Button>
             </div>
           </form>

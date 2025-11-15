@@ -16,4 +16,162 @@ model User {
   imageUrl         String?
   firebaseId       String   @unique
   firebaseDisabled Boolean  @default(false)
+
+  // Relationships
+  createdGroups      Group[]          @relation("GroupCreator")
+  groupMemberships   GroupMember[]
+  paidExpenses       Expense[]        @relation("ExpensePayer")
+  expenseSplits      ExpenseSplit[]
+  expensePayments    ExpensePayment[]
+  paymentLogsAsPayer PaymentLog[]     @relation("PaymentLogPayer")
+  paymentLogsAsPayee PaymentLog[]     @relation("PaymentLogPayee")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  creator  User          @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members  GroupMember[]
+  trips    Trip[]
+  expenses Expense[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  joinedAt  DateTime @default(now())
+  role      String?  @default("member") // "member" | "admin"
+  createdAt DateTime @default(now())
+
+  // Relationships
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+enum TripStatus {
+  planning
+  finalized
+  ongoing
+  cancelled
+}
+
+model Trip {
+  id        String     @id @default(cuid())
+  groupId   String
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  location  String?
+  status    TripStatus @default(planning)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relationships
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  activities  Activity[]
+  expenses    Expense[]
+  paymentLogs PaymentLog[]
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  tripId    String
+  date      DateTime
+  title     String
+  startTime String?
+  endTime   String?
+  notes     String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentMethod {
+  cash
+  bank
+  maya
+  gcash
+}
+
+model Expense {
+  id            String         @id @default(cuid())
+  groupId       String
+  tripId        String
+  paidById      String
+  amount        Decimal
+  description   String
+  date          DateTime
+  category      String?
+  paymentMethod PaymentMethod?
+  accountNumber String?
+  bankName      String?
+  accountName   String?
+  qrImage       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relationships
+  group       Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidBy      User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
+  splits      ExpenseSplit[]
+  payments    ExpensePayment[]
+  paymentLogs PaymentLog[]
+}
+
+model ExpenseSplit {
+  id        String   @id @default(cuid())
+  expenseId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relationships
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+}
+
+model ExpensePayment {
+  id        String   @id @default(cuid())
+  expenseId String
+  userId    String
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  // Relationships
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+}
+
+model PaymentLog {
+  id            String         @id @default(cuid())
+  tripId        String
+  expenseId     String
+  payerId       String
+  payeeId       String
+  amount        Decimal
+  paymentMethod PaymentMethod?
+  timestamp     DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+
+  // Relationships
+  trip    Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  payer   User    @relation("PaymentLogPayer", fields: [payerId], references: [id], onDelete: Cascade)
+  payee   User    @relation("PaymentLogPayee", fields: [payeeId], references: [id], onDelete: Cascade)
 }

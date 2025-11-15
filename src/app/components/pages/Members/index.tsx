@@ -1,40 +1,17 @@
 "use client";
-import { Group, User } from "@/src/shared/types";
 import { ArrowLeft, Crown, Mail, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { GROUPS, USERS } from "../Dashboard/dummdata";
+import React from "react";
+import { useGroup } from "@/src/hooks/useGroups";
 
 interface IMembersComponent {
   groupId: string;
 }
 const MembersComponent = ({ groupId }: IMembersComponent) => {
   const router = useRouter();
-  const [group, setGroup] = useState<Group | null>(null);
-  const [loading, setLoading] = useState(false); //TODO: REPLACE AL LOADING WITH TANSTACK LOADING / PENDING
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    const savedUsers = USERS;
-    if (savedUsers) {
-      setUsers(savedUsers);
-    }
-
-    const savedGroups = GROUPS;
-    if (savedGroups) {
-      const groups = savedGroups;
-      const foundGroup = groups.find((g: Group) => g.id === groupId);
-      if (foundGroup) {
-        setGroup(foundGroup);
-      }
-    }
-    setLoading(false);
-  }, [groupId]);
-
-  const getMemberUser = (email: string) => {
-    return users.find((u) => u.email === email);
-  };
+  const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const group = groupData?.group || null;
 
   const getInitials = (email: string) => {
     return email.substring(0, 2).toUpperCase();
@@ -96,7 +73,6 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           {group.memberEmails && group.memberEmails.length > 0 ? (
             group.memberEmails.map((email, index) => {
-              const user = getMemberUser(email);
               const isCreator = email === group.createdBy;
 
               return (
@@ -105,26 +81,18 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
                   className='bg-gray-50 border border-gray-200 rounded-xl p-6 hover:bg-gray-100 hover:border-amber-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/10'
                 >
                   <div className='flex items-center gap-4'>
-                    {user?.avatar ? (
-                      <Image
-                        src={user.avatar || "/placeholder.svg"}
-                        alt={user.name}
-                        className='w-16 h-16 rounded-full object-cover border-2 border-amber-500/50'
-                      />
-                    ) : (
-                      <div
-                        className={`w-16 h-16 ${getAvatarColor(
-                          index
-                        )} rounded-full flex items-center justify-center text-white text-xl font-bold`}
-                      >
-                        {getInitials(email)}
-                      </div>
-                    )}
+                    <div
+                      className={`w-16 h-16 ${getAvatarColor(
+                        index
+                      )} rounded-full flex items-center justify-center text-white text-xl font-bold`}
+                    >
+                      {getInitials(email)}
+                    </div>
 
                     <div className='flex-1'>
                       <div className='flex items-center gap-2 mb-1'>
                         <h3 className='text-lg font-semibold text-gray-900'>
-                          {user?.name || email.split("@")[0]}
+                          {email.split("@")[0]}
                         </h3>
                         {isCreator && (
                           <div className='flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 rounded-full border border-amber-500/50'>

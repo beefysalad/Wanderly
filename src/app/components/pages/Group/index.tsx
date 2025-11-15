@@ -1,31 +1,20 @@
 "use client";
-import { Group } from "@/src/shared/types";
 import { ArrowLeft, Plus, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { GROUPS } from "../Dashboard/dummdata";
+import React, { useState } from "react";
 import CreateTripModal from "../../shared/Modal/CreateTripModal";
 import TripsListComponent from "./TripsList";
+import { useGroup } from "@/src/hooks/useGroups";
 
 interface IGroupComponent {
   param: string;
 }
 const GroupComponent = ({ param }: IGroupComponent) => {
-  const [group, setGroup] = useState<Group | null>(null);
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [copied, setCopied] = useState(false);
-
   const router = useRouter();
-  useEffect(() => {
-    const savedGroups = GROUPS;
-    if (savedGroups) {
-      const groups = savedGroups;
-      const foundGroup = groups.find((g: Group) => g.id === param);
-      if (foundGroup) {
-        setGroup(foundGroup);
-      }
-    }
-  }, [param]);
+  const { data: groupData, isLoading, error } = useGroup(param);
+  const group = groupData?.group || null;
   const copyCode = () => {
     if (group) {
       navigator.clipboard.writeText(group.code);
@@ -40,7 +29,19 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const handleUpdateGroup = () => {
     console.log("HANDLE");
   };
-  if (!group) {
+
+  if (isLoading) {
+    return (
+      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
+        <div className='text-center'>
+          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-600 font-medium'>Loading group...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!group || error) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
         <div className='text-center bg-white rounded-2xl p-8 shadow-xl border border-slate-200 max-w-md'>
@@ -115,7 +116,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               <span className='text-slate-700 font-semibold'>
                 Members{" "}
                 <span className='text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full min-w-[2rem]'>
-                  {group.members?.length || 0}
+                  {group.memberEmails?.length || 0}
                 </span>
               </span>
             </button>

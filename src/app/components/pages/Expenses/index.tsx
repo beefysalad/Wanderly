@@ -1,28 +1,29 @@
 "use client";
-import { Expense, Group, PaymentLog, Trip } from "@/src/shared/types";
+import { Expense, PaymentLog, Trip } from "@/src/shared/types";
 import { ArrowLeft, Plus, Receipt } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ExpensesList from "./ExpenseList";
 import AddExpenseModal from "../../shared/Modal/AddExpenseModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
-import { GROUPS } from "../Dashboard/dummdata";
+import { useGroup } from "@/src/hooks/useGroups";
 
 interface IExpensesComponent {
   groupId: string;
   tripId: string;
 }
 const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
-  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-  const [group, setGroup] = useState<Group | null>(null);
-  const [trip, setTrip] = useState<Trip | null>(null);
+  const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const group = groupData?.group || null;
+  const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [paymentLogs, setPaymentLogs] = useState<PaymentLog[]>([]);
   const [activeTab, setActiveTab] = useState<"expenses" | "logs">("expenses");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
+
   const handleDeleteExpense = () => {
     console.log("DELETE");
   };
@@ -43,19 +44,8 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   };
 
   useEffect(() => {
-    const savedGroups = GROUPS;
-    if (savedGroups) {
-      const groups = savedGroups;
-      const foundGroup = groups.find((g: Group) => g.id === groupId);
-      if (foundGroup) {
-        setGroup(foundGroup);
-        const foundTrip = foundGroup.trips?.find((t: Trip) => t.id === tripId);
-        if (foundTrip) {
-          setTrip(foundTrip);
-        }
-      }
-    }
-
+    // Expenses and payment logs are still stored in localStorage for now
+    // TODO: Move to API when expense endpoints are created
     const savedExpenses = localStorage.getItem(`expenses-${tripId}`);
     if (savedExpenses) {
       setExpenses(JSON.parse(savedExpenses));
@@ -65,9 +55,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     if (savedLogs) {
       setPaymentLogs(JSON.parse(savedLogs));
     }
-
-    setLoading(false);
-  }, [groupId, tripId, router]);
+  }, [tripId]);
 
   if (loading) {
     return (

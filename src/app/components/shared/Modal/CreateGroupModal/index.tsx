@@ -1,23 +1,44 @@
 import { HelpCircle, X } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { createGroupSchema, TCreateGroupSchema } from "./createGroupZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useCreateGroup } from "@/src/hooks/useGroups";
+import { useRouter } from "next/navigation";
 
 interface ICreateGroupModalProps {
   onClose: () => void;
 }
 const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const createGroup = useCreateGroup();
+
   const form = useForm<TCreateGroupSchema>({
     resolver: zodResolver(createGroupSchema),
     defaultValues: {
       groupName: "",
     },
   });
-  const onSubmit = (values: TCreateGroupSchema) => console.log(values);
+
+  const onSubmit = async (values: TCreateGroupSchema) => {
+    try {
+      setError(null);
+      const result = await createGroup.mutateAsync({ name: values.groupName });
+      onClose();
+      // Navigate to the new group
+      if (result.group) {
+        router.push(`/group/${result.group.id}`);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create group";
+      setError(message);
+    }
+  };
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
       <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto'>
@@ -63,10 +84,15 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
             />
           </div>
 
-          {/* Error Message */}
+          {/* Error Messages */}
           {form.formState.errors.groupName && (
             <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
               {form.formState.errors.groupName.message}
+            </div>
+          )}
+          {error && (
+            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
+              {error}
             </div>
           )}
 
@@ -75,15 +101,17 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
             <Button
               type='button'
               onClick={onClose}
+              disabled={createGroup.isPending}
               className='flex-1 px-4 py-2 border bg-slate-150 border-slate-300 rounded-lg text-slate-700  font-medium hover:bg-slate-200  transition-colors'
             >
               Cancel
             </Button>
             <Button
               type='submit'
-              className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+              disabled={createGroup.isPending}
+              className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              Create
+              {createGroup.isPending ? "Creating..." : "Create"}
             </Button>
           </div>
         </form>
