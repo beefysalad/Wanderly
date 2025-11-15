@@ -6,7 +6,7 @@ interface IBottomNavProps {
 }
 const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
   return (
-    <div className='fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700'>
+    <div className='fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-50'>
       <div className='max-w-2xl mx-auto px-4'>
         <div className='flex items-center justify-around'>
           <button
