@@ -32,6 +32,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
         <Header
           setAuthDefaultTab={setAuthDefaultTab}
           setShowAuthModal={setShowAuthModal}
+          setShowQuickJoinModal={setShowQuickJoinModal}
         />
         <section className='px-4 md:px-8 flex-1 flex items-center md:items-start justify-center sm:mt-24 mt-14'>
           <div className='w-full max-w-7xl'>

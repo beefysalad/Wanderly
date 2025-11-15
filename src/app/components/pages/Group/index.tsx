@@ -46,7 +46,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   if (!group || error) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
-        <div className='text-center bg-white rounded-2xl p-8 shadow-xl border border-slate-200 max-w-md'>
+        <div className='text-center bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 max-w-md'>
           <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
             <span className='text-3xl'>😞</span>
           </div>
@@ -71,19 +71,19 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       <div className='max-w-4xl mx-auto px-4 py-6'>
         <button
           onClick={() => router.push("/dashboard")}
-          className='mb-4 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors font-medium'
+          className='mb-6 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 font-medium'
         >
           <ArrowLeft className='w-5 h-5' />
           Back to Groups
         </button>
 
-        <div className='mb-8 bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200'>
+        <div className='mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200'>
           <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6'>
             <div className='flex-1'>
               <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-2 text-balance'>
                 {group.name}
               </h1>
-              <div className='flex items-center gap-2 flex-wrap'>
+              <div className='flex items-center gap-2 flex-wrap mb-2'>
                 <span className='text-sm text-slate-600'>Group Code:</span>
                 <code className='px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg font-mono font-bold text-amber-600 text-lg'>
                   {group.code}
@@ -96,6 +96,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
+              {group.createdBy && (
+                <p className='text-xs text-slate-500 flex items-center gap-1.5'>
+                  <span>Group creator {group.createdBy}</span>
+                </p>
+              )}
             </div>
           </div>
 

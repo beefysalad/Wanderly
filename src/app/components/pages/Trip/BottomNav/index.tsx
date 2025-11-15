@@ -13,7 +13,7 @@ const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
             onClick={() => onTabChange("calendar")}
             className={`flex-1 flex flex-col items-center justify-center gap-1 py-4 px-4 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "calendar"
-                ? "text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
+                ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
                 : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
             }`}
           >
@@ -24,7 +24,7 @@ const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
             onClick={() => onTabChange("schedule")}
             className={`flex-1 flex flex-col items-center justify-center gap-1 py-4 px-4 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "schedule"
-                ? "text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
+                ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
                 : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
             }`}
           >

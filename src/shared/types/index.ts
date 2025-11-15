@@ -18,6 +18,7 @@ export interface Trip {
   createdAt: string;
   location?: string; // Added optional location field
   status?: "planning" | "finalized" | "ongoing" | "cancelled"; // Trip status
+  createdBy?: string; // Creator name or email
 }
 export interface User {
   id: string;

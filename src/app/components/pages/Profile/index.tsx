@@ -50,10 +50,10 @@ const ProfileComponent = () => {
         {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className='mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors'
+          className='mb-6 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 font-medium'
         >
           <ArrowLeft className='w-5 h-5' />
-          <span className='font-medium'>Back to Dashboard</span>
+          Back to Dashboard
         </button>
 
         {/* Profile Header Card */}

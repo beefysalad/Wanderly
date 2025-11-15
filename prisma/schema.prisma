@@ -19,6 +19,7 @@ model User {
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")
+  createdTrips       Trip[]           @relation("TripCreator")
   groupMemberships   GroupMember[]
   paidExpenses       Expense[]        @relation("ExpensePayer")
   expenseSplits      ExpenseSplit[]
@@ -65,17 +66,19 @@ enum TripStatus {
 }
 
 model Trip {
-  id        String     @id @default(cuid())
-  groupId   String
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  location  String?
-  status    TripStatus @default(planning)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  groupId     String
+  createdById String
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  status      TripStatus @default(planning)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   // Relationships
+  creator     User         @relation("TripCreator", fields: [createdById], references: [id], onDelete: Cascade)
   group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
   activities  Activity[]
   expenses    Expense[]

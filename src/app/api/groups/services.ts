@@ -14,10 +14,7 @@ async function getOrCreateUser(token: DecodedIdToken) {
 /**
  * Creates a new group and adds the creator as a member
  */
-export async function createGroupService(
-  token: DecodedIdToken,
-  name: string
-) {
+export async function createGroupService(token: DecodedIdToken, name: string) {
   const user = await getOrCreateUser(token);
 
   const code = await generateUniqueGroupCode();
@@ -56,6 +53,13 @@ export async function createGroupService(
       trips: {
         include: {
           activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       },
     },
@@ -131,6 +135,13 @@ export async function joinGroupService(
       trips: {
         include: {
           activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       },
     },
@@ -241,6 +252,13 @@ export async function getGroupByIdService(
       trips: {
         include: {
           activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -255,4 +273,3 @@ export async function getGroupByIdService(
 
   return group;
 }
-

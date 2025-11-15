@@ -145,6 +145,17 @@
   }
 }
 
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes float {
   0%,
   100% {
@@ -223,6 +234,11 @@
 
 .animate-slide-in-left {
   animation: slide-in-left 0.8s ease-out;
+  animation-fill-mode: both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
   animation-fill-mode: both;
 }
 

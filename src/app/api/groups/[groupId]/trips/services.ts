@@ -54,6 +54,7 @@ export async function createTripService(
   const trip = await prisma.trip.create({
     data: {
       groupId,
+      createdById: user.id,
       name: data.name,
       startDate: data.startDate,
       endDate: data.endDate,
@@ -62,6 +63,13 @@ export async function createTripService(
     },
     include: {
       activities: true,
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 

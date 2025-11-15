@@ -24,10 +24,32 @@ type GroupWithRelations = Prisma.GroupGetPayload<{
     trips: {
       include: {
         activities: true;
+        creator: {
+          select: {
+            id: true;
+            name: true;
+            email: true;
+          };
+        };
       };
     };
   };
 }>;
+
+type TripWithRelations =
+  | GroupWithRelations["trips"][number]
+  | Prisma.TripGetPayload<{
+      include: {
+        activities: true;
+        creator: {
+          select: {
+            id: true;
+            name: true;
+            email: true;
+          };
+        };
+      };
+    }>;
 
 /**
  * Transforms Prisma Group model to TypeScript Group interface
@@ -47,13 +69,17 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
 /**
  * Transforms Prisma Trip model to TypeScript Trip interface
  */
-export function transformTrip(
-  prismaTrip: Prisma.TripGetPayload<{
-    include: {
-      activities: true;
+export function transformTrip(prismaTrip: TripWithRelations): Trip {
+  let createdBy: string | undefined = undefined;
+  if (prismaTrip.creator) {
+    const creator = prismaTrip.creator as {
+      id: string;
+      name: string;
+      email: string;
     };
-  }>
-): Trip {
+    createdBy = creator.name || creator.email;
+  }
+
   return {
     id: prismaTrip.id,
     groupId: prismaTrip.groupId,
@@ -63,6 +89,7 @@ export function transformTrip(
     location: prismaTrip.location || undefined,
     status: prismaTrip.status || undefined,
     createdAt: prismaTrip.createdAt.toISOString(),
+    createdBy,
     activities: prismaTrip.activities.map(transformActivity),
   };
 }
