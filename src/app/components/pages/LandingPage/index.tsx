@@ -24,6 +24,31 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
 
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
 
+  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+
+    const ripple = document.createElement("span");
+    ripple.style.cssText = `
+      position: absolute;
+      width: ${size}px;
+      height: ${size}px;
+      left: ${x}px;
+      top: ${y}px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out;
+      pointer-events: none;
+    `;
+
+    button.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  };
+
   return (
     <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative flex flex-col'>
       <PulseBackground />
@@ -44,24 +69,28 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                   style={{ animationDelay: "0.4s" }}
                 >
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      createRipple(e);
                       setAuthDefaultTab("signup");
                       setShowAuthModal(true);
                     }}
-                    className='px-6 py-2.5 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/50 text-sm'
+                    className='relative px-8 py-3 bg-linear-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group animate-gradient-shift'
                   >
-                    <UserPlus className='w-4 h-4' />
-                    Sign Up
+                    <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700'></div>
+                    <UserPlus className='w-4 h-4 relative z-10' />
+                    <span className='relative z-10'>Start Planning Free</span>
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      createRipple(e);
                       setAuthDefaultTab("signin");
                       setShowAuthModal(true);
                     }}
-                    className='px-6 py-2.5 bg-orange-600 hover:bg-orange-700 border border-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50'
+                    className='relative px-8 py-3 bg-transparent hover:bg-orange-600/10 border-2 border-linear-to-r from-orange-500 via-amber-500 to-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50 group overflow-hidden'
                   >
-                    <LogIn className='w-4 h-4' />
-                    Login
+                    <div className='absolute inset-0 bg-linear-to-r from-orange-500/0 via-orange-500/20 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
+                    <LogIn className='w-4 h-4 relative z-10' />
+                    <span className='relative z-10'>Login</span>
                   </button>
                 </div>
 
@@ -71,9 +100,12 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                 >
                   <button
                     onClick={() => setShowQuickJoinModal(true)}
-                    className='text-sm text-amber-400 hover:text-amber-300 cursor-pointer transition'
+                    className='group relative text-sm text-amber-400 hover:text-amber-300 cursor-pointer transition-all duration-300'
                   >
-                    Quick Join as Guest (View Only)
+                    <span className='relative inline-block'>
+                      Quick Join as Guest (View Only)
+                      <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-amber-400 group-hover:w-full transition-all duration-300'></span>
+                    </span>
                   </button>
                 </div>
               </div>
@@ -86,31 +118,37 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
         <div className='md:hidden px-4 pb-8 space-y-3 animate-slide-up'>
           <div className='flex flex-col gap-3'>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                createRipple(e);
                 setAuthDefaultTab("signup");
                 setShowAuthModal(true);
               }}
-              className='w-full px-6 py-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 active:scale-95 text-sm border border-amber-400/50'
+              className='relative w-full px-6 py-3 bg-linear-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-xl font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 active:scale-95 text-sm border border-amber-400/50 overflow-hidden group'
             >
-              <UserPlus className='w-4 h-4' />
-              Sign Up
+              <div className='absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-active:translate-x-full transition-transform duration-500'></div>
+              <UserPlus className='w-4 h-4 relative z-10' />
+              <span className='relative z-10'>Start Planning Free</span>
             </button>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                createRipple(e);
                 setAuthDefaultTab("signin");
                 setShowAuthModal(true);
               }}
-              className='w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 border border-orange-500 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 text-sm shadow-lg shadow-orange-500/30'
+              className='relative w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 border border-orange-500 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 text-sm shadow-lg shadow-orange-500/30 group overflow-hidden'
             >
               <LogIn className='w-4 h-4' />
-              Login
+              <span>Login</span>
             </button>
           </div>
           <button
             onClick={() => setShowQuickJoinModal(true)}
-            className='w-full text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4 transition text-center py-1'
+            className='group w-full text-sm text-amber-400 hover:text-amber-300 transition-all duration-300 text-center py-1 relative'
           >
-            Quick Join as Guest (View Only)
+            <span className='relative inline-block'>
+              Quick Join as Guest (View Only)
+              <span className='absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-amber-400 group-hover:w-full transition-all duration-300'></span>
+            </span>
           </button>
         </div>
         <Footer />
