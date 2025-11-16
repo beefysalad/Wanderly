@@ -9,12 +9,25 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
+import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
   const router = useRouter();
   const { user, loading } = useCurrentUser();
   const { data: groupsData } = useGroups();
   const groups = groupsData?.groups || [];
+  const [activeTab, setActiveTab] = useState<"dashboard" | "trips" | "groups" | "profile">("profile");
+
+  const handleTabChange = (tab: "dashboard" | "trips" | "groups" | "profile") => {
+    if (tab === "profile") {
+      setActiveTab("profile");
+      // Stay on profile page
+    } else {
+      // Navigate to dashboard with tab query parameter
+      router.push(`/dashboard?tab=${tab}`);
+    }
+  };
 
   // Calculate statistics
   const totalGroups = groups.length;
@@ -54,7 +67,7 @@ const ProfileComponent = () => {
     : null;
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20'>
+    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-24 md:pb-20'>
       <div className='max-w-4xl mx-auto px-4 py-8'>
         {/* Back Button */}
         <button
@@ -183,6 +196,8 @@ const ProfileComponent = () => {
           </div>
         </div>
       </div>
+
+      <DashboardBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </main>
   );
 };

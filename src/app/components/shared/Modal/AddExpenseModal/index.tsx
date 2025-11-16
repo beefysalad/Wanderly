@@ -4,7 +4,15 @@ import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { expenseSchema, TExpenseSchema } from "./addExpenseZod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HelpCircle, Upload, X, Loader2 } from "lucide-react";
+import {
+  HelpCircle,
+  Upload,
+  X,
+  Loader2,
+  ChevronDown,
+  Users,
+  CreditCard,
+} from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { useCreateExpense, useUpdateExpense } from "@/src/hooks/useExpenses";
@@ -39,6 +47,8 @@ const AddExpenseModal = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [isSplitExpanded, setIsSplitExpanded] = useState(false);
+  const [isPaymentExpanded, setIsPaymentExpanded] = useState(false);
   const createExpenseMutation = useCreateExpense(tripId, groupId);
   const updateExpenseMutation = useUpdateExpense(
     tripId,
@@ -90,13 +100,31 @@ const AddExpenseModal = ({
         splitWith: editingExpense.splitWith || [],
         activityId: editingExpense.activityId || "",
       });
+
+      // Auto-expand sections if they have data
+      if (editingExpense.splitWith && editingExpense.splitWith.length > 0) {
+        setIsSplitExpanded(true);
+      }
+      if (
+        editingExpense.paymentMethod ||
+        editingExpense.accountNumber ||
+        editingExpense.bankName ||
+        editingExpense.qrImage
+      ) {
+        setIsPaymentExpanded(true);
+      }
+    } else {
+      // Reset accordion state when not editing
+      setIsSplitExpanded(false);
+      setIsPaymentExpanded(false);
     }
   }, [editingExpense, form]);
 
   // Format activities for dropdown: sorted by date, then by startTime
   const sortedActivities = useMemo(() => {
     return [...activities].sort((a, b) => {
-      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+      const dateCompare =
+        new Date(a.date).getTime() - new Date(b.date).getTime();
       if (dateCompare !== 0) return dateCompare;
       const timeA = a.startTime || "00:00";
       const timeB = b.startTime || "00:00";
@@ -111,10 +139,49 @@ const AddExpenseModal = ({
       day: "numeric",
     });
     if (activity.startTime) {
-      return `${activity.title} - ${date} (${formatTime12Hour(activity.startTime)})`;
+      return `${activity.title} - ${date} (${formatTime12Hour(
+        activity.startTime
+      )})`;
     }
     return `${activity.title} - ${date}`;
   };
+
+  // Get summary text for Split Among section
+  const getSplitSummary = (): string => {
+    const splitWith = form.watch("splitWith");
+    if (splitWith.length === 0) {
+      return "No members selected";
+    }
+    if (splitWith.length === members.length) {
+      return "All members";
+    }
+    return `${splitWith.length} member${
+      splitWith.length > 1 ? "s" : ""
+    } selected`;
+  };
+
+  // Get summary text for Payment Details section
+  const getPaymentSummary = (): string => {
+    const paymentMethod = form.watch("paymentMethod");
+    if (!paymentMethod) {
+      return "No payment method";
+    }
+    const methodLabels: Record<string, string> = {
+      cash: "Cash",
+      bank: "Bank Transfer",
+      maya: "Maya",
+      gcash: "GCash",
+    };
+    return methodLabels[paymentMethod] || "Payment method";
+  };
+
+  // Auto-expand payment section when payment method is selected
+  const paymentMethod = form.watch("paymentMethod");
+  useEffect(() => {
+    if (paymentMethod && !isPaymentExpanded) {
+      setIsPaymentExpanded(true);
+    }
+  }, [paymentMethod, isPaymentExpanded]);
 
   const onSubmit = async (values: TExpenseSchema) => {
     try {
@@ -125,10 +192,9 @@ const AddExpenseModal = ({
           description: values.description,
           date: new Date(values.date).toISOString(),
           category: values.category || undefined,
-          paymentMethod:
-            values.paymentMethod === "" || !values.paymentMethod
-              ? undefined
-              : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
+          paymentMethod: !values.paymentMethod
+            ? undefined
+            : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
           accountNumber: values.accountNumber || undefined,
           bankName: values.bankName || undefined,
           accountName: values.accountName || undefined,
@@ -142,10 +208,9 @@ const AddExpenseModal = ({
           description: values.description,
           date: new Date(values.date).toISOString(),
           category: values.category || undefined,
-          paymentMethod:
-            values.paymentMethod === "" || !values.paymentMethod
-              ? undefined
-              : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
+          paymentMethod: !values.paymentMethod
+            ? undefined
+            : (values.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
           accountNumber: values.accountNumber || undefined,
           bankName: values.bankName || undefined,
           accountName: values.accountName || undefined,
@@ -345,204 +410,258 @@ const AddExpenseModal = ({
             </div>
           )}
 
-          {/* Split With */}
-          <div>
-            <label className='block text-sm font-medium text-slate-700 mb-2'>
-              Split Among (who should pay back?)
-            </label>
-            <div className='space-y-2'>
-              {/* Select All / Unselect All */}
-              <label className='flex items-center gap-2 cursor-pointer pb-2 border-b border-slate-200'>
-                <input
-                  type='checkbox'
-                  checked={
-                    form.watch("splitWith").length === members.length &&
-                    members.length > 0
-                  }
-                  onChange={toggleSelectAll}
-                  className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
-                />
+          {/* Split Among Accordion Section */}
+          <div className='border-t border-slate-200 pt-4'>
+            <button
+              type='button'
+              onClick={() => setIsSplitExpanded(!isSplitExpanded)}
+              className='w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors'
+            >
+              <div className='flex items-center gap-2'>
+                <Users className='w-4 h-4 text-orange-500' />
                 <span className='text-sm font-medium text-slate-700'>
-                  {form.watch("splitWith").length === members.length &&
-                  members.length > 0
-                    ? "Unselect All"
-                    : "Select All"}
+                  Split Among (who should pay back?)
                 </span>
-              </label>
+                {!isSplitExpanded && (
+                  <span className='text-xs text-slate-500 ml-2'>
+                    ({getSplitSummary()})
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                  isSplitExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-              {/* Individual member checkboxes */}
-              {members.map((member) => (
-                <label
-                  key={member}
-                  className='flex items-center gap-2 cursor-pointer'
-                >
+            {isSplitExpanded && (
+              <div className='mt-3 space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200'>
+                {/* Select All / Unselect All */}
+                <label className='flex items-center gap-2 cursor-pointer pb-2 border-b border-slate-200'>
                   <input
                     type='checkbox'
-                    checked={form.watch("splitWith").includes(member)}
-                    onChange={() => toggleMember(member)}
+                    checked={
+                      form.watch("splitWith").length === members.length &&
+                      members.length > 0
+                    }
+                    onChange={toggleSelectAll}
                     className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
                   />
-                  <span className='text-sm text-slate-700'>
-                    {getDisplayName(member)}
+                  <span className='text-sm font-medium text-slate-700'>
+                    {form.watch("splitWith").length === members.length &&
+                    members.length > 0
+                      ? "Unselect All"
+                      : "Select All"}
                   </span>
                 </label>
-              ))}
-            </div>
+
+                {/* Individual member checkboxes */}
+                {members.map((member) => (
+                  <label
+                    key={member}
+                    className='flex items-center gap-2 cursor-pointer'
+                  >
+                    <input
+                      type='checkbox'
+                      checked={form.watch("splitWith").includes(member)}
+                      onChange={() => toggleMember(member)}
+                      className='w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500'
+                    />
+                    <span className='text-sm text-slate-700'>
+                      {getDisplayName(member)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Payment Method Section */}
-          <div className='pt-4 border-t border-slate-200'>
-            <div className='flex items-center gap-2 mb-2'>
-              <label className='block text-sm font-medium text-slate-700'>
-                Preferred Payment Method
-              </label>
-              <div className='group relative'>
-                <HelpCircle className='w-4 h-4 text-slate-400 cursor-help' />
-                <div className='absolute left-0 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-xs rounded shadow-lg z-10'>
-                  Add your payment details so others know how to pay you back
-                </div>
-              </div>
-            </div>
-            <select
-              {...form.register("paymentMethod", {
-                onChange: (e) => {
-                  const value = e.target.value as
-                    | "bank"
-                    | "maya"
-                    | "gcash"
-                    | "cash"
-                    | "";
-
-                  // Update RHF value
-                  form.setValue("paymentMethod", value);
-
-                  // Also clear dependent fields
-                  form.setValue("accountNumber", "");
-                  form.setValue("bankName", "");
-                  form.setValue("accountName", "");
-                  form.setValue("qrImage", "");
-                },
-              })}
-              className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 mb-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+          {/* Payment Details Accordion Section */}
+          <div className='border-t border-slate-200 pt-4'>
+            <button
+              type='button'
+              onClick={() => setIsPaymentExpanded(!isPaymentExpanded)}
+              className='w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors'
             >
-              <option value=''>Select payment method</option>
-              <option value='cash'>💵 Cash</option>
-              <option value='bank'>🏦 Bank Transfer</option>
-              <option value='maya'>💳 Maya</option>
-              <option value='gcash'>💰 GCash</option>
-            </select>
+              <div className='flex items-center gap-2'>
+                <CreditCard className='w-4 h-4 text-orange-500' />
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm font-medium text-slate-700'>
+                    Payment Details
+                  </span>
+                  <div className='group relative'>
+                    <HelpCircle className='w-3.5 h-3.5 text-slate-400 cursor-help' />
+                    <div className='absolute left-0 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-xs rounded shadow-lg z-10'>
+                      Add your payment details so others know how to pay you
+                      back
+                    </div>
+                  </div>
+                </div>
+                {!isPaymentExpanded && (
+                  <span className='text-xs text-slate-500 ml-2'>
+                    ({getPaymentSummary()})
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                  isPaymentExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-            {form.watch("paymentMethod") &&
-              form.watch("paymentMethod") !== "cash" && (
-                <div className='space-y-3'>
-                  {form.watch("paymentMethod") === "bank" && (
-                    <div>
-                      <label className='block text-sm font-medium text-slate-700 mb-1'>
-                        Bank Name *
-                      </label>
-                      <input
-                        type='text'
-                        {...form.register("bankName")}
-                        placeholder='e.g., BDO, BPI, Metrobank'
-                        className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                      />
+            {isPaymentExpanded && (
+              <div className='mt-3 space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200'>
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>
+                    Preferred Payment Method
+                  </label>
+                  <select
+                    {...form.register("paymentMethod", {
+                      onChange: (e) => {
+                        const value = e.target.value as
+                          | "bank"
+                          | "maya"
+                          | "gcash"
+                          | "cash"
+                          | "";
+
+                        // Update RHF value
+                        form.setValue("paymentMethod", value);
+
+                        // Also clear dependent fields
+                        form.setValue("accountNumber", "");
+                        form.setValue("bankName", "");
+                        form.setValue("accountName", "");
+                        form.setValue("qrImage", "");
+                      },
+                    })}
+                    className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                  >
+                    <option value=''>Select payment method</option>
+                    <option value='cash'>💵 Cash</option>
+                    <option value='bank'>🏦 Bank Transfer</option>
+                    <option value='maya'>💳 Maya</option>
+                    <option value='gcash'>💰 GCash</option>
+                  </select>
+                </div>
+
+                {form.watch("paymentMethod") &&
+                  form.watch("paymentMethod") !== "cash" && (
+                    <div className='space-y-3'>
+                      {form.watch("paymentMethod") === "bank" && (
+                        <div>
+                          <label className='block text-sm font-medium text-slate-700 mb-1'>
+                            Bank Name *
+                          </label>
+                          <input
+                            type='text'
+                            {...form.register("bankName")}
+                            placeholder='e.g., BDO, BPI, Metrobank'
+                            className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className='block text-sm font-medium text-slate-700 mb-1'>
+                          Account Name{" "}
+                          {form.watch("paymentMethod") === "bank"
+                            ? "*"
+                            : "(Optional)"}
+                        </label>
+                        <input
+                          type='text'
+                          {...form.register("accountName")}
+                          placeholder='Full name on account'
+                          className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                        />
+                      </div>
+
+                      {/* Account Number */}
+                      <div>
+                        <label className='block text-sm font-medium text-slate-700 mb-1'>
+                          Account Number
+                        </label>
+                        <input
+                          type='text'
+                          {...form.register("accountNumber")}
+                          placeholder={`Enter account number`}
+                          className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                        />
+                      </div>
+
+                      {/* QR Code Upload */}
+                      <div>
+                        <label className='block text-sm font-medium text-slate-700 mb-1'>
+                          QR Code (Optional)
+                        </label>
+                        <div className='flex items-center gap-2'>
+                          <label
+                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 transition-colors ${
+                              uploadingImage
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer hover:bg-slate-50"
+                            }`}
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <Loader2 className='w-4 h-4 animate-spin' />
+                                <span className='text-sm'>Uploading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className='w-4 h-4' />
+                                <span className='text-sm'>
+                                  {form.watch("qrImage")
+                                    ? "Change QR"
+                                    : "Upload QR"}
+                                </span>
+                              </>
+                            )}
+                            <input
+                              type='file'
+                              accept='image/*'
+                              onChange={handleImageUpload}
+                              disabled={uploadingImage}
+                              className='hidden'
+                            />
+                          </label>
+                        </div>
+                        {uploadError && (
+                          <p className='mt-2 text-sm text-red-600'>
+                            {uploadError}
+                          </p>
+                        )}
+                        {form.watch("qrImage") && (
+                          <div className='mt-2 relative'>
+                            <Image
+                              src={form.watch("qrImage") || "/placeholder.svg"}
+                              alt='QR Code'
+                              width={128}
+                              height={128}
+                              className='w-32 h-32 object-contain rounded border cursor-pointer hover:opacity-80 transition-opacity'
+                              onClick={() => setShowImageModal(true)}
+                            />
+                            <button
+                              type='button'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                form.setValue("qrImage", "");
+                                setUploadError(null);
+                              }}
+                              className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10'
+                            >
+                              <X className='w-3 h-3' />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
-
-                  <div>
-                    <label className='block text-sm font-medium text-slate-700 mb-1'>
-                      Account Name{" "}
-                      {form.watch("paymentMethod") === "bank"
-                        ? "*"
-                        : "(Optional)"}
-                    </label>
-                    <input
-                      type='text'
-                      {...form.register("accountName")}
-                      placeholder='Full name on account'
-                      className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                    />
-                  </div>
-
-                  {/* Account Number */}
-                  <div>
-                    <label className='block text-sm font-medium text-slate-700 mb-1'>
-                      Account Number
-                    </label>
-                    <input
-                      type='text'
-                      {...form.register("accountNumber")}
-                      placeholder={`Enter account number`}
-                      className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                    />
-                  </div>
-
-                  {/* QR Code Upload */}
-                  <div>
-                    <label className='block text-sm font-medium text-slate-700 mb-1'>
-                      QR Code (Optional)
-                    </label>
-                    <div className='flex items-center gap-2'>
-                      <label
-                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 transition-colors ${
-                          uploadingImage
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer hover:bg-slate-50"
-                        }`}
-                      >
-                        {uploadingImage ? (
-                          <>
-                            <Loader2 className='w-4 h-4 animate-spin' />
-                            <span className='text-sm'>Uploading...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className='w-4 h-4' />
-                            <span className='text-sm'>
-                              {form.watch("qrImage")
-                                ? "Change QR"
-                                : "Upload QR"}
-                            </span>
-                          </>
-                        )}
-                        <input
-                          type='file'
-                          accept='image/*'
-                          onChange={handleImageUpload}
-                          disabled={uploadingImage}
-                          className='hidden'
-                        />
-                      </label>
-                    </div>
-                    {uploadError && (
-                      <p className='mt-2 text-sm text-red-600'>{uploadError}</p>
-                    )}
-                    {form.watch("qrImage") && (
-                      <div className='mt-2 relative'>
-                        <Image
-                          src={form.watch("qrImage") || "/placeholder.svg"}
-                          alt='QR Code'
-                          width={128}
-                          height={128}
-                          className='w-32 h-32 object-contain rounded border cursor-pointer hover:opacity-80 transition-opacity'
-                          onClick={() => setShowImageModal(true)}
-                        />
-                        <button
-                          type='button'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            form.setValue("qrImage", "");
-                            setUploadError(null);
-                          }}
-                          className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10'
-                        >
-                          <X className='w-3 h-3' />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
+            )}
           </div>
 
           {/* Submit */}
