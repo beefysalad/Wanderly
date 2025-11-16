@@ -9,24 +9,28 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 ### Core Functionality
 
 - **Group Management**
+
   - Create and manage travel groups
   - Invite members via email
   - Unique 6-character group codes for easy sharing
   - Guest view mode with read-only access via group codes
 
 - **Trip Planning**
+
   - Create multiple trips within groups
   - Set trip dates, locations, and status (planning, finalized, ongoing, cancelled)
   - Visual calendar and schedule views
   - Track trip progress and completion
 
 - **Activity Scheduling**
+
   - Add activities with dates, times, and notes
   - Mark activities as done
   - Calendar overview and detailed schedule views
   - Export schedules as PNG images or ICS files for calendar apps
 
 - **Expense Tracking**
+
   - Track expenses with categories (accommodation, food, transportation, activities, other)
   - Split expenses among group members
   - Mark payments as received
@@ -35,6 +39,7 @@ Wanderly is a modern web application designed to simplify group trip planning. N
   - Support for multiple payment methods (Cash, Bank Transfer, Maya, GCash)
 
 - **Guest Access**
+
   - Share group code with non-members
   - Read-only view of trips, activities, and expenses
   - Real-time updates via polling
@@ -48,6 +53,7 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 ## Tech Stack
 
 ### Frontend
+
 - **Next.js 15.5.6** - React framework with App Router
 - **React 19.1.0** - UI library
 - **TypeScript** - Type safety
@@ -58,6 +64,7 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 - **Lucide React** - Icons
 
 ### Backend
+
 - **Next.js API Routes** - Serverless API endpoints
 - **Prisma 6.19.0** - ORM and database toolkit
 - **PostgreSQL** - Database
@@ -65,6 +72,7 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 - **Firebase Admin SDK** - Server-side Firebase operations
 
 ### Services
+
 - **Cloudinary** - Image upload and storage for QR codes
 - **Axios** - HTTP client
 
@@ -72,7 +80,7 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 
 ### Prerequisites
 
-- Node.js 20+ 
+- Node.js 20+
 - PostgreSQL database
 - Firebase project with Authentication enabled
 - Cloudinary account (for QR code uploads)
@@ -80,18 +88,20 @@ Wanderly is a modern web application designed to simplify group trip planning. N
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd travelscheduleapp
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
-Create a `.env` file in the root directory with the following variables:
+   Create a `.env` file in the root directory with the following variables:
 
 ```env
 # Database
@@ -117,6 +127,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 4. Set up the database:
+
 ```bash
 # Generate Prisma Client
 npm run db:generate
@@ -126,6 +137,7 @@ npm run db:migrate
 ```
 
 5. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -176,18 +188,21 @@ travelscheduleapp/
 ## Key Features Explained
 
 ### Group Management
+
 - Create groups with unique 6-character codes
 - Add members via email
 - Leave groups
 - View group members and details
 
 ### Trip Planning
+
 - Create trips within groups
 - Set start/end dates and locations
 - Track trip status
 - Delete trips
 
 ### Activity Scheduling
+
 - Add activities with:
   - Title and description
   - Date and optional time range
@@ -198,6 +213,7 @@ travelscheduleapp/
 - Mark activities as done/undone
 
 ### Expense Tracking
+
 - Create expenses with:
   - Amount and description
   - Category (accommodation, food, transportation, activities, other)
@@ -210,18 +226,21 @@ travelscheduleapp/
 - Filter by settled/unsettled expenses
 
 ### Guest Access
+
 - Share group code for read-only access
 - View trips, activities, and expenses
 - Real-time updates (30-second polling)
 - Privacy protection (blurred emails)
 
 ### Export Features
+
 - **PNG Export**: Export trip schedule as high-quality image
 - **ICS Export**: Export to calendar format for import into calendar apps
 
 ## Authentication
 
 The app uses Firebase Authentication for user management. Users can:
+
 - Sign up with email/password
 - Sign in with existing accounts
 - Automatic user sync to database on first login
@@ -229,6 +248,7 @@ The app uses Firebase Authentication for user management. Users can:
 ## Database Schema
 
 The application uses Prisma ORM with PostgreSQL. Key models include:
+
 - **User** - User accounts
 - **Group** - Travel groups
 - **GroupMember** - Many-to-many relationship between users and groups
@@ -241,6 +261,7 @@ The application uses Prisma ORM with PostgreSQL. Key models include:
 ## API Routes
 
 ### Groups
+
 - `GET /api/groups` - List user's groups
 - `POST /api/groups` - Create a group
 - `GET /api/groups/[groupId]` - Get group details
@@ -250,15 +271,18 @@ The application uses Prisma ORM with PostgreSQL. Key models include:
 - `POST /api/groups/validate-code` - Validate group code
 
 ### Trips
+
 - `POST /api/groups/[groupId]/trips` - Create a trip
 - `DELETE /api/groups/[groupId]/trips/[tripId]` - Delete a trip
 
 ### Activities
+
 - `POST /api/trips/[tripId]/activities` - Create an activity
 - `PATCH /api/trips/[tripId]/activities/[activityId]` - Update an activity
 - `DELETE /api/trips/[tripId]/activities/[activityId]` - Delete an activity
 
 ### Expenses
+
 - `GET /api/trips/[tripId]/expenses` - List expenses
 - `POST /api/trips/[tripId]/expenses` - Create an expense
 - `GET /api/trips/[tripId]/expenses/[expenseId]` - Get expense details
@@ -267,21 +291,25 @@ The application uses Prisma ORM with PostgreSQL. Key models include:
 - `POST /api/trips/[tripId]/expenses/[expenseId]/payments` - Mark payment
 
 ### Payment Logs
+
 - `GET /api/trips/[tripId]/payment-logs` - Get payment history
 - `POST /api/trips/[tripId]/payment-logs` - Create payment log
 
 ### Upload
+
 - `POST /api/upload/image` - Upload image to Cloudinary
 
 ## Development
 
 ### Code Style
+
 - TypeScript for type safety
 - ESLint for code quality
 - Consistent component structure
 - Modular architecture
 
 ### State Management
+
 - TanStack Query for server state
 - React hooks for local state
 - Optimistic updates for better UX

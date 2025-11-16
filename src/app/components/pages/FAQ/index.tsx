@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Plus,
   Shield,
+  Sparkles,
   Trash2,
   UserPlus,
   Users,
@@ -21,7 +22,7 @@ import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 interface FAQItem {
   id: string;
   question: string;
-  answer: string;
+  answer: string | React.ReactNode;
   icon: React.ReactNode;
 }
 
@@ -46,10 +47,39 @@ const FAQComponent = () => {
 
   const faqs: FAQItem[] = [
     {
+      id: "what-is-wanderly",
+      question: "What is Wanderly?",
+      answer:
+        "Wanderly is an all-in-one platform designed to make group trip planning seamless and stress-free. Instead of juggling multiple apps, confusing spreadsheets, and endless group chats, Wanderly brings everything together in one beautiful, intuitive platform. You can create groups, plan trips with friends, manage schedules with visual calendar and list views, track and split expenses fairly, and export your schedule to your phone's calendar. Wanderly was built specifically for group travel by a software engineer who wanted to solve the common frustrations of trip planning. It's currently in beta and completely free to use.",
+      icon: <Sparkles className='w-6 h-6 text-amber-400' />,
+    },
+    {
       id: "ics-file",
       question: "What is an .ics file?",
-      answer:
-        "An .ics file is a standard calendar file format (iCalendar) that's completely safe to download and use. It's the same format used by Google Calendar, Apple Calendar, Microsoft Outlook, and most other calendar applications. When you export your trip schedule as an .ics file from Wanderly, you can import it directly into your phone's calendar app. The file contains only your trip activities (dates, times, titles, and notes) - no personal information or sensitive data. It's a text-based format that's been used for decades and is trusted by millions of users worldwide.",
+      answer: (
+        <>
+          An .ics file is a standard calendar file format (iCalendar) that's completely safe to download and use. It's the same format used by Google Calendar, Apple Calendar, Microsoft Outlook, and most other calendar applications. When you export your trip schedule as an .ics file from Wanderly, you can import it directly into your phone's calendar app. The file contains only your trip activities (dates, times, titles, and notes) - no personal information or sensitive data. It's a text-based format that's been used for decades and is trusted by millions of users worldwide.
+          <br /><br />
+          <span className="text-amber-300">Learn more: </span>
+          <a 
+            href="https://en.wikipedia.org/wiki/ICalendar" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-amber-400 hover:text-amber-300 underline"
+          >
+            Wikipedia - iCalendar
+          </a>
+          {" • "}
+          <a 
+            href="https://datatracker.ietf.org/doc/html/rfc5545" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-amber-400 hover:text-amber-300 underline"
+          >
+            RFC 5545 (Official Standard)
+          </a>
+        </>
+      ),
       icon: <Calendar className='w-6 h-6 text-amber-400' />,
     },
     {
@@ -111,8 +141,30 @@ const FAQComponent = () => {
     {
       id: "data-security",
       question: "Is my data secure?",
-      answer:
-        "Yes! Wanderly uses Firebase Authentication for secure login, which is trusted by millions of apps worldwide. Your password is encrypted and never stored in plain text. Group codes are unique and randomly generated, making them hard to guess. Only members of your groups can see your trips and activities. We don't share your data with third parties. Your information is private to you and your group members.",
+      answer: (
+        <>
+          Yes! Wanderly uses Firebase Authentication for secure login, which is trusted by millions of apps worldwide. Your password is encrypted and never stored in plain text. Group codes are unique and randomly generated, making them hard to guess. Only members of your groups can see your trips and activities. We don't share your data with third parties. Your information is private to you and your group members.
+          <br /><br />
+          <span className="text-amber-300">Learn more: </span>
+          <a 
+            href="https://firebase.google.com/docs/auth" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-amber-400 hover:text-amber-300 underline"
+          >
+            Firebase Authentication Documentation
+          </a>
+          {" • "}
+          <a 
+            href="https://firebase.google.com/support/privacy" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-amber-400 hover:text-amber-300 underline"
+          >
+            Firebase Privacy & Security
+          </a>
+        </>
+      ),
       icon: <Shield className='w-6 h-6 text-amber-400' />,
     },
   ];
@@ -179,9 +231,9 @@ const FAQComponent = () => {
                                 : "max-h-0 opacity-0"
                             }`}
                           >
-                            <p className='text-sm text-slate-300 leading-relaxed pt-2'>
+                            <div className='text-sm text-slate-300 leading-relaxed pt-2'>
                               {faq.answer}
-                            </p>
+                            </div>
                           </div>
                         </div>
                         <div className='shrink-0'>
