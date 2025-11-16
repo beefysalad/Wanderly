@@ -161,7 +161,7 @@ const AboutComponent = () => {
                 <div className='pt-8 border-t border-amber-500/20 space-y-6'>
                   {/* Creator Card */}
                   <div className='bg-gradient-to-br from-purple-900/20 to-violet-900/20 border border-amber-500/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm hover:border-amber-500/40 transition-all duration-300 shadow-lg'>
-                    <div className='flex flex-col sm:flex-row items-start gap-6 mb-6'>
+                    <div className='flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6'>
                       <div className='relative flex-shrink-0'>
                         <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-xl opacity-40 animate-pulse-slow'></div>
                         <div className='relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1 shadow-xl'>
@@ -180,13 +180,13 @@ const AboutComponent = () => {
                           <Code2 className='w-4 h-4 text-purple-950' />
                         </div>
                       </div>
-                      <div className='flex-1 space-y-2'>
-                        <div className='flex items-center gap-2 flex-wrap'>
+                      <div className='flex-1 space-y-2 text-center sm:text-left w-full'>
+                        <div className='flex items-center justify-center sm:justify-start gap-2 flex-wrap'>
                           <h3 className='text-2xl md:text-3xl font-bold text-white'>
                             About the Creator
                           </h3>
                         </div>
-                        <div className='flex items-center gap-3'>
+                        <div className='flex items-center justify-center sm:justify-start gap-3 flex-wrap'>
                           <p className='text-base text-slate-300 font-medium'>
                             Patrick
                           </p>
@@ -205,14 +205,14 @@ const AboutComponent = () => {
                     </div>
                     <div className='space-y-4'>
                       <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
-                        I&apos;m a seasoned software engineer who, honestly,
-                        hasn&apos;t been much of a traveler yet. But lately,
-                        I&apos;ve been planning to change that and start
-                        exploring the world. As I researched and prepared for my
-                        future trips, I quickly realized how messy trip planning
-                        can be sometimes&mdash;and it gave me the idea that
-                        group trip planning must be even messier. I knew I could
-                        build something better.
+                        I&apos;m a software engineer who, honestly, hasn&apos;t
+                        been much of a traveler yet. But lately, I&apos;ve been
+                        planning to change that and start exploring the world.
+                        As I researched and prepared for my future trips, I
+                        quickly realized how messy trip planning can be
+                        sometimes&mdash;and it gave me the idea that group trip
+                        planning must be even messier. I knew I could build
+                        something better.
                       </p>
                       <div className='relative pl-6 border-l-2 border-amber-500/30'>
                         <div className='absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-400/50 to-transparent'></div>

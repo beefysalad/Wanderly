@@ -219,6 +219,11 @@ function drawActivitiesList(
         contentHeight += 20;
       }
 
+      // Transportation height
+      if (activity.transportationMode || activity.pickupTime) {
+        contentHeight += 18;
+      }
+
       // Notes height
       if (activity.notes) {
         ctx.font = "14px Arial";
@@ -286,6 +291,35 @@ function drawActivitiesList(
           : formatTime12Hour(activity.startTime);
         ctx.fillText(`⏰ ${timeText}`, titleX, detailY);
         detailY += 20;
+      }
+
+      // Transportation info
+      if (activity.transportationMode || activity.pickupTime) {
+        let transportText = "";
+        if (activity.transportationMode) {
+          const modeIcons: Record<string, string> = {
+            car: "🚗",
+            bus: "🚌",
+            plane: "✈️",
+            train: "🚊",
+            taxi: "🚕",
+            walking: "🚶",
+            commute: "🚌",
+          };
+          const icon = modeIcons[activity.transportationMode] || "🚗";
+          transportText += `${icon} ${
+            activity.transportationMode.charAt(0).toUpperCase() +
+            activity.transportationMode.slice(1)
+          }`;
+        }
+        if (activity.pickupTime) {
+          if (transportText) transportText += " • ";
+          const label =
+            activity.transportationMode === "plane" ? "Departure" : "Pickup";
+          transportText += `${label}: ${formatTime12Hour(activity.pickupTime)}`;
+        }
+        ctx.fillText(transportText, titleX, detailY);
+        detailY += 18;
       }
 
       if (activity.notes) {
@@ -457,7 +491,7 @@ function formatICSDateTime(date: Date, time?: string): string {
   const [hours, minutes] = time.split(":").map(Number);
   const localDate = new Date(date);
   localDate.setHours(hours, minutes, 0, 0);
-  
+
   // Convert to UTC
   const utcYear = localDate.getUTCFullYear();
   const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
@@ -518,7 +552,7 @@ export function exportScheduleToICS({
 
     // Date handling
     const activityDate = new Date(activity.date);
-    
+
     if (activity.startTime) {
       // Timed event
       const dtstart = formatICSDateTime(activityDate, activity.startTime);
@@ -531,7 +565,9 @@ export function exportScheduleToICS({
         // If no end time, default to 1 hour after start
         const [hours, minutes] = activity.startTime.split(":").map(Number);
         const endHours = (hours + 1) % 24;
-        const endTimeStr = `${String(endHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        const endTimeStr = `${String(endHours).padStart(2, "0")}:${String(
+          minutes
+        ).padStart(2, "0")}`;
         const dtend = formatICSDateTime(activityDate, endTimeStr);
         lines.push(`DTEND:${dtend}`);
       }
@@ -546,9 +582,56 @@ export function exportScheduleToICS({
     const summary = escapeICSText(activity.title);
     lines.push(`SUMMARY:${summary}`);
 
-    // DESCRIPTION (notes if available)
+    // DESCRIPTION (notes + transportation details if available)
+    const descriptionParts: string[] = [];
     if (activity.notes) {
-      const description = escapeICSText(activity.notes);
+      descriptionParts.push(escapeICSText(activity.notes));
+    }
+    // Add transportation details to description
+    if (
+      activity.transportationMode ||
+      activity.pickupTime ||
+      activity.pickupLocation ||
+      activity.dropoffLocation
+    ) {
+      const transportDetails: string[] = [];
+      if (activity.transportationMode) {
+        transportDetails.push(
+          `Transportation: ${
+            activity.transportationMode.charAt(0).toUpperCase() +
+            activity.transportationMode.slice(1)
+          }`
+        );
+      }
+      if (activity.pickupTime) {
+        const timeLabel =
+          activity.transportationMode === "plane"
+            ? "Departure Time"
+            : "Pickup Time";
+        transportDetails.push(`${timeLabel}: ${activity.pickupTime}`);
+      }
+      if (activity.pickupLocation) {
+        const locationLabel =
+          activity.transportationMode === "plane"
+            ? "Departure Airport"
+            : "Pickup Location";
+        transportDetails.push(`${locationLabel}: ${activity.pickupLocation}`);
+      }
+      if (activity.dropoffLocation) {
+        const locationLabel =
+          activity.transportationMode === "plane"
+            ? "Arrival Airport"
+            : "Dropoff Location";
+        transportDetails.push(`${locationLabel}: ${activity.dropoffLocation}`);
+      }
+      if (transportDetails.length > 0) {
+        descriptionParts.push(
+          `Transportation Details: ${transportDetails.join(", ")}`
+        );
+      }
+    }
+    if (descriptionParts.length > 0) {
+      const description = descriptionParts.join("\\n\\n");
       lines.push(`DESCRIPTION:${description}`);
     }
 

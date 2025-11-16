@@ -24,7 +24,17 @@ async function handler(req: NextRequest, auth: AuthContext) {
       );
     }
 
-    const { title, date, startTime, endTime, notes } = await req.json();
+    const {
+      title,
+      date,
+      startTime,
+      endTime,
+      notes,
+      transportationMode,
+      pickupTime,
+      pickupLocation,
+      dropoffLocation,
+    } = await req.json();
 
     if (!title || !date) {
       return NextResponse.json(
@@ -39,6 +49,10 @@ async function handler(req: NextRequest, auth: AuthContext) {
       startTime,
       endTime,
       notes,
+      transportationMode,
+      pickupTime,
+      pickupLocation,
+      dropoffLocation,
     });
 
     const transformedActivity = transformActivity(activity);

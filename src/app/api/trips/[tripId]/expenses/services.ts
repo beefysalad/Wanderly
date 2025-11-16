@@ -283,9 +283,22 @@ export async function createExpenseService(
     accountName?: string;
     qrImage?: string;
     splitWith: string[]; // emails
+    activityId?: string;
   }
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
+
+  // Verify activity belongs to trip if provided
+  if (data.activityId) {
+    const activity = await prisma.activity.findUnique({
+      where: { id: data.activityId },
+      select: { tripId: true },
+    });
+
+    if (!activity || activity.tripId !== tripId) {
+      throw new Error("Activity not found or does not belong to this trip");
+    }
+  }
 
   // Get paidBy user ID
   const paidById = await getUserIdFromEmail(data.paidBy);
@@ -316,6 +329,7 @@ export async function createExpenseService(
       bankName: data.bankName || null,
       accountName: data.accountName || null,
       qrImage: data.qrImage || null,
+      activityId: data.activityId || null,
       splits: {
         create: splitWithUserIds.map((userId) => ({
           userId,
@@ -376,6 +390,7 @@ export async function updateExpenseService(
     accountName?: string;
     qrImage?: string;
     splitWith?: string[]; // emails
+    activityId?: string;
   }
 ) {
   await verifyTripAccess(token, tripId);
@@ -388,6 +403,20 @@ export async function updateExpenseService(
 
   if (!existingExpense || existingExpense.tripId !== tripId) {
     throw new Error("Expense not found or does not belong to this trip");
+  }
+
+  // Verify activity belongs to trip if provided
+  if (data.activityId !== undefined) {
+    if (data.activityId) {
+      const activity = await prisma.activity.findUnique({
+        where: { id: data.activityId },
+        select: { tripId: true },
+      });
+
+      if (!activity || activity.tripId !== tripId) {
+        throw new Error("Activity not found or does not belong to this trip");
+      }
+    }
   }
 
   // Prepare update data
@@ -458,6 +487,14 @@ export async function updateExpenseService(
     }
   }
 
+  if (data.activityId !== undefined) {
+    if (data.activityId) {
+      updateData.activity = { connect: { id: data.activityId } };
+    } else {
+      updateData.activity = { disconnect: true };
+    }
+  }
+
   const expense = await prisma.expense.update({
     where: { id: expenseId },
     data: updateData,
@@ -523,4 +560,3 @@ export async function deleteExpenseService(
 
   logger.info("Expense deleted", { expenseId, tripId });
 }
-

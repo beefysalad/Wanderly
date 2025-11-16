@@ -20,7 +20,18 @@ async function handler(req: NextRequest, auth: AuthContext) {
 
     if (req.method === "PATCH") {
       const body = await req.json();
-      const { title, date, startTime, endTime, notes, done } = body;
+      const {
+        title,
+        date,
+        startTime,
+        endTime,
+        notes,
+        done,
+        transportationMode,
+        pickupTime,
+        pickupLocation,
+        dropoffLocation,
+      } = body;
 
       const activity = await updateActivityService(
         auth.decodedToken,
@@ -33,6 +44,10 @@ async function handler(req: NextRequest, auth: AuthContext) {
           ...(endTime !== undefined && { endTime }),
           ...(notes !== undefined && { notes }),
           ...(done !== undefined && { done }),
+          ...(transportationMode !== undefined && { transportationMode }),
+          ...(pickupTime !== undefined && { pickupTime }),
+          ...(pickupLocation !== undefined && { pickupLocation }),
+          ...(dropoffLocation !== undefined && { dropoffLocation }),
         }
       );
 

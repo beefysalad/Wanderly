@@ -56,6 +56,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
         accountName,
         qrImage,
         splitWith,
+        activityId,
       } = body;
 
       if (!paidBy || !amount || !description || !date || !splitWith) {
@@ -80,6 +81,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
         accountName,
         qrImage,
         splitWith: Array.isArray(splitWith) ? splitWith : [],
+        activityId,
       });
 
       const transformedExpense = transformExpense(expense);

@@ -103,7 +103,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
                     className='group relative text-sm text-amber-400 hover:text-amber-300 cursor-pointer transition-all duration-300'
                   >
                     <span className='relative inline-block'>
-                      Quick Join as Guest (View Only)
+                    Quick Join as Guest (View Only)
                       <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-amber-400 group-hover:w-full transition-all duration-300'></span>
                     </span>
                   </button>
@@ -146,7 +146,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
             className='group w-full text-sm text-amber-400 hover:text-amber-300 transition-all duration-300 text-center py-1 relative'
           >
             <span className='relative inline-block'>
-              Quick Join as Guest (View Only)
+            Quick Join as Guest (View Only)
               <span className='absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-amber-400 group-hover:w-full transition-all duration-300'></span>
             </span>
           </button>

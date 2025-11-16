@@ -58,6 +58,10 @@ export async function createActivityService(
     startTime?: string;
     endTime?: string;
     notes?: string;
+    transportationMode?: string;
+    pickupTime?: string;
+    pickupLocation?: string;
+    dropoffLocation?: string;
   }
 ) {
   const { user } = await verifyTripAccess(token, tripId);
@@ -71,6 +75,10 @@ export async function createActivityService(
       endTime: data.endTime || null,
       notes: data.notes || null,
       done: false,
+      transportationMode: data.transportationMode || null,
+      pickupTime: data.pickupTime || null,
+      pickupLocation: data.pickupLocation || null,
+      dropoffLocation: data.dropoffLocation || null,
     },
   });
 
@@ -92,6 +100,10 @@ export async function updateActivityService(
     endTime?: string;
     notes?: string;
     done?: boolean;
+    transportationMode?: string;
+    pickupTime?: string;
+    pickupLocation?: string;
+    dropoffLocation?: string;
   }
 ) {
   await verifyTripAccess(token, tripId);
@@ -115,6 +127,10 @@ export async function updateActivityService(
       ...(data.endTime !== undefined && { endTime: data.endTime || null }),
       ...(data.notes !== undefined && { notes: data.notes || null }),
       ...(data.done !== undefined && { done: data.done }),
+      ...(data.transportationMode !== undefined && { transportationMode: data.transportationMode || null }),
+      ...(data.pickupTime !== undefined && { pickupTime: data.pickupTime || null }),
+      ...(data.pickupLocation !== undefined && { pickupLocation: data.pickupLocation || null }),
+      ...(data.dropoffLocation !== undefined && { dropoffLocation: data.dropoffLocation || null }),
     },
   });
 
