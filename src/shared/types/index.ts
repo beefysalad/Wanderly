@@ -70,3 +70,12 @@ export interface PaymentLog {
   timestamp: string;
   paymentMethod?: "cash" | "bank" | "maya" | "gcash";
 }
+
+export interface Review {
+  id: string;
+  rating: number; // 1-5 stars
+  comment: string;
+  name?: string;
+  email?: string;
+  createdAt: string;
+}

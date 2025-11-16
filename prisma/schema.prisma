@@ -178,3 +178,13 @@ model PaymentLog {
   payer   User    @relation("PaymentLogPayer", fields: [payerId], references: [id], onDelete: Cascade)
   payee   User    @relation("PaymentLogPayee", fields: [payeeId], references: [id], onDelete: Cascade)
 }
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 stars
+  comment   String
+  name      String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
