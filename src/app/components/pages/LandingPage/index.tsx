@@ -34,7 +34,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
           setShowAuthModal={setShowAuthModal}
           setShowQuickJoinModal={setShowQuickJoinModal}
         />
-        <section className='px-4 md:px-8 flex-1 flex items-center md:items-start justify-center sm:mt-24 mt-14'>
+        <section className='px-4 md:px-8 flex-1 flex items-center md:items-start justify-center sm:mt-24 mt-14 min-h-[calc(100vh-200px)] pb-16 md:pb-24'>
           <div className='w-full max-w-7xl'>
             <div className='grid md:grid-cols-2 gap-12 items-center'>
               <div className='space-y-6 relative'>
@@ -83,7 +83,7 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
           </div>
         </section>
 
-        <div className='md:hidden px-4 pb-6 space-y-3 animate-slide-up'>
+        <div className='md:hidden px-4 pb-8 space-y-3 animate-slide-up'>
           <div className='flex flex-col gap-3'>
             <button
               onClick={() => {

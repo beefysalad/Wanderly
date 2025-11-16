@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Header from "../../shared/Header";
+import Footer from "../../shared/Footer";
 import AuthModal from "../../shared/Modal/AuthModal";
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
@@ -301,6 +302,7 @@ const FAQComponent = () => {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
 
       {showAuthModal && (
