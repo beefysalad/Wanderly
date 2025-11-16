@@ -175,13 +175,20 @@ const AddExpenseModal = ({
     return methodLabels[paymentMethod] || "Payment method";
   };
 
-  // Auto-expand payment section when payment method is selected
+  // Auto-expand payment section when payment method is first selected (but allow manual closing)
   const paymentMethod = form.watch("paymentMethod");
+  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
+
   useEffect(() => {
-    if (paymentMethod && !isPaymentExpanded) {
+    if (paymentMethod && !isPaymentExpanded && !hasAutoExpanded) {
       setIsPaymentExpanded(true);
+      setHasAutoExpanded(true);
     }
-  }, [paymentMethod, isPaymentExpanded]);
+    // Reset auto-expand flag when payment method is cleared
+    if (!paymentMethod) {
+      setHasAutoExpanded(false);
+    }
+  }, [paymentMethod, isPaymentExpanded, hasAutoExpanded]);
 
   const onSubmit = async (values: TExpenseSchema) => {
     try {

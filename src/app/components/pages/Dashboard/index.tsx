@@ -4,6 +4,7 @@ import type { Trip } from "@/src/shared/types/index";
 import { signOut } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import CreateGroupModal from "../../shared/Modal/CreateGroupModal";
 import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
 import DashboardCTA from "./DashboardCTA";
@@ -157,7 +158,7 @@ const DashboardComponent = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-24 md:pb-20'>
+    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-36 md:pb-28'>
       <div className='max-w-4xl mx-auto px-4 py-4 md:py-6'>
         {activeTab === "dashboard" && (
           <>
@@ -202,6 +203,13 @@ const DashboardComponent = () => {
 
         {activeTab === "trips" && (
           <div>
+            <button
+              onClick={() => handleTabChange("dashboard")}
+              className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
+            >
+              <ArrowLeft className='w-5 h-5' />
+              Back to Dashboard
+            </button>
             <div className='mb-6'>
               <h2 className='text-2xl font-bold text-slate-900'>All Trips</h2>
               <p className='text-slate-600 text-sm mt-1'>
@@ -214,6 +222,13 @@ const DashboardComponent = () => {
 
         {activeTab === "groups" && (
           <div>
+            <button
+              onClick={() => handleTabChange("dashboard")}
+              className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
+            >
+              <ArrowLeft className='w-5 h-5' />
+              Back to Dashboard
+            </button>
             <div className='mb-6'>
               <h2 className='text-2xl font-bold text-slate-900'>All Groups</h2>
               <p className='text-slate-600 text-sm mt-1'>

@@ -400,3 +400,16 @@ body {
   /* background: #1e0938; */
   overscroll-behavior-y: none;
 }
+
+/* Safe area padding for mobile devices (especially iOS) */
+@supports (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@supports not (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

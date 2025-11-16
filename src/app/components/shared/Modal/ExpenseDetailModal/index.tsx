@@ -114,21 +114,21 @@ const ExpenseDetailModal = ({
       onClick={onClose}
     >
       <div
-        className='bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto'
+        className='bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[75vh] flex flex-col overflow-hidden'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className='sticky top-0 bg-gradient-to-r from-orange-600 to-amber-600 p-6 rounded-t-2xl'>
+        <div className='flex-shrink-0 bg-gradient-to-r from-orange-600 to-amber-600 p-6 rounded-t-2xl relative z-10'>
           <div className='flex items-start justify-between mb-4'>
-            <div className='flex-1'>
+            <div className='flex-1 min-w-0 pr-4'>
               <div className='flex items-center gap-3 mb-2'>
-                <span className='text-4xl'>
+                <span className='text-4xl flex-shrink-0'>
                   {expense.category
                     ? categoryEmojis[expense.category] || "📌"
                     : "📌"}
                 </span>
-                <div>
-                  <h2 className='text-2xl font-bold text-white'>
+                <div className='min-w-0 flex-1'>
+                  <h2 className='text-2xl font-bold text-white break-words'>
                     {expense.description}
                   </h2>
                   <p className='text-orange-100 text-sm'>
@@ -141,11 +141,11 @@ const ExpenseDetailModal = ({
                 </div>
               </div>
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 flex-shrink-0 relative z-20'>
               {!readOnly && onEdit && (
                 <button
                   onClick={onEdit}
-                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white relative z-10'
                   title='Edit expense'
                 >
                   <Pencil className='w-5 h-5' />
@@ -154,7 +154,7 @@ const ExpenseDetailModal = ({
               {!readOnly && onDelete && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                  className='p-2 hover:bg-white/20 rounded-full transition-colors text-white relative z-10'
                   title='Delete expense'
                 >
                   <Trash2 className='w-5 h-5' />
@@ -162,7 +162,8 @@ const ExpenseDetailModal = ({
               )}
               <button
                 onClick={onClose}
-                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white'
+                className='p-2 hover:bg-white/20 rounded-full transition-colors text-white relative z-10'
+                title='Close'
               >
                 <X className='w-5 h-5' />
               </button>
@@ -180,7 +181,7 @@ const ExpenseDetailModal = ({
         </div>
 
         {/* Content */}
-        <div className='p-6 space-y-6'>
+        <div className='p-6 space-y-6 overflow-y-auto overflow-x-hidden flex-1'>
           {/* Linked Activity */}
           {linkedActivity && (
             <div>
@@ -254,12 +255,12 @@ const ExpenseDetailModal = ({
                         : "bg-slate-50 dark:bg-slate-700 border-red-500 dark:border-red-600"
                     }`}
                   >
-                    <div className='flex items-center gap-3'>
-                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold'>
+                    <div className='flex items-center gap-3 min-w-0 flex-1'>
+                      <div className='w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold'>
                         {member[0].toUpperCase()}
                       </div>
-                      <div>
-                        <p className='font-medium text-slate-900 dark:text-white'>
+                      <div className='min-w-0 flex-1'>
+                        <p className='font-medium text-slate-900 dark:text-white break-words'>
                           {getDisplayName(member)}
                           {isCurrentUser && " (You)"}
                         </p>
@@ -325,7 +326,7 @@ const ExpenseDetailModal = ({
                         Account Number
                       </p>
                       <div className='flex items-center gap-2'>
-                        <code className='flex-1 text-sm bg-white dark:bg-slate-700 px-3 py-2 rounded border border-slate-200 dark:border-slate-600 font-mono'>
+                        <code className='flex-1 text-sm bg-white dark:bg-slate-700 px-3 py-2 rounded border border-slate-200 dark:border-slate-600 font-mono break-all overflow-wrap-anywhere'>
                           {expense.accountNumber}
                         </code>
                         <button
@@ -358,14 +359,16 @@ const ExpenseDetailModal = ({
                           Download
                         </button>
                       </div>
-                      <Image
-                        src={expense.qrImage || "/placeholder.svg"}
-                        alt='Payment QR Code'
-                        width={192}
-                        height={192}
-                        className='w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-slate-600 mx-auto bg-white cursor-pointer hover:opacity-80 transition-opacity'
-                        onClick={() => setShowImageModal(true)}
-                      />
+                      <div className='flex justify-center'>
+                        <Image
+                          src={expense.qrImage || "/placeholder.svg"}
+                          alt='Payment QR Code'
+                          width={192}
+                          height={192}
+                          className='w-48 h-48 max-w-full object-contain rounded-lg border border-slate-200 dark:border-slate-600 bg-white cursor-pointer hover:opacity-80 transition-opacity'
+                          onClick={() => setShowImageModal(true)}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

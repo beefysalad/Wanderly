@@ -33,6 +33,8 @@ model Group {
   name        String
   code        String   @unique
   createdById String
+  colorScheme String?  @default("orange")
+  emoji       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -86,23 +88,23 @@ model Trip {
 }
 
 model Activity {
-  id                String   @id @default(cuid())
-  tripId            String
-  date              DateTime
-  title             String
-  startTime         String?
-  endTime           String?
-  notes             String?
-  done              Boolean  @default(false)
+  id                 String   @id @default(cuid())
+  tripId             String
+  date               DateTime
+  title              String
+  startTime          String?
+  endTime            String?
+  notes              String?
+  done               Boolean  @default(false)
   transportationMode String?
-  pickupTime        String?
-  pickupLocation    String?
-  dropoffLocation   String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  pickupTime         String?
+  pickupLocation     String?
+  dropoffLocation    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relationships
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
   expenses Expense[] @relation("ActivityExpenses")
 }
 
@@ -188,7 +190,7 @@ model PaymentLog {
 
 model Review {
   id        String   @id @default(cuid())
-  rating    Int      // 1-5 stars
+  rating    Int // 1-5 stars
   comment   String
   name      String?
   email     String?

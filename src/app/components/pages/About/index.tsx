@@ -193,9 +193,7 @@ const AboutComponent = () => {
                           <span className='w-1 h-1 bg-amber-400 rounded-full'></span>
                           <div className='flex items-center gap-1.5 text-xs text-slate-400'>
                             <Code2 className='w-3.5 h-3.5 text-amber-400' />
-                            <span>
-                              Software Engineer / Full Stack Developer
-                            </span>
+                            <span>Software Engineer</span>
                           </div>
                         </div>
                         <p className='text-sm text-slate-400 italic'>

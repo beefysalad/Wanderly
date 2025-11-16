@@ -14,7 +14,12 @@ async function getOrCreateUser(token: DecodedIdToken) {
 /**
  * Creates a new group and adds the creator as a member
  */
-export async function createGroupService(token: DecodedIdToken, name: string) {
+export async function createGroupService(
+  token: DecodedIdToken,
+  name: string,
+  colorScheme: string = "orange",
+  emoji: string | null = null
+) {
   const user = await getOrCreateUser(token);
 
   const code = await generateUniqueGroupCode();
@@ -23,6 +28,8 @@ export async function createGroupService(token: DecodedIdToken, name: string) {
     data: {
       name,
       code,
+      colorScheme,
+      emoji,
       createdById: user.id,
       members: {
         create: {
@@ -360,6 +367,115 @@ export async function deleteGroupService(
   });
 
   logger.info("Group deleted", { groupId, deletedBy: user.id });
+}
+
+/**
+ * Updates a group (only creator/admin can update)
+ */
+export async function updateGroupService(
+  token: DecodedIdToken,
+  groupId: string,
+  updates: {
+    name?: string;
+    colorScheme?: string;
+    emoji?: string | null;
+  }
+) {
+  const user = await getOrCreateUser(token);
+
+  // Verify group exists and user is the creator or admin
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: {
+      members: {
+        where: { userId: user.id },
+      },
+    },
+  });
+
+  if (!group) {
+    throw new Error("Group not found");
+  }
+
+  const membership = group.members[0];
+  if (!membership) {
+    throw new Error("User is not a member of this group");
+  }
+
+  // Only creator or admin can update
+  const isCreator = group.createdById === user.id;
+  const isAdmin = membership.role === "admin";
+  if (!isCreator && !isAdmin) {
+    throw new Error("Only group creator or admin can update the group");
+  }
+
+  // Validate name if provided
+  if (updates.name !== undefined) {
+    if (!updates.name || typeof updates.name !== "string" || updates.name.trim().length < 5) {
+      throw new Error("Group name must be at least 5 characters");
+    }
+  }
+
+  // Build update data
+  const updateData: {
+    name?: string;
+    colorScheme?: string;
+    emoji?: string | null;
+  } = {};
+
+  if (updates.name !== undefined) {
+    updateData.name = updates.name.trim();
+  }
+  if (updates.colorScheme !== undefined) {
+    updateData.colorScheme = updates.colorScheme;
+  }
+  if (updates.emoji !== undefined) {
+    updateData.emoji = updates.emoji;
+  }
+
+  // Update the group
+  const updatedGroup = await prisma.group.update({
+    where: { id: groupId },
+    data: updateData,
+    include: {
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+      trips: {
+        include: {
+          activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  logger.info("Group updated", { groupId, updatedBy: user.id, updates });
+  return updatedGroup;
 }
 
 /**

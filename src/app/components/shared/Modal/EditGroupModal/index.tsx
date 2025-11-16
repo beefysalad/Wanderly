@@ -1,13 +1,13 @@
 import { X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { createGroupSchema, TCreateGroupSchema } from "./createGroupZod";
+import { editGroupSchema, TEditGroupSchema } from "./editGroupZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useCreateGroup } from "@/src/hooks/useGroups";
-import { useRouter } from "next/navigation";
+import { useUpdateGroup } from "@/src/hooks/useGroups";
+import { Group } from "@/src/shared/types";
 
 const COLOR_SCHEMES = [
   {
@@ -84,69 +84,83 @@ const COMMON_EMOJIS = [
   "🎯",
 ];
 
-interface ICreateGroupModalProps {
+interface IEditGroupModalProps {
+  group: Group;
   onClose: () => void;
 }
-const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const createGroup = useCreateGroup();
 
-  const form = useForm<TCreateGroupSchema>({
-    resolver: zodResolver(createGroupSchema),
+const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
+  const [error, setError] = useState<string | null>(null);
+  const updateGroup = useUpdateGroup();
+
+  const form = useForm<TEditGroupSchema>({
+    resolver: zodResolver(editGroupSchema),
     defaultValues: {
-      groupName: "",
-      colorScheme: "orange",
-      emoji: null,
+      groupName: group.name,
+      colorScheme: (group.colorScheme ||
+        "orange") as TEditGroupSchema["colorScheme"],
+      emoji: group.emoji || null,
     },
   });
+
+  // Update form when group changes
+  useEffect(() => {
+    form.reset({
+      groupName: group.name,
+      colorScheme: (group.colorScheme ||
+        "orange") as TEditGroupSchema["colorScheme"],
+      emoji: group.emoji || null,
+    });
+  }, [group, form]);
 
   const selectedColorScheme = form.watch("colorScheme");
   const selectedEmoji = form.watch("emoji");
 
-  const onSubmit = async (values: TCreateGroupSchema) => {
+  const onSubmit = async (values: TEditGroupSchema) => {
     try {
       setError(null);
-      const result = await createGroup.mutateAsync({
+      await updateGroup.mutateAsync({
+        groupId: group.id,
         name: values.groupName,
         colorScheme: values.colorScheme || "orange",
         emoji: values.emoji || null,
       });
       onClose();
-      // Navigate to the new group
-      if (result.group) {
-        router.push(`/group/${result.group.id}`);
-      }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to create group";
+        err instanceof Error ? err.message : "Failed to update group";
       setError(message);
     }
   };
+
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full max-h-[75vh] flex flex-col overflow-hidden'>
         {/* Header */}
-        <div className='pb-6 border-b border-slate-200 flex items-center justify-between mb-6'>
+        <div className='flex-shrink-0 p-6 border-b border-slate-200 flex items-center justify-between'>
           <div>
             <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
-              Create Group
+              Edit Group
             </h2>
             <p className='text-sm text-slate-600 mt-1'>
-              Create group and share with friends
+              Update group name, color, and emoji
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className='p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors'
+            className='p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex-shrink-0 relative z-10'
+            title='Close'
           >
             <X className='w-5 h-5 text-slate-500' />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='flex-1 overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4'
+        >
           {/* Group Name */}
           <div className='space-y-2'>
             <Label
@@ -258,17 +272,17 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
             <Button
               type='button'
               onClick={onClose}
-              disabled={createGroup.isPending}
+              disabled={updateGroup.isPending}
               className='flex-1 px-4 py-2 border bg-slate-150 border-slate-300 rounded-lg text-slate-700  font-medium hover:bg-slate-200  transition-colors'
             >
               Cancel
             </Button>
             <Button
               type='submit'
-              disabled={createGroup.isPending}
+              disabled={updateGroup.isPending}
               className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {createGroup.isPending ? "Creating..." : "Create"}
+              {updateGroup.isPending ? "Updating..." : "Update"}
             </Button>
           </div>
         </form>
@@ -277,4 +291,4 @@ const CreateGroupModal = ({ onClose }: ICreateGroupModalProps) => {
   );
 };
 
-export default CreateGroupModal;
+export default EditGroupModal;

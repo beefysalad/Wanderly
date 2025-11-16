@@ -1,5 +1,5 @@
 import { Group, Trip } from "@/src/shared/types";
-import { Calendar, Users, Plane, TrendingUp } from "lucide-react";
+import { Calendar, Users, Plane, Clock } from "lucide-react";
 import { useMemo } from "react";
 
 interface IDashboardStatisticsProps {
@@ -29,18 +29,26 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
       return startDate >= today;
     });
 
-    const totalMembers = new Set<string>();
-    groups.forEach((group) => {
-      group.memberEmails?.forEach((email) => {
-        totalMembers.add(email);
+    // Calculate days until next trip
+    let daysUntilNextTrip: number | null = null;
+    if (upcomingTrips.length > 0) {
+      const sortedUpcomingTrips = [...upcomingTrips].sort((a, b) => {
+        const dateA = new Date(a.startDate).getTime();
+        const dateB = new Date(b.startDate).getTime();
+        return dateA - dateB;
       });
-    });
+      const nextTrip = sortedUpcomingTrips[0];
+      const nextTripDate = new Date(nextTrip.startDate);
+      nextTripDate.setHours(0, 0, 0, 0);
+      const diffTime = nextTripDate.getTime() - today.getTime();
+      daysUntilNextTrip = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
 
     return {
       totalGroups,
       totalTrips,
       upcomingTrips: upcomingTrips.length,
-      totalMembers: totalMembers.size,
+      daysUntilNextTrip,
     };
   }, [groups]);
 
@@ -70,9 +78,9 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
       borderColor: "border-blue-200",
     },
     {
-      label: "Total Members",
-      value: stats.totalMembers,
-      icon: TrendingUp,
+      label: "Days Until Next Trip",
+      value: stats.daysUntilNextTrip !== null ? stats.daysUntilNextTrip : "—",
+      icon: Clock,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
@@ -111,4 +119,3 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
 };
 
 export default DashboardStatistics;
-

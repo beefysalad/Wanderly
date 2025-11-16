@@ -1,6 +1,7 @@
 import { Group } from "@/src/shared/types";
 import { CalendarIcon, Code2, Compass, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { getGroupColorClasses } from "@/lib/utils/groupColors";
 
 interface IGroupsViewProps {
   groups: Group[];
@@ -42,42 +43,46 @@ const GroupsView = ({ groups, handleNavigateToGroup }: IGroupsViewProps) => {
   return (
     <>
       <div className='space-y-4'>
-        {paginatedGroups.map((group) => (
-          <button
-            key={group.id}
-            onClick={() => handleNavigateToGroup(group.id)}
-            className='w-full bg-white rounded-xl border border-slate-200 p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-200 text-left active:scale-[0.98]'
-          >
-            <div className='flex items-start justify-between gap-3 mb-4'>
-              <div className='w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0'>
-                <Compass className='w-6 h-6 text-white' />
+        {paginatedGroups.map((group) => {
+          const colors = getGroupColorClasses(group.colorScheme);
+          const hasEmoji = !!group.emoji;
+          return (
+            <button
+              key={group.id}
+              onClick={() => handleNavigateToGroup(group.id)}
+              className={`w-full bg-white rounded-xl border border-slate-200 p-5 ${colors.hoverBorder} hover:shadow-lg transition-all duration-200 text-left active:scale-[0.98]`}
+            >
+              <div className='flex items-start justify-between gap-3 mb-4'>
+                <div className={`w-12 h-12 ${hasEmoji ? 'bg-slate-100' : colors.bg} rounded-xl flex items-center justify-center shadow-md flex-shrink-0 ${hasEmoji ? '' : 'text-white'} text-2xl`}>
+                  {group.emoji || <Compass className='w-6 h-6' />}
+                </div>
+                <div className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 ${colors.bgLight} ${colors.textDark} rounded-full border ${colors.borderLight} flex-shrink-0`}>
+                  <Code2 className='w-3 h-3' />
+                  {group.code}
+                </div>
               </div>
-              <div className='flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full border border-amber-200 flex-shrink-0'>
-                <Code2 className='w-3 h-3' />
-                {group.code}
-              </div>
-            </div>
 
-            <h3 className='text-lg font-semibold text-slate-900 mb-3 line-clamp-2'>
-              {group.name}
-            </h3>
+              <h3 className='text-lg font-semibold text-slate-900 mb-3 line-clamp-2'>
+                {group.name}
+              </h3>
 
-            <div className='flex items-center gap-4 text-sm text-slate-600'>
-              <div className='flex items-center gap-1.5'>
-                <CalendarIcon className='w-4 h-4 text-orange-500' />
-                <span className='font-medium'>{group.trips?.length || 0}</span>
-                <span>trips</span>
+              <div className='flex items-center gap-4 text-sm text-slate-600'>
+                <div className='flex items-center gap-1.5'>
+                  <CalendarIcon className={`w-4 h-4 ${colors.icon}`} />
+                  <span className='font-medium'>{group.trips?.length || 0}</span>
+                  <span>trips</span>
+                </div>
+                <div className='flex items-center gap-1.5'>
+                  <Users className={`w-4 h-4 ${colors.icon}`} />
+                  <span className='font-medium'>
+                    {group.memberEmails?.length || 0}
+                  </span>
+                  <span>members</span>
+                </div>
               </div>
-              <div className='flex items-center gap-1.5'>
-                <Users className='w-4 h-4 text-orange-500' />
-                <span className='font-medium'>
-                  {group.memberEmails?.length || 0}
-                </span>
-                <span>members</span>
-              </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       {totalPages > 1 && (
@@ -88,7 +93,7 @@ const GroupsView = ({ groups, handleNavigateToGroup }: IGroupsViewProps) => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
               currentPage === 1
                 ? "text-slate-400 cursor-not-allowed"
-                : "text-slate-700 hover:bg-slate-50 hover:text-orange-600"
+                : "text-slate-700 hover:bg-slate-50"
             }`}
           >
             <ChevronLeft className='w-4 h-4' />
@@ -105,7 +110,7 @@ const GroupsView = ({ groups, handleNavigateToGroup }: IGroupsViewProps) => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
               currentPage === totalPages
                 ? "text-slate-400 cursor-not-allowed"
-                : "text-slate-700 hover:bg-slate-50 hover:text-orange-600"
+                : "text-slate-700 hover:bg-slate-50"
             }`}
           >
             Next
