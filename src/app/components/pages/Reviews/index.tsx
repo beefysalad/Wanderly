@@ -15,6 +15,7 @@ import { reviewsSchema, TReviewsSchema } from "./reviewsZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useReviews, useCreateReview } from "@/src/hooks/useReviews";
 import { formatDistanceToNow } from "date-fns";
+import Footer from "../../shared/Footer";
 
 const ReviewsComponent = () => {
   const router = useRouter();
@@ -539,6 +540,7 @@ const ReviewsComponent = () => {
             )}
           </div>
         </div>
+        <Footer />
       </div>
     </div>
   );

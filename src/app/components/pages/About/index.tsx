@@ -1,12 +1,14 @@
 "use client";
 
-import { Calendar, DollarSign, Sparkles, Users } from "lucide-react";
+import { Calendar, DollarSign, Sparkles, Users, Code2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Header from "../../shared/Header";
+import Footer from "../../shared/Footer";
 import AuthModal from "../../shared/Modal/AuthModal";
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
+import Image from "next/image";
 
 const AboutComponent = () => {
   const router = useRouter();
@@ -157,25 +159,73 @@ const AboutComponent = () => {
 
                 {/* Creator & Status Section */}
                 <div className='pt-8 border-t border-amber-500/20 space-y-6'>
-                  <div className='space-y-4'>
-                    <h3 className='text-xl md:text-2xl font-bold text-white'>
-                      About the Creator
-                    </h3>
-                    <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
-                      I&apos;m a seasoned software engineer who, honestly,
-                      hasn&apos;t been much of a traveler. But lately, I&apos;ve
-                      been planning to change that and start exploring the
-                      world. As I began planning my first trips, I quickly
-                      realized how messy group trip planning can be&mdash;and I
-                      knew I could build something better.
-                    </p>
-                    <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
-                      That&apos;s how Wanderly was born. It&apos;s the tool I
-                      wish existed when I started planning my adventures, built
-                      with the precision and care that comes from years of
-                      engineering experience, combined with the fresh
-                      perspective of someone new to the travel planning world.
-                    </p>
+                  {/* Creator Card */}
+                  <div className='bg-gradient-to-br from-purple-900/20 to-violet-900/20 border border-amber-500/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm hover:border-amber-500/40 transition-all duration-300 shadow-lg'>
+                    <div className='flex flex-col sm:flex-row items-start gap-6 mb-6'>
+                      <div className='relative flex-shrink-0'>
+                        <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-xl opacity-40 animate-pulse-slow'></div>
+                        <div className='relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 p-1 shadow-xl'>
+                          <div className='relative w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden ring-2 ring-amber-500/30'>
+                            <Image
+                              src='/avatar.jpeg'
+                              alt='Patrick - Creator of Wanderly'
+                              fill
+                              className='object-cover rounded-full'
+                              sizes='(max-width: 768px) 96px, 112px'
+                              priority
+                            />
+                          </div>
+                        </div>
+                        <div className='absolute -bottom-1 -right-1 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900'>
+                          <Code2 className='w-4 h-4 text-purple-950' />
+                        </div>
+                      </div>
+                      <div className='flex-1 space-y-2'>
+                        <div className='flex items-center gap-2 flex-wrap'>
+                          <h3 className='text-2xl md:text-3xl font-bold text-white'>
+                            About the Creator
+                          </h3>
+                        </div>
+                        <div className='flex items-center gap-3'>
+                          <p className='text-base text-slate-300 font-medium'>
+                            Patrick
+                          </p>
+                          <span className='w-1 h-1 bg-amber-400 rounded-full'></span>
+                          <div className='flex items-center gap-1.5 text-xs text-slate-400'>
+                            <Code2 className='w-3.5 h-3.5 text-amber-400' />
+                            <span>
+                              Software Engineer / Full Stack Developer
+                            </span>
+                          </div>
+                        </div>
+                        <p className='text-sm text-slate-400 italic'>
+                          coffee makes the world go round ☕
+                        </p>
+                      </div>
+                    </div>
+                    <div className='space-y-4'>
+                      <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
+                        I&apos;m a seasoned software engineer who, honestly,
+                        hasn&apos;t been much of a traveler yet. But lately,
+                        I&apos;ve been planning to change that and start
+                        exploring the world. As I researched and prepared for my
+                        future trips, I quickly realized how messy trip planning
+                        can be sometimes&mdash;and it gave me the idea that
+                        group trip planning must be even messier. I knew I could
+                        build something better.
+                      </p>
+                      <div className='relative pl-6 border-l-2 border-amber-500/30'>
+                        <div className='absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-400/50 to-transparent'></div>
+                        <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
+                          That&apos;s how Wanderly was born. It&apos;s the tool
+                          I wish existed for planning my future adventures,
+                          built with the precision and care that comes from
+                          years of engineering experience, combined with the
+                          fresh perspective of someone new to the travel
+                          planning world.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className='p-5 bg-amber-500/10 backdrop-blur-sm rounded-xl border border-amber-500/30 space-y-3'>
@@ -222,6 +272,7 @@ const AboutComponent = () => {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
 
       {showAuthModal && (
