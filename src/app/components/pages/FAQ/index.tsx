@@ -58,23 +58,32 @@ const FAQComponent = () => {
       question: "What is an .ics file?",
       answer: (
         <>
-          An .ics file is a standard calendar file format (iCalendar) that's completely safe to download and use. It's the same format used by Google Calendar, Apple Calendar, Microsoft Outlook, and most other calendar applications. When you export your trip schedule as an .ics file from Wanderly, you can import it directly into your phone's calendar app. The file contains only your trip activities (dates, times, titles, and notes) - no personal information or sensitive data. It's a text-based format that's been used for decades and is trusted by millions of users worldwide.
-          <br /><br />
-          <span className="text-amber-300">Learn more: </span>
-          <a 
-            href="https://en.wikipedia.org/wiki/ICalendar" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 underline"
+          An .ics file is a standard calendar file format (iCalendar)
+          that&apos;s completely safe to download and use. It&apos;s the same
+          format used by Google Calendar, Apple Calendar, Microsoft Outlook, and
+          most other calendar applications. When you export your trip schedule
+          as an .ics file from Wanderly, you can import it directly into your
+          phone&apos;s calendar app. The file contains only your trip activities
+          (dates, times, titles, and notes) - no personal information or
+          sensitive data. It&apos;s a text-based format that&apos;s been used
+          for decades and is trusted by millions of users worldwide.
+          <br />
+          <br />
+          <span className='text-amber-300'>Learn more: </span>
+          <a
+            href='https://en.wikipedia.org/wiki/ICalendar'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-amber-400 hover:text-amber-300 underline'
           >
             Wikipedia - iCalendar
           </a>
           {" • "}
-          <a 
-            href="https://datatracker.ietf.org/doc/html/rfc5545" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 underline"
+          <a
+            href='https://datatracker.ietf.org/doc/html/rfc5545'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-amber-400 hover:text-amber-300 underline'
           >
             RFC 5545 (Official Standard)
           </a>
@@ -143,23 +152,30 @@ const FAQComponent = () => {
       question: "Is my data secure?",
       answer: (
         <>
-          Yes! Wanderly uses Firebase Authentication for secure login, which is trusted by millions of apps worldwide. Your password is encrypted and never stored in plain text. Group codes are unique and randomly generated, making them hard to guess. Only members of your groups can see your trips and activities. We don't share your data with third parties. Your information is private to you and your group members.
-          <br /><br />
-          <span className="text-amber-300">Learn more: </span>
-          <a 
-            href="https://firebase.google.com/docs/auth" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 underline"
+          Yes! Wanderly uses Firebase Authentication for secure login, which is
+          trusted by millions of apps worldwide. Your password is encrypted and
+          never stored in plain text. Group codes are unique and randomly
+          generated, making them hard to guess. Only members of your groups can
+          see your trips and activities. We don&apos;t share your data with
+          third parties. Your information is private to you and your group
+          members.
+          <br />
+          <br />
+          <span className='text-amber-300'>Learn more: </span>
+          <a
+            href='https://firebase.google.com/docs/auth'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-amber-400 hover:text-amber-300 underline'
           >
             Firebase Authentication Documentation
           </a>
           {" • "}
-          <a 
-            href="https://firebase.google.com/support/privacy" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 underline"
+          <a
+            href='https://firebase.google.com/support/privacy'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-amber-400 hover:text-amber-300 underline'
           >
             Firebase Privacy & Security
           </a>
