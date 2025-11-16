@@ -1,26 +1,48 @@
-import { Activity } from "@/src/shared/types";
-import { Calendar, Clock, FileText, Pencil, Trash2, X } from "lucide-react";
+import { Activity, Expense } from "@/src/shared/types";
+import {
+  Calendar,
+  Clock,
+  FileText,
+  Pencil,
+  Trash2,
+  X,
+  Navigation2,
+  MapPin,
+  DollarSign,
+  Link2,
+} from "lucide-react";
 import React from "react";
 import { formatTime12Hour } from "@/lib/utils";
 
 interface IActivityDetailModal {
   activity: Activity;
+  expenses?: Expense[]; // expenses from the trip
+  tripId?: string; // tripId to fetch expenses if not provided
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onToggleDone?: () => void;
+  onSelectExpense?: (expense: Expense) => void; // callback when clicking on expense
   readOnly?: boolean;
 }
 
 const ActivityDetailModal = ({
   activity,
+  expenses = [],
+  tripId,
   onClose,
   onEdit,
   onDelete,
   onToggleDone,
+  onSelectExpense,
   readOnly = false,
 }: IActivityDetailModal) => {
   const activityDate = new Date(activity.date);
+  
+  // Filter expenses linked to this activity
+  const linkedExpenses = expenses.filter(
+    (exp) => exp.activityId === activity.id
+  );
 
   return (
     <div
@@ -138,6 +160,87 @@ const ActivityDetailModal = ({
             </div>
           </div>
 
+          {/* Transportation Details */}
+          {(activity.transportationMode ||
+            activity.pickupTime ||
+            activity.transportationFee ||
+            activity.pickupLocation ||
+            activity.dropoffLocation) && (
+            <div className='bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 border border-slate-200 dark:border-slate-600'>
+              <div className='flex items-center gap-2 mb-3'>
+                <Navigation2 className='w-5 h-5 text-orange-600' />
+                <p className='text-sm font-semibold text-slate-900 dark:text-white'>
+                  Transportation Details
+                </p>
+              </div>
+              <div className='space-y-3'>
+                {activity.transportationMode && (
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xl'>
+                      {activity.transportationMode === "car" && "🚗"}
+                      {activity.transportationMode === "bus" && "🚌"}
+                      {activity.transportationMode === "plane" && "✈️"}
+                      {activity.transportationMode === "train" && "🚊"}
+                      {activity.transportationMode === "taxi" && "🚕"}
+                      {activity.transportationMode === "walking" && "🚶"}
+                      {activity.transportationMode === "commute" && "🚌"}
+                      {!["car", "bus", "plane", "train", "taxi", "walking", "commute"].includes(activity.transportationMode) && "🚗"}
+                    </span>
+                    <p className='text-slate-900 dark:text-white font-medium'>
+                      {activity.transportationMode.charAt(0).toUpperCase() +
+                        activity.transportationMode.slice(1)}
+                    </p>
+                  </div>
+                )}
+                {activity.pickupTime && (
+                  <div className='flex items-start gap-3'>
+                    <Clock className='w-4 h-4 text-slate-400 mt-0.5' />
+                    <div>
+                      <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5'>
+                        {activity.transportationMode === "plane"
+                          ? "Departure Time"
+                          : "Pickup Time"}
+                      </p>
+                      <p className='text-slate-900 dark:text-white'>
+                        {formatTime12Hour(activity.pickupTime)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {activity.pickupLocation && (
+                  <div className='flex items-start gap-3'>
+                    <MapPin className='w-4 h-4 text-slate-400 mt-0.5' />
+                    <div>
+                      <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5'>
+                        {activity.transportationMode === "plane"
+                          ? "Departure Airport"
+                          : "Pickup Location"}
+                      </p>
+                      <p className='text-slate-900 dark:text-white'>
+                        {activity.pickupLocation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {activity.dropoffLocation && (
+                  <div className='flex items-start gap-3'>
+                    <MapPin className='w-4 h-4 text-slate-400 mt-0.5' />
+                    <div>
+                      <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5'>
+                        {activity.transportationMode === "plane"
+                          ? "Arrival Airport"
+                          : "Dropoff Location"}
+                      </p>
+                      <p className='text-slate-900 dark:text-white'>
+                        {activity.dropoffLocation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Notes */}
           {activity.notes ? (
             <div className='flex items-start gap-3'>
@@ -159,6 +262,57 @@ const ActivityDetailModal = ({
                   Notes
                 </p>
                 <p className='text-slate-400 italic'>No notes added</p>
+              </div>
+            </div>
+          )}
+
+          {/* Linked Expenses */}
+          {linkedExpenses.length > 0 && (
+            <div className='pt-4 border-t border-slate-200 dark:border-slate-700'>
+              <div className='flex items-center gap-2 mb-3'>
+                <DollarSign className='w-5 h-5 text-emerald-600 dark:text-emerald-400' />
+                <p className='text-sm font-semibold text-slate-900 dark:text-white'>
+                  Linked Expenses ({linkedExpenses.length})
+                </p>
+              </div>
+              <div className='space-y-2'>
+                {linkedExpenses.map((expense) => {
+                  const Component = onSelectExpense ? "button" : "div";
+                  const onClick = onSelectExpense
+                    ? () => {
+                        onSelectExpense(expense);
+                        onClose();
+                      }
+                    : undefined;
+
+                  return (
+                    <Component
+                      key={expense.id}
+                      onClick={onClick}
+                      className={`w-full text-left p-3 rounded-lg border ${
+                        onSelectExpense
+                          ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 cursor-pointer transition-colors"
+                          : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                      }`}
+                    >
+                      <div className='flex items-start justify-between gap-3'>
+                        <div className='flex-1 min-w-0'>
+                          <p className='font-medium text-slate-900 dark:text-white text-sm truncate'>
+                            {expense.description}
+                          </p>
+                          <div className='flex items-center gap-2 mt-1 text-xs text-slate-600 dark:text-slate-400'>
+                            <span>₱{expense.amount.toFixed(2)}</span>
+                            <span>•</span>
+                            <span>{expense.paidBy.split("@")[0]}</span>
+                          </div>
+                        </div>
+                        <div className='flex-shrink-0'>
+                          <Link2 className='w-4 h-4 text-emerald-600 dark:text-emerald-400' />
+                        </div>
+                      </div>
+                    </Component>
+                  );
+                })}
               </div>
             </div>
           )}

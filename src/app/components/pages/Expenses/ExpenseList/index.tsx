@@ -1,6 +1,6 @@
 "use client";
-import { Expense } from "@/src/shared/types";
-import { CheckCircle } from "lucide-react";
+import { Expense, Activity } from "@/src/shared/types";
+import { CheckCircle, Link2 } from "lucide-react";
 import React from "react";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ interface IExpensesListProps {
   memberNames?: Record<string, string>; // email -> name mapping
   tripId: string;
   groupId: string;
+  activities?: Activity[]; // activities from the trip
   onDeleteExpense?: (id: string) => void;
   onUpdateExpense?: (expense: Expense) => void;
   onEditExpense?: (expense: Expense) => void;
@@ -34,6 +35,7 @@ const ExpensesList = ({
   memberNames,
   tripId,
   groupId,
+  activities = [],
   onDeleteExpense,
   onEditExpense,
   onUpdateExpense,
@@ -43,6 +45,12 @@ const ExpensesList = ({
   paymentLogs = [],
 }: IExpensesListProps) => {
   const queryClient = useQueryClient();
+  
+  // Helper to get activity by id
+  const getActivityById = (activityId?: string): Activity | undefined => {
+    if (!activityId) return undefined;
+    return activities.find((a) => a.id === activityId);
+  };
 
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
@@ -210,12 +218,22 @@ const ExpensesList = ({
                           <h4 className='font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate'>
                             {expense.description}
                           </h4>
-                          {allPaid && (
-                            <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
-                              <CheckCircle className='w-3 h-3' />
-                              Settled
-                            </span>
-                          )}
+                          <div className='flex items-center gap-2 flex-wrap'>
+                            {expense.activityId && getActivityById(expense.activityId) && (
+                              <span className='text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center gap-1 w-fit' title={getActivityById(expense.activityId)?.title}>
+                                <Link2 className='w-3 h-3' />
+                                <span className='truncate max-w-[120px]'>
+                                  {getActivityById(expense.activityId)?.title}
+                                </span>
+                              </span>
+                            )}
+                            {allPaid && (
+                              <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
+                                <CheckCircle className='w-3 h-3' />
+                                Settled
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
                           Paid by{" "}

@@ -45,6 +45,7 @@ async function handler(req: NextRequest, auth: AuthContext) {
         accountName,
         qrImage,
         splitWith,
+        activityId,
       } = body;
 
       const expense = await updateExpenseService(
@@ -68,6 +69,7 @@ async function handler(req: NextRequest, auth: AuthContext) {
           ...(accountName !== undefined && { accountName }),
           ...(qrImage !== undefined && { qrImage }),
           ...(splitWith !== undefined && { splitWith }),
+          ...(activityId !== undefined && { activityId }),
         }
       );
 
@@ -110,4 +112,3 @@ async function handler(req: NextRequest, auth: AuthContext) {
 export const GET = withAuth(handler);
 export const PATCH = withAuth(handler);
 export const DELETE = withAuth(handler);
-

@@ -116,5 +116,9 @@ export function transformActivity(
     endTime: prismaActivity.endTime || undefined,
     notes: prismaActivity.notes || undefined,
     done: prismaActivity.done,
+    transportationMode: prismaActivity.transportationMode || undefined,
+    pickupTime: prismaActivity.pickupTime || undefined,
+    pickupLocation: prismaActivity.pickupLocation || undefined,
+    dropoffLocation: prismaActivity.dropoffLocation || undefined,
   };
 }

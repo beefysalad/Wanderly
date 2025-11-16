@@ -200,6 +200,31 @@ const TravelSchedule = ({
                                 ` - ${formatTime12Hour(activity.endTime)}`}
                             </p>
                           )}
+                          {activity.transportationMode && (
+                            <div className='flex items-center gap-2 mt-2 ml-7'>
+                              <span className='text-base'>
+                                {activity.transportationMode === "car" && "🚗"}
+                                {activity.transportationMode === "bus" && "🚌"}
+                                {activity.transportationMode === "plane" && "✈️"}
+                                {activity.transportationMode === "train" && "🚊"}
+                                {activity.transportationMode === "taxi" && "🚕"}
+                                {activity.transportationMode === "walking" && "🚶"}
+                                {activity.transportationMode === "commute" && "🚌"}
+                                {!["car", "bus", "plane", "train", "taxi", "walking", "commute"].includes(activity.transportationMode) && "🚗"}
+                              </span>
+                              <span className='text-sm text-slate-600'>
+                                {activity.transportationMode.charAt(0).toUpperCase() + activity.transportationMode.slice(1)}
+                                {activity.pickupTime && (
+                                  <span>
+                                    {" "}•{" "}
+                                    {activity.transportationMode === "plane"
+                                      ? `Departure: ${formatTime12Hour(activity.pickupTime)}`
+                                      : `Pickup: ${formatTime12Hour(activity.pickupTime)}`}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
                           {activity.notes && (
                             <p className='text-sm text-slate-600 mt-2 ml-7 line-clamp-2'>
                               {activity.notes}

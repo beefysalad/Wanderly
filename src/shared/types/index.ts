@@ -39,6 +39,10 @@ export interface Activity {
   endTime?: string;
   notes?: string;
   done: boolean;
+  transportationMode?: string;
+  pickupTime?: string;
+  pickupLocation?: string;
+  dropoffLocation?: string;
 }
 
 export interface Expense {
@@ -57,6 +61,7 @@ export interface Expense {
   accountName?: string; // for all payment methods
   qrImage?: string; // blob URL or base64 image
   paidMembers?: string[]; // members who have paid their share
+  activityId?: string; // optional link to activity
 }
 
 export interface PaymentLog {

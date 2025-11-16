@@ -1,13 +1,25 @@
 "use client";
-import { Expense } from "@/src/shared/types";
-import { CheckCircle, Copy, Download, Pencil, Trash2, X } from "lucide-react";
+import { Expense, Activity } from "@/src/shared/types";
+import {
+  CheckCircle,
+  Copy,
+  Download,
+  Pencil,
+  Trash2,
+  X,
+  Link2,
+  Calendar,
+} from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "../ConfirmDeleteModal";
+import { formatTime12Hour } from "@/lib/utils";
+
 interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
+  activities?: Activity[]; // activities from the trip
   onClose: () => void;
   onMarkPaid?: (memberId: string) => void;
   onEdit?: () => void;
@@ -28,6 +40,7 @@ const ExpenseDetailModal = ({
   expense,
   members,
   memberNames,
+  activities = [],
   onClose,
   onDelete,
   onEdit,
@@ -43,6 +56,11 @@ const ExpenseDetailModal = ({
   const getDisplayName = (email: string): string => {
     return memberNames?.[email] || email.split("@")[0];
   };
+
+  // Get linked activity
+  const linkedActivity = expense.activityId
+    ? activities.find((a) => a.id === expense.activityId)
+    : undefined;
 
   useEffect(() => {
     // Prevent body scroll when modal is open
@@ -163,6 +181,46 @@ const ExpenseDetailModal = ({
 
         {/* Content */}
         <div className='p-6 space-y-6'>
+          {/* Linked Activity */}
+          {linkedActivity && (
+            <div>
+              <p className='text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2'>
+                Linked Activity
+              </p>
+              <div className='bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800'>
+                <div className='flex items-start gap-2'>
+                  <Link2 className='w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0' />
+                  <div className='flex-1'>
+                    <p className='font-semibold text-slate-900 dark:text-white mb-1'>
+                      {linkedActivity.title}
+                    </p>
+                    <div className='flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400'>
+                      <Calendar className='w-3 h-3' />
+                      <span>
+                        {new Date(linkedActivity.date).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
+                      </span>
+                      {linkedActivity.startTime && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            {formatTime12Hour(linkedActivity.startTime)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Paid By */}
           <div>
             <p className='text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-2'>

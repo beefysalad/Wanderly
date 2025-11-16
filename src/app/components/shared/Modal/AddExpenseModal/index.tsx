@@ -1,5 +1,5 @@
-import { Expense } from "@/src/shared/types";
-import React, { useEffect, useState } from "react";
+import { Expense, Activity } from "@/src/shared/types";
+import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { expenseSchema, TExpenseSchema } from "./addExpenseZod";
@@ -9,12 +9,14 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { useCreateExpense, useUpdateExpense } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface IAddExpenseModalProps {
   tripId: string;
   groupId: string;
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
+  activities?: Activity[]; // activities from the trip
   onAddExpense: () => void;
   onClose: () => void;
   editingExpense?: Expense;
@@ -24,6 +26,7 @@ const AddExpenseModal = ({
   groupId,
   members,
   memberNames,
+  activities = [],
   onAddExpense,
   onClose,
   editingExpense,
@@ -66,6 +69,7 @@ const AddExpenseModal = ({
       paymentMethod: "",
       qrImage: "",
       splitWith: [],
+      activityId: "",
     },
   });
 
@@ -84,9 +88,33 @@ const AddExpenseModal = ({
         paymentMethod: editingExpense.paymentMethod || "",
         qrImage: editingExpense.qrImage || "",
         splitWith: editingExpense.splitWith || [],
+        activityId: editingExpense.activityId || "",
       });
     }
   }, [editingExpense, form]);
+
+  // Format activities for dropdown: sorted by date, then by startTime
+  const sortedActivities = useMemo(() => {
+    return [...activities].sort((a, b) => {
+      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      const timeA = a.startTime || "00:00";
+      const timeB = b.startTime || "00:00";
+      return timeA.localeCompare(timeB);
+    });
+  }, [activities]);
+
+  // Format activity display text
+  const formatActivityDisplay = (activity: Activity): string => {
+    const date = new Date(activity.date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    if (activity.startTime) {
+      return `${activity.title} - ${date} (${formatTime12Hour(activity.startTime)})`;
+    }
+    return `${activity.title} - ${date}`;
+  };
 
   const onSubmit = async (values: TExpenseSchema) => {
     try {
@@ -123,6 +151,7 @@ const AddExpenseModal = ({
           accountName: values.accountName || undefined,
           qrImage: values.qrImage || undefined,
           splitWith: values.splitWith,
+          activityId: values.activityId || undefined,
         });
       }
       onAddExpense();
@@ -294,6 +323,27 @@ const AddExpenseModal = ({
               <option value='other'>📌 Other</option>
             </select>
           </div>
+
+          {/* Link to Activity */}
+          {sortedActivities.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium text-slate-700 mb-1'>
+                Link to Activity
+                <span className='text-xs text-slate-500 ml-1'>(optional)</span>
+              </label>
+              <select
+                {...form.register("activityId")}
+                className='w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+              >
+                <option value=''>No activity link</option>
+                {sortedActivities.map((activity) => (
+                  <option key={activity.id} value={activity.id}>
+                    {formatActivityDisplay(activity)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Split With */}
           <div>

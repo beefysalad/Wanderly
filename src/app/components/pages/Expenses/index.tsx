@@ -298,6 +298,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                     memberNames={group.memberNames}
                     tripId={tripId}
                     groupId={groupId}
+                    activities={trip.activities || []}
                     onDeleteExpense={handleDeleteExpense}
                     onUpdateExpense={handleUpdateExpense}
                     onEditExpense={handleEditExpense}
@@ -394,23 +395,25 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       </main>
 
       {/* Render modals outside main to avoid container constraints */}
-      {showAddModal && (
+      {showAddModal && trip && (
         <AddExpenseModal
           tripId={tripId}
           groupId={groupId}
           members={group.memberEmails || []}
           memberNames={group.memberNames}
+          activities={trip.activities || []}
           onAddExpense={handleAddExpense}
           onClose={handleCloseModal}
           editingExpense={editingExpense || undefined}
         />
       )}
 
-      {selectedExpense && (
+      {selectedExpense && trip && (
         <ExpenseDetailModal
           expense={selectedExpense}
           members={group.memberEmails || []}
           memberNames={group.memberNames}
+          activities={trip.activities || []}
           onClose={() => setSelectedExpense(null)}
           onMarkPaid={(memberId) => {
             handleMarkPaid(selectedExpense.id, memberId);

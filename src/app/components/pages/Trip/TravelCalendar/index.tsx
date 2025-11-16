@@ -115,20 +115,49 @@ const TravelCalendar = ({
                       }`}
                       onClick={() => onViewActivity?.(activity)}
                     >
-                      <p
-                        className={`font-medium ${
-                          activity.done
-                            ? "line-through text-slate-500"
-                            : "text-slate-900"
-                        }`}
-                      >
-                        {activity.title}
-                      </p>
+                      <div className='flex items-center gap-2'>
+                        {activity.transportationMode && (
+                          <span className='text-base shrink-0'>
+                            {activity.transportationMode === "car" && "🚗"}
+                            {activity.transportationMode === "bus" && "🚌"}
+                            {activity.transportationMode === "plane" && "✈️"}
+                            {activity.transportationMode === "train" && "🚊"}
+                            {activity.transportationMode === "taxi" && "🚕"}
+                            {activity.transportationMode === "walking" && "🚶"}
+                            {activity.transportationMode === "commute" && "🚌"}
+                            {!["car", "bus", "plane", "train", "taxi", "walking", "commute"].includes(activity.transportationMode) && "🚗"}
+                          </span>
+                        )}
+                        <p
+                          className={`font-medium flex-1 ${
+                            activity.done
+                              ? "line-through text-slate-500"
+                              : "text-slate-900"
+                          }`}
+                        >
+                          {activity.title}
+                        </p>
+                      </div>
                       {activity.startTime && (
                         <p className='text-xs text-slate-500 mt-1'>
                           {formatTime12Hour(activity.startTime)}
                           {activity.endTime &&
                             ` - ${formatTime12Hour(activity.endTime)}`}
+                          {activity.pickupTime && (
+                            <span className='ml-2'>
+                              •{" "}
+                              {activity.transportationMode === "plane"
+                                ? `Departure: ${formatTime12Hour(activity.pickupTime)}`
+                                : `Pickup: ${formatTime12Hour(activity.pickupTime)}`}
+                            </span>
+                          )}
+                        </p>
+                      )}
+                      {!activity.startTime && activity.pickupTime && (
+                        <p className='text-xs text-slate-500 mt-1'>
+                          {activity.transportationMode === "plane"
+                            ? `Departure: ${formatTime12Hour(activity.pickupTime)}`
+                            : `Pickup: ${formatTime12Hour(activity.pickupTime)}`}
                         </p>
                       )}
                     </div>

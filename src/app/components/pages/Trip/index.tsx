@@ -12,6 +12,7 @@ import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useGroup } from "@/src/hooks/useGroups";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
+import { useExpenses } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,8 +28,10 @@ interface ITripComponent {
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
   const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const { data: expensesData } = useExpenses(tripId);
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
+  const expenses = expensesData?.expenses || [];
   const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
     "calendar"
   );
@@ -441,14 +444,14 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                           className='fixed inset-0 z-10'
                           onClick={() => setShowExportMenu(false)}
                         />
-                        <div className='absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-20'>
+                        <div className='absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-20 min-w-max sm:min-w-0'>
                           <button
                             onClick={() => handleExportSchedule("png")}
                             disabled={isExporting}
                             className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed'
                           >
-                            <Download className='w-4 h-4 text-slate-600' />
-                            <span className='text-slate-700 font-medium'>
+                            <Download className='w-4 h-4 text-slate-600 flex-shrink-0' />
+                            <span className='text-slate-700 font-medium text-sm sm:text-base break-words'>
                               Export as PNG
                             </span>
                           </button>
@@ -457,8 +460,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                             disabled={isExporting}
                             className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed border-t border-slate-100'
                           >
-                            <span className='text-lg'>📅</span>
-                            <span className='text-slate-700 font-medium'>
+                            <span className='text-lg flex-shrink-0'>📅</span>
+                            <span className='text-slate-700 font-medium text-sm sm:text-base break-words'>
                               Export as Calendar (.ics)
                             </span>
                           </button>
@@ -571,6 +574,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             trip?.activities?.find((a) => a.id === selectedActivity.id) ||
             selectedActivity
           }
+          expenses={expenses}
+          tripId={tripId}
           onClose={() => {
             setShowActivityDetailModal(false);
             setSelectedActivity(null);
@@ -587,6 +592,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               ...selectedActivity,
               done: !selectedActivity.done,
             });
+          }}
+          onSelectExpense={(expense) => {
+            router.push(`/group/${groupId}/trip/${tripId}/expenses`);
           }}
         />
       )}

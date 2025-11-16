@@ -81,6 +81,7 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     accountName: prismaExpense.accountName || undefined,
     qrImage: prismaExpense.qrImage || undefined,
     paidMembers: prismaExpense.payments.map((payment) => payment.user.email),
+    activityId: prismaExpense.activityId || undefined,
   };
 }
 

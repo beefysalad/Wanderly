@@ -23,6 +23,7 @@ export const expenseSchema = z
     bankName: z.string().optional(),
     accountName: z.string().optional(),
     qrImage: z.string().optional(),
+    activityId: z.string().optional(),
   })
 
   // CONDITIONAL: accountNumber required ONLY when bank/maya/gcash

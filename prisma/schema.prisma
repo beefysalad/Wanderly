@@ -86,19 +86,24 @@ model Trip {
 }
 
 model Activity {
-  id        String   @id @default(cuid())
-  tripId    String
-  date      DateTime
-  title     String
-  startTime String?
-  endTime   String?
-  notes     String?
-  done      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  tripId            String
+  date              DateTime
+  title             String
+  startTime         String?
+  endTime           String?
+  notes             String?
+  done              Boolean  @default(false)
+  transportationMode String?
+  pickupTime        String?
+  pickupLocation    String?
+  dropoffLocation   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relationships
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  expenses Expense[] @relation("ActivityExpenses")
 }
 
 enum PaymentMethod {
@@ -122,6 +127,7 @@ model Expense {
   bankName      String?
   accountName   String?
   qrImage       String?
+  activityId    String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -129,6 +135,7 @@ model Expense {
   group       Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
   trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
   paidBy      User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
+  activity    Activity?        @relation("ActivityExpenses", fields: [activityId], references: [id], onDelete: SetNull)
   splits      ExpenseSplit[]
   payments    ExpensePayment[]
   paymentLogs PaymentLog[]

@@ -25,11 +25,44 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   const isCreator = group && user?.email && group.createdByEmail === user.email;
 
-  const copyCode = () => {
-    if (group) {
-      navigator.clipboard.writeText(group.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const copyCode = async () => {
+    if (!group) return;
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(group.code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback for older browsers or insecure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = group.code;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand("copy");
+          if (successful) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          } else {
+            console.error("Failed to copy using fallback method");
+          }
+        } catch (err) {
+          console.error("Fallback copy failed:", err);
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+      // Optionally show an error message to user
+      alert("Failed to copy code. Please copy manually: " + group.code);
     }
   };
   const goBack = () => {
