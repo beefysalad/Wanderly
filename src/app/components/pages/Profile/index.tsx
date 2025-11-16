@@ -5,18 +5,29 @@ import {
   ArrowLeft,
   Mail,
   Calendar,
-  CheckCircle2,
-  XCircle,
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
+import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
   const router = useRouter();
   const { user, loading } = useCurrentUser();
   const { data: groupsData } = useGroups();
   const groups = groupsData?.groups || [];
+  const [activeTab, setActiveTab] = useState<"dashboard" | "trips" | "groups" | "profile">("profile");
+
+  const handleTabChange = (tab: "dashboard" | "trips" | "groups" | "profile") => {
+    if (tab === "profile") {
+      setActiveTab("profile");
+      // Stay on profile page
+    } else {
+      // Navigate to dashboard with tab query parameter
+      router.push(`/dashboard?tab=${tab}`);
+    }
+  };
 
   // Calculate statistics
   const totalGroups = groups.length;
@@ -51,18 +62,17 @@ const ProfileComponent = () => {
   const displayName = user.displayName || user.email?.split("@")[0] || "User";
   const avatarUrl = user.photoURL || null;
   const email = user.email || "";
-  const emailVerified = user.emailVerified || false;
   const accountCreated = user.metadata?.creationTime
     ? new Date(user.metadata.creationTime)
     : null;
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20'>
+    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-24 md:pb-20'>
       <div className='max-w-4xl mx-auto px-4 py-8'>
         {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
+          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
         >
           <ArrowLeft className='w-5 h-5' />
           Back to Dashboard
@@ -70,8 +80,8 @@ const ProfileComponent = () => {
 
         {/* Profile Header Card */}
         <div className='bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mb-6'>
-          {/* Gradient Header */}
-          <div className='bg-gradient-to-r from-amber-400 via-orange-500 to-orange-600 p-8 sm:p-12'>
+          {/* Header Section - No Gradients */}
+          <div className='bg-orange-500 p-8 sm:p-12'>
             <div className='flex flex-col sm:flex-row items-center sm:items-start gap-6'>
               {/* Avatar */}
               <div className='relative'>
@@ -86,7 +96,7 @@ const ProfileComponent = () => {
                     />
                   </div>
                 ) : (
-                  <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-xl bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center'>
+                  <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-xl bg-orange-400 flex items-center justify-center'>
                     <User className='w-12 h-12 sm:w-16 sm:h-16 text-white' />
                   </div>
                 )}
@@ -97,26 +107,9 @@ const ProfileComponent = () => {
                 <h1 className='text-3xl sm:text-4xl font-bold text-white mb-2'>
                   {displayName}
                 </h1>
-                <div className='flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4'>
-                  <div className='flex items-center gap-2 text-amber-50'>
-                    <Mail className='w-4 h-4' />
-                    <span className='text-sm sm:text-base'>{email}</span>
-                  </div>
-                  {emailVerified ? (
-                    <div className='flex items-center gap-2 text-orange-200 bg-orange-500/20 px-3 py-1 rounded-full'>
-                      <CheckCircle2 className='w-4 h-4' />
-                      <span className='text-xs sm:text-sm font-medium'>
-                        Verified
-                      </span>
-                    </div>
-                  ) : (
-                    <div className='flex items-center gap-2 text-amber-200 bg-amber-500/20 px-3 py-1 rounded-full'>
-                      <XCircle className='w-4 h-4' />
-                      <span className='text-xs sm:text-sm font-medium'>
-                        Unverified
-                      </span>
-                    </div>
-                  )}
+                <div className='flex items-center justify-center sm:justify-start gap-2 text-white/90'>
+                  <Mail className='w-4 h-4' />
+                  <span className='text-sm sm:text-base'>{email}</span>
                 </div>
               </div>
             </div>
@@ -124,23 +117,25 @@ const ProfileComponent = () => {
 
           {/* Info Cards Section */}
           <div className='p-6 sm:p-8'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               {/* Account Information Card */}
-              <div className='bg-slate-50 rounded-xl p-6 border border-slate-200'>
+              <div className='bg-slate-50 rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow'>
                 <h3 className='text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2'>
-                  <User className='w-5 h-5 text-amber-500' />
+                  <User className='w-5 h-5 text-orange-500' />
                   Account Information
                 </h3>
-                <div className='space-y-3'>
+                <div className='space-y-4'>
                   <div>
-                    <p className='text-xs text-slate-500 mb-1'>Email Address</p>
-                    <p className='text-sm font-medium text-slate-900'>
+                    <p className='text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide'>
+                      Email Address
+                    </p>
+                    <p className='text-sm font-medium text-slate-900 break-all'>
                       {email}
                     </p>
                   </div>
                   {accountCreated && (
                     <div>
-                      <p className='text-xs text-slate-500 mb-1'>
+                      <p className='text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide'>
                         Member Since
                       </p>
                       <div className='flex items-center gap-2'>
@@ -155,46 +150,28 @@ const ProfileComponent = () => {
                       </div>
                     </div>
                   )}
-                  <div>
-                    <p className='text-xs text-slate-500 mb-1'>Email Status</p>
-                    <div className='flex items-center gap-2'>
-                      {emailVerified ? (
-                        <>
-                          <CheckCircle2 className='w-4 h-4 text-orange-500' />
-                          <p className='text-sm font-medium text-orange-600'>
-                            Verified
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className='w-4 h-4 text-amber-500' />
-                          <p className='text-sm font-medium text-amber-600'>
-                            Not Verified
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
 
               {/* Statistics Card */}
-              <div className='bg-slate-50 rounded-xl p-6 border border-slate-200'>
+              <div className='bg-slate-50 rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow'>
                 <h3 className='text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2'>
-                  <Calendar className='w-5 h-5 text-orange-500' />
+                  <Calendar className='w-5 h-5 text-amber-500' />
                   Your Statistics
                 </h3>
                 <div className='space-y-4'>
-                  <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
-                    <span className='text-sm text-slate-600'>
+                  <div className='flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-orange-300 transition-colors'>
+                    <span className='text-sm font-medium text-slate-600'>
                       Travel Groups
                     </span>
                     <span className='text-2xl font-bold text-amber-600'>
                       {totalGroups}
                     </span>
                   </div>
-                  <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
-                    <span className='text-sm text-slate-600'>Total Trips</span>
+                  <div className='flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-orange-300 transition-colors'>
+                    <span className='text-sm font-medium text-slate-600'>
+                      Total Trips
+                    </span>
                     <span className='text-2xl font-bold text-orange-600'>
                       {totalTrips}
                     </span>
@@ -216,18 +193,11 @@ const ProfileComponent = () => {
               provider. To update your name or profile picture, please update
               your account settings with your authentication provider.
             </p>
-            {!emailVerified && (
-              <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4'>
-                <p className='text-sm text-amber-800'>
-                  <strong>Email Verification:</strong> Your email address has
-                  not been verified. Please check your inbox for a verification
-                  email.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      <DashboardBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </main>
   );
 };

@@ -45,7 +45,7 @@ const ExpensesList = ({
   paymentLogs = [],
 }: IExpensesListProps) => {
   const queryClient = useQueryClient();
-  
+
   // Helper to get activity by id
   const getActivityById = (activityId?: string): Activity | undefined => {
     if (!activityId) return undefined;
@@ -152,28 +152,34 @@ const ExpensesList = ({
 
   return (
     <div className='space-y-6'>
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
+      <div className='grid grid-cols-2 gap-3 md:gap-4 mb-6'>
+        <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow'>
+          <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide'>
             My Expenses
           </p>
-          <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
+          <p className='text-2xl font-bold text-orange-600 dark:text-orange-400'>
             ₱{myExpenses.toFixed(2)}
           </p>
         </div>
-        <div className='bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700'>
-          <p className='text-sm text-emerald-600 dark:text-emerald-400 mb-1'>
-            Total Trip Expenses
+        <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow'>
+          <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide'>
+            Trip Expenses
           </p>
-          <p className='text-2xl font-bold text-emerald-600 dark:text-emerald-400'>
+          <p className='text-2xl font-bold text-amber-600 dark:text-amber-400'>
             ₱{totalSpent.toFixed(2)}
           </p>
         </div>
       </div>
 
       {sortedDates.length === 0 ? (
-        <div className='text-center py-12'>
-          <p className='text-slate-500 dark:text-slate-400'>No expenses yet</p>
+        <div className='bg-slate-50 rounded-xl p-12 text-center border border-slate-200'>
+          <div className='w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <span className='text-3xl'>💰</span>
+          </div>
+          <p className='text-slate-600 font-medium mb-1'>No expenses yet</p>
+          <p className='text-sm text-slate-500'>
+            Add your first expense to get started
+          </p>
         </div>
       ) : (
         sortedDates.map((date) => (
@@ -219,14 +225,20 @@ const ExpensesList = ({
                             {expense.description}
                           </h4>
                           <div className='flex items-center gap-2 flex-wrap'>
-                            {expense.activityId && getActivityById(expense.activityId) && (
-                              <span className='text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center gap-1 w-fit' title={getActivityById(expense.activityId)?.title}>
-                                <Link2 className='w-3 h-3' />
-                                <span className='truncate max-w-[120px]'>
-                                  {getActivityById(expense.activityId)?.title}
+                            {expense.activityId &&
+                              getActivityById(expense.activityId) && (
+                                <span
+                                  className='text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center gap-1 w-fit'
+                                  title={
+                                    getActivityById(expense.activityId)?.title
+                                  }
+                                >
+                                  <Link2 className='w-3 h-3' />
+                                  <span className='truncate max-w-[120px]'>
+                                    {getActivityById(expense.activityId)?.title}
+                                  </span>
                                 </span>
-                              </span>
-                            )}
+                              )}
                             {allPaid && (
                               <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
                                 <CheckCircle className='w-3 h-3' />

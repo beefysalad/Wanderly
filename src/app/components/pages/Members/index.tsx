@@ -1,6 +1,5 @@
 "use client";
-import { ArrowLeft, Crown, Mail, Users } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft, Crown, Mail, Users, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useGroup } from "@/src/hooks/useGroups";
@@ -34,78 +33,117 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-white flex items-center justify-center'>
-        <div className='text-gray-600'>Loading...</div>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-600 font-medium'>Loading members...</p>
+        </div>
       </div>
     );
   }
 
   if (!group) {
     return (
-      <div className='min-h-screen bg-white flex items-center justify-center'>
-        <div className='text-gray-600'>Group not found</div>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-slate-600 font-medium'>Group not found</p>
+        </div>
       </div>
     );
   }
+
+  const memberCount = group.memberEmails?.length || 0;
+  const displayName = (email: string) => {
+    return (
+      group.memberNames?.[email] ||
+      group.memberMetadata?.[email]?.name ||
+      email.split("@")[0]
+    );
+  };
+
   return (
-    <div className='min-h-screen bg-white p-4 md:p-8'>
-      <div className='max-w-4xl mx-auto'>
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 p-4 md:p-8'>
+      <div className='max-w-5xl mx-auto'>
         <button
           onClick={() => router.back()}
-          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
+          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
         >
           <ArrowLeft className='w-5 h-5' />
           Back
         </button>
 
-        <div className='bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 mb-8 shadow-2xl'>
-          <div className='flex items-center gap-3 mb-2'>
-            <div className='w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm'>
-              <Users className='w-6 h-6 text-white' />
-            </div>
-            <div>
-              <h1 className='text-3xl font-bold text-white'>Group Members</h1>
-              <p className='text-white/80'>{group.name}</p>
+        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mb-8'>
+          <div className='bg-gradient-to-r from-amber-500 to-orange-500 p-6 md:p-8'>
+            <div className='flex items-center gap-4'>
+              <div className='w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30'>
+                <Users className='w-7 h-7 text-white' />
+              </div>
+              <div>
+                <h1 className='text-3xl md:text-4xl font-bold text-white mb-1'>
+                  Group Members
+                </h1>
+                <p className='text-white/90 text-lg'>{group.name}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'>
           {group.memberEmails && group.memberEmails.length > 0 ? (
             group.memberEmails.map((email, index) => {
-              const isCreator = email === group.createdBy;
+              const isCreator =
+                email === group.createdByEmail || email === group.createdBy;
+              const memberMeta = group.memberMetadata?.[email];
+              const joinedDate = memberMeta?.joinedAt
+                ? new Date(memberMeta.joinedAt)
+                : null;
 
               return (
                 <div
                   key={email}
-                  className='bg-gray-50 border border-gray-200 rounded-xl p-6 hover:bg-gray-100 hover:border-amber-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/10'
+                  className='group bg-white rounded-xl border border-slate-200 p-5 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-300 transition-all duration-300 hover:-translate-y-1'
                 >
-                  <div className='flex items-center gap-4'>
-                    <div
-                      className={`w-16 h-16 ${getAvatarColor(
-                        index
-                      )} rounded-full flex items-center justify-center text-white text-xl font-bold`}
-                    >
-                      {getInitials(email)}
-                    </div>
+                  <div className='flex flex-col gap-4'>
+                    <div className='flex items-start gap-4'>
+                      <div
+                        className={`w-14 h-14 ${getAvatarColor(
+                          index
+                        )} rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}
+                      >
+                        {getInitials(email)}
+                      </div>
 
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <h3 className='text-lg font-semibold text-gray-900'>
-                          {email.split("@")[0]}
-                        </h3>
-                        {isCreator && (
-                          <div className='flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 rounded-full border border-amber-500/50'>
-                            <Crown className='w-3 h-3 text-amber-400' />
-                            <span className='text-xs text-amber-400 font-medium'>
-                              Creator
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center gap-2 mb-2 flex-wrap'>
+                          <h3 className='text-base font-semibold text-slate-900 truncate'>
+                            {displayName(email)}
+                          </h3>
+                          {isCreator && (
+                            <div className='flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 rounded-full border border-amber-300 dark:border-amber-700'>
+                              <Crown className='w-3 h-3 text-amber-600 dark:text-amber-400' />
+                              <span className='text-xs text-amber-700 dark:text-amber-300 font-medium'>
+                                Creator
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2'>
+                          <Mail className='w-3.5 h-3.5 flex-shrink-0' />
+                          <span className='truncate text-xs'>{email}</span>
+                        </div>
+                        {joinedDate && (
+                          <div className='flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400'>
+                            <Calendar className='w-3.5 h-3.5 flex-shrink-0' />
+                            <span>
+                              Joined{" "}
+                              {joinedDate.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
                             </span>
                           </div>
                         )}
-                      </div>
-                      <div className='flex items-center gap-2 text-sm text-gray-600'>
-                        <Mail className='w-4 h-4' />
-                        <span className='truncate'>{email}</span>
                       </div>
                     </div>
                   </div>
@@ -113,16 +151,32 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
               );
             })
           ) : (
-            <div className='col-span-full text-center py-12'>
-              <Users className='w-12 h-12 text-gray-300 mx-auto mb-3' />
-              <p className='text-gray-500'>No members in this group yet</p>
+            <div className='col-span-full'>
+              <div className='bg-white rounded-xl border border-slate-200 p-12 text-center'>
+                <div className='w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <Users className='w-8 h-8 text-slate-400' />
+                </div>
+                <p className='text-slate-600 font-medium mb-2'>
+                  No members yet
+                </p>
+                <p className='text-slate-500 text-sm'>
+                  This group does&apos;t have any members yet.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        <div className='mt-6 text-center text-gray-400 text-sm'>
-          Total Members: {group.memberEmails?.length || 0}
-        </div>
+        {memberCount > 0 && (
+          <div className='mt-8 text-center'>
+            <div className='inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm'>
+              <Users className='w-4 h-4 text-slate-500' />
+              <span className='text-sm font-medium text-slate-700'>
+                {memberCount} {memberCount === 1 ? "Member" : "Members"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,13 @@
 "use client";
 import { Expense, Trip } from "@/src/shared/types";
-import { ArrowLeft, Plus, Receipt } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Receipt,
+  Calendar,
+  Filter,
+  ChevronDown,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import ExpensesList from "./ExpenseList";
@@ -29,10 +36,10 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const expenses = expensesData?.expenses || [];
   const paymentLogs = paymentLogsData?.paymentLogs || [];
-  const [activeTab, setActiveTab] = useState<"expenses" | "logs">("expenses");
-  const [expenseSubTab, setExpenseSubTab] = useState<"unsettled" | "settled">(
-    "unsettled"
+  const [view, setView] = useState<"all" | "unsettled" | "settled" | "logs">(
+    "all"
   );
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -50,6 +57,32 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
 
   const unsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
   const settledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
+
+  // Get filtered expenses based on current view
+  const getFilteredExpenses = () => {
+    if (view === "unsettled") return unsettledExpenses;
+    if (view === "settled") return settledExpenses;
+    if (view === "logs") return [];
+    return expenses; // "all"
+  };
+
+  const filteredExpenses = getFilteredExpenses();
+
+  // Get view label
+  const getViewLabel = () => {
+    switch (view) {
+      case "all":
+        return `All Expenses (${expenses.length})`;
+      case "unsettled":
+        return `Unsettled (${unsettledExpenses.length})`;
+      case "settled":
+        return `Settled (${settledExpenses.length})`;
+      case "logs":
+        return `Payment Logs (${paymentLogs.length})`;
+      default:
+        return "All Expenses";
+    }
+  };
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!expenseId) return;
@@ -183,130 +216,130 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   }
   return (
     <>
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-20'>
-        <div className='max-w-4xl mx-auto px-4 py-6'>
+      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-6'>
+        <div className='max-w-4xl mx-auto px-4 py-4 md:py-6'>
           <div className='mb-8'>
-            {/* Header Card with Integrated Back Button */}
-            <div className='bg-gradient-to-br from-white via-orange-50/50 to-amber-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 sm:p-8 relative overflow-hidden mb-6'>
-              {/* Glassmorphism overlay */}
-              <div className='absolute inset-0 bg-white/60 backdrop-blur-md -z-0'></div>
-              <div className='relative z-10'>
-                <div className='flex items-start gap-4 mb-4'>
+            {/* Header Card with Integrated Back Button and Actions */}
+            <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6 mb-6'>
+              <div className='flex items-start justify-between gap-4'>
+                <div className='flex items-start gap-4 flex-1 min-w-0'>
                   <button
                     onClick={() => router.back()}
-                    className='p-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
+                    className='p-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
                     aria-label='Go back'
                   >
                     <ArrowLeft className='w-5 h-5' />
                   </button>
                   <div className='flex-1 min-w-0'>
-                    <h1 className='text-3xl sm:text-4xl font-bold text-slate-900 leading-tight mb-2'>
+                    <h1 className='text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-2'>
                       Expenses
                     </h1>
-                    <p className='text-sm sm:text-base text-slate-600 flex items-center gap-2'>
-                      <span className='text-lg'>📅</span>
+                    <p className='text-sm text-slate-600 flex items-center gap-2'>
+                      <Calendar className='w-4 h-4 text-orange-500' />
                       <span>{trip.name}</span>
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className='rounded-2xl p-4 sm:p-5 mb-6'>
-              <div className='flex gap-3 mb-4'>
                 <button
-                  onClick={() => setActiveTab("expenses")}
-                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
-                    activeTab === "expenses"
-                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                      : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                  }`}
+                  onClick={() => setShowAddModal(true)}
+                  className='p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0 active:scale-[0.95] transform'
+                  aria-label='Add expense'
                 >
-                  Expenses
-                </button>
-                <button
-                  onClick={() => setActiveTab("logs")}
-                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
-                    activeTab === "logs"
-                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                      : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                  }`}
-                >
-                  <Receipt className='w-4 h-4' />
-                  Logs ({paymentLogs.length})
+                  <Plus className='w-5 h-5' />
                 </button>
               </div>
 
-              {activeTab === "expenses" && (
-                <>
-                  <div className='flex gap-3 mb-4'>
-                    <button
-                      onClick={() => setExpenseSubTab("unsettled")}
-                      className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                        expenseSubTab === "unsettled"
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                          : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                      }`}
-                    >
-                      Unsettled ({unsettledExpenses.length})
-                    </button>
-                    <button
-                      onClick={() => setExpenseSubTab("settled")}
-                      className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
-                        expenseSubTab === "settled"
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                          : "bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white border border-slate-200/50"
-                      }`}
-                    >
-                      Settled ({settledExpenses.length})
-                    </button>
+              {/* Filter Dropdown */}
+              <div className='mt-4 relative'>
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className='w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors'
+                >
+                  <div className='flex items-center gap-2'>
+                    <Filter className='w-4 h-4 text-slate-500' />
+                    <span className='font-medium'>{getViewLabel()}</span>
                   </div>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className='w-full px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
-                  >
-                    <Plus className='w-5 h-5' />
-                    <span>Add Expense</span>
-                  </button>
-                </>
-              )}
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                      showFilterDropdown ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {showFilterDropdown && (
+                  <>
+                    <div
+                      className='fixed inset-0 z-10'
+                      onClick={() => setShowFilterDropdown(false)}
+                    />
+                    <div className='absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-slate-200 shadow-lg z-20 overflow-hidden'>
+                      <button
+                        onClick={() => {
+                          setView("all");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                          view === "all"
+                            ? "bg-orange-50 text-orange-700 font-medium"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className='w-2 h-2 rounded-full bg-slate-300'></div>
+                        <span>All Expenses ({expenses.length})</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setView("unsettled");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                          view === "unsettled"
+                            ? "bg-orange-50 text-orange-700 font-medium"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className='w-2 h-2 rounded-full bg-red-400'></div>
+                        <span>Unsettled ({unsettledExpenses.length})</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setView("settled");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                          view === "settled"
+                            ? "bg-orange-50 text-orange-700 font-medium"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className='w-2 h-2 rounded-full bg-emerald-400'></div>
+                        <span>Settled ({settledExpenses.length})</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setView("logs");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors border-t border-slate-200 ${
+                          view === "logs"
+                            ? "bg-orange-50 text-orange-700 font-medium"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Receipt className='w-4 h-4 text-slate-500' />
+                        <span>Payment Logs ({paymentLogs.length})</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Content Area Card */}
-          <div className='rounded-2xl  p-4 sm:p-6 relative overflow-hidden'>
-            {/* Glassmorphism overlay */}
-
-            <div className='relative z-10'>
-              {activeTab === "expenses" ? (
-                loadingExpenses ? (
-                  <div className='text-center py-12'>
-                    <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                    <p className='text-slate-600 font-medium'>
-                      Loading expenses...
-                    </p>
-                  </div>
-                ) : (
-                  <ExpensesList
-                    expenses={
-                      expenseSubTab === "settled"
-                        ? settledExpenses
-                        : unsettledExpenses
-                    }
-                    members={group.memberEmails || []}
-                    memberNames={group.memberNames}
-                    tripId={tripId}
-                    groupId={groupId}
-                    activities={trip.activities || []}
-                    onDeleteExpense={handleDeleteExpense}
-                    onUpdateExpense={handleUpdateExpense}
-                    onEditExpense={handleEditExpense}
-                    onSelectExpense={setSelectedExpense}
-                    currentUser={user?.email ?? ""}
-                  />
-                )
-              ) : loadingLogs ? (
+          <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6'>
+            {view === "logs" ? (
+              loadingLogs ? (
                 <div className='text-center py-12'>
                   <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
                   <p className='text-slate-600 font-medium'>
@@ -316,12 +349,12 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
               ) : (
                 <div className='space-y-3'>
                   {paymentLogs.length === 0 ? (
-                    <div className='bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-white/50'>
+                    <div className='bg-slate-50 rounded-xl p-8 text-center border border-slate-200'>
                       <Receipt className='w-16 h-16 text-slate-300 mx-auto mb-3' />
-                      <p className='text-slate-500 font-medium'>
+                      <p className='text-slate-600 font-medium mb-1'>
                         No payment logs yet
                       </p>
-                      <p className='text-sm text-slate-400 mt-1'>
+                      <p className='text-sm text-slate-500'>
                         Payment history will appear here
                       </p>
                     </div>
@@ -335,20 +368,20 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                       .map((log) => (
                         <div
                           key={log.id}
-                          className='bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50 hover:shadow-xl transition-shadow'
+                          className='bg-white rounded-xl p-4 border border-slate-200 hover:shadow-md transition-shadow'
                         >
                           <div className='flex items-start justify-between gap-4'>
-                            <div className='flex-1'>
+                            <div className='flex-1 min-w-0'>
                               <div className='flex items-center gap-2 mb-2'>
-                                <span className='text-2xl'>
+                                <span className='text-xl flex-shrink-0'>
                                   {log.paymentMethod === "cash" && "💵"}
                                   {log.paymentMethod === "bank" && "🏦"}
                                   {log.paymentMethod === "maya" && "💳"}
                                   {log.paymentMethod === "gcash" && "💰"}
                                   {!log.paymentMethod && "💵"}
                                 </span>
-                                <div>
-                                  <p className='font-semibold text-slate-900'>
+                                <div className='flex-1 min-w-0'>
+                                  <p className='font-semibold text-slate-900 truncate'>
                                     {log.expenseDescription}
                                   </p>
                                   <p className='text-xs text-slate-500'>
@@ -365,21 +398,21 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                                   </p>
                                 </div>
                               </div>
-                              <div className='flex items-center gap-2 text-sm'>
-                                <span className='font-medium text-slate-700'>
-                                  {log.payer}
+                              <div className='flex items-center gap-2 text-sm flex-wrap'>
+                                <span className='font-medium text-slate-700 truncate'>
+                                  {log.payer.split("@")[0]}
                                 </span>
                                 <span className='text-slate-400'>→</span>
-                                <span className='font-medium text-slate-700'>
-                                  {log.payee}
+                                <span className='font-medium text-slate-700 truncate'>
+                                  {log.payee.split("@")[0]}
                                 </span>
                               </div>
                             </div>
-                            <div className='text-right'>
+                            <div className='text-right flex-shrink-0'>
                               <p className='text-lg font-bold text-emerald-600'>
                                 ₱{log.amount.toFixed(2)}
                               </p>
-                              <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium'>
+                              <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 font-medium mt-1'>
                                 Paid
                               </span>
                             </div>
@@ -388,8 +421,29 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                       ))
                   )}
                 </div>
-              )}
-            </div>
+              )
+            ) : loadingExpenses ? (
+              <div className='text-center py-12'>
+                <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                <p className='text-slate-600 font-medium'>
+                  Loading expenses...
+                </p>
+              </div>
+            ) : (
+              <ExpensesList
+                expenses={filteredExpenses}
+                members={group.memberEmails || []}
+                memberNames={group.memberNames}
+                tripId={tripId}
+                groupId={groupId}
+                activities={trip.activities || []}
+                onDeleteExpense={handleDeleteExpense}
+                onUpdateExpense={handleUpdateExpense}
+                onEditExpense={handleEditExpense}
+                onSelectExpense={setSelectedExpense}
+                currentUser={user?.email ?? ""}
+              />
+            )}
           </div>
         </div>
       </main>

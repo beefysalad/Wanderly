@@ -57,8 +57,8 @@ const DashboardCalendar = ({
     }
   };
   return (
-    <div className='w-full lg:w-80 flex-shrink-0 mb-6 lg:mb-0'>
-      <div className='bg-white rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-6 lg:sticky lg:top-8'>
+    <div className='w-full lg:w-80 flex-shrink-0 mb-4 lg:mb-0'>
+      <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6 lg:sticky lg:top-8'>
         <div className='flex items-center justify-between mb-3'>
           <h3 className='text-sm font-bold text-slate-900 flex items-center gap-2'>
             <CalendarIcon className='w-4 h-4 text-amber-500' />
