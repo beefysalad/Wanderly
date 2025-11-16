@@ -74,6 +74,8 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
     id: prismaGroup.id,
     name: prismaGroup.name,
     code: prismaGroup.code,
+    colorScheme: prismaGroup.colorScheme || undefined,
+    emoji: prismaGroup.emoji || undefined,
     createdAt: prismaGroup.createdAt.toISOString(),
     createdBy: prismaGroup.creator.name || prismaGroup.creator.email,
     createdByEmail: prismaGroup.creator.email,

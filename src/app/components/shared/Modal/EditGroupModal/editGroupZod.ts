@@ -13,9 +13,10 @@ const colorSchemeOptions = [
   "cyan",
 ] as const;
 
-export const createGroupSchema = z.object({
+export const editGroupSchema = z.object({
   groupName: z.string().min(5, "Group name must be at least 5 characters"),
   colorScheme: z.enum(colorSchemeOptions),
   emoji: z.string().optional().nullable(),
 });
-export type TCreateGroupSchema = z.input<typeof createGroupSchema>;
+export type TEditGroupSchema = z.input<typeof editGroupSchema>;
+

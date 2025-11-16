@@ -38,7 +38,7 @@ const ProfileComponent = () => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading profile...</p>
@@ -49,7 +49,7 @@ const ProfileComponent = () => {
 
   if (!user) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
           <p className='text-slate-600 font-medium'>
             Please sign in to view your profile
@@ -67,7 +67,7 @@ const ProfileComponent = () => {
     : null;
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-24 md:pb-20'>
+    <main className='min-h-screen bg-slate-50 pb-36 md:pb-28'>
       <div className='max-w-4xl mx-auto px-4 py-8'>
         {/* Back Button */}
         <button
@@ -79,38 +79,16 @@ const ProfileComponent = () => {
         </button>
 
         {/* Profile Header Card */}
-        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mb-6'>
-          {/* Header Section - No Gradients */}
-          <div className='bg-orange-500 p-8 sm:p-12'>
-            <div className='flex flex-col sm:flex-row items-center sm:items-start gap-6'>
-              {/* Avatar */}
-              <div className='relative'>
-                {avatarUrl ? (
-                  <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white'>
-                    <Image
-                      src={avatarUrl}
-                      alt={displayName}
-                      width={128}
-                      height={128}
-                      className='w-full h-full object-cover'
-                    />
-                  </div>
-                ) : (
-                  <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-xl bg-orange-400 flex items-center justify-center'>
-                    <User className='w-12 h-12 sm:w-16 sm:h-16 text-white' />
-                  </div>
-                )}
-              </div>
-
-              {/* Name and Email */}
-              <div className='flex-1 text-center sm:text-left'>
-                <h1 className='text-3xl sm:text-4xl font-bold text-white mb-2'>
-                  {displayName}
-                </h1>
-                <div className='flex items-center justify-center sm:justify-start gap-2 text-white/90'>
-                  <Mail className='w-4 h-4' />
-                  <span className='text-sm sm:text-base'>{email}</span>
-                </div>
+        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 p-8 sm:p-12 mb-6'>
+          <div className='flex flex-col sm:flex-row items-center sm:items-start gap-6'>
+            {/* Name and Email */}
+            <div className='flex-1 text-center sm:text-left'>
+              <h1 className='text-3xl sm:text-4xl font-bold text-slate-900 mb-2'>
+                {displayName}
+              </h1>
+              <div className='flex items-center justify-center sm:justify-start gap-2 text-slate-600'>
+                <Mail className='w-4 h-4' />
+                <span className='text-sm sm:text-base'>{email}</span>
               </div>
             </div>
           </div>

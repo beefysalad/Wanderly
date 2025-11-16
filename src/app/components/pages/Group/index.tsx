@@ -1,18 +1,21 @@
 "use client";
-import { ArrowLeft, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Plus, Share2, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import CreateTripModal from "../../shared/Modal/CreateTripModal";
+import EditGroupModal from "../../shared/Modal/EditGroupModal";
 import TripsListComponent from "./TripsList";
 import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
+import { getGroupColorClasses } from "@/lib/utils/groupColors";
 
 interface IGroupComponent {
   param: string;
 }
 const GroupComponent = ({ param }: IGroupComponent) => {
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -92,11 +95,14 @@ const GroupComponent = ({ param }: IGroupComponent) => {
     console.log("HANDLE");
   };
 
+  // Get color scheme for the group (default to orange if not loaded yet)
+  const colors = group ? getGroupColorClasses(group.colorScheme) : getGroupColorClasses("orange");
+
   if (isLoading) {
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading group...</p>
         </div>
       </main>
@@ -104,6 +110,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   }
 
   if (!group || error) {
+    const errorColors = getGroupColorClasses("orange");
     return (
       <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
         <div className='text-center bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 max-w-md'>
@@ -118,7 +125,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           </p>
           <button
             onClick={goBack}
-            className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+            className={`px-6 py-3 bg-gradient-to-r ${errorColors.gradient} ${errorColors.gradientHover} text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
           >
             Go Home
           </button>
@@ -140,17 +147,28 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         <div className='mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200'>
           <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6'>
             <div className='flex-1'>
-              <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-2 text-balance'>
-                {group.name}
-              </h1>
+              <div className='flex items-start justify-between gap-4 mb-2'>
+                <h1 className='text-3xl md:text-4xl font-bold text-slate-900 text-balance'>
+                  {group.name}
+                </h1>
+                {isCreator && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className='p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0'
+                    title='Edit Group'
+                  >
+                    <Edit className='w-5 h-5 text-slate-600' />
+                  </button>
+                )}
+              </div>
               <div className='flex items-center gap-2 flex-wrap mb-2'>
                 <span className='text-sm text-slate-600'>Group Code:</span>
-                <code className='px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg font-mono font-bold text-amber-600 text-lg'>
+                <code className={`px-3 py-1 ${colors.bgLight} border ${colors.borderLight} rounded-lg font-mono font-bold ${colors.text} text-lg`}>
                   {group.code}
                 </code>
                 <button
                   onClick={copyCode}
-                  className='px-3 py-1 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors font-medium flex items-center gap-1'
+                  className={`px-3 py-1 text-sm ${colors.bg} ${colors.hoverBg} text-white rounded-lg transition-colors font-medium flex items-center gap-1`}
                 >
                   <Share2 className='w-3 h-3' />
                   {copied ? "Copied!" : "Copy"}
@@ -166,7 +184,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
           <button
             onClick={() => setShowCreateTripModal(true)}
-            className='w-full px-6 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+            className={`w-full px-6 py-4 rounded-xl bg-gradient-to-r ${colors.gradient} ${colors.gradientHover} text-white transition-all font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
           >
             <Plus className='w-6 h-6' />
             Create New Trip
@@ -182,7 +200,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               </span>
               <span className='text-slate-700 font-semibold'>
                 Members{" "}
-                <span className='text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full min-w-[2rem]'>
+                <span className={`text-xs font-bold ${colors.text} ${colors.bgLighter} px-2.5 py-1 rounded-full min-w-[2rem]`}>
                   {group.memberEmails?.length || 0}
                 </span>
               </span>
@@ -229,6 +247,13 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         <CreateTripModal
           groupId={group.id}
           onClose={() => setShowCreateTripModal(false)}
+        />
+      )}
+
+      {showEditModal && group && (
+        <EditGroupModal
+          group={group}
+          onClose={() => setShowEditModal(false)}
         />
       )}
 

@@ -16,7 +16,7 @@ async function handler(req: NextRequest, auth: AuthContext) {
     if (req.method === "POST") {
       // Create new group
       const body = await req.json();
-      const { name } = body;
+      const { name, colorScheme, emoji } = body;
 
       if (!name || typeof name !== "string" || name.trim().length < 5) {
         return NextResponse.json(
@@ -25,7 +25,12 @@ async function handler(req: NextRequest, auth: AuthContext) {
         );
       }
 
-      const group = await createGroupService(auth.decodedToken, name.trim());
+      const group = await createGroupService(
+        auth.decodedToken,
+        name.trim(),
+        colorScheme || "orange",
+        emoji || null
+      );
       const transformedGroup = transformGroup(group);
 
       logger.info("Group created via API", { groupId: group.id });

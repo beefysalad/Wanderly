@@ -2,6 +2,8 @@ export interface Group {
   id: string;
   name: string;
   code: string;
+  colorScheme?: string;
+  emoji?: string;
   trips?: Trip[];
   createdAt: string;
   createdBy?: string;

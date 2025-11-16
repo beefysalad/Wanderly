@@ -1,13 +1,6 @@
 "use client";
 import { Expense, Trip } from "@/src/shared/types";
-import {
-  ArrowLeft,
-  Plus,
-  Receipt,
-  Calendar,
-  Filter,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, Plus, Receipt, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import ExpensesList from "./ExpenseList";
@@ -39,11 +32,12 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const [view, setView] = useState<"all" | "unsettled" | "settled" | "logs">(
     "all"
   );
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
+
+  const currentUserEmail = user?.email || "";
 
   // Filter expenses by settled status
   const isExpenseSettled = (expense: Expense) => {
@@ -55,34 +49,77 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     );
   };
 
-  const unsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
-  const settledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
+  // Check if user is involved in expense
+  const isUserInvolved = (expense: Expense) => {
+    return expense.splitWith?.includes(currentUserEmail) || false;
+  };
+
+  // Get all unsettled and settled expenses
+  const allUnsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
+  const allSettledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
+
+  // Filter by user involvement for settled/unsettled tabs
+  const unsettledExpenses = allUnsettledExpenses.filter((exp) =>
+    isUserInvolved(exp)
+  );
+  const settledExpenses = allSettledExpenses.filter((exp) =>
+    isUserInvolved(exp)
+  );
+
+  // Calculate summary statistics
+  const calculateUnsettledStats = () => {
+    let youOwe = 0;
+    let youAreOwed = 0;
+
+    unsettledExpenses.forEach((expense) => {
+      const splitWith = expense.splitWith || [];
+      const splitCount = splitWith.length || 1;
+      const shareAmount = expense.amount / splitCount;
+      const paidMembers = expense.paidMembers || [];
+
+      if (expense.paidBy === currentUserEmail) {
+        // User paid, calculate what others owe
+        const unpaidCount = splitWith.filter(
+          (member) =>
+            member !== currentUserEmail && !paidMembers.includes(member)
+        ).length;
+        youAreOwed += shareAmount * unpaidCount;
+      } else if (splitWith.includes(currentUserEmail)) {
+        // User is in split but didn't pay, check if they've paid
+        if (!paidMembers.includes(currentUserEmail)) {
+          youOwe += shareAmount;
+        }
+      }
+    });
+
+    return { youOwe, youAreOwed };
+  };
+
+  const calculateSettledStats = () => {
+    let totalSettled = 0;
+
+    settledExpenses.forEach((expense) => {
+      const splitWith = expense.splitWith || [];
+      const splitCount = splitWith.length || 1;
+      const shareAmount = expense.amount / splitCount;
+      totalSettled += shareAmount;
+    });
+
+    return { totalSettled };
+  };
+
+  const unsettledStats = calculateUnsettledStats();
+  const settledStats = calculateSettledStats();
 
   // Get filtered expenses based on current view
   const getFilteredExpenses = () => {
     if (view === "unsettled") return unsettledExpenses;
     if (view === "settled") return settledExpenses;
     if (view === "logs") return [];
-    return expenses; // "all"
+    return expenses; // "all" - show all expenses
   };
 
   const filteredExpenses = getFilteredExpenses();
-
-  // Get view label
-  const getViewLabel = () => {
-    switch (view) {
-      case "all":
-        return `All Expenses (${expenses.length})`;
-      case "unsettled":
-        return `Unsettled (${unsettledExpenses.length})`;
-      case "settled":
-        return `Settled (${settledExpenses.length})`;
-      case "logs":
-        return `Payment Logs (${paymentLogs.length})`;
-      default:
-        return "All Expenses";
-    }
-  };
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!expenseId) return;
@@ -240,98 +277,75 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className='p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0 active:scale-[0.95] transform'
-                  aria-label='Add expense'
-                >
-                  <Plus className='w-5 h-5' />
-                </button>
+                <div className='flex items-center gap-2 flex-shrink-0'>
+                  <button
+                    onClick={() => setView("logs")}
+                    className={`p-3 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center active:scale-[0.95] transform ${
+                      view === "logs"
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                        : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                    }`}
+                    aria-label='Payment logs'
+                  >
+                    <Receipt className='w-5 h-5' />
+                  </button>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className='p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0 active:scale-[0.95] transform'
+                    aria-label='Add expense'
+                  >
+                    <Plus className='w-5 h-5' />
+                  </button>
+                </div>
               </div>
 
-              {/* Filter Dropdown */}
-              <div className='mt-4 relative'>
+              {/* Filter Tabs */}
+              <div className='mt-4 flex items-center gap-2 overflow-x-auto pb-1'>
                 <button
-                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className='w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors'
+                  onClick={() => setView("all")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+                    view === "all"
+                      ? "bg-orange-500 text-white shadow-md"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
                 >
-                  <div className='flex items-center gap-2'>
-                    <Filter className='w-4 h-4 text-slate-500' />
-                    <span className='font-medium'>{getViewLabel()}</span>
-                  </div>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
-                      showFilterDropdown ? "rotate-180" : ""
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      view === "all" ? "bg-white" : "bg-slate-400"
                     }`}
-                  />
+                  ></div>
+                  <span>All Expenses ({expenses.length})</span>
                 </button>
-
-                {showFilterDropdown && (
-                  <>
-                    <div
-                      className='fixed inset-0 z-10'
-                      onClick={() => setShowFilterDropdown(false)}
-                    />
-                    <div className='absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-slate-200 shadow-lg z-20 overflow-hidden'>
-                      <button
-                        onClick={() => {
-                          setView("all");
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                          view === "all"
-                            ? "bg-orange-50 text-orange-700 font-medium"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className='w-2 h-2 rounded-full bg-slate-300'></div>
-                        <span>All Expenses ({expenses.length})</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setView("unsettled");
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                          view === "unsettled"
-                            ? "bg-orange-50 text-orange-700 font-medium"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className='w-2 h-2 rounded-full bg-red-400'></div>
-                        <span>Unsettled ({unsettledExpenses.length})</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setView("settled");
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                          view === "settled"
-                            ? "bg-orange-50 text-orange-700 font-medium"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className='w-2 h-2 rounded-full bg-emerald-400'></div>
-                        <span>Settled ({settledExpenses.length})</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setView("logs");
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors border-t border-slate-200 ${
-                          view === "logs"
-                            ? "bg-orange-50 text-orange-700 font-medium"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <Receipt className='w-4 h-4 text-slate-500' />
-                        <span>Payment Logs ({paymentLogs.length})</span>
-                      </button>
-                    </div>
-                  </>
-                )}
+                <button
+                  onClick={() => setView("unsettled")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+                    view === "unsettled"
+                      ? "bg-red-500 text-white shadow-md"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      view === "unsettled" ? "bg-white" : "bg-red-400"
+                    }`}
+                  ></div>
+                  <span>Unsettled ({unsettledExpenses.length})</span>
+                </button>
+                <button
+                  onClick={() => setView("settled")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+                    view === "settled"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      view === "settled" ? "bg-white" : "bg-emerald-400"
+                    }`}
+                  ></div>
+                  <span>Settled ({settledExpenses.length})</span>
+                </button>
               </div>
             </div>
           </div>
@@ -430,19 +444,78 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                 </p>
               </div>
             ) : (
-              <ExpensesList
-                expenses={filteredExpenses}
-                members={group.memberEmails || []}
-                memberNames={group.memberNames}
-                tripId={tripId}
-                groupId={groupId}
-                activities={trip.activities || []}
-                onDeleteExpense={handleDeleteExpense}
-                onUpdateExpense={handleUpdateExpense}
-                onEditExpense={handleEditExpense}
-                onSelectExpense={setSelectedExpense}
-                currentUser={user?.email ?? ""}
-              />
+              <>
+                {/* Summary Statistics for Unsettled Tab */}
+                {view === "unsettled" && (
+                  <div className='mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                    <div className='bg-red-50 border border-red-200 rounded-xl p-4'>
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <p className='text-sm font-medium text-red-700 mb-1'>
+                            You Owe
+                          </p>
+                          <p className='text-2xl font-bold text-red-900'>
+                            ₱{unsettledStats.youOwe.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className='w-12 h-12 bg-red-100 rounded-full flex items-center justify-center'>
+                          <span className='text-2xl'>📤</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className='bg-emerald-50 border border-emerald-200 rounded-xl p-4'>
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <p className='text-sm font-medium text-emerald-700 mb-1'>
+                            You&apos;re Owed
+                          </p>
+                          <p className='text-2xl font-bold text-emerald-900'>
+                            ₱{unsettledStats.youAreOwed.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center'>
+                          <span className='text-2xl'>📥</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Statistics for Settled Tab */}
+                {view === "settled" && (
+                  <div className='mb-6'>
+                    <div className='bg-slate-50 border border-slate-200 rounded-xl p-4'>
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <p className='text-sm font-medium text-slate-700 mb-1'>
+                            Total Settled
+                          </p>
+                          <p className='text-2xl font-bold text-slate-900'>
+                            ₱{settledStats.totalSettled.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className='w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center'>
+                          <span className='text-2xl'>✓</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <ExpensesList
+                  expenses={filteredExpenses}
+                  members={group.memberEmails || []}
+                  memberNames={group.memberNames}
+                  tripId={tripId}
+                  groupId={groupId}
+                  activities={trip.activities || []}
+                  onDeleteExpense={handleDeleteExpense}
+                  onUpdateExpense={handleUpdateExpense}
+                  onEditExpense={handleEditExpense}
+                  onSelectExpense={setSelectedExpense}
+                  currentUser={user?.email ?? ""}
+                />
+              </>
             )}
           </div>
         </div>

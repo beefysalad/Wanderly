@@ -13,6 +13,15 @@ interface GroupResponse {
 
 interface CreateGroupRequest {
   name: string;
+  colorScheme?: string;
+  emoji?: string | null;
+}
+
+interface UpdateGroupRequest {
+  groupId: string;
+  name?: string;
+  colorScheme?: string;
+  emoji?: string | null;
 }
 
 interface JoinGroupRequest {
@@ -133,6 +142,26 @@ export function useDeleteGroup() {
       // Invalidate groups list and remove specific group from cache
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.removeQueries({ queryKey: ["groups", groupId] });
+    },
+  });
+}
+
+/**
+ * Mutation hook to update a group (creator/admin only)
+ */
+export function useUpdateGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation<GroupResponse, Error, UpdateGroupRequest>({
+    mutationFn: async (data) => {
+      const { groupId, ...updates } = data;
+      const response = await api.patch<GroupResponse>(`/groups/${groupId}`, updates);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate groups list and specific group
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["groups", variables.groupId] });
     },
   });
 }

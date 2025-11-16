@@ -33,7 +33,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+      <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading members...</p>
@@ -44,7 +44,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
 
   if (!group) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 flex items-center justify-center'>
+      <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
           <p className='text-slate-600 font-medium'>Group not found</p>
         </div>
@@ -62,7 +62,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 p-4 md:p-8'>
+    <div className='min-h-screen bg-slate-50 p-4 md:p-8'>
       <div className='max-w-5xl mx-auto'>
         <button
           onClick={() => router.back()}
@@ -72,19 +72,12 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
           Back
         </button>
 
-        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mb-8'>
-          <div className='bg-gradient-to-r from-amber-500 to-orange-500 p-6 md:p-8'>
-            <div className='flex items-center gap-4'>
-              <div className='w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30'>
-                <Users className='w-7 h-7 text-white' />
-              </div>
-              <div>
-                <h1 className='text-3xl md:text-4xl font-bold text-white mb-1'>
-                  Group Members
-                </h1>
-                <p className='text-white/90 text-lg'>{group.name}</p>
-              </div>
-            </div>
+        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 p-6 md:p-8 mb-8'>
+          <div>
+            <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-1'>
+              Group Members
+            </h1>
+            <p className='text-slate-600 text-lg'>{group.name}</p>
           </div>
         </div>
 
