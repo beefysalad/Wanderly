@@ -12,6 +12,10 @@ interface CreateActivityRequest {
   startTime?: string;
   endTime?: string;
   notes?: string;
+  transportationMode?: string;
+  pickupTime?: string;
+  pickupLocation?: string;
+  dropoffLocation?: string;
 }
 
 interface UpdateActivityRequest {
@@ -21,6 +25,10 @@ interface UpdateActivityRequest {
   endTime?: string;
   notes?: string;
   done?: boolean;
+  transportationMode?: string | null;
+  pickupTime?: string | null;
+  pickupLocation?: string | null;
+  dropoffLocation?: string | null;
 }
 
 /**

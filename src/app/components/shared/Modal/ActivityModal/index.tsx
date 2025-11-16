@@ -2,14 +2,19 @@ import { Activity } from "@/src/shared/types";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { activitySchema, TActivitySchema } from "./activityAddZod";
+
+const transportationModes = [
+  "commute",
+  "car",
+  "plane",
+  "bus",
+  "train",
+  "taxi",
+  "walking",
+  "other",
+] as const;
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Calendar,
-  Clock,
-  FileText,
-  X,
-  ChevronDown,
-} from "lucide-react";
+import { Calendar, Clock, FileText, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   useCreateActivity,
@@ -37,9 +42,8 @@ const ActivityModal = ({
   preSelectedDate,
 }: IActivityModal) => {
   const [error, setError] = useState<string | null>(null);
-  const [isTransportationExpanded, setIsTransportationExpanded] = useState(
-    false
-  );
+  const [isTransportationExpanded, setIsTransportationExpanded] =
+    useState(false);
   const createActivity = useCreateActivity(tripId, groupId);
   const updateActivity = useUpdateActivity(
     tripId,
@@ -53,7 +57,6 @@ const ActivityModal = ({
       editingActivity &&
       (editingActivity.transportationMode ||
         editingActivity.pickupTime ||
-        editingActivity.transportationFee ||
         editingActivity.pickupLocation ||
         editingActivity.dropoffLocation)
     ) {
@@ -73,7 +76,10 @@ const ActivityModal = ({
       startTime: editingActivity?.startTime || "",
       endTime: editingActivity?.endTime || "",
       notes: editingActivity?.notes || "",
-      transportationMode: editingActivity?.transportationMode || undefined,
+      transportationMode:
+        (editingActivity?.transportationMode as
+          | (typeof transportationModes)[number]
+          | undefined) || undefined,
       pickupTime: editingActivity?.pickupTime || undefined,
       pickupLocation: editingActivity?.pickupLocation || undefined,
       dropoffLocation: editingActivity?.dropoffLocation || undefined,
@@ -107,7 +113,12 @@ const ActivityModal = ({
     const mode = form.watch("transportationMode");
     const pickupTime = form.watch("pickupTime");
     const parts: string[] = [];
-    if (mode) parts.push(`${getTransportationIcon(mode)} ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    if (mode)
+      parts.push(
+        `${getTransportationIcon(mode)} ${
+          mode.charAt(0).toUpperCase() + mode.slice(1)
+        }`
+      );
     if (pickupTime) {
       const label = mode === "plane" ? "Departure" : "Pickup";
       parts.push(`${label}: ${pickupTime}`);
@@ -125,34 +136,39 @@ const ActivityModal = ({
         const updateData = {
           title: values.title,
           date: values.date,
-          startTime: values.startTime || null,
-          endTime: values.endTime || null,
-          notes: values.notes || null,
+          startTime: values.startTime || undefined,
+          endTime: values.endTime || undefined,
+          notes: values.notes || undefined,
           // Explicitly include transportation fields, converting undefined/empty to null
           // This allows the API to clear existing transportation data
-          transportationMode: values.transportationMode && typeof values.transportationMode === 'string' && values.transportationMode.trim() !== ""
-            ? values.transportationMode
+          transportationMode: values.transportationMode
+            ? (values.transportationMode as (typeof transportationModes)[number])
             : null,
-          pickupTime: values.pickupTime && typeof values.pickupTime === 'string' && values.pickupTime.trim() !== ""
-            ? values.pickupTime
-            : null,
-          pickupLocation: values.pickupLocation && typeof values.pickupLocation === 'string' && values.pickupLocation.trim() !== ""
-            ? values.pickupLocation
-            : null,
-          dropoffLocation: values.dropoffLocation && typeof values.dropoffLocation === 'string' && values.dropoffLocation.trim() !== ""
-            ? values.dropoffLocation
-            : null,
+          pickupTime:
+            values.pickupTime && values.pickupTime.trim() !== ""
+              ? values.pickupTime
+              : null,
+          pickupLocation:
+            values.pickupLocation && values.pickupLocation.trim() !== ""
+              ? values.pickupLocation
+              : null,
+          dropoffLocation:
+            values.dropoffLocation && values.dropoffLocation.trim() !== ""
+              ? values.dropoffLocation
+              : null,
         };
         await updateActivity.mutateAsync(updateData);
       } else {
-        // Create new activity - only send if they have values
+        // Create new activity - only send if they have values (convert empty strings to undefined)
         await createActivity.mutateAsync({
           title: values.title,
           date: values.date,
           startTime: values.startTime || undefined,
           endTime: values.endTime || undefined,
           notes: values.notes || undefined,
-          transportationMode: values.transportationMode || undefined,
+          transportationMode: values.transportationMode
+            ? (values.transportationMode as (typeof transportationModes)[number])
+            : undefined,
           pickupTime: values.pickupTime || undefined,
           pickupLocation: values.pickupLocation || undefined,
           dropoffLocation: values.dropoffLocation || undefined,
@@ -321,19 +337,27 @@ const ActivityModal = ({
                   <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
                     Mode of Transportation
                   </label>
-                    <select
-                      value={form.watch("transportationMode") || ""}
-                      onChange={(e) => {
-                        const value = e.target.value === "" ? undefined : e.target.value;
-                        form.setValue("transportationMode", value, { shouldValidate: true });
-                      }}
-                      onBlur={form.register("transportationMode").onBlur}
-                      name="transportationMode"
-                      ref={form.register("transportationMode").ref}
-                      className='w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
-                    >
-                      <option value=''>Select mode...</option>
-                    <option value='commute'>🚌 Commute (Public Transport)</option>
+                  <select
+                    value={form.watch("transportationMode") || ""}
+                    onChange={(e) => {
+                      const value =
+                        e.target.value === ""
+                          ? undefined
+                          : (e.target
+                              .value as (typeof transportationModes)[number]);
+                      form.setValue("transportationMode", value, {
+                        shouldValidate: true,
+                      });
+                    }}
+                    onBlur={form.register("transportationMode").onBlur}
+                    name='transportationMode'
+                    ref={form.register("transportationMode").ref}
+                    className='w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
+                  >
+                    <option value=''>Select mode...</option>
+                    <option value='commute'>
+                      🚌 Commute (Public Transport)
+                    </option>
                     <option value='car'>🚗 Car (Private Vehicle)</option>
                     <option value='plane'>✈️ Plane (Air Travel)</option>
                     <option value='bus'>🚌 Bus</option>
@@ -459,13 +483,26 @@ const ActivityModal = ({
                     onClick={() => {
                       // Explicitly clear all transportation fields
                       // Use empty strings that will be converted to null on submit
-                      form.setValue("transportationMode", "", { shouldValidate: false });
-                      form.setValue("pickupTime", "", { shouldValidate: false });
-                      form.setValue("pickupLocation", "", { shouldValidate: false });
-                      form.setValue("dropoffLocation", "", { shouldValidate: false });
+                      form.setValue("transportationMode", undefined, {
+                        shouldValidate: false,
+                      });
+                      form.setValue("pickupTime", "", {
+                        shouldValidate: false,
+                      });
+                      form.setValue("pickupLocation", "", {
+                        shouldValidate: false,
+                      });
+                      form.setValue("dropoffLocation", "", {
+                        shouldValidate: false,
+                      });
                       // Trigger validation after clearing to ensure form is valid
                       setTimeout(() => {
-                        form.trigger(["transportationMode", "pickupTime", "pickupLocation", "dropoffLocation"]);
+                        form.trigger([
+                          "transportationMode",
+                          "pickupTime",
+                          "pickupLocation",
+                          "dropoffLocation",
+                        ]);
                       }, 0);
                     }}
                     className='w-full mt-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-200 dark:border-red-800'
@@ -498,11 +535,6 @@ const ActivityModal = ({
           {form.formState.errors.pickupTime && (
             <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
               {form.formState.errors.pickupTime.message}
-            </div>
-          )}
-          {form.formState.errors.transportationFee && (
-            <div className='p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm'>
-              {form.formState.errors.transportationFee.message}
             </div>
           )}
 

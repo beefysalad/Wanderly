@@ -50,6 +50,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+  const [isDeletingActivity, setIsDeletingActivity] = useState<boolean>(false);
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
 
@@ -115,19 +116,20 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const handleDeleteActivity = async () => {
     if (!activityToDelete) return;
 
+    setIsDeletingActivity(true);
     try {
       await api.delete(`/trips/${tripId}/activities/${activityToDelete}`);
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
       setShowDeleteActivityModal(false);
       setActivityToDelete(null);
     } catch (err) {
-      setShowDeleteActivityModal(false);
-      setActivityToDelete(null);
       alert(
         err instanceof Error
           ? err.message
           : "Failed to delete activity. Please try again."
       );
+    } finally {
+      setIsDeletingActivity(false);
     }
   };
 
@@ -563,7 +565,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             setShowDeleteActivityModal(false);
             setActivityToDelete(null);
           }}
-          isDeleting={false}
+          isDeleting={isDeletingActivity}
           confirmText='Delete Activity'
         />
       )}

@@ -38,7 +38,7 @@ const ActivityDetailModal = ({
   readOnly = false,
 }: IActivityDetailModal) => {
   const activityDate = new Date(activity.date);
-  
+
   // Filter expenses linked to this activity
   const linkedExpenses = expenses.filter(
     (exp) => exp.activityId === activity.id
@@ -163,7 +163,6 @@ const ActivityDetailModal = ({
           {/* Transportation Details */}
           {(activity.transportationMode ||
             activity.pickupTime ||
-            activity.transportationFee ||
             activity.pickupLocation ||
             activity.dropoffLocation) && (
             <div className='bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 border border-slate-200 dark:border-slate-600'>
@@ -184,7 +183,15 @@ const ActivityDetailModal = ({
                       {activity.transportationMode === "taxi" && "🚕"}
                       {activity.transportationMode === "walking" && "🚶"}
                       {activity.transportationMode === "commute" && "🚌"}
-                      {!["car", "bus", "plane", "train", "taxi", "walking", "commute"].includes(activity.transportationMode) && "🚗"}
+                      {![
+                        "car",
+                        "bus",
+                        "plane",
+                        "train",
+                        "taxi",
+                        "walking",
+                        "commute",
+                      ].includes(activity.transportationMode) && "🚗"}
                     </span>
                     <p className='text-slate-900 dark:text-white font-medium'>
                       {activity.transportationMode.charAt(0).toUpperCase() +

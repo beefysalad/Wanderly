@@ -30,6 +30,7 @@ interface CreateExpenseRequest {
   accountName?: string;
   qrImage?: string;
   splitWith: string[];
+  activityId?: string;
 }
 
 interface UpdateExpenseRequest {
@@ -44,6 +45,7 @@ interface UpdateExpenseRequest {
   accountName?: string;
   qrImage?: string;
   splitWith?: string[];
+  activityId?: string;
 }
 
 interface MarkExpensePaidRequest {

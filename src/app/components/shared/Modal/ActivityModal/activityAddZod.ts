@@ -23,24 +23,10 @@ export const activitySchema = z
     notes: z.string().optional(), // optional notes
 
     // Transportation fields (all optional)
-    // Convert empty strings to undefined for enum validation
-    transportationMode: z
-      .preprocess(
-        (val) => (val === "" || val === null ? undefined : val),
-        z.enum(transportationModes).optional()
-      ),
-    pickupTime: z.preprocess(
-      (val) => (val === "" || val === null ? undefined : val),
-      z.string().optional()
-    ), // "HH:MM" string
-    pickupLocation: z.preprocess(
-      (val) => (val === "" || val === null ? undefined : val),
-      z.string().optional()
-    ),
-    dropoffLocation: z.preprocess(
-      (val) => (val === "" || val === null ? undefined : val),
-      z.string().optional()
-    ),
+    transportationMode: z.enum(transportationModes).optional(),
+    pickupTime: z.string().optional(), // "HH:MM" string
+    pickupLocation: z.string().optional(),
+    dropoffLocation: z.string().optional(),
   })
   // Optional refinement to ensure startTime <= endTime
   .refine(
