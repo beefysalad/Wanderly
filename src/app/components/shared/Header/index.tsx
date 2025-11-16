@@ -101,6 +101,15 @@ const Header = ({
                 </SheetClose>
 
                 <SheetClose asChild>
+                  <Link
+                    href='/reviews'
+                    className='block px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium'
+                  >
+                    Reviews
+                  </Link>
+                </SheetClose>
+
+                <SheetClose asChild>
                   <button
                     onClick={() => {
                       setAuthDefaultTab("signup");
@@ -212,6 +221,15 @@ const Header = ({
                     className='block px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium'
                   >
                     FAQ
+                  </Link>
+                </SheetClose>
+
+                <SheetClose asChild>
+                  <Link
+                    href='/reviews'
+                    className='block px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium'
+                  >
+                    Reviews
                   </Link>
                 </SheetClose>
 
