@@ -488,7 +488,11 @@ export async function updateExpenseService(
   }
 
   if (data.activityId !== undefined) {
-    updateData.activityId = data.activityId || null;
+    if (data.activityId) {
+      updateData.activity = { connect: { id: data.activityId } };
+    } else {
+      updateData.activity = { disconnect: true };
+    }
   }
 
   const expense = await prisma.expense.update({
@@ -556,4 +560,3 @@ export async function deleteExpenseService(
 
   logger.info("Expense deleted", { expenseId, tripId });
 }
-
