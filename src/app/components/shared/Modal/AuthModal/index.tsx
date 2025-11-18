@@ -9,9 +9,14 @@ import SignUpForm from "./SignUpForm";
 interface IAuthModalProps {
   onClose: () => void;
   defaultTab?: "signin" | "signup";
+  onAuthSuccess?: () => void;
 }
 
-const AuthModal = ({ onClose, defaultTab = "signin" }: IAuthModalProps) => {
+const AuthModal = ({
+  onClose,
+  defaultTab = "signin",
+  onAuthSuccess,
+}: IAuthModalProps) => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(defaultTab);
 
   return (
@@ -64,10 +69,14 @@ const AuthModal = ({ onClose, defaultTab = "signin" }: IAuthModalProps) => {
           </div>
 
           {/* Sign In Form */}
-          {activeTab === "signin" && <SignInForm />}
+          {activeTab === "signin" && (
+            <SignInForm onAuthSuccess={onAuthSuccess} />
+          )}
 
           {/* Sign Up Form */}
-          {activeTab === "signup" && <SignUpForm />}
+          {activeTab === "signup" && (
+            <SignUpForm onAuthSuccess={onAuthSuccess} />
+          )}
         </div>
       </div>
     </div>

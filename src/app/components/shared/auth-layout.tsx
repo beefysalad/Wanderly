@@ -7,7 +7,9 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const pathName = usePathname();
   const publicRoutes = ["/", "/about", "/faq", "/reviews"];
   const isPublicRoute =
-    publicRoutes.includes(pathName) || pathName.startsWith("/guest");
+    publicRoutes.includes(pathName) ||
+    pathName.startsWith("/guest") ||
+    pathName.startsWith("/invite");
   return <AuthGuard requireAuth={!isPublicRoute}>{children}</AuthGuard>;
 };
 
