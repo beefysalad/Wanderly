@@ -26,6 +26,7 @@ model User {
   expensePayments    ExpensePayment[]
   paymentLogsAsPayer PaymentLog[]     @relation("PaymentLogPayer")
   paymentLogsAsPayee PaymentLog[]     @relation("PaymentLogPayee")
+  notifications      Notification[]
 }
 
 model Group {
@@ -39,10 +40,11 @@ model Group {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  creator  User          @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  members  GroupMember[]
-  trips    Trip[]
-  expenses Expense[]
+  creator       User           @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members       GroupMember[]
+  trips         Trip[]
+  expenses      Expense[]
+  notifications Notification[] @relation("NotificationGroup")
 }
 
 model GroupMember {
@@ -80,11 +82,12 @@ model Trip {
   updatedAt   DateTime   @updatedAt
 
   // Relationships
-  creator     User         @relation("TripCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  activities  Activity[]
-  expenses    Expense[]
-  paymentLogs PaymentLog[]
+  creator       User           @relation("TripCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  activities    Activity[]
+  expenses      Expense[]
+  paymentLogs   PaymentLog[]
+  notifications Notification[] @relation("NotificationTrip")
 }
 
 model Activity {
@@ -104,8 +107,9 @@ model Activity {
   updatedAt          DateTime @updatedAt
 
   // Relationships
-  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  expenses Expense[] @relation("ActivityExpenses")
+  trip          Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  expenses      Expense[]      @relation("ActivityExpenses")
+  notifications Notification[] @relation("NotificationActivity")
 }
 
 enum PaymentMethod {
@@ -134,13 +138,14 @@ model Expense {
   updatedAt     DateTime       @updatedAt
 
   // Relationships
-  group       Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  paidBy      User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
-  activity    Activity?        @relation("ActivityExpenses", fields: [activityId], references: [id], onDelete: SetNull)
-  splits      ExpenseSplit[]
-  payments    ExpensePayment[]
-  paymentLogs PaymentLog[]
+  group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trip          Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidBy        User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
+  activity      Activity?        @relation("ActivityExpenses", fields: [activityId], references: [id], onDelete: SetNull)
+  splits        ExpenseSplit[]
+  payments      ExpensePayment[]
+  paymentLogs   PaymentLog[]
+  notifications Notification[]   @relation("NotificationExpense")
 }
 
 model ExpenseSplit {
@@ -203,4 +208,43 @@ model Review {
   email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum NotificationType {
+  payment
+  group_join
+  group_leave
+  activity_added
+  activity_edited
+  activity_deleted
+  expense_added
+  expense_edited
+  expense_deleted
+  trip_created
+  trip_deleted
+}
+
+model Notification {
+  id                String           @id @default(cuid())
+  userId            String
+  type              NotificationType
+  title             String
+  message           String
+  read              Boolean          @default(false)
+  readAt            DateTime?
+  relatedGroupId    String?
+  relatedTripId     String?
+  relatedExpenseId  String?
+  relatedActivityId String?
+  createdAt         DateTime         @default(now())
+
+  // Relationships
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedGroup    Group?    @relation("NotificationGroup", fields: [relatedGroupId], references: [id], onDelete: SetNull)
+  relatedTrip     Trip?     @relation("NotificationTrip", fields: [relatedTripId], references: [id], onDelete: SetNull)
+  relatedExpense  Expense?  @relation("NotificationExpense", fields: [relatedExpenseId], references: [id], onDelete: SetNull)
+  relatedActivity Activity? @relation("NotificationActivity", fields: [relatedActivityId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }

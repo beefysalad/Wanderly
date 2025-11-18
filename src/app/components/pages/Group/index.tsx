@@ -9,6 +9,8 @@ import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { getGroupColorClasses } from "@/lib/utils/groupColors";
+import NavigationLoader from "../../shared/NavigationLoader";
+import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 
 interface IGroupComponent {
   param: string;
@@ -25,6 +27,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const leaveGroup = useLeaveGroup();
   const deleteGroup = useDeleteGroup();
   const { user } = useCurrentUser();
+  const { isNavigating, withNavigation } = useNavigationLoading();
 
   const isCreator = group && user?.email && group.createdByEmail === user.email;
 
@@ -74,9 +77,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const handleLeaveGroup = async () => {
     if (!group) return;
     try {
-      await leaveGroup.mutateAsync(group.id);
-      setShowLeaveModal(false);
-      router.push("/dashboard");
+      await withNavigation(async () => {
+        await leaveGroup.mutateAsync(group.id);
+        setShowLeaveModal(false);
+        router.push("/dashboard");
+      });
     } catch (error) {
       console.error("Failed to leave group:", error);
     }
@@ -84,9 +89,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const handleDeleteGroup = async () => {
     if (!group) return;
     try {
-      await deleteGroup.mutateAsync(group.id);
-      setShowDeleteModal(false);
-      router.push("/dashboard");
+      await withNavigation(async () => {
+        await deleteGroup.mutateAsync(group.id);
+        setShowDeleteModal(false);
+        router.push("/dashboard");
+      });
     } catch (error) {
       console.error("Failed to delete group:", error);
     }
@@ -274,6 +281,8 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           cancelText='Cancel'
         />
       )}
+
+      {isNavigating && <NavigationLoader message='Redirecting...' />}
     </main>
   );
 };

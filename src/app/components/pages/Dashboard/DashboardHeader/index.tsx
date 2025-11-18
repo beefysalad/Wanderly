@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Compass, LogOut } from "lucide-react";
 import React from "react";
+import NotificationBell from "../../../shared/NotificationBell";
 
 interface IDashboardHeaderProps {
   handleLogout: () => void;
@@ -27,7 +28,8 @@ const DashboardHeader = ({
             </p>
           </div>
         </div>
-        <div className='flex gap-2 w-full sm:w-auto'>
+        <div className='flex gap-2 w-full sm:w-auto items-center'>
+          <NotificationBell />
           <Button
             onClick={handleLogout}
             variant='outline'

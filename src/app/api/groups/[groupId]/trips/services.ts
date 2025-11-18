@@ -2,7 +2,8 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { TripStatus } from "@prisma/client";
+import { TripStatus, NotificationType } from "@prisma/client";
+import { createNotificationService } from "../../../notifications/services";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -72,6 +73,38 @@ export async function createTripService(
       },
     },
   });
+
+  // Notify all group members (except the creator)
+  const allMembers = await prisma.groupMember.findMany({
+    where: { groupId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  const notificationPromises = allMembers
+    .filter((member) => member.userId !== user.id)
+    .map((member) =>
+      createNotificationService(member.userId, {
+        type: NotificationType.trip_created,
+        title: "New Trip Created",
+        message: `${user.name || user.email} created trip '${data.name}' in ${group.name}`,
+        relatedGroupId: groupId,
+        relatedTripId: trip.id,
+      }).catch((err) => {
+        logger.error("Failed to create notification", {
+          userId: member.userId,
+          error: err,
+        });
+      })
+    );
+
+  await Promise.all(notificationPromises);
 
   logger.info("Trip created", { tripId: trip.id, groupId });
   return trip;

@@ -2,8 +2,9 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { PaymentMethod, Prisma } from "@prisma/client";
+import { PaymentMethod, Prisma, NotificationType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
+import { createNotificationService } from "../../../notifications/services";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -286,7 +287,10 @@ export async function createExpenseService(
     activityId?: string;
   }
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user: userAccess } = await verifyTripAccess(token, tripId);
+  
+  // Get full user info for notifications
+  const user = await getOrCreateUser(token);
 
   // Verify activity belongs to trip if provided
   if (data.activityId) {
@@ -366,6 +370,54 @@ export async function createExpenseService(
       },
     },
   });
+
+  // Get trip with group info for notifications
+  const tripWithGroup = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  // Notify all group members (except the creator)
+  if (tripWithGroup) {
+    const allMembers = await prisma.groupMember.findMany({
+      where: { groupId: tripWithGroup.groupId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    const notificationPromises = allMembers
+      .filter((member) => member.userId !== userAccess.id)
+      .map((member) =>
+        createNotificationService(member.userId, {
+          type: NotificationType.expense_added,
+          title: "New Expense Added",
+          message: `${user.name || user.email} added expense '${data.description}' (₱${data.amount.toFixed(2)}) to ${tripWithGroup.name}`,
+          relatedGroupId: tripWithGroup.groupId,
+          relatedTripId: tripId,
+          relatedExpenseId: expense.id,
+        }).catch((err) => {
+          logger.error("Failed to create notification", {
+            userId: member.userId,
+            error: err,
+          });
+        })
+      );
+
+    await Promise.all(notificationPromises);
+  }
 
   logger.info("Expense created", { expenseId: expense.id, tripId });
   return expense;
@@ -495,6 +547,16 @@ export async function updateExpenseService(
     }
   }
 
+  // Get expense description before update for notification
+  const expenseBeforeUpdate = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    select: { description: true, amount: true },
+  });
+  
+  const expenseAmount = expenseBeforeUpdate?.amount 
+    ? Number(expenseBeforeUpdate.amount) 
+    : 0;
+
   const expense = await prisma.expense.update({
     where: { id: expenseId },
     data: updateData,
@@ -529,6 +591,54 @@ export async function updateExpenseService(
     },
   });
 
+  // Get trip with group info for notifications
+  const tripWithGroup = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  // Notify all group members (except the editor) - only if significant changes
+  if (tripWithGroup && expenseBeforeUpdate && expenseAmount > 0 && (data.description !== undefined || data.amount !== undefined)) {
+    const allMembers = await prisma.groupMember.findMany({
+      where: { groupId: tripWithGroup.groupId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    const notificationPromises = allMembers
+      .filter((member) => member.userId !== userAccess.id)
+      .map((member) =>
+        createNotificationService(member.userId, {
+          type: NotificationType.expense_edited,
+          title: "Expense Updated",
+          message: `${user.name || user.email} updated expense '${expenseBeforeUpdate.description}' (₱${expenseAmount.toFixed(2)}) in ${tripWithGroup.name}`,
+          relatedGroupId: tripWithGroup.groupId,
+          relatedTripId: tripId,
+          relatedExpenseId: expense.id,
+        }).catch((err) => {
+          logger.error("Failed to create notification", {
+            userId: member.userId,
+            error: err,
+          });
+        })
+      );
+
+    await Promise.all(notificationPromises);
+  }
+
   logger.info("Expense updated", { expenseId: expense.id, tripId });
   return expense;
 }
@@ -541,19 +651,76 @@ export async function deleteExpenseService(
   tripId: string,
   expenseId: string
 ) {
-  await verifyTripAccess(token, tripId);
+  const { user: userAccess } = await verifyTripAccess(token, tripId);
+  
+  // Get full user info for notifications
+  const user = await getOrCreateUser(token);
 
-  // Verify expense exists and belongs to trip
+  // Get expense info before deletion
   const existingExpense = await prisma.expense.findUnique({
     where: { id: expenseId },
-    select: { tripId: true },
+    select: { tripId: true, description: true, amount: true },
   });
 
   if (!existingExpense || existingExpense.tripId !== tripId) {
     throw new Error("Expense not found or does not belong to this trip");
   }
+  
+  const expenseAmount = existingExpense.amount 
+    ? Number(existingExpense.amount) 
+    : 0;
+
+  // Get trip with group info for notifications
+  const tripWithGroup = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  // Notify all group members (except the deleter) BEFORE deletion
+  // This ensures the notification is created before the expense is deleted
+  if (tripWithGroup) {
+    const allMembers = await prisma.groupMember.findMany({
+      where: { groupId: tripWithGroup.groupId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    const notificationPromises = allMembers
+      .filter((member) => member.userId !== userAccess.id)
+      .map((member) =>
+        createNotificationService(member.userId, {
+          type: NotificationType.expense_deleted,
+          title: "Expense Deleted",
+          message: `${user.name || user.email} deleted expense '${existingExpense.description}' (₱${expenseAmount.toFixed(2)}) from ${tripWithGroup.name}`,
+          relatedGroupId: tripWithGroup.groupId,
+          relatedTripId: tripId,
+          // Don't include relatedExpenseId since the expense will be deleted
+        }).catch((err) => {
+          logger.error("Failed to create notification", {
+            userId: member.userId,
+            error: err,
+          });
+        })
+      );
+
+    await Promise.all(notificationPromises);
+  }
 
   // Delete expense (cascade will handle splits, payments, payment logs)
+  // Notifications will have relatedExpenseId set to null due to SetNull
   await prisma.expense.delete({
     where: { id: expenseId },
   });

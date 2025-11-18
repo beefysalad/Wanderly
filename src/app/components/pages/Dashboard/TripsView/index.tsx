@@ -1,7 +1,16 @@
 import { Trip, Group } from "@/src/shared/types";
-import { Calendar, MapPin, Users, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
+import NavigationLoader from "../../../shared/NavigationLoader";
 
 interface ITripsViewProps {
   groups: Group[];
@@ -12,6 +21,7 @@ const ITEMS_PER_PAGE = 10;
 const TripsView = ({ groups }: ITripsViewProps) => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const { isNavigating, withNavigation } = useNavigationLoading();
 
   const allTrips = useMemo(() => {
     const trips: Array<
@@ -100,7 +110,11 @@ const TripsView = ({ groups }: ITripsViewProps) => {
           return (
             <button
               key={`${trip.groupId}-${trip.id}`}
-              onClick={() => router.push(`/group/${trip.groupId}/trip/${trip.id}`)}
+              onClick={() => {
+                withNavigation(async () => {
+                  router.push(`/group/${trip.groupId}/trip/${trip.id}`);
+                });
+              }}
               className='w-full bg-white rounded-xl border border-slate-200 p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-200 text-left active:scale-[0.98]'
             >
               <div className='flex items-start justify-between gap-3 mb-3'>
@@ -179,9 +193,10 @@ const TripsView = ({ groups }: ITripsViewProps) => {
           </button>
         </div>
       )}
+
+      {isNavigating && <NavigationLoader message='Loading trip...' />}
     </>
   );
 };
 
 export default TripsView;
-

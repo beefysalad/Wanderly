@@ -2,8 +2,9 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { PaymentMethod } from "@prisma/client";
+import { PaymentMethod, NotificationType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
+import { createNotificationService } from "../../../notifications/services";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -248,6 +249,23 @@ export async function createPaymentLogService(
       },
     },
   });
+
+  // Notify the payee (person who received payment)
+  try {
+    await createNotificationService(payeeId, {
+      type: NotificationType.payment,
+      title: "Payment Received",
+      message: `${paymentLog.payer.name || paymentLog.payer.email} paid you ₱${data.amount.toFixed(2)} for ${paymentLog.expense.description}`,
+      relatedGroupId: trip.groupId,
+      relatedTripId: tripId,
+      relatedExpenseId: data.expenseId,
+    });
+  } catch (err) {
+    logger.error("Failed to create payment notification", {
+      payeeId,
+      error: err,
+    });
+  }
 
   logger.info("Payment log created", {
     paymentLogId: paymentLog.id,
