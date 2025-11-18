@@ -518,10 +518,10 @@ function formatICSDate(date: Date): string {
 /**
  * Exports schedule as .ics calendar file
  */
-export function exportScheduleToICS({
+export async function exportScheduleToICS({
   trip,
   activities,
-}: ExportScheduleOptions): void {
+}: ExportScheduleOptions): Promise<void> {
   const lines: string[] = [];
 
   // Calendar header
@@ -668,53 +668,51 @@ export function exportScheduleToICS({
   const fileName = `${trip.name.replace(/[^a-z0-9]/gi, "_")}_schedule.ics`;
 
   if (isMobileSafari) {
-    // For mobile Safari, create a blob URL and open it
-    // Safari will recognize the calendar MIME type and offer to add to calendar
-    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    
-    // Open in a new window/tab - Safari will recognize the calendar file
-    // and offer to add it to the calendar app
-    const newWindow = window.open(url, "_blank");
-    
-    // If popup was blocked or failed, fall back to creating a visible link
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
-      // Create a visible link that user can tap
+    // For mobile Safari, fetch from API endpoint which serves the file with proper headers
+    // This works better than client-side blob downloads
+    try {
+      // Import getToken dynamically to avoid circular dependencies
+      const { getToken } = await import("../helper");
+      const token = await getToken();
+      
+      const apiUrl = `/api/trips/${trip.id}/export/ics`;
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export calendar file");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      // Create a link and trigger download
       const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
-      link.textContent = "Tap to download calendar file";
-      link.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        padding: 12px 24px;
-        background: #f97316;
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 600;
-        z-index: 10000;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      `;
       document.body.appendChild(link);
-      
-      // Auto-remove after 5 seconds or when clicked
-      const removeLink = () => {
-        if (link.parentNode) {
-          document.body.removeChild(link);
-        }
-        URL.revokeObjectURL(url);
-      };
-      
-      link.addEventListener("click", removeLink);
-      setTimeout(removeLink, 5000);
-    } else {
-      // Clean up the URL after a delay if window opened successfully
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to export via API:", error);
+      // Fallback to client-side generation
+      const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
   } else {
     // For desktop browsers, use blob URL (more efficient)
