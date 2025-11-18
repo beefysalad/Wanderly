@@ -1,14 +1,16 @@
 "use client";
 import { Expense, Activity } from "@/src/shared/types";
-import { CheckCircle, Link2 } from "lucide-react";
+import { CheckCircle, Link2, User } from "lucide-react";
 import React from "react";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 
 interface IExpensesListProps {
   expenses: Expense[];
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
+  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with imageUrl
   tripId: string;
   groupId: string;
   activities?: Activity[]; // activities from the trip
@@ -33,6 +35,7 @@ const ExpensesList = ({
   expenses,
   members,
   memberNames,
+  memberMetadata,
   tripId,
   groupId,
   activities = [],
@@ -55,6 +58,16 @@ const ExpensesList = ({
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
     return memberNames?.[email] || email.split("@")[0];
+  };
+
+  // Helper function to get member avatar
+  const getMemberAvatar = (email: string) => {
+    return memberMetadata?.[email]?.imageUrl;
+  };
+
+  // Helper function to get member initials
+  const getMemberInitials = (email: string): string => {
+    return email.substring(0, 2).toUpperCase();
   };
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
@@ -247,15 +260,31 @@ const ExpensesList = ({
                             )}
                           </div>
                         </div>
-                        <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
-                          Paid by{" "}
-                          <strong>{getDisplayName(expense.paidBy)}</strong>
+                        <div className='flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
+                          <span>Paid by</span>
+                          <div className='flex items-center gap-1.5'>
+                            {getMemberAvatar(expense.paidBy) ? (
+                              <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
+                                <Image
+                                  src={getMemberAvatar(expense.paidBy)!}
+                                  alt={getDisplayName(expense.paidBy)}
+                                  fill
+                                  className='object-cover'
+                                />
+                              </div>
+                            ) : (
+                              <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
+                                {getMemberInitials(expense.paidBy)}
+                              </div>
+                            )}
+                            <strong>{getDisplayName(expense.paidBy)}</strong>
+                          </div>
                           {paidCount > 0 && totalOwed > 0 && (
                             <span className='ml-1 sm:ml-2 text-emerald-600 dark:text-emerald-400'>
                               • {paidCount}/{totalOwed} paid
                             </span>
                           )}
-                        </p>
+                        </div>
                       </div>
                       <div className='text-right flex-shrink-0'>
                         <p className='text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap'>

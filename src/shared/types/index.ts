@@ -10,7 +10,7 @@ export interface Group {
   createdByEmail?: string;
   memberEmails?: string[];
   memberNames?: Record<string, string>; // email -> name mapping
-  memberMetadata?: Record<string, { joinedAt: string; name?: string }>; // email -> metadata with joined date
+  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with joined date and imageUrl
 }
 
 export interface Trip {

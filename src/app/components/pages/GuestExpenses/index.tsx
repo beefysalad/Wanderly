@@ -200,6 +200,7 @@ const GuestExpensesComponent = ({
                 }
                 paymentLogs={paymentLogs}
                 memberNames={group?.memberNames || {}}
+                memberMetadata={group?.memberMetadata}
                 members={group?.memberEmails || []}
                 readOnly={true}
                 onSelectExpense={setSelectedExpense}

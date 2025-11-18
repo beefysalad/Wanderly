@@ -42,12 +42,15 @@ async function handler(req: NextRequest, context: AuthContext) {
     // Get the current user from Firebase Auth
     const firebaseUser = await userAuth?.getUser(uid);
     if (!firebaseUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (!userAuth) {
+      return NextResponse.json(
+        { error: "Firebase Admin not initialized" },
+        { status: 500 }
+      );
+    }
     // Update password using Firebase Admin SDK
     // Note: The client should verify the current password before calling this endpoint
     // Admin SDK can update password directly (used for admin operations)
@@ -75,4 +78,3 @@ async function handler(req: NextRequest, context: AuthContext) {
 }
 
 export const PATCH = withAuth(handler);
-

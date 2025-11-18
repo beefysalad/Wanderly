@@ -12,6 +12,8 @@ import {
   Camera,
   Lock,
   Loader2,
+  Users,
+  MapPin,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -57,7 +59,6 @@ const ProfileComponent = () => {
     },
   });
 
-  // Update form when user changes or edit mode toggles
   useEffect(() => {
     if (user) {
       form.reset({
@@ -76,9 +77,7 @@ const ProfileComponent = () => {
   const handleTabChange = (tab: "dashboard" | "trips" | "groups" | "profile") => {
     if (tab === "profile") {
       setActiveTab("profile");
-      // Stay on profile page
     } else {
-      // Navigate to dashboard with tab query parameter
       router.push(`/dashboard?tab=${tab}`);
     }
   };
@@ -87,14 +86,12 @@ const ProfileComponent = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       setUploadError("File must be an image");
       return;
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setUploadError("File size must be less than 5MB");
       return;
@@ -104,14 +101,12 @@ const ProfileComponent = () => {
     setUploadError(null);
 
     try {
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
 
-      // Upload to server
       const formData = new FormData();
       formData.append("file", file);
 
@@ -125,7 +120,6 @@ const ProfileComponent = () => {
         }
       );
 
-      // Set the photo in form and store the uploaded URL
       form.setValue("photo", file);
       setUploadedPhotoURL(response.data.url);
     } catch (error: unknown) {
@@ -144,23 +138,19 @@ const ProfileComponent = () => {
       setError(null);
       setUploadError(null);
 
-      // Update profile (name and photo)
       const profileUpdates: { name?: string; photoURL?: string } = {};
 
       if (values.name && values.name !== user?.displayName) {
         profileUpdates.name = values.name;
       }
 
-      // If photo was uploaded, use the stored URL
       if (uploadedPhotoURL) {
         profileUpdates.photoURL = uploadedPhotoURL;
       }
 
-      // Update profile if there are changes
       if (Object.keys(profileUpdates).length > 0) {
         await updateProfileMutation.mutateAsync(profileUpdates);
         
-        // Also update client-side Firebase Auth for immediate UI updates
         if (auth.currentUser) {
           const clientUpdates: { displayName?: string; photoURL?: string } = {};
           if (profileUpdates.name) {
@@ -175,7 +165,6 @@ const ProfileComponent = () => {
         }
       }
 
-      // Update password if provided
       if (
         values.newPassword &&
         values.newPassword.length > 0 &&
@@ -187,7 +176,6 @@ const ProfileComponent = () => {
         });
       }
 
-      // Exit edit mode after successful update
       setIsEditMode(false);
     } catch (err) {
       const message =
@@ -201,7 +189,6 @@ const ProfileComponent = () => {
     setError(null);
     setUploadError(null);
     setShowPasswordSection(false);
-    // Reset form to original values
     if (user) {
       form.reset({
         name: user.displayName || "",
@@ -215,7 +202,6 @@ const ProfileComponent = () => {
     }
   };
 
-  // Calculate statistics
   const totalGroups = groups.length;
   const totalTrips = groups.reduce(
     (acc, group) => acc + (group.trips?.length || 0),
@@ -226,7 +212,7 @@ const ProfileComponent = () => {
     return (
       <main className='min-h-screen bg-slate-50 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading profile...</p>
         </div>
       </main>
@@ -235,9 +221,12 @@ const ProfileComponent = () => {
 
   if (!user) {
     return (
-      <main className='min-h-screen bg-slate-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <p className='text-slate-600 font-medium'>
+      <main className='min-h-screen bg-slate-50 flex items-center justify-center px-4'>
+        <div className='text-center max-w-md'>
+          <div className='w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <User className='w-10 h-10 text-slate-400' />
+          </div>
+          <p className='text-slate-600 font-medium text-lg'>
             Please sign in to view your profile
           </p>
         </div>
@@ -256,380 +245,381 @@ const ProfileComponent = () => {
 
   return (
     <main className='min-h-screen bg-slate-50 pb-36 md:pb-28'>
-      <div className='max-w-4xl mx-auto px-4 py-8'>
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
         {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
+          className='mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium'
         >
-          <ArrowLeft className='w-5 h-5' />
+          <ArrowLeft className='w-4 h-4' />
           Back to Dashboard
         </button>
 
         {/* Profile Header Card */}
-        <div className='bg-white rounded-2xl shadow-lg border border-slate-200 p-8 sm:p-12 mb-6'>
-          {!isEditMode ? (
-            // View Mode
-            <>
+        <div className='bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden'>
+          <div className='p-6 sm:p-8'>
+            {!isEditMode ? (
+              // View Mode
               <div className='flex flex-col sm:flex-row items-center sm:items-start gap-6'>
                 {/* Avatar */}
-                {avatarUrl ? (
-                  <div className='relative w-24 h-24 rounded-full overflow-hidden border-4 border-orange-200 shadow-lg'>
-                    <Image
-                      src={avatarUrl}
-                      alt={displayName}
-                      fill
-                      className='object-cover'
-                    />
-                  </div>
-                ) : (
-                  <div className='w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center border-4 border-orange-200 shadow-lg'>
-                    <User className='w-12 h-12 text-white' />
-                  </div>
-                )}
+                <div className='relative flex-shrink-0'>
+                  {avatarUrl ? (
+                    <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-200'>
+                      <Image
+                        src={avatarUrl}
+                        alt={displayName}
+                        fill
+                        className='object-cover'
+                      />
+                    </div>
+                  ) : (
+                    <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200'>
+                      <User className='w-10 h-10 sm:w-12 sm:h-12 text-slate-400' />
+                    </div>
+                  )}
+                </div>
 
                 {/* Name and Email */}
-                <div className='flex-1 text-center sm:text-left'>
-                  <div className='flex items-center justify-center sm:justify-start gap-3 mb-2'>
-                    <h1 className='text-3xl sm:text-4xl font-bold text-slate-900'>
+                <div className='flex-1 text-center sm:text-left w-full sm:w-auto'>
+                  <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-3'>
+                    <h1 className='text-2xl sm:text-3xl font-bold text-slate-900'>
                       {displayName}
                     </h1>
                     <button
                       onClick={() => setIsEditMode(true)}
-                      className='p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-600 hover:text-slate-900'
-                      title='Edit Profile'
+                      className='px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors flex items-center gap-2'
+                      type='button'
                     >
-                      <Edit className='w-5 h-5' />
+                      <Edit className='w-4 h-4' />
+                      Edit Profile
                     </button>
                   </div>
                   <div className='flex items-center justify-center sm:justify-start gap-2 text-slate-600'>
-                    <Mail className='w-4 h-4' />
-                    <span className='text-sm sm:text-base'>{email}</span>
+                    <Mail className='w-4 h-4 flex-shrink-0' />
+                    <span className='text-sm break-all'>{email}</span>
                   </div>
                 </div>
               </div>
-            </>
-          ) : (
-            // Edit Mode
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-2xl font-bold text-slate-900'>Edit Profile</h2>
-                <div className='flex gap-2'>
-                  <Button
-                    type='button'
-                    onClick={handleCancel}
-                    disabled={isPending}
-                    className='px-4 py-2 border bg-slate-100 border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-200 transition-colors'
-                  >
-                    <X className='w-4 h-4 mr-2' />
-                    Cancel
-                  </Button>
-                  <Button
-                    type='submit'
-                    disabled={isPending}
-                    className='px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white'
-                  >
-                    {isPending ? (
-                      <>
-                        <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className='w-4 h-4 mr-2' />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Photo Upload */}
-              <div className='space-y-2'>
-                <Label className='text-slate-700'>Profile Photo</Label>
-                <div className='flex items-center gap-4'>
-                  <div className='relative'>
-                    {avatarUrl ? (
-                      <div className='relative w-24 h-24 rounded-full overflow-hidden border-4 border-orange-200 shadow-lg'>
-                        <Image
-                          src={avatarUrl}
-                          alt='Profile'
-                          fill
-                          className='object-cover'
-                        />
-                      </div>
-                    ) : (
-                      <div className='w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center border-4 border-orange-200 shadow-lg'>
-                        <User className='w-12 h-12 text-white' />
-                      </div>
-                    )}
-                    {uploadingImage && (
-                      <div className='absolute inset-0 bg-black/50 rounded-full flex items-center justify-center'>
-                        <Loader2 className='w-5 h-5 text-white animate-spin' />
-                      </div>
-                    )}
-                  </div>
-                  <div className='flex-1'>
-                    <input
-                      ref={fileInputRef}
-                      type='file'
-                      accept='image/*'
-                      onChange={handleImageUpload}
-                      className='hidden'
-                    />
+            ) : (
+              // Edit Mode
+              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200'>
+                  <h2 className='text-2xl font-bold text-slate-900'>Edit Profile</h2>
+                  <div className='flex gap-2 w-full sm:w-auto'>
                     <Button
                       type='button'
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingImage}
-                      className='flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      onClick={handleCancel}
+                      disabled={isPending}
+                      variant='outline'
+                      className='flex-1 sm:flex-none'
                     >
-                      {uploadingImage ? (
+                      <X className='w-4 h-4 mr-2' />
+                      Cancel
+                    </Button>
+                    <Button
+                      type='submit'
+                      disabled={isPending}
+                      className='flex-1 sm:flex-none bg-orange-500 hover:bg-orange-600'
+                    >
+                      {isPending ? (
                         <>
-                          <Loader2 className='w-4 h-4 animate-spin' />
-                          Uploading...
+                          <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                          Saving...
                         </>
                       ) : (
                         <>
-                          <Camera className='w-4 h-4' />
-                          {avatarUrl ? "Change Photo" : "Upload Photo"}
+                          <Save className='w-4 h-4 mr-2' />
+                          Save
                         </>
                       )}
                     </Button>
-                    {uploadError && (
-                      <p className='text-xs text-red-500 mt-1'>{uploadError}</p>
-                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Name */}
-              <div className='space-y-2'>
-                <Label
-                  htmlFor='name'
-                  className={`${
-                    form.formState.errors.name
-                      ? "text-red-500"
-                      : "text-slate-700"
-                  } transition-colors`}
-                >
-                  {form.formState.errors.name
-                    ? form.formState.errors.name.message
-                    : "Name"}
-                </Label>
-                <Input
-                  id='name'
-                  type='text'
-                  {...form.register("name")}
-                  placeholder='Your name'
-                  className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
-                    form.formState.errors.name
-                      ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                      : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
-                  }`}
-                />
-              </div>
-
-              {/* Email (read-only) */}
-              <div className='space-y-2'>
-                <Label className='text-slate-700'>Email Address</Label>
-                <Input
-                  type='email'
-                  value={email}
-                  disabled
-                  className='w-full px-3 py-2 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 cursor-not-allowed'
-                />
-                <p className='text-xs text-slate-500'>Email cannot be changed</p>
-              </div>
-
-              {/* Password Section Toggle */}
-              <div className='space-y-2'>
-                <button
-                  type='button'
-                  onClick={() => setShowPasswordSection(!showPasswordSection)}
-                  className='flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors'
-                >
-                  <Lock className='w-4 h-4' />
-                  {showPasswordSection
-                    ? "Hide Password Change"
-                    : "Change Password (Optional)"}
-                </button>
-              </div>
-
-              {/* Password Fields */}
-              {showPasswordSection && (
-                <div className='space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200'>
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='currentPassword'
-                      className={`${
-                        form.formState.errors.currentPassword
-                          ? "text-red-500"
-                          : "text-slate-700"
-                      } transition-colors`}
-                    >
-                      {form.formState.errors.currentPassword
-                        ? form.formState.errors.currentPassword.message
-                        : "Current Password"}
-                    </Label>
-                    <Input
-                      id='currentPassword'
-                      type='password'
-                      {...form.register("currentPassword")}
-                      placeholder='Enter current password'
-                      className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
-                        form.formState.errors.currentPassword
-                          ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                          : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
-                      }`}
-                    />
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='newPassword'
-                      className={`${
-                        form.formState.errors.newPassword
-                          ? "text-red-500"
-                          : "text-slate-700"
-                      } transition-colors`}
-                    >
-                      {form.formState.errors.newPassword
-                        ? form.formState.errors.newPassword.message
-                        : "New Password"}
-                    </Label>
-                    <Input
-                      id='newPassword'
-                      type='password'
-                      {...form.register("newPassword")}
-                      placeholder='Enter new password (min 8 characters)'
-                      className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
-                        form.formState.errors.newPassword
-                          ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                          : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
-                      }`}
-                    />
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='confirmPassword'
-                      className={`${
-                        form.formState.errors.confirmPassword
-                          ? "text-red-500"
-                          : "text-slate-700"
-                      } transition-colors`}
-                    >
-                      {form.formState.errors.confirmPassword
-                        ? form.formState.errors.confirmPassword.message
-                        : "Confirm New Password"}
-                    </Label>
-                    <Input
-                      id='confirmPassword'
-                      type='password'
-                      {...form.register("confirmPassword")}
-                      placeholder='Confirm new password'
-                      className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
-                        form.formState.errors.confirmPassword
-                          ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                          : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
-                      }`}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* General Error Message */}
-              {error && (
-                <div className='p-3 bg-red-50 text-red-600 rounded-lg text-sm'>
-                  {error}
-                </div>
-              )}
-            </form>
-          )}
-
-          {/* Info Cards Section - Only show in view mode */}
-          {!isEditMode && (
-            <div className='p-6 sm:p-8 mt-6'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                {/* Account Information Card */}
-                <div className='bg-slate-50 rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow'>
-                  <h3 className='text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2'>
-                    <User className='w-5 h-5 text-orange-500' />
-                    Account Information
-                  </h3>
-                  <div className='space-y-4'>
-                    <div>
-                      <p className='text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide'>
-                        Email Address
-                      </p>
-                      <p className='text-sm font-medium text-slate-900 break-all'>
-                        {email}
-                      </p>
-                    </div>
-                    {accountCreated && (
-                      <div>
-                        <p className='text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide'>
-                          Member Since
-                        </p>
-                        <div className='flex items-center gap-2'>
-                          <Calendar className='w-4 h-4 text-slate-400' />
-                          <p className='text-sm font-medium text-slate-900'>
-                            {accountCreated.toLocaleDateString("en-US", {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </p>
+                {/* Photo Upload */}
+                <div className='space-y-3'>
+                  <Label className='text-sm font-medium text-slate-700'>Profile Photo</Label>
+                  <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4'>
+                    <div className='relative flex-shrink-0'>
+                      {avatarUrl ? (
+                        <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-200'>
+                          <Image
+                            src={avatarUrl}
+                            alt='Profile'
+                            fill
+                            className='object-cover'
+                          />
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200'>
+                          <User className='w-10 h-10 sm:w-12 sm:h-12 text-slate-400' />
+                        </div>
+                      )}
+                      {uploadingImage && (
+                        <div className='absolute inset-0 bg-black/50 rounded-full flex items-center justify-center'>
+                          <Loader2 className='w-5 h-5 text-white animate-spin' />
+                        </div>
+                      )}
+                    </div>
+                    <div className='flex-1 w-full sm:w-auto'>
+                      <input
+                        ref={fileInputRef}
+                        type='file'
+                        accept='image/*'
+                        onChange={handleImageUpload}
+                        className='hidden'
+                      />
+                      <Button
+                        type='button'
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        variant='outline'
+                        className='w-full sm:w-auto'
+                      >
+                        {uploadingImage ? (
+                          <>
+                            <Loader2 className='w-4 h-4 animate-spin' />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className='w-4 h-4' />
+                            {avatarUrl ? "Change Photo" : "Upload Photo"}
+                          </>
+                        )}
+                      </Button>
+                      {uploadError && (
+                        <p className='text-xs text-red-500 mt-2'>{uploadError}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Statistics Card */}
-                <div className='bg-slate-50 rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow'>
-                  <h3 className='text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2'>
-                    <Calendar className='w-5 h-5 text-amber-500' />
-                    Your Statistics
-                  </h3>
-                  <div className='space-y-4'>
-                    <div className='flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-orange-300 transition-colors'>
-                      <span className='text-sm font-medium text-slate-600'>
-                        Travel Groups
-                      </span>
-                      <span className='text-2xl font-bold text-amber-600'>
-                        {totalGroups}
-                      </span>
+                {/* Name and Email */}
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='name'
+                      className={`text-sm font-medium ${
+                        form.formState.errors.name ? "text-red-500" : "text-slate-700"
+                      }`}
+                    >
+                      {form.formState.errors.name
+                        ? form.formState.errors.name.message
+                        : "Name"}
+                    </Label>
+                    <Input
+                      id='name'
+                      type='text'
+                      {...form.register("name")}
+                      placeholder='Your name'
+                      className={
+                        form.formState.errors.name
+                          ? "border-red-500 focus-visible:border-red-500"
+                          : ""
+                      }
+                    />
+                  </div>
+
+                  <div className='space-y-2'>
+                    <Label className='text-sm font-medium text-slate-700'>Email Address</Label>
+                    <Input
+                      type='email'
+                      value={email}
+                      disabled
+                      className='bg-slate-50 text-slate-500 cursor-not-allowed'
+                    />
+                    <p className='text-xs text-slate-500'>Email cannot be changed</p>
+                  </div>
+                </div>
+
+                {/* Password Section Toggle */}
+                <div>
+                  <button
+                    type='button'
+                    onClick={() => setShowPasswordSection(!showPasswordSection)}
+                    className='flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors'
+                  >
+                    <Lock className='w-4 h-4' />
+                    {showPasswordSection
+                      ? "Hide Password Change"
+                      : "Change Password (Optional)"}
+                  </button>
+                </div>
+
+                {/* Password Fields */}
+                {showPasswordSection && (
+                  <div className='space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200'>
+                    <div className='space-y-2'>
+                      <Label
+                        htmlFor='currentPassword'
+                        className={`text-sm font-medium ${
+                          form.formState.errors.currentPassword
+                            ? "text-red-500"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        {form.formState.errors.currentPassword
+                          ? form.formState.errors.currentPassword.message
+                          : "Current Password"}
+                      </Label>
+                      <Input
+                        id='currentPassword'
+                        type='password'
+                        {...form.register("currentPassword")}
+                        placeholder='Enter current password'
+                        className={
+                          form.formState.errors.currentPassword
+                            ? "border-red-500 focus-visible:border-red-500"
+                            : ""
+                        }
+                      />
                     </div>
-                    <div className='flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 hover:border-orange-300 transition-colors'>
-                      <span className='text-sm font-medium text-slate-600'>
-                        Total Trips
-                      </span>
-                      <span className='text-2xl font-bold text-orange-600'>
-                        {totalTrips}
-                      </span>
+
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='newPassword'
+                          className={`text-sm font-medium ${
+                            form.formState.errors.newPassword
+                              ? "text-red-500"
+                              : "text-slate-700"
+                          }`}
+                        >
+                          {form.formState.errors.newPassword
+                            ? form.formState.errors.newPassword.message
+                            : "New Password"}
+                        </Label>
+                        <Input
+                          id='newPassword'
+                          type='password'
+                          {...form.register("newPassword")}
+                          placeholder='Min 8 characters'
+                          className={
+                            form.formState.errors.newPassword
+                              ? "border-red-500 focus-visible:border-red-500"
+                              : ""
+                          }
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='confirmPassword'
+                          className={`text-sm font-medium ${
+                            form.formState.errors.confirmPassword
+                              ? "text-red-500"
+                              : "text-slate-700"
+                          }`}
+                        >
+                          {form.formState.errors.confirmPassword
+                            ? form.formState.errors.confirmPassword.message
+                            : "Confirm Password"}
+                        </Label>
+                        <Input
+                          id='confirmPassword'
+                          type='password'
+                          {...form.register("confirmPassword")}
+                          placeholder='Confirm new password'
+                          className={
+                            form.formState.errors.confirmPassword
+                              ? "border-red-500 focus-visible:border-red-500"
+                              : ""
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <div className='p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm'>
+                    {error}
+                  </div>
+                )}
+              </form>
+            )}
+
+            {/* Info Cards Section - Only show in view mode */}
+            {!isEditMode && (
+              <div className='mt-8 pt-8 border-t border-slate-200'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {/* Account Information Card */}
+                  <div className='bg-slate-50 rounded-lg p-5 border border-slate-200'>
+                    <div className='flex items-center gap-2 mb-4'>
+                      <div className='w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center'>
+                        <User className='w-4 h-4 text-orange-600' />
+                      </div>
+                      <h3 className='text-lg font-semibold text-slate-900'>Account Information</h3>
+                    </div>
+                    <div className='space-y-4'>
+                      <div>
+                        <p className='text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide'>
+                          Email Address
+                        </p>
+                        <p className='text-sm font-medium text-slate-900 break-all'>
+                          {email}
+                        </p>
+                      </div>
+                      {accountCreated && (
+                        <div>
+                          <p className='text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide'>
+                            Member Since
+                          </p>
+                          <div className='flex items-center gap-2'>
+                            <Calendar className='w-4 h-4 text-slate-400' />
+                            <p className='text-sm font-medium text-slate-900'>
+                              {accountCreated.toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Statistics Card */}
+                  <div className='bg-slate-50 rounded-lg p-5 border border-slate-200'>
+                    <div className='flex items-center gap-2 mb-4'>
+                      <div className='w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center'>
+                        <MapPin className='w-4 h-4 text-amber-600' />
+                      </div>
+                      <h3 className='text-lg font-semibold text-slate-900'>Your Statistics</h3>
+                    </div>
+                    <div className='space-y-3'>
+                      <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
+                        <div className='flex items-center gap-2'>
+                          <Users className='w-4 h-4 text-orange-500' />
+                          <span className='text-sm font-medium text-slate-700'>
+                            Travel Groups
+                          </span>
+                        </div>
+                        <span className='text-xl font-bold text-orange-600'>
+                          {totalGroups}
+                        </span>
+                      </div>
+                      <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
+                        <div className='flex items-center gap-2'>
+                          <MapPin className='w-4 h-4 text-amber-500' />
+                          <span className='text-sm font-medium text-slate-700'>
+                            Total Trips
+                          </span>
+                        </div>
+                        <span className='text-xl font-bold text-amber-600'>
+                          {totalTrips}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Additional Info Card - Only show in view mode */}
-        {!isEditMode && (
-          <div className='bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8'>
-            <h3 className='text-lg font-semibold text-slate-900 mb-4'>
-              About Your Account
-            </h3>
-            <div className='space-y-3 text-sm text-slate-600'>
-              <p>
-                You can update your profile information, including your name,
-                profile photo, and password, by clicking the edit button above.
-              </p>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       <DashboardBottomNav activeTab={activeTab} onTabChange={handleTabChange} />

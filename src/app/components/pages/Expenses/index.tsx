@@ -506,6 +506,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                   expenses={filteredExpenses}
                   members={group.memberEmails || []}
                   memberNames={group.memberNames}
+                  memberMetadata={group.memberMetadata}
                   tripId={tripId}
                   groupId={groupId}
                   activities={trip.activities || []}
