@@ -3,6 +3,8 @@ import { Group, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import NavigationLoader from "../../../shared/NavigationLoader";
+import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 
 interface ITripsListComponent {
   group?: Group;
@@ -21,15 +23,18 @@ const TripsListComponent = ({
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const tripsPerPage = 4;
+  const { isNavigating, withNavigation } = useNavigationLoading();
 
   const tripsList = trips || group?.trips || [];
 
   const handleSelectTrip = (tripId: string) => {
-    if (readOnly) {
-      router.push(`/guest/group/${groupId}/trip/${tripId}`);
-    } else {
-      router.push(`/group/${groupId}/trip/${tripId}`);
-    }
+    withNavigation(async () => {
+      if (readOnly) {
+        router.push(`/guest/group/${groupId}/trip/${tripId}`);
+      } else {
+        router.push(`/group/${groupId}/trip/${tripId}`);
+      }
+    });
   };
 
   if (!tripsList || tripsList.length === 0) {
@@ -124,6 +129,8 @@ const TripsListComponent = ({
           </button>
         </div>
       )}
+
+      {isNavigating && <NavigationLoader message='Loading trip...' />}
     </div>
   );
 };

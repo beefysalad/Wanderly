@@ -2,7 +2,8 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { TripStatus } from "@prisma/client";
+import { TripStatus, NotificationType } from "@prisma/client";
+import { createNotificationService } from "../../../../notifications/services";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -47,7 +48,7 @@ export async function deleteTripService(
   // Verify trip exists and belongs to group
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    select: { id: true, groupId: true },
+    select: { id: true, groupId: true, name: true },
   });
 
   if (!trip) {
@@ -58,7 +59,42 @@ export async function deleteTripService(
     throw new Error("Trip does not belong to this group");
   }
 
+  // Get all group members before deletion
+  const allMembers = await prisma.groupMember.findMany({
+    where: { groupId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  // Notify all group members (except the deleter) BEFORE deletion
+  // This ensures the notification is created before the trip is deleted
+  const notificationPromises = allMembers
+    .filter((member) => member.userId !== user.id)
+    .map((member) =>
+      createNotificationService(member.userId, {
+        type: NotificationType.trip_deleted,
+        title: "Trip Deleted",
+        message: `${user.name || user.email} deleted trip '${trip.name}' from ${group.name}`,
+        relatedGroupId: groupId,
+        // Don't include relatedTripId since the trip will be deleted
+      }).catch((err) => {
+        logger.error("Failed to create notification", {
+          userId: member.userId,
+          error: err,
+        });
+      })
+    );
+
+  await Promise.all(notificationPromises);
+
   // Delete the trip (cascade will handle activities, expenses, etc.)
+  // Notifications will have relatedTripId set to null due to SetNull
   await prisma.trip.delete({
     where: { id: tripId },
   });

@@ -93,3 +93,18 @@ export interface Review {
   email?: string;
   createdAt: string;
 }
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: "payment" | "group_join" | "group_leave" | "activity_added" | "activity_edited" | "activity_deleted" | "expense_added" | "expense_edited" | "expense_deleted" | "trip_created" | "trip_deleted";
+  title: string;
+  message: string;
+  read: boolean;
+  readAt?: string;
+  relatedGroupId?: string;
+  relatedTripId?: string;
+  relatedExpenseId?: string;
+  relatedActivityId?: string;
+  createdAt: string;
+}

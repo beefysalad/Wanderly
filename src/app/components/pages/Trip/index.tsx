@@ -20,6 +20,8 @@ import {
   exportScheduleToICS,
 } from "@/lib/utils/exportSchedule";
 import { ChevronDown } from "lucide-react";
+import NavigationLoader from "../../shared/NavigationLoader";
+import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 
 interface ITripComponent {
   tripId: string;
@@ -53,11 +55,14 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const [isDeletingActivity, setIsDeletingActivity] = useState<boolean>(false);
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
+  const { isNavigating, withNavigation } = useNavigationLoading();
 
   const handleDeleteTrip = async () => {
     try {
-      await deleteTrip.mutateAsync();
-      router.push(`/group/${groupId}`);
+      await withNavigation(async () => {
+        await deleteTrip.mutateAsync();
+        router.push(`/group/${groupId}`);
+      });
     } catch (err) {
       setShowDeleteModal(false);
       alert(
@@ -601,6 +606,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           }}
         />
       )}
+
+      {isNavigating && <NavigationLoader message='Redirecting...' />}
     </main>
   );
 };

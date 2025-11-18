@@ -1,17 +1,15 @@
 "use client";
 
-import { Calendar, DollarSign, Sparkles, Users, Code2 } from "lucide-react";
+import { Calendar, Code2, DollarSign, Sparkles, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Header from "../../shared/Header";
 import Footer from "../../shared/Footer";
+import Header from "../../shared/Header";
 import AuthModal from "../../shared/Modal/AuthModal";
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
-import Image from "next/image";
 
 const AboutComponent = () => {
-  const router = useRouter();
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
     "signin"
@@ -69,11 +67,21 @@ const AboutComponent = () => {
                       and &quot;What time is that activity again?&quot;
                     </p>
                     <p className='text-base md:text-lg'>
-                      Wanderly was built to solve these problems in one
-                      beautiful, intuitive platform. No more juggling between
-                      different tools or losing track of important details.
-                      Everything your group needs is right here, organized and
-                      accessible to everyone.
+                      The problem is that there&apos;s no single tool built for
+                      group travel. You end up using Google Sheets for the
+                      itinerary, Venmo for expenses, WhatsApp for coordination,
+                      and your calendar app for dates. Information gets lost,
+                      people miss updates, and someone always ends up confused
+                      about the plan.
+                    </p>
+                    <p className='text-base md:text-lg'>
+                      Wanderly brings everything together in one place. Your
+                      schedule, expenses, group chat, and all the details your
+                      trip needs&mdash;organized, accessible, and easy to share
+                      with everyone. No more switching between apps or digging
+                      through old messages. Everything your group needs is right
+                      here, updated in real-time, so everyone stays on the same
+                      page.
                     </p>
                   </div>
                 </div>
@@ -203,24 +211,21 @@ const AboutComponent = () => {
                     </div>
                     <div className='space-y-4'>
                       <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
-                        I&apos;m a software engineer who, honestly, hasn&apos;t
-                        been much of a traveler yet. But lately, I&apos;ve been
-                        planning to change that and start exploring the world.
-                        As I researched and prepared for my future trips, I
-                        quickly realized how messy trip planning can be
-                        sometimes&mdash;and it gave me the idea that group trip
-                        planning must be even messier. I knew I could build
-                        something better.
+                        I&apos;m a software engineer who loves building things
+                        that actually matter. When I&apos;m not coding,
+                        you&apos;ll probably find me with a cup of coffee,
+                        working on side projects, or trying to figure out what
+                        series or anime to watch.
                       </p>
                       <div className='relative pl-6 border-l-2 border-amber-500/30'>
                         <div className='absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-400/50 to-transparent'></div>
                         <p className='text-base md:text-lg text-slate-200 leading-relaxed'>
-                          That&apos;s how Wanderly was born. It&apos;s the tool
-                          I wish existed for planning my future adventures,
-                          built with the precision and care that comes from
-                          years of engineering experience, combined with the
-                          fresh perspective of someone new to the travel
-                          planning world.
+                          I built Wanderly because I wanted to solve a real
+                          problem I was facing. I&apos;m not much of a traveler
+                          yet, but I&apos;m trying to change that. As I started
+                          planning trips, I realized how messy it all
+                          gets&mdash;especially when you&apos;re coordinating
+                          with a group. So I built the tool I wish I had.
                         </p>
                       </div>
                     </div>

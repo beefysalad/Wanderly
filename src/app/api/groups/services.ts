@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
 import type { DecodedIdToken } from "firebase-admin/auth";
+import { createNotificationService } from "../notifications/services";
+import { NotificationType } from "@prisma/client";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -155,6 +157,37 @@ export async function joinGroupService(
       },
     },
   });
+
+  // Notify all group members (except the person who just joined)
+  const allMembers = await prisma.groupMember.findMany({
+    where: { groupId: group.id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  const notificationPromises = allMembers
+    .filter((member) => member.userId !== user.id)
+    .map((member) =>
+      createNotificationService(member.userId, {
+        type: NotificationType.group_join,
+        title: "New Member Joined",
+        message: `${user.name || user.email} joined ${group.name}`,
+        relatedGroupId: group.id,
+      }).catch((err) => {
+        logger.error("Failed to create notification", {
+          userId: member.userId,
+          error: err,
+        });
+      })
+    );
+
+  await Promise.all(notificationPromises);
 
   logger.info("User joined group", {
     userId: user.id,
@@ -328,6 +361,25 @@ export async function leaveGroupService(
     throw new Error("Group creator cannot leave the group");
   }
 
+  // Get group name for notifications
+  const groupWithName = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { name: true },
+  });
+
+  // Get all remaining members before deletion (excluding the user leaving)
+  const allMembers = await prisma.groupMember.findMany({
+    where: { groupId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
+    },
+  });
+
   // Remove the membership
   await prisma.groupMember.delete({
     where: {
@@ -337,6 +389,27 @@ export async function leaveGroupService(
       },
     },
   });
+
+  // Notify all remaining group members
+  if (groupWithName) {
+    const notificationPromises = allMembers
+      .filter((member) => member.userId !== user.id)
+      .map((member) =>
+        createNotificationService(member.userId, {
+          type: NotificationType.group_leave,
+          title: "Member Left Group",
+          message: `${user.name || user.email} left ${groupWithName.name}`,
+          relatedGroupId: groupId,
+        }).catch((err) => {
+          logger.error("Failed to create notification", {
+            userId: member.userId,
+            error: err,
+          });
+        })
+      );
+
+    await Promise.all(notificationPromises);
+  }
 
   logger.info("User left group", { userId: user.id, groupId });
 }
@@ -414,7 +487,11 @@ export async function updateGroupService(
 
   // Validate name if provided
   if (updates.name !== undefined) {
-    if (!updates.name || typeof updates.name !== "string" || updates.name.trim().length < 5) {
+    if (
+      !updates.name ||
+      typeof updates.name !== "string" ||
+      updates.name.trim().length < 5
+    ) {
       throw new Error("Group name must be at least 5 characters");
     }
   }
