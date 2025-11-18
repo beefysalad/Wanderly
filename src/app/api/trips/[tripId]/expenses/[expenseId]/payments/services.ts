@@ -17,7 +17,7 @@ async function getOrCreateUser(token: DecodedIdToken) {
 async function verifyTripAccess(
   token: DecodedIdToken,
   tripId: string
-): Promise<{ trip: { groupId: string }; user: { id: string } }> {
+): Promise<{ trip: { groupId: string }; user: { id: string; email: string } }> {
   const user = await getOrCreateUser(token);
 
   // Get trip with group
@@ -339,4 +339,3 @@ export async function confirmPaymentService(
 
   return updatedExpense!;
 }
-
