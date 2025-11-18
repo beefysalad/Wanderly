@@ -288,7 +288,7 @@ export async function createExpenseService(
   }
 ) {
   const { trip, user: userAccess } = await verifyTripAccess(token, tripId);
-  
+
   // Get full user info for notifications
   const user = await getOrCreateUser(token);
 
@@ -404,7 +404,9 @@ export async function createExpenseService(
         createNotificationService(member.userId, {
           type: NotificationType.expense_added,
           title: "New Expense Added",
-          message: `${user.name || user.email} added expense '${data.description}' (₱${data.amount.toFixed(2)}) to ${tripWithGroup.name}`,
+          message: `${user.name || user.email} added expense '${
+            data.description
+          }' (₱${data.amount.toFixed(2)}) to ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           relatedExpenseId: expense.id,
@@ -445,7 +447,10 @@ export async function updateExpenseService(
     activityId?: string;
   }
 ) {
-  await verifyTripAccess(token, tripId);
+  const { user: userAccess } = await verifyTripAccess(token, tripId);
+
+  // Get full user info for notifications
+  const user = await getOrCreateUser(token);
 
   // Verify expense exists and belongs to trip
   const existingExpense = await prisma.expense.findUnique({
@@ -552,9 +557,9 @@ export async function updateExpenseService(
     where: { id: expenseId },
     select: { description: true, amount: true },
   });
-  
-  const expenseAmount = expenseBeforeUpdate?.amount 
-    ? Number(expenseBeforeUpdate.amount) 
+
+  const expenseAmount = expenseBeforeUpdate?.amount
+    ? Number(expenseBeforeUpdate.amount)
     : 0;
 
   const expense = await prisma.expense.update({
@@ -605,7 +610,12 @@ export async function updateExpenseService(
   });
 
   // Notify all group members (except the editor) - only if significant changes
-  if (tripWithGroup && expenseBeforeUpdate && expenseAmount > 0 && (data.description !== undefined || data.amount !== undefined)) {
+  if (
+    tripWithGroup &&
+    expenseBeforeUpdate &&
+    expenseAmount > 0 &&
+    (data.description !== undefined || data.amount !== undefined)
+  ) {
     const allMembers = await prisma.groupMember.findMany({
       where: { groupId: tripWithGroup.groupId },
       include: {
@@ -624,7 +634,9 @@ export async function updateExpenseService(
         createNotificationService(member.userId, {
           type: NotificationType.expense_edited,
           title: "Expense Updated",
-          message: `${user.name || user.email} updated expense '${expenseBeforeUpdate.description}' (₱${expenseAmount.toFixed(2)}) in ${tripWithGroup.name}`,
+          message: `${user.name || user.email} updated expense '${
+            expenseBeforeUpdate.description
+          }' (₱${expenseAmount.toFixed(2)}) in ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           relatedExpenseId: expense.id,
@@ -652,7 +664,7 @@ export async function deleteExpenseService(
   expenseId: string
 ) {
   const { user: userAccess } = await verifyTripAccess(token, tripId);
-  
+
   // Get full user info for notifications
   const user = await getOrCreateUser(token);
 
@@ -665,9 +677,9 @@ export async function deleteExpenseService(
   if (!existingExpense || existingExpense.tripId !== tripId) {
     throw new Error("Expense not found or does not belong to this trip");
   }
-  
-  const expenseAmount = existingExpense.amount 
-    ? Number(existingExpense.amount) 
+
+  const expenseAmount = existingExpense.amount
+    ? Number(existingExpense.amount)
     : 0;
 
   // Get trip with group info for notifications
@@ -704,7 +716,9 @@ export async function deleteExpenseService(
         createNotificationService(member.userId, {
           type: NotificationType.expense_deleted,
           title: "Expense Deleted",
-          message: `${user.name || user.email} deleted expense '${existingExpense.description}' (₱${expenseAmount.toFixed(2)}) from ${tripWithGroup.name}`,
+          message: `${user.name || user.email} deleted expense '${
+            existingExpense.description
+          }' (₱${expenseAmount.toFixed(2)}) from ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           // Don't include relatedExpenseId since the expense will be deleted

@@ -18,7 +18,10 @@ async function getOrCreateUser(token: DecodedIdToken) {
 async function verifyTripAccess(
   token: DecodedIdToken,
   tripId: string
-): Promise<{ trip: { groupId: string; name: string }; user: { id: string; name: string | null; email: string } }> {
+): Promise<{
+  trip: { groupId: string; name: string };
+  user: { id: string; name: string | null; email: string };
+}> {
   const user = await getOrCreateUser(token);
 
   // Get trip with group
@@ -117,7 +120,9 @@ export async function createActivityService(
         createNotificationService(member.userId, {
           type: NotificationType.activity_added,
           title: "New Activity Added",
-          message: `${user.name || user.email} added activity '${data.title}' to ${tripWithGroup.name}`,
+          message: `${user.name || user.email} added activity '${
+            data.title
+          }' to ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           relatedActivityId: activity.id,
@@ -156,7 +161,7 @@ export async function updateActivityService(
     dropoffLocation?: string;
   }
 ) {
-  await verifyTripAccess(token, tripId);
+  const { user } = await verifyTripAccess(token, tripId);
 
   // Verify activity belongs to trip
   const existingActivity = await prisma.activity.findUnique({
@@ -179,14 +184,24 @@ export async function updateActivityService(
     data: {
       ...(data.title !== undefined && { title: data.title }),
       ...(data.date !== undefined && { date: data.date }),
-      ...(data.startTime !== undefined && { startTime: data.startTime || null }),
+      ...(data.startTime !== undefined && {
+        startTime: data.startTime || null,
+      }),
       ...(data.endTime !== undefined && { endTime: data.endTime || null }),
       ...(data.notes !== undefined && { notes: data.notes || null }),
       ...(data.done !== undefined && { done: data.done }),
-      ...(data.transportationMode !== undefined && { transportationMode: data.transportationMode || null }),
-      ...(data.pickupTime !== undefined && { pickupTime: data.pickupTime || null }),
-      ...(data.pickupLocation !== undefined && { pickupLocation: data.pickupLocation || null }),
-      ...(data.dropoffLocation !== undefined && { dropoffLocation: data.dropoffLocation || null }),
+      ...(data.transportationMode !== undefined && {
+        transportationMode: data.transportationMode || null,
+      }),
+      ...(data.pickupTime !== undefined && {
+        pickupTime: data.pickupTime || null,
+      }),
+      ...(data.pickupLocation !== undefined && {
+        pickupLocation: data.pickupLocation || null,
+      }),
+      ...(data.dropoffLocation !== undefined && {
+        dropoffLocation: data.dropoffLocation || null,
+      }),
     },
   });
 
@@ -204,7 +219,11 @@ export async function updateActivityService(
   });
 
   // Notify all group members (except the editor) - only if significant changes
-  if (tripWithGroup && activityBeforeUpdate && (data.title !== undefined || data.date !== undefined)) {
+  if (
+    tripWithGroup &&
+    activityBeforeUpdate &&
+    (data.title !== undefined || data.date !== undefined)
+  ) {
     const allMembers = await prisma.groupMember.findMany({
       where: { groupId: tripWithGroup.groupId },
       include: {
@@ -223,7 +242,9 @@ export async function updateActivityService(
         createNotificationService(member.userId, {
           type: NotificationType.activity_edited,
           title: "Activity Updated",
-          message: `${user.name || user.email} updated activity '${activityBeforeUpdate.title}' in ${tripWithGroup.name}`,
+          message: `${user.name || user.email} updated activity '${
+            activityBeforeUpdate.title
+          }' in ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           relatedActivityId: activity.id,
@@ -296,7 +317,9 @@ export async function deleteActivityService(
         createNotificationService(member.userId, {
           type: NotificationType.activity_deleted,
           title: "Activity Deleted",
-          message: `${user.name || user.email} deleted activity '${existingActivity.title}' from ${tripWithGroup.name}`,
+          message: `${user.name || user.email} deleted activity '${
+            existingActivity.title
+          }' from ${tripWithGroup.name}`,
           relatedGroupId: tripWithGroup.groupId,
           relatedTripId: tripId,
           // Don't include relatedActivityId since the activity will be deleted
@@ -319,4 +342,3 @@ export async function deleteActivityService(
 
   logger.info("Activity deleted", { activityId, tripId });
 }
-
