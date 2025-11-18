@@ -30,7 +30,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   const copyCode = async () => {
     if (!group) return;
-    
+
     try {
       // Try modern clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -47,7 +47,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        
+
         try {
           const successful = document.execCommand("copy");
           if (successful) {
@@ -96,7 +96,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   };
 
   // Get color scheme for the group (default to orange if not loaded yet)
-  const colors = group ? getGroupColorClasses(group.colorScheme) : getGroupColorClasses("orange");
+  const colors = group
+    ? getGroupColorClasses(group.colorScheme)
+    : getGroupColorClasses("orange");
 
   if (isLoading) {
     return (
@@ -163,7 +165,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               </div>
               <div className='flex items-center gap-2 flex-wrap mb-2'>
                 <span className='text-sm text-slate-600'>Group Code:</span>
-                <code className={`px-3 py-1 ${colors.bgLight} border ${colors.borderLight} rounded-lg font-mono font-bold ${colors.text} text-lg`}>
+                <code
+                  className={`px-3 py-1 ${colors.bgLight} border ${colors.borderLight} rounded-lg font-mono font-bold ${colors.text} text-lg`}
+                >
                   {group.code}
                 </code>
                 <button
@@ -195,12 +199,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
               onClick={() => router.push(`/group/${group.id}/members`)}
               className='px-4 py-5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-slate-200 group'
             >
-              <span className='text-3xl group-hover:scale-110 transition-transform'>
-                👥
-              </span>
               <span className='text-slate-700 font-semibold'>
                 Members{" "}
-                <span className={`text-xs font-bold ${colors.text} ${colors.bgLighter} px-2.5 py-1 rounded-full min-w-[2rem]`}>
+                <span
+                  className={`text-xs font-bold ${colors.text} ${colors.bgLighter} px-2.5 py-1 rounded-full min-w-[2rem]`}
+                >
                   {group.memberEmails?.length || 0}
                 </span>
               </span>
@@ -209,22 +212,16 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             {isCreator ? (
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
+                className='text-red-600 font-semiboldpx-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium  gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
               >
-                <span className='text-3xl group-hover:scale-110 transition-transform'>
-                  🗑️
-                </span>
-                <span className='text-red-600 font-semibold'>Delete</span>
+                Delete
               </button>
             ) : (
               <button
                 onClick={() => setShowLeaveModal(true)}
-                className='px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
+                className='text-red-600 font-semibold px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
               >
-                <span className='text-3xl group-hover:scale-110 transition-transform'>
-                  👋
-                </span>
-                <span className='text-red-600 font-semibold'>Leave</span>
+                Leave
               </button>
             )}
           </div>
@@ -251,10 +248,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       )}
 
       {showEditModal && group && (
-        <EditGroupModal
-          group={group}
-          onClose={() => setShowEditModal(false)}
-        />
+        <EditGroupModal group={group} onClose={() => setShowEditModal(false)} />
       )}
 
       {showLeaveModal && group && (
