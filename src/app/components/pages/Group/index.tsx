@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Plus, Share2, Edit } from "lucide-react";
+import { ArrowLeft, Plus, Share2, Edit, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import CreateTripModal from "../../shared/Modal/CreateTripModal";
@@ -21,6 +21,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const router = useRouter();
   const { data: groupData, isLoading, error } = useGroup(param);
   const group = groupData?.group || null;
@@ -71,6 +72,47 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       alert("Failed to copy code. Please copy manually: " + group.code);
     }
   };
+
+  const copyInviteLink = async () => {
+    if (!group) return;
+
+    const inviteLink = `${window.location.origin}/invite/${group.code}`;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(inviteLink);
+        setInviteLinkCopied(true);
+        setTimeout(() => setInviteLinkCopied(false), 2000);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteLink;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand("copy");
+          if (successful) {
+            setInviteLinkCopied(true);
+            setTimeout(() => setInviteLinkCopied(false), 2000);
+          } else {
+            console.error("Failed to copy using fallback method");
+          }
+        } catch (err) {
+          console.error("Fallback copy failed:", err);
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to copy invite link:", err);
+      alert("Failed to copy invite link. Please copy manually: " + inviteLink);
+    }
+  };
+
   const goBack = () => {
     router.push("/dashboard");
   };
@@ -183,6 +225,13 @@ const GroupComponent = ({ param }: IGroupComponent) => {
                 >
                   <Share2 className='w-3 h-3' />
                   {copied ? "Copied!" : "Copy"}
+                </button>
+                <button
+                  onClick={copyInviteLink}
+                  className={`px-3 py-1 text-sm ${colors.bg} ${colors.hoverBg} text-white rounded-lg transition-colors font-medium flex items-center gap-1`}
+                >
+                  <UserPlus className='w-3 h-3' />
+                  {inviteLinkCopied ? "Link Copied!" : "Invite Friend"}
                 </button>
               </div>
               {group.createdBy && (

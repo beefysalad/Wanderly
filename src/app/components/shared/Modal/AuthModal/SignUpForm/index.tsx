@@ -11,7 +11,11 @@ import { useForm } from "react-hook-form";
 import { syncUser } from "../authAction";
 import { registrationSchema, TRegistrationSchema } from "../authZod";
 
-const SignUpForm = () => {
+interface ISignUpFormProps {
+  onAuthSuccess?: () => void;
+}
+
+const SignUpForm = ({ onAuthSuccess }: ISignUpFormProps) => {
   const queryClient = useQueryClient();
   const form = useForm<TRegistrationSchema>({
     resolver: zodResolver(registrationSchema),
@@ -35,6 +39,13 @@ const SignUpForm = () => {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["current-user"], data);
+      // Call the callback after successful sign up
+      if (onAuthSuccess) {
+        // Small delay to ensure user state is updated
+        setTimeout(() => {
+          onAuthSuccess();
+        }, 100);
+      }
     },
   });
   const onSubmit = (values: TRegistrationSchema) =>

@@ -31,13 +31,14 @@ interface JoinGroupRequest {
 /**
  * Query hook to fetch all groups the user is a member of
  */
-export function useGroups() {
+export function useGroups(enabled: boolean = true) {
   return useQuery<GroupsResponse>({
     queryKey: ["groups"],
     queryFn: async () => {
       const response = await api.get<GroupsResponse>("/groups");
       return response.data;
     },
+    enabled,
   });
 }
 

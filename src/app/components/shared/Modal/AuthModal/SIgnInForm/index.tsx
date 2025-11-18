@@ -11,7 +11,11 @@ import { useForm } from "react-hook-form";
 import { syncUser } from "../authAction";
 import { loginSchema, TLoginSchema } from "../authZod";
 
-const SignInForm = () => {
+interface ISignInFormProps {
+  onAuthSuccess?: () => void;
+}
+
+const SignInForm = ({ onAuthSuccess }: ISignInFormProps) => {
   const form = useForm<TLoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -25,6 +29,13 @@ const SignInForm = () => {
     },
     onSuccess: async () => {
       await syncUser();
+      // Call the callback after successful sign in
+      if (onAuthSuccess) {
+        // Small delay to ensure user state is updated
+        setTimeout(() => {
+          onAuthSuccess();
+        }, 100);
+      }
     },
     onError: (error) => {
       console.error("Sign in Error", error);
