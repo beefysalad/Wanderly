@@ -177,24 +177,28 @@ const DashboardComponent = () => {
             {sortedGroups.length > 0 && (
               <div className='mt-6'>
                 <div className='flex flex-col lg:flex-row gap-4 md:gap-6'>
-                  {/* Calendar Sidebar */}
-                  {showCalendar && (
-                    <DashboardCalendar
-                      getTripsForDate={getTripsForDate}
-                      groups={sortedGroups}
-                      setShowCalendar={setShowCalendar}
-                      showCalendar={showCalendar}
+                  {/* Groups Section - Show first on mobile, second on desktop */}
+                  <div className='order-1 lg:order-2 flex-1'>
+                    <DashboardGroupCards
+                      groups={limitedGroups}
+                      handleNavigateToGroup={handleNavigateToGroup}
+                      limit={6}
+                      totalGroups={sortedGroups.length}
+                      onViewAll={handleViewAllGroups}
                     />
-                  )}
+                  </div>
 
-                  {/* Groups Section */}
-                  <DashboardGroupCards
-                    groups={limitedGroups}
-                    handleNavigateToGroup={handleNavigateToGroup}
-                    limit={6}
-                    totalGroups={sortedGroups.length}
-                    onViewAll={handleViewAllGroups}
-                  />
+                  {/* Calendar Sidebar - Show second on mobile, first on desktop */}
+                  {showCalendar && (
+                    <div className='order-2 lg:order-1'>
+                      <DashboardCalendar
+                        getTripsForDate={getTripsForDate}
+                        groups={sortedGroups}
+                        setShowCalendar={setShowCalendar}
+                        showCalendar={showCalendar}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
