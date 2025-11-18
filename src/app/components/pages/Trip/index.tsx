@@ -80,7 +80,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           activities: trip.activities || [],
         });
       } else {
-        exportScheduleToICS({
+        await exportScheduleToICS({
           trip,
           activities: trip.activities || [],
         });
