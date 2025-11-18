@@ -100,14 +100,38 @@ const ExpensesList = ({
   const handleMarkPaid = async (expenseId: string, memberId: string) => {
     if (readOnly) return;
 
+    // Only allow self-marking
+    if (memberId !== currentUser) {
+      alert("You can only mark yourself as paid");
+      return;
+    }
+
     const expense = expenses.find((e) => e.id === expenseId);
     if (!expense) return;
 
     const paidMembers = expense.paidMembers || [];
+    const pendingPayments = expense.pendingPayments || [];
+    const paymentStatus = expense.paymentStatusMap?.[memberId];
+    
+    // Check if already confirmed paid
     const isPaid = paidMembers.includes(memberId);
-    const newPaidMembers = isPaid
+    // Check if pending
+    const isPending = paymentStatus === "pending" || pendingPayments.includes(memberId);
+    
+    // If already confirmed, allow unmarking
+    // If pending, allow unmarking
+    // Otherwise, mark as pending
+    const shouldMarkPending = !isPaid && !isPending;
+    const shouldUnmark = isPaid || isPending;
+    
+    const newPaidMembers = shouldUnmark
       ? paidMembers.filter((m) => m !== memberId)
-      : [...paidMembers, memberId];
+      : paidMembers;
+    const newPendingPayments = shouldUnmark
+      ? pendingPayments.filter((m) => m !== memberId)
+      : shouldMarkPending
+      ? [...pendingPayments, memberId]
+      : pendingPayments;
 
     // Optimistically update the expense in the cache
     queryClient.setQueryData<{ expenses: Expense[] }>(
@@ -115,9 +139,25 @@ const ExpensesList = ({
       (old) => {
         if (!old) return old;
         return {
-          expenses: old.expenses.map((e) =>
-            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e
-          ),
+          expenses: old.expenses.map((e) => {
+            if (e.id !== expenseId) return e;
+            const updatedExpense = {
+              ...e,
+              paidMembers: newPaidMembers,
+              pendingPayments: newPendingPayments,
+            };
+            // Update payment status map
+            if (shouldMarkPending) {
+              updatedExpense.paymentStatusMap = {
+                ...e.paymentStatusMap,
+                [memberId]: "pending",
+              };
+            } else if (shouldUnmark) {
+              const { [memberId]: _, ...rest } = e.paymentStatusMap || {};
+              updatedExpense.paymentStatusMap = rest;
+            }
+            return updatedExpense;
+          }),
         };
       }
     );
@@ -125,8 +165,8 @@ const ExpensesList = ({
     try {
       await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
         memberEmail: memberId,
-        isPaid: !isPaid,
-        createPaymentLog: true,
+        isPaid: shouldMarkPending,
+        createPaymentLog: false, // Don't create log until confirmed
       });
 
       // Refetch to ensure consistency
@@ -145,6 +185,11 @@ const ExpensesList = ({
             ),
           };
         }
+      );
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark expense as paid. Please try again."
       );
       console.error("Failed to mark expense as paid:", error);
     }

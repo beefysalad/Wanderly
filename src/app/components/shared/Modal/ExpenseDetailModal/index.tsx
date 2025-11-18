@@ -9,6 +9,8 @@ import {
   X,
   Link2,
   Calendar,
+  Clock,
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
@@ -19,9 +21,11 @@ interface IExpenseDetailModalProps {
   expense: Expense;
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
+  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with imageUrl
   activities?: Activity[]; // activities from the trip
   onClose: () => void;
   onMarkPaid?: (memberId: string) => void;
+  onConfirmPayment?: (memberEmail: string, status: "confirmed" | "rejected") => void;
   onEdit?: () => void;
   onDelete?: () => void;
   currentUser?: string;
@@ -40,11 +44,13 @@ const ExpenseDetailModal = ({
   expense,
   members,
   memberNames,
+  memberMetadata,
   activities = [],
   onClose,
   onDelete,
   onEdit,
   onMarkPaid,
+  onConfirmPayment,
   currentUser,
   readOnly = false,
 }: IExpenseDetailModalProps) => {
@@ -55,6 +61,21 @@ const ExpenseDetailModal = ({
   // Helper function to get display name from email
   const getDisplayName = (email: string): string => {
     return memberNames?.[email] || email.split("@")[0];
+  };
+
+  // Helper function to get member avatar
+  const getMemberAvatar = (email: string) => {
+    return memberMetadata?.[email]?.imageUrl;
+  };
+
+  // Helper function to get member initials
+  const getMemberInitials = (email: string): string => {
+    const name = memberNames?.[email] || email.split("@")[0];
+    const parts = name.split(" ");
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   // Get linked activity
@@ -107,6 +128,9 @@ const ExpenseDetailModal = ({
   const splitCount = expense.splitWith?.length || members.length;
   const perPersonAmount = expense.amount / splitCount;
   const paidMembers = expense.paidMembers || [];
+  const pendingPayments = expense.pendingPayments || [];
+  const paymentStatusMap = expense.paymentStatusMap || {};
+  const isPayer = currentUser === expense.paidBy;
 
   return (
     <div
@@ -228,9 +252,25 @@ const ExpenseDetailModal = ({
               Paid By
             </p>
             <div className='bg-slate-50 dark:bg-slate-700 rounded-lg p-3'>
-              <p className='font-semibold text-slate-900 dark:text-white'>
-                {getDisplayName(expense.paidBy)}
-              </p>
+              <div className='flex items-center gap-3'>
+                {getMemberAvatar(expense.paidBy) ? (
+                  <div className='relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-600 flex-shrink-0'>
+                    <Image
+                      src={getMemberAvatar(expense.paidBy)!}
+                      alt={getDisplayName(expense.paidBy)}
+                      fill
+                      className='object-cover'
+                    />
+                  </div>
+                ) : (
+                  <div className='w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold flex-shrink-0'>
+                    {getMemberInitials(expense.paidBy)}
+                  </div>
+                )}
+                <p className='font-semibold text-slate-900 dark:text-white'>
+                  {getDisplayName(expense.paidBy)}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -242,23 +282,49 @@ const ExpenseDetailModal = ({
             </p>
             <div className='space-y-2'>
               {expense.splitWith?.map((member) => {
-                const hasPaid = paidMembers.includes(member);
-                const isPayer = member === expense.paidBy;
+                const memberIsPayer = member === expense.paidBy;
                 const isCurrentUser = currentUser === member;
+                const paymentStatus = paymentStatusMap[member];
+                const hasPaid = paidMembers.includes(member);
+                const isPending = paymentStatus === "pending" || pendingPayments.includes(member);
+                const isRejected = paymentStatus === "rejected";
+                const showMarkAsPaid = !readOnly && onMarkPaid && isCurrentUser && !memberIsPayer && !hasPaid && !isPending;
+                const showConfirmButtons = !readOnly && onConfirmPayment && isPayer && isPending && !memberIsPayer;
+
+                // Determine border color based on status
+                let borderColor = "border-red-500 dark:border-red-600";
+                let bgColor = "bg-slate-50 dark:bg-slate-700";
+                if (hasPaid || memberIsPayer) {
+                  borderColor = "border-orange-200 dark:border-orange-800";
+                  bgColor = "bg-orange-50 dark:bg-orange-900/20";
+                } else if (isPending) {
+                  borderColor = "border-amber-400 dark:border-amber-600";
+                  bgColor = "bg-amber-50 dark:bg-amber-900/20";
+                } else if (isRejected) {
+                  borderColor = "border-red-400 dark:border-red-600";
+                  bgColor = "bg-red-50 dark:bg-red-900/20";
+                }
 
                 return (
                   <div
                     key={member}
-                    className={`flex items-center justify-between p-3 rounded-lg border-2 ${
-                      hasPaid || isPayer
-                        ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
-                        : "bg-slate-50 dark:bg-slate-700 border-red-500 dark:border-red-600"
-                    }`}
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 ${bgColor} ${borderColor}`}
                   >
                     <div className='flex items-center gap-3 min-w-0 flex-1'>
-                      <div className='w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold'>
-                        {member[0].toUpperCase()}
-                      </div>
+                      {getMemberAvatar(member) ? (
+                        <div className='relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 flex-shrink-0'>
+                          <Image
+                            src={getMemberAvatar(member)!}
+                            alt={getDisplayName(member)}
+                            fill
+                            className='object-cover'
+                          />
+                        </div>
+                      ) : (
+                        <div className='w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-semibold'>
+                          {getMemberInitials(member)}
+                        </div>
+                      )}
                       <div className='min-w-0 flex-1'>
                         <p className='font-medium text-slate-900 dark:text-white break-words'>
                           {getDisplayName(member)}
@@ -269,8 +335,8 @@ const ExpenseDetailModal = ({
                         </p>
                       </div>
                     </div>
-                    <div>
-                      {isPayer ? (
+                    <div className='flex items-center gap-2'>
+                      {memberIsPayer ? (
                         <span className='text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 font-medium'>
                           Payer
                         </span>
@@ -279,7 +345,37 @@ const ExpenseDetailModal = ({
                           <CheckCircle className='w-5 h-5' />
                           <span className='text-sm font-medium'>Paid</span>
                         </div>
-                      ) : !readOnly && onMarkPaid ? (
+                      ) : isPending ? (
+                        <div className='flex flex-col items-end gap-1'>
+                          <div className='flex items-center gap-1 text-amber-600 dark:text-amber-400'>
+                            <Clock className='w-4 h-4' />
+                            <span className='text-xs font-medium'>Pending</span>
+                          </div>
+                          {showConfirmButtons && (
+                            <div className='flex items-center gap-1'>
+                              <button
+                                onClick={() => onConfirmPayment(member, "confirmed")}
+                                className='px-2 py-0.5 text-xs rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-colors font-medium'
+                                title='Confirm payment'
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => onConfirmPayment(member, "rejected")}
+                                className='px-2 py-0.5 text-xs rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors font-medium'
+                                title='Reject payment'
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : isRejected ? (
+                        <div className='flex items-center gap-1 text-red-600 dark:text-red-400'>
+                          <XCircle className='w-5 h-5' />
+                          <span className='text-sm font-medium'>Rejected</span>
+                        </div>
+                      ) : showMarkAsPaid ? (
                         <button
                           onClick={() => onMarkPaid(member)}
                           className='px-3 py-1 text-sm rounded-full border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors font-medium'

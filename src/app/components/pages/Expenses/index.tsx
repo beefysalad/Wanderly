@@ -1,14 +1,15 @@
 "use client";
-import { Expense, Trip } from "@/src/shared/types";
-import { ArrowLeft, Plus, Receipt, Calendar } from "lucide-react";
+import { Expense, Trip, PaymentLog } from "@/src/shared/types";
+import { ArrowLeft, Plus, Receipt, Calendar, User } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ExpensesList from "./ExpenseList";
 import AddExpenseModal from "../../shared/Modal/AddExpenseModal";
 import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
-import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
+import { useExpenses, usePaymentLogs, useConfirmPayment } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -38,6 +39,75 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const { user } = useCurrentUser();
 
   const currentUserEmail = user?.email || "";
+
+  // Helper functions for payment logs
+  const getMemberAvatarFromLog = (log: PaymentLog, type: "payer" | "payee") => {
+    // First try to use imageUrl from the log itself
+    if (type === "payer" && log.payerImageUrl) {
+      return log.payerImageUrl;
+    }
+    if (type === "payee" && log.payeeImageUrl) {
+      return log.payeeImageUrl;
+    }
+    
+    // Fallback to memberMetadata lookup using email
+    const email = type === "payer" ? log.payerEmail : log.payeeEmail;
+    if (email && group?.memberMetadata?.[email]) {
+      return group.memberMetadata[email].imageUrl;
+    }
+    
+    // Try to find by name or email string
+    const nameOrEmail = type === "payer" ? log.payer : log.payee;
+    const memberEmail = group?.memberEmails?.find((e) => 
+      e === nameOrEmail || e.split("@")[0] === nameOrEmail
+    );
+    if (memberEmail && group?.memberMetadata?.[memberEmail]) {
+      return group.memberMetadata[memberEmail].imageUrl;
+    }
+    
+    // Try to find by name
+    const foundEmail = Object.entries(group?.memberNames || {}).find(
+      ([email, name]) => name === nameOrEmail
+    )?.[0];
+    if (foundEmail && group?.memberMetadata?.[foundEmail]) {
+      return group.memberMetadata[foundEmail].imageUrl;
+    }
+    
+    return undefined;
+  };
+
+  const getMemberInitialsFromLog = (log: PaymentLog, type: "payer" | "payee"): string => {
+    const nameOrEmail = type === "payer" ? log.payer : log.payee;
+    // If it looks like an email, use first 2 chars
+    if (nameOrEmail.includes("@")) {
+      return nameOrEmail.substring(0, 2).toUpperCase();
+    }
+    // Otherwise use first letter of each word or first 2 chars
+    const parts = nameOrEmail.split(" ");
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return nameOrEmail.substring(0, 2).toUpperCase();
+  };
+
+  // Sync selectedExpense with updated expenses data when expenses refetch
+  useEffect(() => {
+    if (selectedExpense && expenses.length > 0) {
+      const updatedExpense = expenses.find((e) => e.id === selectedExpense.id);
+      if (updatedExpense) {
+        // Only update if payment-related data changed
+        const paymentDataChanged = 
+          JSON.stringify(selectedExpense.paymentStatusMap || {}) !== JSON.stringify(updatedExpense.paymentStatusMap || {}) ||
+          JSON.stringify(selectedExpense.paidMembers || []) !== JSON.stringify(updatedExpense.paidMembers || []) ||
+          JSON.stringify(selectedExpense.pendingPayments || []) !== JSON.stringify(updatedExpense.pendingPayments || []);
+        
+        if (paymentDataChanged) {
+          setSelectedExpense(updatedExpense);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expenses]);
 
   // Filter expenses by settled status
   const isExpenseSettled = (expense: Expense) => {
@@ -131,6 +201,79 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
     } catch (error) {
       console.error("Failed to delete expense:", error);
+    }
+  };
+
+  const handleConfirmPayment = async (
+    expenseId: string,
+    memberEmail: string,
+    status: "confirmed" | "rejected"
+  ) => {
+    if (!selectedExpense || selectedExpense.id !== expenseId) return;
+
+    // Optimistically update the selectedExpense
+    const previousExpense = selectedExpense;
+    const updatedExpense = { ...selectedExpense };
+    
+    // Update payment status map
+    if (!updatedExpense.paymentStatusMap) {
+      updatedExpense.paymentStatusMap = {};
+    }
+    updatedExpense.paymentStatusMap[memberEmail] = status;
+
+    // Update paidMembers and pendingPayments arrays
+    if (status === "confirmed") {
+      // Move from pending to confirmed
+      updatedExpense.pendingPayments = (updatedExpense.pendingPayments || []).filter(
+        (email) => email !== memberEmail
+      );
+      if (!updatedExpense.paidMembers?.includes(memberEmail)) {
+        updatedExpense.paidMembers = [
+          ...(updatedExpense.paidMembers || []),
+          memberEmail,
+        ];
+      }
+    } else if (status === "rejected") {
+      // Remove from pending
+      updatedExpense.pendingPayments = (updatedExpense.pendingPayments || []).filter(
+        (email) => email !== memberEmail
+      );
+      // Remove from paidMembers if it was there
+      updatedExpense.paidMembers = (updatedExpense.paidMembers || []).filter(
+        (email) => email !== memberEmail
+      );
+    }
+
+    // Optimistically update the UI
+    setSelectedExpense(updatedExpense);
+
+    try {
+      const response = await api.post<{ expense: Expense }>(
+        `/trips/${tripId}/expenses/${expenseId}/payments/confirm`,
+        {
+          memberEmail,
+          status,
+        }
+      );
+
+      // Update with the actual response from server
+      if (response.data.expense) {
+        setSelectedExpense(response.data.expense);
+      }
+
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    } catch (error) {
+      // Revert optimistic update on error
+      setSelectedExpense(previousExpense);
+      console.error("Failed to confirm payment:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to confirm payment. Please try again."
+      );
     }
   };
 
@@ -413,13 +556,45 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                                 </div>
                               </div>
                               <div className='flex items-center gap-2 text-sm flex-wrap'>
-                                <span className='font-medium text-slate-700 truncate'>
-                                  {log.payer.split("@")[0]}
-                                </span>
+                                <div className='flex items-center gap-1.5'>
+                                  {getMemberAvatarFromLog(log, "payer") ? (
+                                    <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
+                                      <Image
+                                        src={getMemberAvatarFromLog(log, "payer")!}
+                                        alt={log.payer.split("@")[0]}
+                                        fill
+                                        className='object-cover'
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
+                                      {getMemberInitialsFromLog(log, "payer")}
+                                    </div>
+                                  )}
+                                  <span className='font-medium text-slate-700 truncate'>
+                                    {log.payer.split("@")[0]}
+                                  </span>
+                                </div>
                                 <span className='text-slate-400'>→</span>
-                                <span className='font-medium text-slate-700 truncate'>
-                                  {log.payee.split("@")[0]}
-                                </span>
+                                <div className='flex items-center gap-1.5'>
+                                  {getMemberAvatarFromLog(log, "payee") ? (
+                                    <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
+                                      <Image
+                                        src={getMemberAvatarFromLog(log, "payee")!}
+                                        alt={log.payee.split("@")[0]}
+                                        fill
+                                        className='object-cover'
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
+                                      {getMemberInitialsFromLog(log, "payee")}
+                                    </div>
+                                  )}
+                                  <span className='font-medium text-slate-700 truncate'>
+                                    {log.payee.split("@")[0]}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <div className='text-right flex-shrink-0'>
@@ -541,10 +716,14 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           expense={selectedExpense}
           members={group.memberEmails || []}
           memberNames={group.memberNames}
+          memberMetadata={group.memberMetadata}
           activities={trip.activities || []}
           onClose={() => setSelectedExpense(null)}
           onMarkPaid={(memberId) => {
             handleMarkPaid(selectedExpense.id, memberId);
+          }}
+          onConfirmPayment={(memberEmail, status) => {
+            handleConfirmPayment(selectedExpense.id, memberEmail, status);
           }}
           onEdit={() => {
             setEditingExpense(selectedExpense);

@@ -215,6 +215,7 @@ const GuestExpensesComponent = ({
           expense={selectedExpense}
           members={group?.memberEmails || []}
           memberNames={group?.memberNames}
+          memberMetadata={group?.memberMetadata}
           onClose={() => setSelectedExpense(null)}
           readOnly={true}
         />
