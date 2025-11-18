@@ -29,9 +29,9 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
+        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8'>
+          <div className='w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-600 font-medium'>Loading group...</p>
         </div>
       </main>
@@ -67,7 +67,7 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
       <div className='max-w-4xl mx-auto px-4 py-6'>
         <button
           onClick={goBack}
-          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
+          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
         >
           <ArrowLeft className='w-5 h-5' />
           Back to Home
