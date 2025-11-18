@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth/with-auth";
+import { AuthContext, withAuth } from "@/lib/auth/with-auth";
 import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
@@ -106,19 +106,22 @@ function formatICSDate(date: Date): string {
 /**
  * Generate ICS content from trip and activities
  */
-function generateICSContent(trip: { id: string; name: string; location?: string | null }, activities: Array<{
-  id: string;
-  date: Date | string;
-  title: string;
-  startTime?: string | null;
-  endTime?: string | null;
-  notes?: string | null;
-  done: boolean;
-  transportationMode?: string | null;
-  pickupTime?: string | null;
-  pickupLocation?: string | null;
-  dropoffLocation?: string | null;
-}>): string {
+function generateICSContent(
+  trip: { id: string; name: string; location?: string | null },
+  activities: Array<{
+    id: string;
+    date: Date | string;
+    title: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    notes?: string | null;
+    done: boolean;
+    transportationMode?: string | null;
+    pickupTime?: string | null;
+    pickupLocation?: string | null;
+    dropoffLocation?: string | null;
+  }>
+): string {
   const lines: string[] = [];
 
   // Calendar header
@@ -148,9 +151,10 @@ function generateICSContent(trip: { id: string; name: string; location?: string 
     lines.push(`DTSTAMP:${dtstamp}`);
 
     // Date handling
-    const activityDate = typeof activity.date === "string" 
-      ? new Date(activity.date) 
-      : activity.date;
+    const activityDate =
+      typeof activity.date === "string"
+        ? new Date(activity.date)
+        : activity.date;
 
     if (activity.startTime) {
       // Timed event
@@ -319,4 +323,3 @@ async function handler(req: NextRequest, auth: AuthContext) {
 }
 
 export const GET = withAuth(handler);
-
