@@ -162,7 +162,7 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
           className='flex-1 overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4'
         >
           {/* Group Name */}
-          <div className='space-y-2'>
+          <div className='space-y-2 mt-5'>
             <Label
               htmlFor='groupName'
               className={`${

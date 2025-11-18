@@ -660,14 +660,72 @@ export function exportScheduleToICS({
   // Join lines with CRLF (required by ICS format)
   const icsContent = lines.join("\r\n");
 
-  // Create blob and download
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${trip.name.replace(/[^a-z0-9]/gi, "_")}_schedule.ics`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Detect if we're on mobile Safari
+  const isMobileSafari = /iPhone|iPad|iPod/.test(navigator.userAgent) && 
+    /Safari/.test(navigator.userAgent) && 
+    !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+
+  const fileName = `${trip.name.replace(/[^a-z0-9]/gi, "_")}_schedule.ics`;
+
+  if (isMobileSafari) {
+    // For mobile Safari, create a blob URL and open it
+    // Safari will recognize the calendar MIME type and offer to add to calendar
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    
+    // Open in a new window/tab - Safari will recognize the calendar file
+    // and offer to add it to the calendar app
+    const newWindow = window.open(url, "_blank");
+    
+    // If popup was blocked or failed, fall back to creating a visible link
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+      // Create a visible link that user can tap
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.textContent = "Tap to download calendar file";
+      link.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 12px 24px;
+        background: #f97316;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      `;
+      document.body.appendChild(link);
+      
+      // Auto-remove after 5 seconds or when clicked
+      const removeLink = () => {
+        if (link.parentNode) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(url);
+      };
+      
+      link.addEventListener("click", removeLink);
+      setTimeout(removeLink, 5000);
+    } else {
+      // Clean up the URL after a delay if window opened successfully
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    }
+  } else {
+    // For desktop browsers, use blob URL (more efficient)
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }

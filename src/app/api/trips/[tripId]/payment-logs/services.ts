@@ -81,6 +81,7 @@ export async function listPaymentLogsService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       payee: {
@@ -88,6 +89,7 @@ export async function listPaymentLogsService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       expense: {
@@ -151,6 +153,7 @@ export async function listPaymentLogsForGuestService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       payee: {
@@ -158,6 +161,7 @@ export async function listPaymentLogsForGuestService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       expense: {
@@ -225,6 +229,7 @@ export async function createPaymentLogService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       payee: {
@@ -232,6 +237,7 @@ export async function createPaymentLogService(
           id: true,
           email: true,
           name: true,
+          imageUrl: true,
         },
       },
       expense: {

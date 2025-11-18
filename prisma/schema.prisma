@@ -156,12 +156,19 @@ model ExpenseSplit {
   @@unique([expenseId, userId])
 }
 
+enum PaymentStatus {
+  pending
+  confirmed
+  rejected
+}
+
 model ExpensePayment {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   expenseId String
   userId    String
-  paidAt    DateTime @default(now())
-  createdAt DateTime @default(now())
+  status    PaymentStatus @default(pending)
+  paidAt    DateTime      @default(now())
+  createdAt DateTime      @default(now())
 
   // Relationships
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)

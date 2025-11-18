@@ -17,6 +17,7 @@ type GroupWithRelations = Prisma.GroupGetPayload<{
             id: true;
             name: true;
             email: true;
+            imageUrl: true;
           };
         };
       };
@@ -57,8 +58,8 @@ type TripWithRelations =
 export function transformGroup(prismaGroup: GroupWithRelations): Group {
   // Create email -> name mapping
   const memberNames: Record<string, string> = {};
-  // Create email -> metadata mapping with joinedAt dates
-  const memberMetadata: Record<string, { joinedAt: string; name?: string }> = {};
+  // Create email -> metadata mapping with joinedAt dates and imageUrl
+  const memberMetadata: Record<string, { joinedAt: string; name?: string; imageUrl?: string }> = {};
   
   prismaGroup.members.forEach((m) => {
     const email = m.user.email;
@@ -67,6 +68,7 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
     memberMetadata[email] = {
       joinedAt: m.joinedAt.toISOString(),
       name,
+      imageUrl: m.user.imageUrl || undefined,
     };
   });
 

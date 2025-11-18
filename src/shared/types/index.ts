@@ -10,7 +10,7 @@ export interface Group {
   createdByEmail?: string;
   memberEmails?: string[];
   memberNames?: Record<string, string>; // email -> name mapping
-  memberMetadata?: Record<string, { joinedAt: string; name?: string }>; // email -> metadata with joined date
+  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with joined date and imageUrl
 }
 
 export interface Trip {
@@ -63,7 +63,9 @@ export interface Expense {
   bankName?: string; // for bank transfer
   accountName?: string; // for all payment methods
   qrImage?: string; // blob URL or base64 image
-  paidMembers?: string[]; // members who have paid their share
+  paidMembers?: string[]; // members who have confirmed paid their share
+  pendingPayments?: string[]; // members who have marked themselves as paid but pending confirmation
+  paymentStatusMap?: Record<string, "pending" | "confirmed" | "rejected">; // email -> payment status
   activityId?: string; // optional link to activity
 }
 
@@ -72,8 +74,12 @@ export interface PaymentLog {
   tripId: string;
   expenseId: string;
   expenseDescription: string;
-  payer: string; // who paid
-  payee: string; // who received payment
+  payer: string; // who paid (name or email)
+  payee: string; // who received payment (name or email)
+  payerEmail?: string; // payer email for avatar lookup
+  payeeEmail?: string; // payee email for avatar lookup
+  payerImageUrl?: string; // payer avatar URL
+  payeeImageUrl?: string; // payee avatar URL
   amount: number;
   timestamp: string;
   paymentMethod?: "cash" | "bank" | "maya" | "gcash";

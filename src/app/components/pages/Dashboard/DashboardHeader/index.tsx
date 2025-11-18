@@ -34,7 +34,7 @@ const DashboardHeader = ({
             className='border-slate-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 text-slate-700 transition-all bg-transparent flex-1 sm:flex-initial flex-shrink-0'
           >
             <LogOut className='w-4 h-4 sm:mr-2' />
-            <span className='hidden sm:inline'>Logout</span>
+            <span className='inline'>Logout</span>
           </Button>
         </div>
       </div>

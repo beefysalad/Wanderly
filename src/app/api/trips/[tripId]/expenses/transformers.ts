@@ -40,6 +40,7 @@ type PaymentLogWithRelations = Prisma.PaymentLogGetPayload<{
         id: true;
         email: true;
         name: true;
+        imageUrl: true;
       };
     };
     payee: {
@@ -47,6 +48,7 @@ type PaymentLogWithRelations = Prisma.PaymentLogGetPayload<{
         id: true;
         email: true;
         name: true;
+        imageUrl: true;
       };
     };
     expense: {
@@ -62,6 +64,23 @@ type PaymentLogWithRelations = Prisma.PaymentLogGetPayload<{
  * Transforms Prisma Expense model to TypeScript Expense interface
  */
 export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
+  // Separate payments by status
+  const confirmedPayments = prismaExpense.payments
+    .filter((p) => p.status === "confirmed")
+    .map((p) => p.user.email);
+  const pendingPayments = prismaExpense.payments
+    .filter((p) => p.status === "pending")
+    .map((p) => p.user.email);
+  const rejectedPayments = prismaExpense.payments
+    .filter((p) => p.status === "rejected")
+    .map((p) => p.user.email);
+
+  // Create payment status map
+  const paymentStatusMap: Record<string, "pending" | "confirmed" | "rejected"> = {};
+  prismaExpense.payments.forEach((payment) => {
+    paymentStatusMap[payment.user.email] = payment.status as "pending" | "confirmed" | "rejected";
+  });
+
   return {
     id: prismaExpense.id,
     groupId: prismaExpense.groupId,
@@ -80,7 +99,9 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     bankName: prismaExpense.bankName || undefined,
     accountName: prismaExpense.accountName || undefined,
     qrImage: prismaExpense.qrImage || undefined,
-    paidMembers: prismaExpense.payments.map((payment) => payment.user.email),
+    paidMembers: confirmedPayments, // Only confirmed payments count as paid
+    pendingPayments, // Members with pending payments
+    paymentStatusMap, // Map of email -> status
     activityId: prismaExpense.activityId || undefined,
   };
 }
@@ -98,6 +119,10 @@ export function transformPaymentLog(
     expenseDescription: prismaPaymentLog.expense.description,
     payer: prismaPaymentLog.payer.name || prismaPaymentLog.payer.email,
     payee: prismaPaymentLog.payee.name || prismaPaymentLog.payee.email,
+    payerEmail: prismaPaymentLog.payer.email,
+    payeeEmail: prismaPaymentLog.payee.email,
+    payerImageUrl: prismaPaymentLog.payer.imageUrl || undefined,
+    payeeImageUrl: prismaPaymentLog.payee.imageUrl || undefined,
     amount: Number(prismaPaymentLog.amount),
     timestamp: prismaPaymentLog.timestamp.toISOString(),
     paymentMethod:

@@ -46,15 +46,15 @@ const ActivityDetailModal = ({
 
   return (
     <div
-      className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'
+      className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 pb-40 md:pb-8'
       onClick={onClose}
     >
       <div
-        className='bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto'
+        className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full max-h-[calc(100vh-12rem)] md:max-h-[75vh] flex flex-col overflow-hidden'
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className='sticky top-0 bg-gradient-to-r from-orange-600 to-orange-700 p-6 rounded-t-2xl'>
+        {/* Header - Fixed */}
+        <div className='bg-gradient-to-r from-orange-600 to-orange-700 p-6 rounded-t-lg flex-shrink-0'>
           <div className='flex items-start justify-between mb-4'>
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
@@ -119,8 +119,8 @@ const ActivityDetailModal = ({
           </div>
         </div>
 
-        {/* Content */}
-        <div className='p-6 space-y-6'>
+        {/* Content - Scrollable */}
+        <div className='flex-1 overflow-y-auto p-6 space-y-6'>
           {/* Time Range */}
           {(activity.startTime || activity.endTime) && (
             <div className='flex items-start gap-3'>

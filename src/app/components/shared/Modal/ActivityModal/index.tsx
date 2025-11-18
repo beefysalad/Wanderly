@@ -195,10 +195,10 @@ const ActivityModal = ({
   }
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto'>
-        {/* Header */}
-        <div className='flex items-center justify-between mb-6'>
+    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 pb-40 md:pb-8'>
+      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full max-h-[calc(100vh-12rem)] md:max-h-[75vh] flex flex-col overflow-hidden'>
+        {/* Header - Fixed */}
+        <div className='flex items-center justify-between p-6 pb-4 flex-shrink-0 border-b border-slate-200 dark:border-slate-700'>
           <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
             {editingActivity ? "Edit Event" : "Add Event"}
           </h2>
@@ -210,8 +210,9 @@ const ActivityModal = ({
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+        {/* Form Content - Scrollable */}
+        <form onSubmit={form.handleSubmit(onSubmit)} className='flex-1 flex flex-col overflow-hidden'>
+          <div className='flex-1 overflow-y-auto px-6 py-4 space-y-4'>
           {/* Title */}
           <div>
             <label className='block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2'>
@@ -537,9 +538,10 @@ const ActivityModal = ({
               {form.formState.errors.pickupTime.message}
             </div>
           )}
+          </div>
 
-          {/* Buttons */}
-          <div className='flex gap-3 pt-4'>
+          {/* Buttons - Fixed at bottom */}
+          <div className='flex gap-3 p-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800'>
             <button
               type='button'
               onClick={onClose}

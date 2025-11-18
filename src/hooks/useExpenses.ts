@@ -221,3 +221,37 @@ export function useCreatePaymentLog(tripId: string, groupId: string) {
   });
 }
 
+interface ConfirmPaymentRequest {
+  memberEmail: string;
+  status: "confirmed" | "rejected";
+}
+
+/**
+ * Mutation hook to confirm or reject a pending payment
+ */
+export function useConfirmPayment(
+  tripId: string,
+  expenseId: string,
+  groupId: string
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<ExpenseResponse, Error, ConfirmPaymentRequest>({
+    mutationFn: async (data) => {
+      const response = await api.post<ExpenseResponse>(
+        `/trips/${tripId}/expenses/${expenseId}/payments/confirm`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate expenses query
+      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      // Invalidate payment logs if payment was confirmed
+      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      // Also invalidate group query to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+    },
+  });
+}
+
