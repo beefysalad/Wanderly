@@ -6,12 +6,18 @@ interface IBottomNavProps {
 }
 const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
   return (
-    <div className='fixed bottom-0 left-0 right-0 z-[9999] px-4 pb-4'>
+    <div
+      className='fixed bottom-0 left-0 right-0 z-[9999] px-4'
+      style={{
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px) + 1rem)",
+      }}
+    >
       <div
         className='relative bg-white dark:bg-slate-800 rounded-3xl w-full sm:w-fit sm:mx-auto'
         style={{
           paddingTop: "0.5rem",
-          paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "0.75rem",
+          minHeight: "fit-content",
           boxShadow:
             "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), 0 -2px 4px rgba(0, 0, 0, 0.05)",
         }}
