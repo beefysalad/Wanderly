@@ -124,6 +124,10 @@ FIREBASE_PRIVATE_KEY=your_private_key
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+# Socket.IO Server
+NEXT_PUBLIC_SOCKET_URL=http://localhost:8080
+SOCKET_API_KEY=your-secret-api-key
 ```
 
 4. Set up the database:

@@ -42,7 +42,7 @@ export function useNotifications(options?: {
       );
       return response.data;
     },
-    refetchInterval: 30000, // Poll every 30 seconds for new notifications
+    // Polling removed - using Socket.IO for real-time updates
   });
 }
 
@@ -58,7 +58,7 @@ export function useUnreadCount() {
       );
       return response.data;
     },
-    refetchInterval: 30000, // Poll every 30 seconds
+    // Polling removed - using Socket.IO for real-time updates
   });
 }
 

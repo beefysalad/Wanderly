@@ -43,6 +43,7 @@ export function useCreateTrip(groupId: string) {
       // Also invalidate to ensure fresh data
       await queryClient.refetchQueries({ queryKey: ["groups", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
@@ -61,6 +62,7 @@ export function useDeleteTrip(groupId: string, tripId: string) {
       // Invalidate group query to refetch without deleted trip
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }

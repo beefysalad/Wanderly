@@ -8,6 +8,7 @@ import { useGuest } from "@/src/hooks/useGuest";
 import ExpensesList from "../Expenses/ExpenseList";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IGuestExpensesComponent {
   groupId: string;
@@ -20,6 +21,9 @@ const GuestExpensesComponent = ({
 }: IGuestExpensesComponent) => {
   const router = useRouter();
   const guestSession = useGuest();
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(groupId);
 
   const { data: groupData, isLoading: loadingGroup } = useGroupAsGuest(groupId);
   const group = groupData || null;

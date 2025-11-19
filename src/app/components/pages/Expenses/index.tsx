@@ -12,6 +12,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses, usePaymentLogs, useConfirmPayment } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IExpensesComponent {
   groupId: string;
@@ -37,6 +38,9 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(groupId);
 
   const currentUserEmail = user?.email || "";
 

@@ -75,6 +75,12 @@ export async function createGroupService(
     },
   });
 
+  // Emit Socket.IO event for real-time updates
+  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  emitGroupUpdated(group.id, group).catch((err) => {
+    logger.error("Failed to emit group created event", { error: err });
+  });
+
   logger.info("Group created", { groupId: group.id, code: group.code });
   return group;
 }
@@ -188,6 +194,14 @@ export async function joinGroupService(
     );
 
   await Promise.all(notificationPromises);
+
+  // Emit Socket.IO event for real-time updates
+  if (updatedGroup) {
+    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    emitGroupUpdated(group.id, updatedGroup).catch((err) => {
+      logger.error("Failed to emit group updated event on join", { error: err });
+    });
+  }
 
   logger.info("User joined group", {
     userId: user.id,
@@ -411,6 +425,55 @@ export async function leaveGroupService(
     await Promise.all(notificationPromises);
   }
 
+  // Get updated group to emit event
+  const updatedGroup = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: {
+      creator: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              imageUrl: true,
+            },
+          },
+        },
+      },
+      trips: {
+        include: {
+          activities: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  // Emit Socket.IO event for real-time updates
+  if (updatedGroup) {
+    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    emitGroupUpdated(groupId, updatedGroup).catch((err) => {
+      logger.error("Failed to emit group updated event on leave", { error: err });
+    });
+  }
+
   logger.info("User left group", { userId: user.id, groupId });
 }
 
@@ -440,6 +503,12 @@ export async function deleteGroupService(
   // Delete the group (cascade will handle members, trips, expenses, etc.)
   await prisma.group.delete({
     where: { id: groupId },
+  });
+
+  // Emit Socket.IO event for real-time updates
+  const { emitGroupDeleted } = await import("@/lib/socket-events");
+  emitGroupDeleted(groupId).catch((err) => {
+    logger.error("Failed to emit group deleted event", { error: err });
   });
 
   logger.info("Group deleted", { groupId, deletedBy: user.id });
@@ -553,6 +622,12 @@ export async function updateGroupService(
         },
       },
     },
+  });
+
+  // Emit Socket.IO event for real-time updates
+  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  emitGroupUpdated(groupId, updatedGroup).catch((err) => {
+    logger.error("Failed to emit group updated event", { error: err });
   });
 
   logger.info("Group updated", { groupId, updatedBy: user.id, updates });

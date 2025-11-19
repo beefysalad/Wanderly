@@ -23,6 +23,7 @@ import { ChevronDown } from "lucide-react";
 import NavigationLoader from "../../shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface ITripComponent {
   tripId: string;
@@ -59,6 +60,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
   const { isNavigating, withNavigation } = useNavigationLoading();
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(groupId);
 
   // Fetch current user's database ID
   useEffect(() => {

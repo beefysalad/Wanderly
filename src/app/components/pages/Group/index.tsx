@@ -11,6 +11,7 @@ import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { getGroupColorClasses } from "@/lib/utils/groupColors";
 import NavigationLoader from "../../shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IGroupComponent {
   param: string;
@@ -29,6 +30,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const deleteGroup = useDeleteGroup();
   const { user } = useCurrentUser();
   const { isNavigating, withNavigation } = useNavigationLoading();
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(param);
 
   const isCreator = group && user?.email && group.createdByEmail === user.email;
 
