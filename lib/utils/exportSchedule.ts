@@ -470,10 +470,11 @@ function generateEventUID(activityId: string, tripId: string): string {
 }
 
 /**
- * Format date and time for ICS format (YYYYMMDDTHHmmssZ)
+ * Format date and time for ICS format using floating time (YYYYMMDDTHHmmss)
+ * Floating time means no timezone - calendar apps interpret it as local time
  * @param date - Date object (local time)
  * @param time - Optional time string in HH:mm format (local time)
- * @returns Formatted date string in ICS format (UTC)
+ * @returns Formatted date string in ICS floating time format (no timezone)
  */
 function formatICSDateTime(date: Date, time?: string): string {
   // Use local date components
@@ -486,22 +487,15 @@ function formatICSDateTime(date: Date, time?: string): string {
     return `${year}${month}${day}`;
   }
 
-  // For timed events, create a Date object with the local date and time
-  // then convert to UTC for ICS format
+  // For timed events, use floating time format (no timezone conversion)
+  // This ensures times display as entered in the user's local timezone
   const [hours, minutes] = time.split(":").map(Number);
-  const localDate = new Date(date);
-  localDate.setHours(hours, minutes, 0, 0);
+  const hoursStr = String(hours).padStart(2, "0");
+  const minutesStr = String(minutes).padStart(2, "0");
+  const secondsStr = "00";
 
-  // Convert to UTC
-  const utcYear = localDate.getUTCFullYear();
-  const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, "0");
-  const utcDay = String(localDate.getUTCDate()).padStart(2, "0");
-  const utcHours = String(localDate.getUTCHours()).padStart(2, "0");
-  const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, "0");
-  const utcSeconds = "00";
-
-  // Timed event format: YYYYMMDDTHHmmssZ
-  return `${utcYear}${utcMonth}${utcDay}T${utcHours}${utcMinutes}${utcSeconds}Z`;
+  // Floating time format: YYYYMMDDTHHmmss (no Z suffix)
+  return `${year}${month}${day}T${hoursStr}${minutesStr}${secondsStr}`;
 }
 
 /**

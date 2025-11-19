@@ -67,30 +67,29 @@ function generateEventUID(activityId: string, tripId: string): string {
 }
 
 /**
- * Format date and time for ICS format (YYYYMMDDTHHmmssZ)
+ * Format date and time for ICS format using floating time (YYYYMMDDTHHmmss)
+ * Floating time means no timezone - calendar apps interpret it as local time
  */
 function formatICSDateTime(date: Date, time?: string): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
+  // Use local date components (not UTC)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-  if (time) {
-    const [hours, minutes] = time.split(":").map(Number);
-    const localDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes
-    );
-    // then convert to UTC for ICS format
-    const utcHours = String(localDate.getUTCHours()).padStart(2, "0");
-    const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, "0");
-    const utcSeconds = String(localDate.getUTCSeconds()).padStart(2, "0");
-    return `${year}${month}${day}T${utcHours}${utcMinutes}${utcSeconds}Z`;
+  if (!time) {
+    // All-day event format: YYYYMMDD
+    return `${year}${month}${day}`;
   }
 
-  return `${year}${month}${day}T000000Z`;
+  // For timed events, use floating time format (no timezone conversion)
+  // This ensures times display as entered in the user's local timezone
+  const [hours, minutes] = time.split(":").map(Number);
+  const hoursStr = String(hours).padStart(2, "0");
+  const minutesStr = String(minutes).padStart(2, "0");
+  const secondsStr = "00";
+
+  // Floating time format: YYYYMMDDTHHmmss (no Z suffix)
+  return `${year}${month}${day}T${hoursStr}${minutesStr}${secondsStr}`;
 }
 
 /**
