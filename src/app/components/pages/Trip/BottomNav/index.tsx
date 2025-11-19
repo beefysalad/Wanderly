@@ -11,7 +11,7 @@ const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
         className='relative bg-white dark:bg-slate-800 rounded-3xl w-full sm:w-fit sm:mx-auto'
         style={{
           paddingTop: "0.5rem",
-          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
           boxShadow:
             "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), 0 -2px 4px rgba(0, 0, 0, 0.05)",
         }}
