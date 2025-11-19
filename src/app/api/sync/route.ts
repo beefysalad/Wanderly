@@ -15,3 +15,4 @@ async function handler(req: Request, auth: AuthContext) {
   }
 }
 export const POST = withAuth(handler);
+export const GET = withAuth(handler);

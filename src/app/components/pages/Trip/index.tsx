@@ -2,7 +2,7 @@
 import { Trip, Activity, Group } from "@/src/shared/types";
 import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BottomNav from "./BottomNav";
 import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
@@ -22,6 +22,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import NavigationLoader from "../../shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 interface ITripComponent {
   tripId: string;
@@ -34,6 +35,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const expenses = expensesData?.expenses || [];
+  const { user: firebaseUser } = useCurrentUser();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
     "calendar"
   );
@@ -56,6 +59,26 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const deleteTrip = useDeleteTrip(groupId, tripId);
   const queryClient = useQueryClient();
   const { isNavigating, withNavigation } = useNavigationLoading();
+
+  // Fetch current user's database ID
+  useEffect(() => {
+    if (firebaseUser) {
+      api
+        .get("/sync")
+        .then((res) => {
+          if (res.data?.user?.id) {
+            setCurrentUserId(res.data.user.id);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch user ID:", err);
+        });
+    }
+  }, [firebaseUser]);
+
+  // Check if current user is the trip creator
+  const isTripCreator =
+    trip?.createdById && currentUserId && trip.createdById === currentUserId;
 
   const handleDeleteTrip = async () => {
     try {
@@ -479,13 +502,15 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   </div>
                 )}
 
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className='flex-1 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-600 border border-red-200/50 hover:border-red-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
-                >
-                  <Trash2 className='w-4 h-4' />
-                  <span className='hidden sm:inline'>Delete</span>
-                </button>
+                {isTripCreator && (
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className='flex-1 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-600 border border-red-200/50 hover:border-red-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                    <span className='hidden sm:inline'>Delete</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

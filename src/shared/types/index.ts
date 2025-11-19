@@ -10,7 +10,10 @@ export interface Group {
   createdByEmail?: string;
   memberEmails?: string[];
   memberNames?: Record<string, string>; // email -> name mapping
-  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with joined date and imageUrl
+  memberMetadata?: Record<
+    string,
+    { joinedAt: string; name?: string; imageUrl?: string }
+  >; // email -> metadata with joined date and imageUrl
 }
 
 export interface Trip {
@@ -24,6 +27,7 @@ export interface Trip {
   location?: string; // Added optional location field
   status?: "planning" | "finalized" | "ongoing" | "cancelled"; // Trip status
   createdBy?: string; // Creator name or email
+  createdById?: string; // Creator user ID
 }
 export interface User {
   id: string;
@@ -97,7 +101,18 @@ export interface Review {
 export interface Notification {
   id: string;
   userId: string;
-  type: "payment" | "group_join" | "group_leave" | "activity_added" | "activity_edited" | "activity_deleted" | "expense_added" | "expense_edited" | "expense_deleted" | "trip_created" | "trip_deleted";
+  type:
+    | "payment"
+    | "group_join"
+    | "group_leave"
+    | "activity_added"
+    | "activity_edited"
+    | "activity_deleted"
+    | "expense_added"
+    | "expense_edited"
+    | "expense_deleted"
+    | "trip_created"
+    | "trip_deleted";
   title: string;
   message: string;
   read: boolean;

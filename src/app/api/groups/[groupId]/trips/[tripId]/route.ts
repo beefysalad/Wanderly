@@ -81,6 +81,10 @@ async function handler(req: NextRequest, auth: AuthContext) {
       );
     }
 
+    if (message.includes("Only the trip creator")) {
+      return NextResponse.json({ error: message }, { status: 403 });
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
