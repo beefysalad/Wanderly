@@ -48,7 +48,7 @@ export async function deleteTripService(
   // Verify trip exists and belongs to group
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    select: { id: true, groupId: true, name: true },
+    select: { id: true, groupId: true, name: true, createdById: true },
   });
 
   if (!trip) {
@@ -57,6 +57,11 @@ export async function deleteTripService(
 
   if (trip.groupId !== groupId) {
     throw new Error("Trip does not belong to this group");
+  }
+
+  // Only the creator can delete the trip
+  if (trip.createdById !== user.id) {
+    throw new Error("Only the trip creator can delete this trip");
   }
 
   // Get all group members before deletion
@@ -80,7 +85,9 @@ export async function deleteTripService(
       createNotificationService(member.userId, {
         type: NotificationType.trip_deleted,
         title: "Trip Deleted",
-        message: `${user.name || user.email} deleted trip '${trip.name}' from ${group.name}`,
+        message: `${user.name || user.email} deleted trip '${trip.name}' from ${
+          group.name
+        }`,
         relatedGroupId: groupId,
         // Don't include relatedTripId since the trip will be deleted
       }).catch((err) => {

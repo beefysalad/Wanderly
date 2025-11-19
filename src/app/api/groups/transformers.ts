@@ -59,8 +59,11 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
   // Create email -> name mapping
   const memberNames: Record<string, string> = {};
   // Create email -> metadata mapping with joinedAt dates and imageUrl
-  const memberMetadata: Record<string, { joinedAt: string; name?: string; imageUrl?: string }> = {};
-  
+  const memberMetadata: Record<
+    string,
+    { joinedAt: string; name?: string; imageUrl?: string }
+  > = {};
+
   prismaGroup.members.forEach((m) => {
     const email = m.user.email;
     const name = m.user.name || m.user.email.split("@")[0];
@@ -93,6 +96,7 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
  */
 export function transformTrip(prismaTrip: TripWithRelations): Trip {
   let createdBy: string | undefined = undefined;
+  let createdById: string | undefined = undefined;
   if (prismaTrip.creator) {
     const creator = prismaTrip.creator as {
       id: string;
@@ -100,6 +104,7 @@ export function transformTrip(prismaTrip: TripWithRelations): Trip {
       email: string;
     };
     createdBy = creator.name || creator.email;
+    createdById = creator.id;
   }
 
   return {
@@ -112,6 +117,7 @@ export function transformTrip(prismaTrip: TripWithRelations): Trip {
     status: prismaTrip.status || undefined,
     createdAt: prismaTrip.createdAt.toISOString(),
     createdBy,
+    createdById,
     activities: prismaTrip.activities.map(transformActivity),
   };
 }

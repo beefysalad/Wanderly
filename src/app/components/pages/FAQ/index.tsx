@@ -145,7 +145,7 @@ const FAQComponent = () => {
       id: "delete-trip-group",
       question: "Can I delete a trip or group?",
       answer:
-        "Yes, but with restrictions: Only the creator of a group can delete it. When you delete a group, all trips and activities within it are also deleted. For trips, only the group creator can delete trips. If you're a member (not the creator) and want to leave, use the 'Leave' button on the group page. This removes you from the group but doesn't delete it for others.",
+        "Yes, but with restrictions: Only the creator of a group can delete it. When you delete a group, all trips and activities within it are also deleted. For trips, only the trip creator can delete their own trips. If you're a member (not the creator) and want to leave, use the 'Leave' button on the group page. This removes you from the group but doesn't delete it for others.",
       icon: <Trash2 className='w-6 h-6 text-amber-400' />,
     },
     {
