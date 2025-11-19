@@ -5,7 +5,7 @@ import { AuthGuard } from "./auth-guard";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const pathName = usePathname();
-  const publicRoutes = ["/", "/about", "/faq", "/reviews"];
+  const publicRoutes = ["/", "/about", "/faq", "/reviews", "/how-to"];
   const isPublicRoute =
     publicRoutes.includes(pathName) ||
     pathName.startsWith("/guest") ||
