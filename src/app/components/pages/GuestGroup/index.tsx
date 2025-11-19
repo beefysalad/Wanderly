@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import TripsListComponent from "../Group/TripsList";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useGuest } from "@/src/hooks/useGuest";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IGuestGroupComponent {
   groupId: string;
@@ -14,6 +15,9 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
   const router = useRouter();
   const { data: group, isLoading, error } = useGroupAsGuest(groupId);
   const guestSession = useGuest();
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(groupId);
 
   const copyCode = () => {
     if (group) {

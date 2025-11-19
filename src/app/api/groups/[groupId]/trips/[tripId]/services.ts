@@ -4,6 +4,7 @@ import { syncUserToDatabaseService } from "../../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { TripStatus, NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../../notifications/services";
+import { emitTripUpdated, emitTripDeleted } from "@/lib/socket-events";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -106,6 +107,14 @@ export async function deleteTripService(
     where: { id: tripId },
   });
 
+  // Emit Socket.IO event for real-time updates
+  emitTripDeleted(groupId, tripId, {
+    deletedBy: user.name || user.email,
+    tripName: trip.name,
+  }).catch((err) => {
+    logger.error("Failed to emit trip deleted event", { error: err });
+  });
+
   logger.info("Trip deleted", { tripId, groupId });
 }
 
@@ -183,6 +192,11 @@ export async function updateTripService(
         },
       },
     },
+  });
+
+  // Emit Socket.IO event for real-time updates
+  emitTripUpdated(groupId, trip).catch((err) => {
+    logger.error("Failed to emit trip updated event", { error: err });
   });
 
   logger.info("Trip updated", { tripId, groupId });

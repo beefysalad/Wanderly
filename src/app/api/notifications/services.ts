@@ -3,6 +3,10 @@ import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType } from "@prisma/client";
+import {
+  emitNotificationToUser,
+  emitNotificationToGroup,
+} from "@/lib/socket-events";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -38,6 +42,26 @@ export async function createNotificationService(
       relatedActivityId: data.relatedActivityId || null,
     },
   });
+
+  // Get user's Firebase ID for Socket.IO emission
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { firebaseId: true },
+  });
+
+  // Emit Socket.IO event to the user's room
+  if (user?.firebaseId) {
+    emitNotificationToUser(user.firebaseId, notification).catch((err) => {
+      logger.error("Failed to emit notification to user", { error: err });
+    });
+  }
+
+  // Also emit to group room if this is a group-related notification
+  if (data.relatedGroupId) {
+    emitNotificationToGroup(data.relatedGroupId, notification).catch((err) => {
+      logger.error("Failed to emit notification to group", { error: err });
+    });
+  }
 
   logger.info("Notification created", {
     notificationId: notification.id,

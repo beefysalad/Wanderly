@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import api from "@/lib/axios";
 import type { Expense, PaymentLog } from "@/src/shared/types";
 
@@ -88,6 +89,7 @@ export function useCreateExpense(tripId: string, groupId: string) {
       queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
       // Also invalidate group query to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
@@ -115,6 +117,7 @@ export function useUpdateExpense(
       queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
       // Also invalidate group query to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
@@ -140,6 +143,7 @@ export function useDeleteExpense(
       queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
       // Also invalidate group query to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }

@@ -71,7 +71,7 @@ export function useGroupAsGuest(groupId: string | null) {
       return response.data;
     },
     enabled: !!groupId && !!guestSession,
-    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
+    // Polling removed - using Socket.IO for real-time updates
   });
 }
 

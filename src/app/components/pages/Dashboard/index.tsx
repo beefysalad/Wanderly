@@ -16,6 +16,8 @@ import DashboardStatistics from "./DashboardStatistics";
 import TripsView from "./TripsView";
 import GroupsView from "./GroupsView";
 import { useGroups } from "@/src/hooks/useGroups";
+import { useSocket } from "@/src/hooks/useSocket";
+import { useQueryClient } from "@tanstack/react-query";
 
 const DashboardComponent = () => {
   const router = useRouter();
@@ -42,6 +44,29 @@ const DashboardComponent = () => {
   const { user } = useCurrentUser();
   const { data: groupsData, isLoading: loading } = useGroups();
   const allGroups = groupsData?.groups || [];
+  const { socket } = useSocket();
+  const queryClient = useQueryClient();
+
+  // Listen for group updates on dashboard (for all groups)
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGroupUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    };
+
+    const handleTripCreated = () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    };
+
+    socket.on("group:updated", handleGroupUpdate);
+    socket.on("trip:created", handleTripCreated);
+
+    return () => {
+      socket.off("group:updated", handleGroupUpdate);
+      socket.off("trip:created", handleTripCreated);
+    };
+  }, [socket, queryClient]);
 
   // Sort groups by createdAt descending (most recent first)
   const sortedGroups = [...allGroups].sort((a, b) => {

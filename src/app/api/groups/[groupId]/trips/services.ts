@@ -4,6 +4,7 @@ import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { TripStatus, NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../notifications/services";
+import { emitTripCreated } from "@/lib/socket-events";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -105,6 +106,11 @@ export async function createTripService(
     );
 
   await Promise.all(notificationPromises);
+
+  // Emit Socket.IO event for real-time updates
+  emitTripCreated(groupId, trip).catch((err) => {
+    logger.error("Failed to emit trip created event", { error: err });
+  });
 
   logger.info("Trip created", { tripId: trip.id, groupId });
   return trip;

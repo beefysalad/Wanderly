@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import api from "@/lib/axios";
 import type { Activity } from "@/src/shared/types";
 
@@ -48,6 +49,7 @@ export function useCreateActivity(tripId: string, groupId: string) {
     onSuccess: () => {
       // Invalidate group query to refetch with new activity
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
@@ -69,6 +71,7 @@ export function useUpdateActivity(tripId: string, activityId: string, groupId: s
     onSuccess: () => {
       // Invalidate group query to refetch with updated activity
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
@@ -86,6 +89,7 @@ export function useDeleteActivity(tripId: string, activityId: string, groupId: s
     onSuccess: () => {
       // Invalidate group query to refetch without deleted activity
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }

@@ -10,6 +10,7 @@ import { getStatusBadge } from "@/lib/helper";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useGuest } from "@/src/hooks/useGuest";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
+import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IGuestTripComponent {
   tripId: string;
@@ -22,6 +23,9 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
   const { data: groupData, isLoading: loading } = useGroupAsGuest(groupId);
   const group = groupData || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
+
+  // Enable real-time updates for this group via Socket.IO
+  useSocketGroupUpdates(groupId);
   const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
     "calendar"
   );

@@ -2,6 +2,8 @@ import { isDev } from "@/lib/helper";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "./components/shared/query-provider";
+import { SocketProvider } from "@/components/socket-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 import AuthLayout from "./components/shared/auth-layout";
 
@@ -32,7 +34,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <QueryProvider>
-          <AuthLayout>{children}</AuthLayout>
+          <SocketProvider>
+            <AuthLayout>{children}</AuthLayout>
+            <Toaster position="bottom-right" richColors closeButton />
+          </SocketProvider>
         </QueryProvider>
       </body>
     </html>

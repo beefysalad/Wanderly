@@ -5,6 +5,11 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { PaymentMethod, Prisma, NotificationType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { createNotificationService } from "../../../notifications/services";
+import {
+  emitExpenseCreated,
+  emitExpenseUpdated,
+  emitExpenseDeleted,
+} from "@/lib/socket-events";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -419,6 +424,22 @@ export async function createExpenseService(
       );
 
     await Promise.all(notificationPromises);
+
+    // Emit Socket.IO event for real-time updates
+    // Serialize expense properly (convert Decimal to number, ensure paidBy is included)
+    const expenseForSocket = {
+      ...expense,
+      amount: Number(expense.amount),
+      date: expense.date.toISOString(),
+      paidBy: expense.paidBy ? {
+        id: expense.paidBy.id,
+        email: expense.paidBy.email,
+        name: expense.paidBy.name,
+      } : null,
+    };
+    emitExpenseCreated(tripWithGroup.groupId, expenseForSocket).catch((err) => {
+      logger.error("Failed to emit expense created event", { error: err });
+    });
   }
 
   logger.info("Expense created", { expenseId: expense.id, tripId });
@@ -649,6 +670,22 @@ export async function updateExpenseService(
       );
 
     await Promise.all(notificationPromises);
+
+    // Emit Socket.IO event for real-time updates
+    // Serialize expense properly (convert Decimal to number, ensure paidBy is included)
+    const expenseForSocket = {
+      ...expense,
+      amount: Number(expense.amount),
+      date: expense.date.toISOString(),
+      paidBy: expense.paidBy ? {
+        id: expense.paidBy.id,
+        email: expense.paidBy.email,
+        name: expense.paidBy.name,
+      } : null,
+    };
+    emitExpenseUpdated(tripWithGroup.groupId, expenseForSocket).catch((err) => {
+      logger.error("Failed to emit expense updated event", { error: err });
+    });
   }
 
   logger.info("Expense updated", { expenseId: expense.id, tripId });
@@ -738,6 +775,16 @@ export async function deleteExpenseService(
   await prisma.expense.delete({
     where: { id: expenseId },
   });
+
+  // Emit Socket.IO event for real-time updates
+  if (tripWithGroup) {
+    emitExpenseDeleted(tripWithGroup.groupId, expenseId, {
+      deletedBy: user.name || user.email,
+      expenseDescription: existingExpense.description,
+    }).catch((err) => {
+      logger.error("Failed to emit expense deleted event", { error: err });
+    });
+  }
 
   logger.info("Expense deleted", { expenseId, tripId });
 }

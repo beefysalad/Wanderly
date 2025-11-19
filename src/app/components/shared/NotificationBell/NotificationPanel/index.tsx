@@ -22,9 +22,13 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/src/hooks/useNotifications";
+import { useSocketNotifications } from "@/src/hooks/useSocketNotifications";
 import type { Notification } from "@/src/shared/types";
 
 const NotificationPanel = () => {
+  // Enable real-time notifications via Socket.IO
+  useSocketNotifications();
+  
   const { data, isLoading } = useNotifications({ limit: 50 });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();

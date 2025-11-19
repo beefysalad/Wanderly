@@ -4,6 +4,11 @@ import { syncUserToDatabaseService } from "../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../notifications/services";
+import {
+  emitActivityCreated,
+  emitActivityUpdated,
+  emitActivityDeleted,
+} from "@/lib/socket-events";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -135,6 +140,13 @@ export async function createActivityService(
       );
 
     await Promise.all(notificationPromises);
+
+    // Emit Socket.IO event for real-time updates with creator info
+    emitActivityCreated(tripWithGroup.groupId, activity, {
+      createdBy: user.email || user.name || undefined,
+    }).catch((err) => {
+      logger.error("Failed to emit activity created event", { error: err });
+    });
   }
 
   logger.info("Activity created", { activityId: activity.id, tripId });
@@ -257,6 +269,13 @@ export async function updateActivityService(
       );
 
     await Promise.all(notificationPromises);
+
+    // Emit Socket.IO event for real-time updates with updater info
+    emitActivityUpdated(tripWithGroup.groupId, activity, {
+      updatedBy: user.email || user.name || undefined,
+    }).catch((err) => {
+      logger.error("Failed to emit activity updated event", { error: err });
+    });
   }
 
   logger.info("Activity updated", { activityId: activity.id, tripId });
@@ -339,6 +358,16 @@ export async function deleteActivityService(
   await prisma.activity.delete({
     where: { id: activityId },
   });
+
+  // Emit Socket.IO event for real-time updates
+  if (tripWithGroup) {
+    emitActivityDeleted(tripWithGroup.groupId, activityId, {
+      deletedBy: user.name || user.email,
+      activityTitle: existingActivity.title,
+    }).catch((err) => {
+      logger.error("Failed to emit activity deleted event", { error: err });
+    });
+  }
 
   logger.info("Activity deleted", { activityId, tripId });
 }
