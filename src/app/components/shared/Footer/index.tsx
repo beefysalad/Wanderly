@@ -1,5 +1,5 @@
 import { getAppVersion } from "@/lib/helper";
-import { Compass, Home, Info, HelpCircle, Sparkles } from "lucide-react";
+import { Compass, Home, Info, HelpCircle, PlayCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 const Footer = () => {
@@ -32,6 +32,13 @@ const Footer = () => {
             >
               <HelpCircle className='w-3.5 h-3.5' />
               <span>FAQ</span>
+            </Link>
+            <Link
+              href='/how-to'
+              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
+            >
+              <PlayCircle className='w-3.5 h-3.5' />
+              <span>How To</span>
             </Link>
             <Link
               href='/reviews'
@@ -92,6 +99,13 @@ const Footer = () => {
               >
                 <HelpCircle className='w-4 h-4 group-hover:scale-110 transition-transform' />
                 <span className='text-sm'>FAQ</span>
+              </Link>
+              <Link
+                href='/how-to'
+                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+              >
+                <PlayCircle className='w-4 h-4 group-hover:scale-110 transition-transform' />
+                <span className='text-sm'>How To</span>
               </Link>
               <Link
                 href='/reviews'
