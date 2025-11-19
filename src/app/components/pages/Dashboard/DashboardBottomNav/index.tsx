@@ -39,47 +39,59 @@ const DashboardBottomNav = ({
           <div className='flex items-center justify-around'>
             <button
               onClick={() => onTabChange("dashboard")}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 sm:py-1.5 px-3 sm:px-2 text-xs font-medium transition-colors border-b-2 ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-3 sm:pt-1.5 sm:pb-2 px-3 sm:px-2 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === "dashboard"
-                  ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
-                  : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
+                  ? "text-orange-600 dark:text-orange-400"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
               }`}
             >
               <LayoutDashboard className='w-5 h-5' />
               <span className='hidden sm:inline'>Dashboard</span>
+              {activeTab === "dashboard" && (
+                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400' />
+              )}
             </button>
             <button
               onClick={() => onTabChange("trips")}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 sm:py-1.5 px-3 sm:px-2 text-xs font-medium transition-colors border-b-2 ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-3 sm:pt-1.5 sm:pb-2 px-3 sm:px-2 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === "trips"
-                  ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
-                  : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
+                  ? "text-orange-600 dark:text-orange-400"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
               }`}
             >
               <Calendar className='w-5 h-5' />
               <span className='hidden sm:inline'>Trips</span>
+              {activeTab === "trips" && (
+                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400' />
+              )}
             </button>
             <button
               onClick={() => onTabChange("groups")}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 sm:py-1.5 px-3 sm:px-2 text-xs font-medium transition-colors border-b-2 ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-3 sm:pt-1.5 sm:pb-2 px-3 sm:px-2 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === "groups"
-                  ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
-                  : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
+                  ? "text-orange-600 dark:text-orange-400"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
               }`}
             >
               <Building2 className='w-5 h-5' />
               <span className='hidden sm:inline'>Groups</span>
+              {activeTab === "groups" && (
+                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400' />
+              )}
             </button>
             <button
               onClick={() => onTabChange("profile")}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 sm:py-1.5 px-3 sm:px-2 text-xs font-medium transition-colors border-b-2 ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-3 sm:pt-1.5 sm:pb-2 px-3 sm:px-2 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === "profile"
-                  ? "text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-400"
-                  : "text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-300"
+                  ? "text-orange-600 dark:text-orange-400"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
               }`}
             >
               <User className='w-5 h-5' />
               <span className='hidden sm:inline'>Profile</span>
+              {activeTab === "profile" && (
+                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400' />
+              )}
             </button>
           </div>
         </div>
