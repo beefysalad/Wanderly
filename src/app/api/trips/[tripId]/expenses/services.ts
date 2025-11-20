@@ -683,7 +683,9 @@ export async function updateExpenseService(
         name: expense.paidBy.name,
       } : null,
     };
-    emitExpenseUpdated(tripWithGroup.groupId, expenseForSocket).catch((err) => {
+    emitExpenseUpdated(tripWithGroup.groupId, expenseForSocket, {
+      updatedBy: user.name || user.email || undefined,
+    }).catch((err) => {
       logger.error("Failed to emit expense updated event", { error: err });
     });
   }
@@ -781,6 +783,7 @@ export async function deleteExpenseService(
     emitExpenseDeleted(tripWithGroup.groupId, expenseId, {
       deletedBy: user.name || user.email,
       expenseDescription: existingExpense.description,
+      tripId: tripId,
     }).catch((err) => {
       logger.error("Failed to emit expense deleted event", { error: err });
     });

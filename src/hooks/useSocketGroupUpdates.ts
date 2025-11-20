@@ -171,15 +171,27 @@ export function useSocketGroupUpdates(groupId?: string) {
 
     // Handle expense events
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleExpenseCreated = (expense: any) => {
+    const handleExpenseCreated = (data: any) => {
+      const expense = data?.expense || data;
+      const tripId = expense?.tripId;
+
       console.log("Socket: Expense created, invalidating queries", {
         expense: expense,
         paidBy: expense?.paidBy,
         currentUser: currentUser?.email,
+        tripId,
       });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+
+      // Invalidate with tripId-specific keys if available
+      if (tripId) {
+        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      } else {
+        // Fallback to general invalidation if tripId not available
+        queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
 
       // Only show toast if not the current user
       // Handle both object and string formats for paidBy
@@ -228,31 +240,36 @@ export function useSocketGroupUpdates(groupId?: string) {
     };
 
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleExpenseUpdated = (expense: any) => {
-      console.log("Socket: Expense updated, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    const handleExpenseUpdated = (data: any) => {
+      const expense = data?.expense || data;
+      const tripId = expense?.tripId;
+      // Get updatedBy from expense object (attached during emit) or from metadata
+      const updatedBy = expense?.updatedBy || data?.updatedBy;
+
+      console.log("Socket: Expense updated, invalidating queries", {
+        tripId,
+        updatedBy,
+        expenseUpdatedBy: expense?.updatedBy,
+        dataUpdatedBy: data?.updatedBy,
+      });
+
+      // Invalidate with tripId-specific keys if available
+      if (tripId) {
+        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      } else {
+        // Fallback to general invalidation if tripId not available
+        queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
 
       // Only show toast if not the current user
-      // Handle both object and string formats for paidBy
-      let updaterEmail: string | undefined;
-      let updaterName: string | undefined;
-
-      if (typeof expense?.paidBy === "string") {
-        // If paidBy is a string (email), use it directly
-        updaterEmail = expense.paidBy;
-      } else if (expense?.paidBy && typeof expense.paidBy === "object") {
-        // If paidBy is an object, extract email and name
-        updaterEmail = expense.paidBy.email;
-        updaterName = expense.paidBy.name;
-      }
-
-      const isUpdater =
-        isCurrentUser(updaterEmail) || isCurrentUser(updaterName);
+      // Use updatedBy from expense object or metadata instead of paidBy
+      const isUpdater = updatedBy ? isCurrentUser(updatedBy) : false;
 
       if (!isUpdater) {
-        const displayName = updaterName || updaterEmail || "Someone";
+        const displayName = updatedBy || "Someone";
         toast.info(`${displayName} updated an expense`, {
           description: expense?.description
             ? `${expense.description} - ₱${expense.amount || 0}`
@@ -265,11 +282,24 @@ export function useSocketGroupUpdates(groupId?: string) {
       expenseId: string;
       deletedBy?: string;
       expenseDescription?: string;
+      tripId?: string;
     }) => {
-      console.log("Socket: Expense deleted, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      const tripId = data?.tripId;
+
+      console.log("Socket: Expense deleted, invalidating queries", {
+        tripId,
+      });
+
+      // Invalidate with tripId-specific keys if available
+      if (tripId) {
+        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      } else {
+        // Fallback to general invalidation if tripId not available
+        queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
 
       // Only show toast if not the current user
       if (!isCurrentUser(data.deletedBy)) {
