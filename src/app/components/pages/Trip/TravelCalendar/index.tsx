@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ interface ITravelCalendarProps {
   onViewActivity?: (activity: Activity) => void;
   readOnly?: boolean;
 }
+
 const TravelCalendar = ({
   activities,
   endDate,
@@ -52,19 +53,33 @@ const TravelCalendar = ({
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
+  const getTransportationIcon = (mode?: string) => {
+    const icons: Record<string, string> = {
+      car: "🚗",
+      bus: "🚌",
+      plane: "✈️",
+      train: "🚊",
+      taxi: "🚕",
+      walking: "🚶",
+      commute: "🚌",
+    };
+    return icons[mode || ""] || "🚗";
+  };
+
   return (
-    <div className='space-y-4'>
-      <div className='flex items-center justify-between'>
-        <h2 className='text-lg font-semibold text-slate-900'>
-          Calendar Overview
-        </h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Calendar Overview</h2>
         {totalPages > 1 && (
-          <span className='text-sm text-slate-600'>
+          <span className="text-sm font-medium text-slate-500">
             Page {currentPage} of {totalPages}
           </span>
         )}
       </div>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         {days.map((date, index) => {
           const dayActivities = activities
             .filter((a) => {
@@ -76,113 +91,153 @@ const TravelCalendar = ({
               );
             })
             .sort((a, b) => {
-              // Sort by startTime, activities without time go to the end
               if (!a.startTime && !b.startTime) return 0;
               if (!a.startTime) return 1;
               if (!b.startTime) return -1;
               return a.startTime.localeCompare(b.startTime);
             });
 
+          const isToday =
+            date.toDateString() === new Date().toDateString();
+
           return (
             <div
               key={index}
-              className='bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-shadow'
+              className={`bg-white rounded-xl p-4 sm:p-5 border transition-all duration-200 ${
+                isToday
+                  ? "border-orange-300 shadow-md"
+                  : "border-slate-200 shadow-sm hover:shadow-md"
+              }`}
             >
-              <div className='flex items-center justify-between mb-3'>
+              {/* Date Header */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
                 <div>
-                  <p className='font-semibold text-slate-900'>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">
                     {date.toLocaleDateString("en-US", { weekday: "short" })}
                   </p>
-                  <p className='text-sm text-slate-600'>
-                    {date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">
+                      {date.toLocaleDateString("en-US", { day: "numeric" })}
+                    </p>
+                    <p className="text-sm font-medium text-slate-600">
+                      {date.toLocaleDateString("en-US", { month: "short" })}
+                    </p>
+                    {isToday && (
+                      <span className="px-2 py-0.5 text-xs font-semibold text-orange-600 bg-orange-50 rounded-full">
+                        Today
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span className='text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full'>
-                  {dayActivities.length} events
-                </span>
+                <div className="text-right">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      dayActivities.length > 0
+                        ? "bg-orange-500 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {dayActivities.length}
+                  </span>
+                </div>
               </div>
 
+              {/* Activities - Compact List */}
               {dayActivities.length > 0 ? (
-                <div className='space-y-2 mb-3'>
-                  {dayActivities.slice(0, 3).map((activity) => (
+                <div className="space-y-0.5 mb-4">
+                  {dayActivities.slice(0, 5).map((activity, idx) => (
                     <div
                       key={activity.id}
-                      className={`text-sm p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-orange-300 hover:shadow-sm transition-all ${
-                        onViewActivity ? "cursor-pointer" : ""
+                      className={`py-2.5 px-2 rounded-lg transition-colors ${
+                        activity.done
+                          ? "opacity-60"
+                          : onViewActivity
+                          ? "hover:bg-slate-50 cursor-pointer"
+                          : ""
+                      } ${
+                        idx < dayActivities.slice(0, 5).length - 1
+                          ? "border-b border-slate-100"
+                          : ""
                       }`}
                       onClick={() => onViewActivity?.(activity)}
                     >
-                      <div className='flex items-center gap-2'>
+                      <div className="flex items-center gap-2.5">
+                        {/* Transportation Icon - Small */}
                         {activity.transportationMode && (
-                          <span className='text-base shrink-0'>
-                            {activity.transportationMode === "car" && "🚗"}
-                            {activity.transportationMode === "bus" && "🚌"}
-                            {activity.transportationMode === "plane" && "✈️"}
-                            {activity.transportationMode === "train" && "🚊"}
-                            {activity.transportationMode === "taxi" && "🚕"}
-                            {activity.transportationMode === "walking" && "🚶"}
-                            {activity.transportationMode === "commute" && "🚌"}
-                            {!["car", "bus", "plane", "train", "taxi", "walking", "commute"].includes(activity.transportationMode) && "🚗"}
+                          <span className="text-base flex-shrink-0">
+                            {getTransportationIcon(activity.transportationMode)}
                           </span>
                         )}
-                        <p
-                          className={`font-medium flex-1 ${
-                            activity.done
-                              ? "line-through text-slate-500"
-                              : "text-slate-900"
-                          }`}
-                        >
-                          {activity.title}
-                        </p>
-                      </div>
-                      {activity.startTime && (
-                        <p className='text-xs text-slate-500 mt-1'>
-                          {formatTime12Hour(activity.startTime)}
-                          {activity.endTime &&
-                            ` - ${formatTime12Hour(activity.endTime)}`}
-                          {activity.pickupTime && (
-                            <span className='ml-2'>
-                              •{" "}
-                              {activity.transportationMode === "plane"
-                                ? `Departure: ${formatTime12Hour(activity.pickupTime)}`
-                                : `Pickup: ${formatTime12Hour(activity.pickupTime)}`}
-                            </span>
+                        
+                        {/* Title and Time - Inline */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p
+                              className={`text-sm font-semibold flex-1 min-w-0 ${
+                                activity.done
+                                  ? "line-through text-slate-400"
+                                  : "text-slate-900"
+                              }`}
+                            >
+                              {activity.title}
+                            </p>
+                            {(activity.startTime || activity.pickupTime) && (
+                              <span className="text-xs font-medium text-slate-500 flex items-center gap-1 flex-shrink-0">
+                                <Clock className="w-3 h-3" />
+                                {activity.startTime
+                                  ? formatTime12Hour(activity.startTime)
+                                  : activity.pickupTime
+                                  ? formatTime12Hour(activity.pickupTime)
+                                  : ""}
+                              </span>
+                            )}
+                          </div>
+                          {/* Location - Inline if exists */}
+                          {(activity.pickupLocation || activity.dropoffLocation) && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                              <span className="text-xs text-slate-500 truncate">
+                                {activity.pickupLocation || activity.dropoffLocation}
+                              </span>
+                            </div>
                           )}
-                        </p>
-                      )}
-                      {!activity.startTime && activity.pickupTime && (
-                        <p className='text-xs text-slate-500 mt-1'>
-                          {activity.transportationMode === "plane"
-                            ? `Departure: ${formatTime12Hour(activity.pickupTime)}`
-                            : `Pickup: ${formatTime12Hour(activity.pickupTime)}`}
-                        </p>
-                      )}
+                        </div>
+
+                        {/* Done Indicator */}
+                        {activity.done && (
+                          <span className="flex-shrink-0 w-4 h-4 rounded-full bg-orange-500 flex items-center justify-center">
+                            <span className="text-[8px] text-white font-bold">✓</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
-                  {dayActivities.length > 3 && (
-                    <p className='text-xs text-slate-500 text-center'>
-                      +{dayActivities.length - 3} more
-                    </p>
+                  {dayActivities.length > 5 && (
+                    <div className="pt-2 text-center">
+                      <span className="text-xs font-medium text-slate-500">
+                        +{dayActivities.length - 5} more
+                      </span>
+                    </div>
                   )}
                 </div>
               ) : (
-                <p className='text-sm text-slate-400 text-center py-4'>
-                  No events
-                </p>
+                <div className="py-8 text-center">
+                  <p className="text-sm font-medium text-slate-400">
+                    No events
+                  </p>
+                </div>
               )}
 
+              {/* Add Button */}
               {!readOnly && onOpenAddModal && (
                 <Button
                   onClick={() => onOpenAddModal(date)}
-                  variant='outline'
-                  size='sm'
-                  className='w-full text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-600'
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-sm font-medium text-orange-600 border border-orange-200 hover:bg-orange-50 hover:border-orange-300 py-2"
                 >
-                  <Plus className='w-4 h-4 mr-1' />
-                  Add Events
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Add Event
                 </Button>
               )}
             </div>
@@ -190,26 +245,27 @@ const TravelCalendar = ({
         })}
       </div>
 
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className='flex items-center justify-center gap-2 pt-4'>
+        <div className="flex items-center justify-center gap-3 pt-6">
           <button
             onClick={handlePrevious}
             disabled={currentPage === 1}
-            className='px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md'
+            className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 transition-all duration-200 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
-            <ChevronLeft className='w-4 h-4' />
+            <ChevronLeft className="w-4 h-4" />
             Previous
           </button>
-          <span className='px-4 py-2 text-sm font-medium text-slate-600'>
+          <span className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 rounded-xl">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className='px-4 py-2 rounded-lg bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md'
+            className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 transition-all duration-200 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             Next
-            <ChevronRight className='w-4 h-4' />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       )}

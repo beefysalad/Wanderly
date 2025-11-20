@@ -1,67 +1,81 @@
-import { Calendar, ClipboardList } from "lucide-react";
+import { Calendar, ClipboardList, LayoutDashboard, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface IBottomNavProps {
-  activeTab: "calendar" | "schedule";
-  onTabChange: (tab: "calendar" | "schedule") => void;
+  activeTab: "calendar" | "schedule" | "dashboard" | "profile";
+  onTabChange: (tab: "calendar" | "schedule" | "dashboard" | "profile") => void;
 }
+
 const BottomNav = ({ activeTab, onTabChange }: IBottomNavProps) => {
+  const navItems = [
+    { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+    { id: "calendar" as const, label: "Calendar", icon: Calendar },
+    { id: "schedule" as const, label: "Schedule", icon: ClipboardList },
+    { id: "profile" as const, label: "Profile", icon: User },
+  ];
+
   return (
     <div
-      className='fixed bottom-0 left-0 right-0 z-[9999] px-4'
+      className="fixed bottom-0 left-0 right-0 z-[9999]"
       style={{
-        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px) + 1rem)",
+        paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <motion.div
-        layout
-        className='group relative bg-white dark:bg-slate-800 rounded-3xl w-full sm:w-fit sm:mx-auto'
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        style={{
-          paddingTop: "0.5rem",
-          paddingBottom: "0.5rem",
-          minHeight: "fit-content",
-          boxShadow:
-            "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), 0 -2px 4px rgba(0, 0, 0, 0.05)",
-        }}
-      >
-        <div className='px-4 sm:px-3'>
-          <div className='flex items-center justify-center gap-6 sm:gap-8 sm:justify-start'>
-            <button
-              onClick={() => onTabChange("calendar")}
-              className={`relative flex flex-col items-center justify-center py-2.5 sm:py-1.5 px-4 sm:px-3 text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                activeTab === "calendar"
-                  ? "text-orange-600 dark:text-orange-400"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
-              }`}
-            >
-              <Calendar className='w-5 h-5 transition-transform duration-300 ease-in-out group-hover:scale-110' />
-              <span className='hidden sm:inline-block sm:opacity-0 sm:max-w-0 sm:h-0 sm:group-hover:opacity-100 sm:group-hover:max-w-[100px] sm:group-hover:h-auto sm:group-hover:mt-0.5 overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-center'>
-                Calendar
-              </span>
-              {activeTab === "calendar" && (
-                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
-              )}
-            </button>
-            <button
-              onClick={() => onTabChange("schedule")}
-              className={`relative flex flex-col items-center justify-center py-2.5 sm:py-1.5 px-4 sm:px-3 text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                activeTab === "schedule"
-                  ? "text-orange-600 dark:text-orange-400"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
-              }`}
-            >
-              <ClipboardList className='w-5 h-5 transition-transform duration-300 ease-in-out group-hover:scale-110' />
-              <span className='hidden sm:inline-block sm:opacity-0 sm:max-w-0 sm:h-0 sm:group-hover:opacity-100 sm:group-hover:max-w-[100px] sm:group-hover:h-auto sm:group-hover:mt-0.5 overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-center'>
-                Schedule
-              </span>
-              {activeTab === "schedule" && (
-                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
-              )}
-            </button>
-          </div>
-        </div>
-      </motion.div>
+      {/* Backdrop blur overlay */}
+      <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50" />
+      
+      {/* Navigation container */}
+      <div className="relative px-2 sm:px-4 py-2">
+        <nav className="flex items-center justify-around sm:justify-center sm:gap-6 max-w-2xl mx-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => onTabChange(item.id)}
+                className="relative flex flex-col items-center justify-center gap-1 px-3 sm:px-6 py-2 rounded-xl transition-all duration-200 ease-out group"
+              >
+                {/* Active pill background */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activePill"
+                    className="absolute inset-0 bg-orange-100 dark:bg-orange-900/30 rounded-xl"
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                    }}
+                  />
+                )}
+
+                {/* Icon */}
+                <div className="relative z-10">
+                  <Icon
+                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 ${
+                      isActive
+                        ? "text-orange-600 dark:text-orange-400 scale-110"
+                        : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                    }`}
+                  />
+                </div>
+
+                {/* Label - always visible */}
+                <span
+                  className={`relative z-10 text-[10px] sm:text-xs font-medium transition-colors duration-200 ${
+                    isActive
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 };

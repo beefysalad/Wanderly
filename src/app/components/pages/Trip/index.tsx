@@ -1,6 +1,6 @@
 "use client";
 import { Trip, Activity, Group } from "@/src/shared/types";
-import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import BottomNav from "./BottomNav";
@@ -38,9 +38,22 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const expenses = expensesData?.expenses || [];
   const { user: firebaseUser } = useCurrentUser();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
-    "calendar"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "calendar" | "schedule" | "dashboard" | "profile"
+  >("calendar");
+
+  // Handle tab changes - navigate for dashboard/profile, switch view for calendar/schedule
+  const handleTabChange = (
+    tab: "calendar" | "schedule" | "dashboard" | "profile"
+  ) => {
+    if (tab === "dashboard") {
+      router.push("/dashboard");
+    } else if (tab === "profile") {
+      router.push("/dashboard?tab=profile");
+    } else {
+      setActiveTab(tab);
+    }
+  };
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [showActivityDetailModal, setShowActivityDetailModal] =
     useState<boolean>(false);
@@ -433,7 +446,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             )}
           </div>
 
-          {/* Action Buttons Group */}
+          {/* Action Buttons Group - Modern Redesign */}
           <div className='mb-6'>
             <div className='flex flex-col sm:flex-row gap-3'>
               {/* Primary Action Button */}
@@ -442,36 +455,40 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   setSelectedDate(null);
                   setShowActivityModal(true);
                 }}
-                className='flex-1 sm:flex-initial px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
+                className='w-full sm:w-auto sm:flex-initial px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
               >
                 <Plus className='w-5 h-5' />
                 <span>Add Activity</span>
               </button>
 
-              {/* Secondary Action Buttons */}
-              <div className='flex gap-3 flex-1 sm:flex-initial'>
+              {/* Secondary Action Buttons - Consistent Sizing */}
+              <div className='flex gap-3 w-full sm:w-auto'>
+                {/* Expenses Button */}
                 <button
                   onClick={() =>
                     router.push(`/group/${groupId}/trip/${tripId}/expenses`)
                   }
-                  className='flex-1 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
+                  className='flex-1 sm:flex-initial min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
                 >
-                  <span className='text-lg'>💰</span>
-                  <span className='hidden sm:inline'>Expenses</span>
+                  <span className='text-lg flex-shrink-0'>💰</span>
+                  <span className='hidden sm:inline truncate'>Expenses</span>
                 </button>
 
+                {/* Export Button with Dropdown */}
                 {activeTab === "schedule" && (
-                  <div className='relative flex-1'>
+                  <div className='relative flex-1 sm:flex-initial min-w-0'>
                     <button
                       onClick={() => setShowExportMenu(!showExportMenu)}
                       disabled={isExporting || !trip}
-                      className='w-full px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
+                      className='w-full min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
                     >
-                      <Download className='w-4 h-4' />
-                      <span className='hidden sm:inline'>
+                      <span className='hidden sm:inline truncate'>
                         {isExporting ? "Exporting..." : "Export"}
                       </span>
-                      <ChevronDown className='w-4 h-4' />
+                      <span className='sm:hidden truncate'>
+                        {isExporting ? "..." : "Export"}
+                      </span>
+                      <ChevronDown className='w-4 h-4 flex-shrink-0' />
                     </button>
                     {showExportMenu && (
                       <>
@@ -479,24 +496,28 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                           className='fixed inset-0 z-10'
                           onClick={() => setShowExportMenu(false)}
                         />
-                        <div className='absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-20 min-w-max sm:min-w-0'>
+                        <div className='absolute top-full right-0 mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20'>
                           <button
-                            onClick={() => handleExportSchedule("png")}
+                            onClick={() => {
+                              handleExportSchedule("png");
+                              setShowExportMenu(false);
+                            }}
                             disabled={isExporting}
-                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed'
+                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
                           >
-                            <Download className='w-4 h-4 text-slate-600 flex-shrink-0' />
-                            <span className='text-slate-700 font-medium text-sm sm:text-base break-words'>
+                            <span className='text-slate-700 font-medium text-sm'>
                               Export as PNG
                             </span>
                           </button>
                           <button
-                            onClick={() => handleExportSchedule("ics")}
+                            onClick={() => {
+                              handleExportSchedule("ics");
+                              setShowExportMenu(false);
+                            }}
                             disabled={isExporting}
-                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed border-t border-slate-100'
+                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed border-t border-slate-100'
                           >
-                            <span className='text-lg flex-shrink-0'>📅</span>
-                            <span className='text-slate-700 font-medium text-sm sm:text-base break-words'>
+                            <span className='text-slate-700 font-medium text-sm'>
                               Export as Calendar (.ics)
                             </span>
                           </button>
@@ -506,13 +527,14 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   </div>
                 )}
 
+                {/* Delete Button */}
                 {isTripCreator && (
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className='flex-1 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-600 border border-red-200/50 hover:border-red-300 transition-all font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
+                    className='flex-1 sm:flex-initial min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-600 border border-red-200/50 hover:border-red-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
                   >
-                    <Trash2 className='w-4 h-4' />
-                    <span className='hidden sm:inline'>Delete</span>
+                    <Trash2 className='w-4 h-4 flex-shrink-0' />
+                    <span className='hidden sm:inline truncate'>Delete</span>
                   </button>
                 )}
               </div>
@@ -561,7 +583,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
       {showActivityModal && (
         <ActivityModal

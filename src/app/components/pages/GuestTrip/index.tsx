@@ -1,16 +1,16 @@
 "use client";
-import { Trip, Activity, Group } from "@/src/shared/types";
-import { ArrowLeft, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import BottomNav from "../Trip/BottomNav";
-import TravelSchedule from "../Trip/TravelSchedule";
-import TravelCalendar from "../Trip/TravelCalendar";
 import { getStatusBadge } from "@/lib/helper";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useGuest } from "@/src/hooks/useGuest";
-import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import { Activity, Trip } from "@/src/shared/types";
+import { ArrowLeft, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
+import BottomNav from "../Trip/BottomNav";
+import TravelCalendar from "../Trip/TravelCalendar";
+import TravelSchedule from "../Trip/TravelSchedule";
 
 interface IGuestTripComponent {
   tripId: string;
@@ -26,9 +26,20 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
 
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
-  const [activeTab, setActiveTab] = useState<"calendar" | "schedule">(
-    "calendar"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "calendar" | "schedule" | "dashboard" | "profile"
+  >("calendar");
+
+  // Handle tab changes - only allow calendar/schedule for guests
+  const handleTabChange = (
+    tab: "calendar" | "schedule" | "dashboard" | "profile"
+  ) => {
+    if (tab === "calendar" || tab === "schedule") {
+      setActiveTab(tab);
+    }
+    // Ignore dashboard and profile tabs for guests
+  };
+
   const [showActivityDetailModal, setShowActivityDetailModal] =
     useState<boolean>(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
@@ -213,7 +224,7 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
         </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
       {showActivityDetailModal && selectedActivity && (
         <ActivityDetailModal
@@ -230,4 +241,3 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
 };
 
 export default GuestTripComponent;
-
