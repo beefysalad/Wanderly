@@ -105,7 +105,12 @@ export async function emitExpenseCreated(groupId: string, expense: any) {
 }
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function emitExpenseUpdated(groupId: string, expense: any) {
+export async function emitExpenseUpdated(
+  groupId: string,
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expense: any,
+  metadata?: { updatedBy?: string }
+) {
   // Ensure expense is properly serialized
   const serializedExpense = {
     ...expense,
@@ -122,14 +127,24 @@ export async function emitExpenseUpdated(groupId: string, expense: any) {
           name: expense.paidBy.name,
         }
       : expense.paidBy,
+    // Attach updatedBy directly to expense object so it's always available
+    updatedBy: metadata?.updatedBy,
   };
-  await emitEvent("expense/updated", { groupId, expense: serializedExpense });
+  await emitEvent("expense/updated", {
+    groupId,
+    expense: serializedExpense,
+    ...metadata,
+  });
 }
 
 export async function emitExpenseDeleted(
   groupId: string,
   expenseId: string,
-  metadata?: { deletedBy?: string; expenseDescription?: string }
+  metadata?: {
+    deletedBy?: string;
+    expenseDescription?: string;
+    tripId?: string;
+  }
 ) {
   await emitEvent("expense/deleted", { groupId, expenseId, ...metadata });
 }
