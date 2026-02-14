@@ -10,6 +10,7 @@ import {
   emitExpenseUpdated,
   emitExpenseDeleted,
 } from "@/lib/socket-events";
+import type { ExpenseWithRelations } from "./transformers";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -111,6 +112,14 @@ export async function listExpensesService(
           name: true,
         },
       },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
       splits: {
         include: {
           user: {
@@ -188,6 +197,14 @@ export async function listExpensesForGuestService(
           name: true,
         },
       },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
       splits: {
         include: {
           user: {
@@ -235,6 +252,14 @@ export async function getExpenseByIdService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
@@ -291,7 +316,7 @@ export async function createExpenseService(
     splitWith: string[]; // emails
     activityId?: string;
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { trip, user: userAccess } = await verifyTripAccess(token, tripId);
 
   // Get full user info for notifications
@@ -329,6 +354,7 @@ export async function createExpenseService(
       groupId: trip.groupId,
       tripId,
       paidById,
+      createdById: user.id,
       amount: new Decimal(data.amount),
       description: data.description,
       date: data.date,
@@ -351,6 +377,14 @@ export async function createExpenseService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
@@ -469,7 +503,7 @@ export async function updateExpenseService(
     splitWith?: string[]; // emails
     activityId?: string;
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { user: userAccess } = await verifyTripAccess(token, tripId);
 
   // Get full user info for notifications
@@ -594,6 +628,14 @@ export async function updateExpenseService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
@@ -794,4 +836,171 @@ export async function deleteExpenseService(
   }
 
   logger.info("Expense deleted", { expenseId, tripId });
+}
+
+/**
+ * Confirms or rejects a payment
+ */
+export async function confirmPaymentService(
+  token: DecodedIdToken,
+  tripId: string,
+  expenseId: string,
+  data: {
+    memberEmail: string;
+    status: "confirmed" | "rejected";
+  },
+): Promise<ExpenseWithRelations> {
+  const { user } = await verifyTripAccess(token, tripId);
+
+  // Get member user ID
+  const memberId = await getUserIdFromEmail(data.memberEmail);
+
+  // Get expense to verify permissions and get amount
+  const expense = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    include: {
+      splits: {
+        where: { userId: memberId },
+      },
+      payments: {
+        where: { userId: memberId },
+      },
+      paidBy: {
+        select: { id: true, email: true, name: true },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
+    },
+  });
+
+  if (!expense) {
+    throw new Error("Expense not found");
+  }
+
+  if (expense.tripId !== tripId) {
+    throw new Error("Expense does not belong to this trip");
+  }
+
+  // Only the person who paid for the expense can confirm payments
+  if (expense.paidById !== user.id) {
+    throw new Error("Only the payer can confirm payments");
+  }
+
+  // Update payment status
+  const payment = await prisma.expensePayment.upsert({
+    where: {
+      expenseId_userId: {
+        expenseId,
+        userId: memberId,
+      },
+    },
+    update: {
+      status: data.status,
+    },
+    create: {
+      expenseId,
+      userId: memberId,
+      status: data.status,
+    },
+  });
+
+  // Get trip with group info for notifications
+  const tripWithGroup = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      group: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (tripWithGroup) {
+    // Notify the member that their payment was confirmed/rejected
+    await createNotificationService(memberId, {
+      type:
+        data.status === "confirmed"
+          ? NotificationType.payment_confirmed
+          : NotificationType.payment_rejected,
+      title:
+        data.status === "confirmed" ? "Payment Confirmed" : "Payment Rejected",
+      message: `${expense.paidBy.name || expense.paidBy.email} ${
+        data.status
+      } your payment for '${expense.description}'`,
+      relatedGroupId: tripWithGroup.groupId,
+      relatedTripId: tripId,
+      relatedExpenseId: expenseId,
+    }).catch((err) => {
+      logger.error("Failed to create notification", {
+        userId: memberId,
+        error: err,
+      });
+    });
+
+    // We should also emit socket event here if needed, but existing events might cover it
+    // or we can add a specific event for payment status update.
+    // For now, list updates should handle it via polling or if we trigger generic update.
+  }
+
+  logger.info(`Payment ${data.status}`, {
+    expenseId,
+    memberId,
+    status: data.status,
+  });
+
+  // Return full expense object for transformer
+  const updatedExpense = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    include: {
+      paidBy: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
+      splits: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
+      payments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!updatedExpense) {
+    throw new Error("Expense not found after update");
+  }
+
+  return updatedExpense;
 }

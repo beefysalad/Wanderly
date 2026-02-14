@@ -264,7 +264,9 @@ const TravelSchedule = ({
                                     : "border-orange-500/30"
                                 } pb-3`
                               : ""
-                          } ${onViewActivity ? "cursor-pointer" : ""} group`}
+                          } ${
+                            onViewActivity ? "cursor-pointer" : ""
+                          } group hover:bg-slate-800/40 transition-colors rounded-xl`}
                           onClick={() => onViewActivity?.(activity)}
                         >
                           {/* Timeline Dot */}
@@ -378,7 +380,10 @@ const TravelSchedule = ({
                                 >
                                   {onEditActivity && (
                                     <Button
-                                      onClick={() => onEditActivity(activity)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEditActivity(activity);
+                                      }}
                                       variant='ghost'
                                       size='sm'
                                       className='text-slate-400 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-lg'
@@ -389,9 +394,10 @@ const TravelSchedule = ({
                                   )}
                                   {onDeleteActivity && (
                                     <Button
-                                      onClick={() =>
-                                        onDeleteActivity(activity.id)
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteActivity(activity.id);
+                                      }}
                                       variant='ghost'
                                       size='sm'
                                       className='text-slate-400 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0 rounded-lg'
