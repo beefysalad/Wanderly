@@ -6,9 +6,9 @@ interface IDashboardHeaderProps {
 const DashboardHeader = ({ userEmail }: IDashboardHeaderProps) => {
   return (
     <div className='flex items-center justify-between mb-6'>
-      <div className='min-w-0 flex-1'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-white flex items-center gap-2'>
-          Travel
+      <div className='min-w-0 flex-1 text-center md:text-left'>
+        <h1 className='text-2xl sm:text-3xl font-bold text-white flex items-center gap-2 justify-center md:justify-start'>
+          Wanderly
         </h1>
         <p className='text-xs sm:text-sm text-slate-400 mt-1 truncate'>
           {userEmail}

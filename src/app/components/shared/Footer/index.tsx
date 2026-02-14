@@ -7,9 +7,9 @@ const Footer = () => {
     <footer className='relative z-10 px-6 py-12 md:py-16 mt-24 border-t border-white/5'>
       <div className='max-w-6xl mx-auto'>
         {/* Main Content */}
-        <div className='grid grid-cols-1 md:grid-cols-12 gap-12 mb-12'>
+        <div className='grid grid-cols-1 md:grid-cols-12 gap-12 mb-12 text-center md:text-left'>
           {/* Brand Section */}
-          <div className='md:col-span-5 space-y-6'>
+          <div className='md:col-span-5 space-y-6 flex flex-col items-center md:items-start'>
             <div className='flex items-center gap-3'>
               <div className='relative'>
                 <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl blur-lg opacity-40'></div>
@@ -33,11 +33,11 @@ const Footer = () => {
           </div>
 
           {/* Navigation Links */}
-          <div className='md:col-span-4 space-y-4'>
+          <div className='md:col-span-4 space-y-4 flex flex-col items-center md:items-start'>
             <h4 className='text-sm font-bold text-white uppercase tracking-wider'>
               Explore
             </h4>
-            <nav className='flex flex-col gap-3'>
+            <nav className='flex flex-col gap-3 items-center md:items-start'>
               <Link
                 href='/'
                 className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
@@ -72,11 +72,11 @@ const Footer = () => {
           </div>
 
           {/* Status Section */}
-          <div className='md:col-span-3 space-y-4'>
+          <div className='md:col-span-3 space-y-4 flex flex-col items-center md:items-start'>
             <h4 className='text-sm font-bold text-white uppercase tracking-wider'>
               Status
             </h4>
-            <div className='space-y-3'>
+            <div className='space-y-3 flex flex-col items-center md:items-start'>
               <div className='inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full'>
                 <div className='w-2 h-2 bg-amber-400 rounded-full animate-pulse'></div>
                 <span className='text-xs font-bold text-amber-300 uppercase tracking-wider'>
@@ -91,7 +91,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className='pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4'>
+        <div className='pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left'>
           <p className='text-slate-500 text-xs'>
             © 2025 Wanderly. All rights reserved.
           </p>

@@ -45,15 +45,15 @@ const transportationModes = [
 type Step = 1 | 2 | 3;
 
 interface EditActivityPageProps {
-  params: {
+  params: Promise<{
     groupId: string;
     tripId: string;
     activityId: string;
-  };
+  }>;
 }
 
 const EditActivityPage = ({ params }: EditActivityPageProps) => {
-  const { groupId, tripId, activityId } = params;
+  const { groupId, tripId, activityId } = React.use(params);
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);

@@ -213,42 +213,26 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             <ArrowLeft className='w-5 h-5' />
           </button>
 
-          <div className='flex items-center gap-2'>
+          {isCreator && (
             <button
-              onClick={copyInviteLink}
-              className='p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/5'
-              title='Invite Friends'
+              onClick={() => setShowEditModal(true)}
+              className='p-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
+              title='Group Settings'
             >
-              <UserPlus className='w-5 h-5' />
+              <Settings className='w-5 h-5' />
             </button>
-            {isCreator && (
-              <button
-                onClick={() => setShowEditModal(true)}
-                className='p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/5'
-                title='Group Settings'
-              >
-                <Settings className='w-5 h-5' />
-              </button>
-            )}
-          </div>
+          )}
         </div>
-
         {/* Group Info */}
         <div className='mb-8'>
-          <h1 className='text-4xl font-bold text-white mb-2 break-words'>
+          <h1 className='text-4xl font-bold text-white mb-2 break-words text-center'>
             {group.name}
           </h1>
-          <div className='flex items-center gap-3 text-slate-400 mb-6'>
+          <div className='flex items-center gap-3 text-slate-400 mb-6 justify-center'>
             <div className='flex items-center gap-2'>
               <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></span>
               <span className='text-sm font-medium'>Active Group</span>
             </div>
-            {group.createdBy && (
-              <>
-                <span className='w-1 h-1 rounded-full bg-slate-600'></span>
-                <span className='text-sm'>By {group.createdBy}</span>
-              </>
-            )}
           </div>
 
           {/* Stats Grid */}
@@ -292,7 +276,6 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             </button>
           </div>
         </div>
-
         {/* Trips Section */}
         <div>
           <div className='flex items-center justify-between mb-4 px-1'>
@@ -301,9 +284,32 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
           <TripsListComponent group={group} groupId={group.id} />
         </div>
-
-        {/* Floating Create Button */}
-        <div className='fixed bottom-6 right-6 z-50'>
+        {/* Floating Action Buttons */}
+        <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
+          <button
+            onClick={copyInviteLink}
+            className='group flex items-center justify-center w-12 h-12 bg-purple-500/10 hover:bg-purple-500/20 backdrop-blur-xl border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
+            title='Invite Friends'
+          >
+            <UserPlus className='w-5 h-5 transition-transform group-hover:scale-110' />
+          </button>
+          {isCreator ? (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
+              title='Delete Group'
+            >
+              <Trash2 className='w-5 h-5 transition-transform group-hover:scale-110' />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLeaveModal(true)}
+              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
+              title='Leave Group'
+            >
+              <LogOut className='w-5 h-5 transition-transform group-hover:scale-110' />
+            </button>
+          )}
           <button
             onClick={() => router.push(`/group/${group.id}/trips/create`)}
             className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
@@ -312,28 +318,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             <Plus className='w-7 h-7 transition-transform group-hover:rotate-90' />
             <span className='sr-only'>Create Trip</span>
           </button>
-        </div>
-
-        {/* Danger Zone */}
-        <div className='mt-12 pt-8 border-t border-white/5'>
-          {isCreator ? (
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className='w-full p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 transition-all flex items-center justify-center gap-2 text-sm font-medium'
-            >
-              <Trash2 className='w-4 h-4' />
-              Delete Group
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowLeaveModal(true)}
-              className='w-full p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 transition-all flex items-center justify-center gap-2 text-sm font-medium'
-            >
-              <LogOut className='w-4 h-4' />
-              Leave Group
-            </button>
-          )}
-        </div>
+        </div>{" "}
       </div>
 
       {showEditModal && group && (

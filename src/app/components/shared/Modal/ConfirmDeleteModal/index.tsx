@@ -21,22 +21,20 @@ const ConfirmDeleteModal = ({
   cancelText = "Cancel",
 }: IConfirmDeleteModal) => {
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-6'>
+    <div className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200'>
+      <div className='bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 max-w-md w-full p-6 animate-in zoom-in-95 duration-200'>
         <div className='flex items-start gap-4 mb-6'>
-          <div className='flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center'>
-            <AlertTriangle className='w-5 h-5 text-red-600 dark:text-red-400' />
+          <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center'>
+            <AlertTriangle className='w-6 h-6 text-red-400' />
           </div>
-          <div className='flex-1'>
-            <h2 className='text-xl font-bold text-slate-900 dark:text-white mb-2'>
-              {title}
-            </h2>
-            <p className='text-slate-600 dark:text-slate-300'>{message}</p>
+          <div className='flex-1 min-w-0'>
+            <h2 className='text-xl font-bold text-white mb-2'>{title}</h2>
+            <p className='text-slate-400 text-sm leading-relaxed'>{message}</p>
           </div>
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className='text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='text-slate-500 hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors p-1 hover:bg-white/5 rounded-lg'
           >
             <X className='w-5 h-5' />
           </button>
@@ -47,7 +45,7 @@ const ConfirmDeleteModal = ({
             type='button'
             onClick={onCancel}
             disabled={isDeleting}
-            className='flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='flex-1 px-4 py-2.5 text-slate-300 bg-slate-800/50 hover:bg-slate-800 border border-white/5 hover:border-white/10 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed'
           >
             {cancelText}
           </button>
@@ -55,7 +53,7 @@ const ConfirmDeleteModal = ({
             type='button'
             onClick={onConfirm}
             disabled={isDeleting}
-            className='flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-medium transition-all shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed'
           >
             {isDeleting ? "Deleting..." : confirmText}
           </button>
@@ -66,4 +64,3 @@ const ConfirmDeleteModal = ({
 };
 
 export default ConfirmDeleteModal;
-

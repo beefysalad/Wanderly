@@ -104,22 +104,24 @@ const ExpensesList = ({
 
   return (
     <div className='space-y-6'>
-      <div className='grid grid-cols-2 gap-3 md:gap-4 mb-6'>
-        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'>
-          <p className='text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-2'>
+      <div className='grid grid-cols-2 gap-2 md:gap-4 mb-6'>
+        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-3 md:p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'>
+          <p className='text-xs font-bold text-slate-400 mb-1 md:mb-2 uppercase tracking-widest flex items-center gap-1 md:gap-2'>
             <User className='w-3 h-3 text-orange-400' />
-            My Expenses
+            <span className='hidden sm:inline'>My Expenses</span>
+            <span className='sm:hidden'>My</span>
           </p>
-          <p className='text-3xl font-bold text-orange-400 group-hover:scale-105 transition-transform origin-left'>
+          <p className='text-xl md:text-2xl lg:text-3xl font-bold text-orange-400 group-hover:scale-105 transition-transform origin-left truncate'>
             ₱{myExpenses.toFixed(2)}
           </p>
         </div>
-        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 border border-white/5 hover:border-amber-500/20 transition-all hover:bg-slate-800/60 group'>
-          <p className='text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-2'>
+        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-3 md:p-5 border border-white/5 hover:border-amber-500/20 transition-all hover:bg-slate-800/60 group'>
+          <p className='text-xs font-bold text-slate-400 mb-1 md:mb-2 uppercase tracking-widest flex items-center gap-1 md:gap-2'>
             <Clock className='w-3 h-3 text-amber-400' />
-            Total Trip
+            <span className='hidden sm:inline'>Total Trip</span>
+            <span className='sm:hidden'>Total</span>
           </p>
-          <p className='text-3xl font-bold text-amber-400 group-hover:scale-105 transition-transform origin-left'>
+          <p className='text-xl md:text-2xl lg:text-3xl font-bold text-amber-400 group-hover:scale-105 transition-transform origin-left truncate'>
             ₱{totalSpent.toFixed(2)}
           </p>
         </div>
@@ -312,12 +314,12 @@ const ExpensesList = ({
                         </div>
 
                         {/* Amount Section */}
-                        <div className='text-right flex-shrink-0 flex flex-col justify-center self-center pl-2 border-l border-white/5'>
-                          <p className='text-lg sm:text-xl font-bold text-white tracking-tight'>
+                        <div className='text-right flex-shrink-0 flex flex-col justify-center self-center pl-2 md:pl-4 border-l border-white/5 min-w-0'>
+                          <p className='text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate'>
                             ₱{expense.amount.toFixed(2)}
                           </p>
                           {splitCount > 1 && (
-                            <p className='text-xs font-medium text-slate-500'>
+                            <p className='text-xs font-medium text-slate-500 truncate'>
                               ₱{perPersonAmount.toFixed(2)} / person
                             </p>
                           )}

@@ -455,12 +455,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         {/* Trip Header */}
         <div className='mb-8'>
           <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
-            <div>
-              <div className='flex items-center gap-3 mb-2'>
+            <div className='text-center md:text-left'>
+              <div className='flex items-center gap-3 mb-2 justify-center md:justify-start'>
                 {!isEditingStatus ? (
                   <button
                     onClick={() => setIsEditingStatus(true)}
-                    className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-lg border ${statusBadge.border} ${statusBadge.bg} ${statusBadge.text} hover:opacity-80 transition-opacity`}
+                    className='text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all'
                   >
                     {statusBadge.label}
                   </button>
@@ -478,12 +478,29 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                     }
                     onBlur={() => setIsEditingStatus(false)}
                     autoFocus
-                    className='text-[10px] uppercase font-bold px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 text-white focus:outline-none focus:border-orange-500'
+                    className='text-xs md:text-[10px] uppercase font-bold px-3 py-2 md:py-1.5 rounded-md border border-slate-600 bg-slate-800/80 backdrop-blur-xl text-slate-300 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 cursor-pointer transition-all hover:bg-slate-800'
                   >
-                    <option value='planning'>PLANNING</option>
-                    <option value='finalized'>FINALIZED</option>
-                    <option value='ongoing'>ONGOING</option>
-                    <option value='cancelled'>CANCELLED</option>
+                    <option
+                      value='planning'
+                      className='bg-slate-900 text-white'
+                    >
+                      PLANNING
+                    </option>
+                    <option
+                      value='finalized'
+                      className='bg-slate-900 text-white'
+                    >
+                      FINALIZED
+                    </option>
+                    <option value='ongoing' className='bg-slate-900 text-white'>
+                      ONGOING
+                    </option>
+                    <option
+                      value='cancelled'
+                      className='bg-slate-900 text-white'
+                    >
+                      CANCELLED
+                    </option>
                   </select>
                 )}
                 {trip.createdBy && (
@@ -495,7 +512,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
                 {trip.name}
               </h1>
-              <div className='flex items-center gap-2 text-slate-400'>
+              <div className='flex items-center gap-2 text-slate-400 justify-center md:justify-start'>
                 <Calendar className='w-4 h-4' />
                 <span>
                   {startDate.toLocaleDateString("en-US", {
@@ -553,16 +570,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   )}
                 </div>
               )}
-
-              {isTripCreator && (
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className='p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 transition-all'
-                  title='Delete Trip'
-                >
-                  <Trash2 className='w-5 h-5' />
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -609,8 +616,17 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           )}
         </div>
 
-        {/* Floating Add Activity/Expense Button */}
-        <div className='fixed bottom-6 right-6 z-50'>
+        {/* Floating Action Buttons */}
+        <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
+          {isTripCreator && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-500 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
+              title='Delete Trip'
+            >
+              <Trash2 className='w-5 h-5 transition-transform group-hover:scale-110' />
+            </button>
+          )}
           <button
             onClick={() =>
               activeTab === "expenses"
