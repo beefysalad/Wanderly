@@ -97,28 +97,30 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
   ];
 
   return (
-    <div className='grid grid-cols-4 gap-2 mb-6'>
-      {statCards.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <div
-            key={stat.label}
-            className={`bg-gradient-to-br ${stat.bgGradient} backdrop-blur-xl rounded-xl border ${stat.borderColor} p-3 transition-all duration-300 shadow-lg ${stat.shadowColor} relative overflow-hidden`}
-          >
-            <div className='flex flex-col items-center text-center'>
+    <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 p-4 md:p-6 mb-8 shadow-lg shadow-black/20'>
+      <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 md:divide-x md:divide-white/5'>
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className='flex flex-col items-center justify-center p-2 md:px-4 text-center group'
+            >
               <div
-                className={`w-8 h-8 ${stat.iconBg} backdrop-blur-sm rounded-lg flex items-center justify-center mb-2`}
+                className={`w-10 h-10 ${stat.iconBg} rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}
               >
-                <Icon className={`w-4 h-4 ${stat.color}`} />
+                <Icon className={`w-5 h-5 ${stat.color}`} />
               </div>
-              <p className='text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide'>
+              <p className='text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider'>
                 {stat.label}
               </p>
-              <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
+              <p className='text-2xl font-bold text-white tracking-tight'>
+                {stat.value}
+              </p>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
