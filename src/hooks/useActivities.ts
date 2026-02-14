@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import api from "@/lib/axios";
 import type { Activity } from "@/src/shared/types";
 

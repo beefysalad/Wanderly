@@ -145,7 +145,7 @@ const ExpenseForm = ({
           ? ["splitWith"]
           : ["accountNumber"]; // Partial validation for step 3 if needed
 
-    // @ts-ignore
+    // @ts-expect-error - Trigger validation for specific fields
     const isValid = await form.trigger(fieldsToValidate);
 
     if (isValid && currentStep < 3) {
@@ -550,7 +550,7 @@ const ExpenseForm = ({
                       <p className='text-xs text-blue-200 leading-relaxed'>
                         Adding payment details helps others pay you back faster.
                         You can skip this if you recorded a cash payment or
-                        don't need reimbursement yet.
+                        don&apos;t need reimbursement yet.
                       </p>
                     </div>
 
@@ -567,7 +567,10 @@ const ExpenseForm = ({
                               key={method}
                               type='button'
                               onClick={() => {
-                                form.setValue("paymentMethod", method as any);
+                                form.setValue(
+                                  "paymentMethod",
+                                  method as "cash" | "bank" | "maya" | "gcash",
+                                );
                                 // Reset other fields if needed, or keep them
                               }}
                               className={`p-3 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${

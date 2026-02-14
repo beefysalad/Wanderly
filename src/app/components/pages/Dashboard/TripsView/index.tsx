@@ -104,8 +104,8 @@ const TripsView = ({ groups }: ITripsViewProps) => {
           const endDate = new Date(trip.endDate);
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const isUpcoming = startDate >= today;
-          const isPast = endDate < today;
+          const _isUpcoming = startDate >= today;
+          const _isPast = endDate < today;
 
           return (
             <button
@@ -130,7 +130,7 @@ const TripsView = ({ groups }: ITripsViewProps) => {
                 {trip.status && (
                   <span
                     className={`text-xs font-medium px-2 py-1 rounded-full border flex-shrink-0 ${getStatusColor(
-                      trip.status
+                      trip.status,
                     )}`}
                   >
                     {trip.status}

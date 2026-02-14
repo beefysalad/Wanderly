@@ -1,8 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { Socket } from "socket.io-client";
-import { initializeSocket, disconnectSocket, reconnectSocket } from "@/lib/socket";
+import { disconnectSocket, reconnectSocket } from "@/lib/socket";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getGuestSession } from "@/lib/guest-session";
@@ -37,7 +43,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       if (!mounted) return;
 
       const guestSession = getGuestSession();
-      
+
       // Only connect if we have either a user or a guest session
       if (user || guestSession) {
         try {
@@ -90,4 +96,3 @@ export function SocketProvider({ children }: SocketProviderProps) {
     </SocketContext.Provider>
   );
 }
-

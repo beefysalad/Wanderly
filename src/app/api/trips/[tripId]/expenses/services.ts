@@ -23,7 +23,7 @@ async function getOrCreateUser(token: DecodedIdToken) {
  */
 async function verifyTripAccess(
   token: DecodedIdToken,
-  tripId: string
+  tripId: string,
 ): Promise<{ trip: { groupId: string }; user: { id: string } }> {
   const user = await getOrCreateUser(token);
 
@@ -57,8 +57,8 @@ async function verifyTripAccess(
 /**
  * Maps email addresses to user IDs
  */
-async function mapEmailsToUserIds(
-  emails: string[]
+async function _mapEmailsToUserIds(
+  emails: string[],
 ): Promise<Map<string, string>> {
   const emailToUserId = new Map<string, string>();
 
@@ -97,7 +97,7 @@ async function getUserIdFromEmail(email: string): Promise<string> {
  */
 export async function listExpensesService(
   token: DecodedIdToken,
-  tripId: string
+  tripId: string,
 ) {
   await verifyTripAccess(token, tripId);
 
@@ -145,7 +145,7 @@ export async function listExpensesService(
  */
 async function verifyTripAccessForGuest(
   groupCode: string,
-  tripId: string
+  tripId: string,
 ): Promise<{ trip: { groupId: string } }> {
   // Get trip with group
   const trip = await prisma.trip.findUnique({
@@ -174,7 +174,7 @@ async function verifyTripAccessForGuest(
  */
 export async function listExpensesForGuestService(
   groupCode: string,
-  tripId: string
+  tripId: string,
 ) {
   await verifyTripAccessForGuest(groupCode, tripId);
 
@@ -223,7 +223,7 @@ export async function listExpensesForGuestService(
 export async function getExpenseByIdService(
   token: DecodedIdToken,
   tripId: string,
-  expenseId: string
+  expenseId: string,
 ) {
   await verifyTripAccess(token, tripId);
 
@@ -290,7 +290,7 @@ export async function createExpenseService(
     qrImage?: string;
     splitWith: string[]; // emails
     activityId?: string;
-  }
+  },
 ) {
   const { trip, user: userAccess } = await verifyTripAccess(token, tripId);
 
@@ -314,7 +314,7 @@ export async function createExpenseService(
 
   // Map splitWith emails to user IDs
   const splitWithUserIds = await Promise.all(
-    data.splitWith.map((email) => getUserIdFromEmail(email))
+    data.splitWith.map((email) => getUserIdFromEmail(email)),
   );
 
   // Map payment method
@@ -420,7 +420,7 @@ export async function createExpenseService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);
@@ -431,11 +431,13 @@ export async function createExpenseService(
       ...expense,
       amount: Number(expense.amount),
       date: expense.date.toISOString(),
-      paidBy: expense.paidBy ? {
-        id: expense.paidBy.id,
-        email: expense.paidBy.email,
-        name: expense.paidBy.name,
-      } : null,
+      paidBy: expense.paidBy
+        ? {
+            id: expense.paidBy.id,
+            email: expense.paidBy.email,
+            name: expense.paidBy.name,
+          }
+        : null,
     };
     emitExpenseCreated(tripWithGroup.groupId, expenseForSocket).catch((err) => {
       logger.error("Failed to emit expense created event", { error: err });
@@ -466,7 +468,7 @@ export async function updateExpenseService(
     qrImage?: string;
     splitWith?: string[]; // emails
     activityId?: string;
-  }
+  },
 ) {
   const { user: userAccess } = await verifyTripAccess(token, tripId);
 
@@ -554,7 +556,7 @@ export async function updateExpenseService(
     // Create new splits
     if (data.splitWith.length > 0) {
       const splitWithUserIds = await Promise.all(
-        data.splitWith.map((email) => getUserIdFromEmail(email))
+        data.splitWith.map((email) => getUserIdFromEmail(email)),
       );
 
       updateData.splits = {
@@ -666,7 +668,7 @@ export async function updateExpenseService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);
@@ -677,11 +679,13 @@ export async function updateExpenseService(
       ...expense,
       amount: Number(expense.amount),
       date: expense.date.toISOString(),
-      paidBy: expense.paidBy ? {
-        id: expense.paidBy.id,
-        email: expense.paidBy.email,
-        name: expense.paidBy.name,
-      } : null,
+      paidBy: expense.paidBy
+        ? {
+            id: expense.paidBy.id,
+            email: expense.paidBy.email,
+            name: expense.paidBy.name,
+          }
+        : null,
     };
     emitExpenseUpdated(tripWithGroup.groupId, expenseForSocket, {
       updatedBy: user.name || user.email || undefined,
@@ -700,7 +704,7 @@ export async function updateExpenseService(
 export async function deleteExpenseService(
   token: DecodedIdToken,
   tripId: string,
-  expenseId: string
+  expenseId: string,
 ) {
   const { user: userAccess } = await verifyTripAccess(token, tripId);
 
@@ -766,7 +770,7 @@ export async function deleteExpenseService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);

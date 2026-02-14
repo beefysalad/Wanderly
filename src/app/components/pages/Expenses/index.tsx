@@ -1,12 +1,11 @@
 "use client";
 import { Expense, Trip, PaymentLog } from "@/src/shared/types";
-import { ArrowLeft, Plus, Receipt, Calendar, User, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Receipt, Wallet } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import ExpensesList from "./ExpenseList";
-import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
@@ -75,7 +74,7 @@ const ExpensesComponent = ({
 
     // Try to find by name
     const foundEmail = Object.entries(group?.memberNames || {}).find(
-      ([email, name]) => name === nameOrEmail,
+      ([, name]) => name === nameOrEmail,
     )?.[0];
     if (foundEmail && group?.memberMetadata?.[foundEmail]) {
       return group.memberMetadata[foundEmail].imageUrl;
@@ -219,141 +218,6 @@ const ExpensesComponent = ({
     }
   };
 
-  const handleConfirmPayment = async (
-    expenseId: string,
-    memberEmail: string,
-    status: "confirmed" | "rejected",
-  ) => {
-    if (!selectedExpense || selectedExpense.id !== expenseId) return;
-
-    // Optimistically update the selectedExpense
-    const previousExpense = selectedExpense;
-    const updatedExpense = { ...selectedExpense };
-
-    // Update payment status map
-    if (!updatedExpense.paymentStatusMap) {
-      updatedExpense.paymentStatusMap = {};
-    }
-    updatedExpense.paymentStatusMap[memberEmail] = status;
-
-    // Update paidMembers and pendingPayments arrays
-    if (status === "confirmed") {
-      // Move from pending to confirmed
-      updatedExpense.pendingPayments = (
-        updatedExpense.pendingPayments || []
-      ).filter((email) => email !== memberEmail);
-      if (!updatedExpense.paidMembers?.includes(memberEmail)) {
-        updatedExpense.paidMembers = [
-          ...(updatedExpense.paidMembers || []),
-          memberEmail,
-        ];
-      }
-    } else if (status === "rejected") {
-      // Remove from pending
-      updatedExpense.pendingPayments = (
-        updatedExpense.pendingPayments || []
-      ).filter((email) => email !== memberEmail);
-      // Remove from paidMembers if it was there
-      updatedExpense.paidMembers = (updatedExpense.paidMembers || []).filter(
-        (email) => email !== memberEmail,
-      );
-    }
-
-    // Optimistically update the UI
-    setSelectedExpense(updatedExpense);
-
-    try {
-      const response = await api.post<{ expense: Expense }>(
-        `/trips/${tripId}/expenses/${expenseId}/payments/confirm`,
-        {
-          memberEmail,
-          status,
-        },
-      );
-
-      // Update with the actual response from server
-      if (response.data.expense) {
-        setSelectedExpense(response.data.expense);
-      }
-
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-    } catch (error) {
-      // Revert optimistic update on error
-      setSelectedExpense(previousExpense);
-      console.error("Failed to confirm payment:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to confirm payment. Please try again.",
-      );
-    }
-  };
-
-  const handleMarkPaid = async (expenseId: string, memberId: string) => {
-    const expense = expenses.find((e) => e.id === expenseId);
-    if (!expense) return;
-
-    const paidMembers = expense.paidMembers || [];
-    const isPaid = paidMembers.includes(memberId);
-    const newPaidMembers = isPaid
-      ? paidMembers.filter((m) => m !== memberId)
-      : [...paidMembers, memberId];
-
-    // Optimistically update the expense in the cache
-    queryClient.setQueryData<{ expenses: Expense[] }>(
-      ["expenses", tripId],
-      (old) => {
-        if (!old) return old;
-        return {
-          expenses: old.expenses.map((e) =>
-            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e,
-          ),
-        };
-      },
-    );
-
-    // Also update selectedExpense if it's the one being modified
-    if (selectedExpense?.id === expenseId) {
-      setSelectedExpense({
-        ...selectedExpense,
-        paidMembers: newPaidMembers,
-      });
-    }
-
-    try {
-      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
-        memberEmail: memberId,
-        isPaid: !isPaid,
-        createPaymentLog: true,
-      });
-
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-    } catch (error) {
-      // Revert optimistic update on error
-      queryClient.setQueryData<{ expenses: Expense[] }>(
-        ["expenses", tripId],
-        (old) => {
-          if (!old) return old;
-          return {
-            expenses: old.expenses.map((e) =>
-              e.id === expenseId ? expense : e,
-            ),
-          };
-        },
-      );
-      if (selectedExpense?.id === expenseId) {
-        setSelectedExpense(expense);
-      }
-      console.error("Failed to mark expense as paid:", error);
-    }
-  };
-
   const handleUpdateExpense = () => {
     // This is handled by the ExpenseList component when marking as paid
     // The actual update is done via API call in ExpenseList
@@ -445,7 +309,9 @@ const ExpensesComponent = ({
       ].map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setView(tab.id as any)}
+          onClick={() =>
+            setView(tab.id as "all" | "unsettled" | "settled" | "logs")
+          }
           className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center justify-center gap-2 ${
             view === tab.id
               ? "bg-slate-700 text-white shadow-lg border border-white/10 scale-[1.02]"
@@ -736,7 +602,7 @@ const ExpensesComponent = ({
                         <span className='text-6xl'>📥</span>
                       </div>
                       <p className='text-sm font-bold text-emerald-400 uppercase tracking-widest mb-1'>
-                        You're Owed
+                        You&apos;re Owed
                       </p>
                       <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
                         ₱{unsettledStats.youAreOwed.toFixed(2)}

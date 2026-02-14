@@ -16,7 +16,7 @@ async function getOrCreateUser(token: DecodedIdToken) {
  */
 async function verifyTripAccess(
   token: DecodedIdToken,
-  tripId: string
+  tripId: string,
 ): Promise<{ trip: { groupId: string }; user: { id: string; email: string } }> {
   const user = await getOrCreateUser(token);
 
@@ -76,9 +76,9 @@ export async function markExpensePaidService(
     memberEmail: string; // email of member marking as paid
     isPaid: boolean; // true to mark as paid, false to unmark
     createPaymentLog?: boolean; // whether to create a payment log
-  }
+  },
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip: _trip, user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
   const expense = await prisma.expense.findUnique({
@@ -112,7 +112,7 @@ export async function markExpensePaidService(
 
   // Verify member is in the split list
   const isInSplit = expense.splits.some(
-    (split) => split.user.email === data.memberEmail
+    (split) => split.user.email === data.memberEmail,
   );
 
   if (!isInSplit) {
@@ -230,9 +230,9 @@ export async function confirmPaymentService(
   data: {
     memberEmail: string; // email of member whose payment is being confirmed/rejected
     status: "confirmed" | "rejected"; // new status
-  }
+  },
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip: _trip, user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
   const expense = await prisma.expense.findUnique({

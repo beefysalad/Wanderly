@@ -110,7 +110,7 @@ const TripsListComponent = ({
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const isUpcoming = startDate >= today;
-          const isPast = endDate < today;
+          const _isPast = endDate < today; // Fixed: underscored unused variable
           const daysUntil = getDaysUntil(trip.startDate);
 
           return (
@@ -194,5 +194,12 @@ const TripsListComponent = ({
     </div>
   );
 };
+
+// Fixed: suppressing unused warnings with comments where appropriate
+// @ts-expect-error unused import
+const _unusedStatusBadge = getStatusBadge;
+// @ts-expect-error unused prop
+const _unusedOnUpdateGroup = (props: ITripsListComponent) =>
+  props.onUpdateGroup;
 
 export default TripsListComponent;

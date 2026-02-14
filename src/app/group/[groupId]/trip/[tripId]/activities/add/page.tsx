@@ -324,7 +324,7 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                 form.handleSubmit(onSubmit, (errors) => {
                   console.error("Form validation errors:", errors);
                   const errorMessages = Object.values(errors)
-                    .map((err: any) => err.message)
+                    .map((err: { message: string }) => err.message)
                     .join(", ");
                   setError(`Validation failed: ${errorMessages}`);
                 })(e);

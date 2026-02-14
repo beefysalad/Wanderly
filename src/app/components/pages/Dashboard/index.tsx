@@ -154,10 +154,7 @@ const DashboardComponent = () => {
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
-        <DashboardHeader
-          handleLogout={handleLogout}
-          userEmail={user?.email ?? ""}
-        />
+        <DashboardHeader userEmail={user?.email ?? ""} />
 
         <DashboardStatistics groups={sortedGroups} />
 

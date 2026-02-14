@@ -71,14 +71,18 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
   const pendingPayments = prismaExpense.payments
     .filter((p) => p.status === "pending")
     .map((p) => p.user.email);
-  const rejectedPayments = prismaExpense.payments
+  const _rejectedPayments = prismaExpense.payments
     .filter((p) => p.status === "rejected")
     .map((p) => p.user.email);
 
   // Create payment status map
-  const paymentStatusMap: Record<string, "pending" | "confirmed" | "rejected"> = {};
+  const paymentStatusMap: Record<string, "pending" | "confirmed" | "rejected"> =
+    {};
   prismaExpense.payments.forEach((payment) => {
-    paymentStatusMap[payment.user.email] = payment.status as "pending" | "confirmed" | "rejected";
+    paymentStatusMap[payment.user.email] = payment.status as
+      | "pending"
+      | "confirmed"
+      | "rejected";
   });
 
   return {
@@ -110,7 +114,7 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
  * Transforms Prisma PaymentLog model to TypeScript PaymentLog interface
  */
 export function transformPaymentLog(
-  prismaPaymentLog: PaymentLogWithRelations
+  prismaPaymentLog: PaymentLogWithRelations,
 ): PaymentLog {
   return {
     id: prismaPaymentLog.id,
@@ -128,7 +132,10 @@ export function transformPaymentLog(
     paymentMethod:
       prismaPaymentLog.paymentMethod === null
         ? undefined
-        : (prismaPaymentLog.paymentMethod as "cash" | "bank" | "maya" | "gcash"),
+        : (prismaPaymentLog.paymentMethod as
+            | "cash"
+            | "bank"
+            | "maya"
+            | "gcash"),
   };
 }
-

@@ -10,7 +10,6 @@ import {
   createExpenseService,
 } from "./services";
 import { transformExpense } from "./transformers";
-import { PaymentMethod } from "@prisma/client";
 
 async function handler(req: NextRequest, context: OptionalAuthContext) {
   try {
@@ -21,7 +20,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
     if (!tripId) {
       return NextResponse.json(
         { error: "Trip ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +39,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
       if (context.isGuest) {
         return NextResponse.json(
           { error: "Guest access not allowed for creating expenses" },
-          { status: 403 }
+          { status: 403 },
         );
       }
       const body = await req.json();
@@ -62,7 +61,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
       if (!paidBy || !amount || !description || !date || !splitWith) {
         return NextResponse.json(
           { error: "Missing required expense fields" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -86,11 +85,14 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
 
       const transformedExpense = transformExpense(expense);
 
-      return NextResponse.json({ expense: transformedExpense }, { status: 201 });
+      return NextResponse.json(
+        { expense: transformedExpense },
+        { status: 201 },
+      );
     } else {
       return NextResponse.json(
         { error: "Method not allowed" },
-        { status: 405 }
+        { status: 405 },
       );
     }
   } catch (error) {
@@ -105,7 +107,7 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
     ) {
       return NextResponse.json(
         { error: "Trip not found or access denied" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -115,4 +117,3 @@ async function handler(req: NextRequest, context: OptionalAuthContext) {
 
 export const GET = withOptionalAuth(handler);
 export const POST = withOptionalAuth(handler);
-

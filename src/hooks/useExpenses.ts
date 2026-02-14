@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import api from "@/lib/axios";
 import type { Expense, PaymentLog } from "@/src/shared/types";
 
@@ -63,7 +62,7 @@ export function useExpenses(tripId: string) {
     queryKey: ["expenses", tripId],
     queryFn: async () => {
       const response = await api.get<ExpensesResponse>(
-        `/trips/${tripId}/expenses`
+        `/trips/${tripId}/expenses`,
       );
       return response.data;
     },
@@ -80,7 +79,7 @@ export function useCreateExpense(tripId: string, groupId: string) {
     mutationFn: async (data) => {
       const response = await api.post<ExpenseResponse>(
         `/trips/${tripId}/expenses`,
-        data
+        data,
       );
       return response.data;
     },
@@ -100,7 +99,7 @@ export function useCreateExpense(tripId: string, groupId: string) {
 export function useUpdateExpense(
   tripId: string,
   expenseId: string,
-  groupId: string
+  groupId: string,
 ) {
   const queryClient = useQueryClient();
 
@@ -108,7 +107,7 @@ export function useUpdateExpense(
     mutationFn: async (data) => {
       const response = await api.patch<ExpenseResponse>(
         `/trips/${tripId}/expenses/${expenseId}`,
-        data
+        data,
       );
       return response.data;
     },
@@ -128,7 +127,7 @@ export function useUpdateExpense(
 export function useDeleteExpense(
   tripId: string,
   expenseId: string,
-  groupId: string
+  groupId: string,
 ) {
   const queryClient = useQueryClient();
 
@@ -154,7 +153,7 @@ export function useDeleteExpense(
 export function useMarkExpensePaid(
   tripId: string,
   expenseId: string,
-  groupId: string
+  groupId: string,
 ) {
   const queryClient = useQueryClient();
 
@@ -162,7 +161,7 @@ export function useMarkExpensePaid(
     mutationFn: async (data) => {
       const response = await api.post<ExpenseResponse>(
         `/trips/${tripId}/expenses/${expenseId}/payments`,
-        data
+        data,
       );
       return response.data;
     },
@@ -185,7 +184,7 @@ export function usePaymentLogs(tripId: string) {
     queryKey: ["paymentLogs", tripId],
     queryFn: async () => {
       const response = await api.get<PaymentLogsResponse>(
-        `/trips/${tripId}/payment-logs`
+        `/trips/${tripId}/payment-logs`,
       );
       return response.data;
     },
@@ -212,7 +211,7 @@ export function useCreatePaymentLog(tripId: string, groupId: string) {
     mutationFn: async (data) => {
       const response = await api.post<PaymentLogResponse>(
         `/trips/${tripId}/payment-logs`,
-        data
+        data,
       );
       return response.data;
     },
@@ -236,7 +235,7 @@ interface ConfirmPaymentRequest {
 export function useConfirmPayment(
   tripId: string,
   expenseId: string,
-  groupId: string
+  groupId: string,
 ) {
   const queryClient = useQueryClient();
 
@@ -244,7 +243,7 @@ export function useConfirmPayment(
     mutationFn: async (data) => {
       const response = await api.post<ExpenseResponse>(
         `/trips/${tripId}/expenses/${expenseId}/payments/confirm`,
-        data
+        data,
       );
       return response.data;
     },
@@ -258,4 +257,3 @@ export function useConfirmPayment(
     },
   });
 }
-

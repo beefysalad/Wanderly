@@ -1,14 +1,14 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCreateGroup } from "@/src/hooks/useGroups";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useCreateGroup } from "@/src/hooks/useGroups";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Sparkles, X } from "lucide-react";
 import { createGroupSchema, TCreateGroupSchema } from "./createGroupZod";
 
 const COLOR_SCHEMES = [

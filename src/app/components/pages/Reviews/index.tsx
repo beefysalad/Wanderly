@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
-  Sparkles,
   Star,
   TrendingUp,
 } from "lucide-react";
@@ -134,7 +133,6 @@ const ReviewsComponent = () => {
               <h1 className='text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 bg-clip-text text-transparent'>
                 Reviews
               </h1>
-              <Sparkles className='w-8 h-8 text-amber-400' />
             </div>
 
             <p className='text-center text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto'>

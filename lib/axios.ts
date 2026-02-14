@@ -15,7 +15,7 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (error) {
+    } catch (_error) {
       // No token available, which is fine for public routes or guest access
       // Check for guest session instead
       const guestSession = getGuestSession();
@@ -29,7 +29,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for error handling (optional)
@@ -39,7 +39,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

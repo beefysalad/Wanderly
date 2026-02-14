@@ -1,13 +1,9 @@
 import NotificationBell from "../../../shared/NotificationBell";
 
 interface IDashboardHeaderProps {
-  handleLogout: () => void;
   userEmail: string | undefined;
 }
-const DashboardHeader = ({
-  handleLogout,
-  userEmail,
-}: IDashboardHeaderProps) => {
+const DashboardHeader = ({ userEmail }: IDashboardHeaderProps) => {
   return (
     <div className='flex items-center justify-between mb-6'>
       <div className='min-w-0 flex-1'>

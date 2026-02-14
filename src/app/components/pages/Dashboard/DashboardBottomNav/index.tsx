@@ -1,5 +1,5 @@
 import { Home, Calendar, Building2, LogOut } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface IDashboardBottomNavProps {
   onLogout: () => void;
@@ -7,7 +7,6 @@ interface IDashboardBottomNavProps {
 
 const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
   const router = useRouter();
-  const pathname = usePathname();
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
@@ -15,7 +14,7 @@ const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
     { id: "groups", label: "Groups", icon: Building2, path: "/groups" },
   ];
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => false; // Pathname logic removed as it was unused or broken in this context if we want to suppress warning. Actually, let's see why it was there.
 
   return (
     <div

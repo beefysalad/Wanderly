@@ -95,7 +95,8 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
         startTime: activity.startTime || "",
         endTime: activity.endTime || "",
         notes: activity.notes || "",
-        transportationMode: activity.transportationMode as any,
+        transportationMode:
+          activity.transportationMode as TActivitySchema["transportationMode"],
         pickupTime: activity.pickupTime || undefined,
         pickupLocation: activity.pickupLocation || undefined,
         dropoffLocation: activity.dropoffLocation || undefined,
@@ -335,7 +336,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                 form.handleSubmit(onSubmit, (errors) => {
                   console.error("Form validation errors:", errors);
                   const errorMessages = Object.values(errors)
-                    .map((err: any) => err.message)
+                    .map((err: { message: string }) => err.message)
                     .join(", ");
                   setError(`Validation failed: ${errorMessages}`);
                 })(e);

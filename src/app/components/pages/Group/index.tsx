@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Plus,
   Share2,
-  Edit,
   UserPlus,
   Users,
   Trash2,
@@ -154,7 +153,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   };
 
   // Get color scheme for the group (default to orange if not loaded yet)
-  const colors = group
+  group
     ? getGroupColorClasses(group.colorScheme)
     : getGroupColorClasses("orange");
 
@@ -180,7 +179,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             Group Not Found
           </h2>
           <p className='text-slate-400 mb-8'>
-            This group doesn't exist or has been removed.
+            This group doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={goBack}

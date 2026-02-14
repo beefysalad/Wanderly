@@ -20,7 +20,10 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 import { useForm } from "react-hook-form";
-import { editProfileSchema, TEditProfileSchema } from "../../shared/Modal/EditProfileModal/editProfileZod";
+import {
+  editProfileSchema,
+  TEditProfileSchema,
+} from "../../shared/Modal/EditProfileModal/editProfileZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -28,14 +31,16 @@ import { Button } from "@/components/ui/button";
 import { useUpdateProfile, useUpdatePassword } from "@/src/hooks/useProfile";
 import api from "@/lib/axios";
 import { auth } from "@/lib/firebase";
-import { updateProfile } from "firebase/auth";
+import { signOut, updateProfile } from "firebase/auth";
 
 const ProfileComponent = () => {
   const router = useRouter();
   const { user, loading } = useCurrentUser();
   const { data: groupsData } = useGroups();
   const groups = groupsData?.groups || [];
-  const [activeTab, setActiveTab] = useState<"dashboard" | "trips" | "groups" | "profile">("profile");
+  const [activeTab, setActiveTab] = useState<
+    "dashboard" | "trips" | "groups" | "profile"
+  >("profile");
   const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -74,7 +79,13 @@ const ProfileComponent = () => {
     }
   }, [user, form, isEditMode]);
 
-  const handleTabChange = (tab: "dashboard" | "trips" | "groups" | "profile") => {
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
+
+  const handleTabChange = (
+    tab: "dashboard" | "trips" | "groups" | "profile",
+  ) => {
     if (tab === "profile") {
       setActiveTab("profile");
     } else {
@@ -117,7 +128,7 @@ const ProfileComponent = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       form.setValue("photo", file);
@@ -126,7 +137,7 @@ const ProfileComponent = () => {
       console.error("Failed to upload image:", error);
       setUploadError(
         (error as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Failed to upload image. Please try again."
+          ?.error || "Failed to upload image. Please try again.",
       );
     } finally {
       setUploadingImage(false);
@@ -150,7 +161,7 @@ const ProfileComponent = () => {
 
       if (Object.keys(profileUpdates).length > 0) {
         await updateProfileMutation.mutateAsync(profileUpdates);
-        
+
         if (auth.currentUser) {
           const clientUpdates: { displayName?: string; photoURL?: string } = {};
           if (profileUpdates.name) {
@@ -205,7 +216,7 @@ const ProfileComponent = () => {
   const totalGroups = groups.length;
   const totalTrips = groups.reduce(
     (acc, group) => acc + (group.trips?.length || 0),
-    0
+    0,
   );
 
   if (loading) {
@@ -241,7 +252,8 @@ const ProfileComponent = () => {
     ? new Date(user.metadata.creationTime)
     : null;
 
-  const isPending = updateProfileMutation.isPending || updatePasswordMutation.isPending;
+  const isPending =
+    updateProfileMutation.isPending || updatePasswordMutation.isPending;
 
   return (
     <main className='min-h-screen bg-slate-50 pb-36 md:pb-28'>
@@ -302,9 +314,14 @@ const ProfileComponent = () => {
               </div>
             ) : (
               // Edit Mode
-              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className='space-y-6'
+              >
                 <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200'>
-                  <h2 className='text-2xl font-bold text-slate-900'>Edit Profile</h2>
+                  <h2 className='text-2xl font-bold text-slate-900'>
+                    Edit Profile
+                  </h2>
                   <div className='flex gap-2 w-full sm:w-auto'>
                     <Button
                       type='button'
@@ -338,7 +355,9 @@ const ProfileComponent = () => {
 
                 {/* Photo Upload */}
                 <div className='space-y-3'>
-                  <Label className='text-sm font-medium text-slate-700'>Profile Photo</Label>
+                  <Label className='text-sm font-medium text-slate-700'>
+                    Profile Photo
+                  </Label>
                   <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4'>
                     <div className='relative flex-shrink-0'>
                       {avatarUrl ? (
@@ -389,7 +408,9 @@ const ProfileComponent = () => {
                         )}
                       </Button>
                       {uploadError && (
-                        <p className='text-xs text-red-500 mt-2'>{uploadError}</p>
+                        <p className='text-xs text-red-500 mt-2'>
+                          {uploadError}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -401,7 +422,9 @@ const ProfileComponent = () => {
                     <Label
                       htmlFor='name'
                       className={`text-sm font-medium ${
-                        form.formState.errors.name ? "text-red-500" : "text-slate-700"
+                        form.formState.errors.name
+                          ? "text-red-500"
+                          : "text-slate-700"
                       }`}
                     >
                       {form.formState.errors.name
@@ -422,14 +445,18 @@ const ProfileComponent = () => {
                   </div>
 
                   <div className='space-y-2'>
-                    <Label className='text-sm font-medium text-slate-700'>Email Address</Label>
+                    <Label className='text-sm font-medium text-slate-700'>
+                      Email Address
+                    </Label>
                     <Input
                       type='email'
                       value={email}
                       disabled
                       className='bg-slate-50 text-slate-500 cursor-not-allowed'
                     />
-                    <p className='text-xs text-slate-500'>Email cannot be changed</p>
+                    <p className='text-xs text-slate-500'>
+                      Email cannot be changed
+                    </p>
                   </div>
                 </div>
 
@@ -551,7 +578,9 @@ const ProfileComponent = () => {
                       <div className='w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center'>
                         <User className='w-4 h-4 text-orange-600' />
                       </div>
-                      <h3 className='text-lg font-semibold text-slate-900'>Account Information</h3>
+                      <h3 className='text-lg font-semibold text-slate-900'>
+                        Account Information
+                      </h3>
                     </div>
                     <div className='space-y-4'>
                       <div>
@@ -588,7 +617,9 @@ const ProfileComponent = () => {
                       <div className='w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center'>
                         <MapPin className='w-4 h-4 text-amber-600' />
                       </div>
-                      <h3 className='text-lg font-semibold text-slate-900'>Your Statistics</h3>
+                      <h3 className='text-lg font-semibold text-slate-900'>
+                        Your Statistics
+                      </h3>
                     </div>
                     <div className='space-y-3'>
                       <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
@@ -622,7 +653,7 @@ const ProfileComponent = () => {
         </div>
       </div>
 
-      <DashboardBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <DashboardBottomNav onLogout={handleLogout} />
     </main>
   );
 };

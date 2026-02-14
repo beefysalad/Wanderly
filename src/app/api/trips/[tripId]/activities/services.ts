@@ -22,7 +22,7 @@ async function getOrCreateUser(token: DecodedIdToken) {
  */
 async function verifyTripAccess(
   token: DecodedIdToken,
-  tripId: string
+  tripId: string,
 ): Promise<{
   trip: { groupId: string; name: string };
   user: { id: string; name: string | null; email: string };
@@ -72,9 +72,9 @@ export async function createActivityService(
     pickupTime?: string;
     pickupLocation?: string;
     dropoffLocation?: string;
-  }
+  },
 ) {
-  const { user, trip } = await verifyTripAccess(token, tripId);
+  const { user, trip: _trip } = await verifyTripAccess(token, tripId);
 
   const activity = await prisma.activity.create({
     data: {
@@ -136,7 +136,7 @@ export async function createActivityService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);
@@ -171,7 +171,7 @@ export async function updateActivityService(
     pickupTime?: string;
     pickupLocation?: string;
     dropoffLocation?: string;
-  }
+  },
 ) {
   const { user } = await verifyTripAccess(token, tripId);
 
@@ -265,7 +265,7 @@ export async function updateActivityService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);
@@ -288,7 +288,7 @@ export async function updateActivityService(
 export async function deleteActivityService(
   token: DecodedIdToken,
   tripId: string,
-  activityId: string
+  activityId: string,
 ) {
   const { user } = await verifyTripAccess(token, tripId);
 
@@ -347,7 +347,7 @@ export async function deleteActivityService(
             userId: member.userId,
             error: err,
           });
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);

@@ -18,7 +18,7 @@ export interface AuthContext {
  * @param options - Optional configuration for admin/role checks
  */
 export function withAuth(
-  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
@@ -32,7 +32,7 @@ export function withAuth(
       if (!token) {
         return NextResponse.json(
           { message: "No token provided" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -41,7 +41,7 @@ export function withAuth(
         logger.error("Firebase Admin not initialized");
         return NextResponse.json(
           { message: "Authentication service unavailable" },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
@@ -73,27 +73,27 @@ export function withAuth(
         ) {
           return NextResponse.json(
             { message: "Invalid or expired token" },
-            { status: 401 }
+            { status: 401 },
           );
         }
         if (error.message.includes("revoked")) {
           return NextResponse.json(
             { message: "Token has been revoked" },
-            { status: 401 }
+            { status: 401 },
           );
         }
       }
 
       return NextResponse.json(
         { message: "Authentication failed" },
-        { status: 401 }
+        { status: 401 },
       );
     }
   };
 }
 
 export function withBasicAuth(
-  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
 ) {
   return withAuth(handler);
 }
@@ -111,8 +111,8 @@ export interface OptionalAuthContext extends AuthContext {
 export function withOptionalAuth(
   handler: (
     req: NextRequest,
-    context: OptionalAuthContext
-  ) => Promise<NextResponse>
+    context: OptionalAuthContext,
+  ) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
@@ -131,7 +131,7 @@ export function withOptionalAuth(
               isGuest: false,
             };
             return await handler(req, authContext);
-          } catch (error) {
+          } catch (_error) {
             // Token invalid, fall through to guest check
             logger.warn("Token validation failed, checking for guest access");
           }
@@ -153,13 +153,13 @@ export function withOptionalAuth(
       // Neither authenticated nor guest
       return NextResponse.json(
         { message: "Unauthorized - Authentication or guest code required" },
-        { status: 401 }
+        { status: 401 },
       );
     } catch (error) {
       logger.error("Optional auth validation failed", error);
       return NextResponse.json(
         { message: "Authentication failed" },
-        { status: 401 }
+        { status: 401 },
       );
     }
   };
