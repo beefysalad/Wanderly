@@ -20,6 +20,7 @@ model User {
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")
   createdTrips       Trip[]           @relation("TripCreator")
+  createdExpenses    Expense[]        @relation("ExpenseCreator")
   groupMemberships   GroupMember[]
   paidExpenses       Expense[]        @relation("ExpensePayer")
   expenseSplits      ExpenseSplit[]
@@ -124,6 +125,7 @@ model Expense {
   groupId       String
   tripId        String
   paidById      String
+  createdById   String?
   amount        Decimal
   description   String
   date          DateTime
@@ -141,6 +143,7 @@ model Expense {
   group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
   trip          Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
   paidBy        User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
+  creator       User?            @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
   activity      Activity?        @relation("ActivityExpenses", fields: [activityId], references: [id], onDelete: SetNull)
   splits        ExpenseSplit[]
   payments      ExpensePayment[]
@@ -171,6 +174,7 @@ model ExpensePayment {
   id        String        @id @default(cuid())
   expenseId String
   userId    String
+  amount    Decimal       @default(0)
   status    PaymentStatus @default(pending)
   paidAt    DateTime      @default(now())
   createdAt DateTime      @default(now())
@@ -212,6 +216,8 @@ model Review {
 
 enum NotificationType {
   payment
+  payment_confirmed
+  payment_rejected
   group_join
   group_leave
   activity_added
@@ -221,6 +227,7 @@ enum NotificationType {
   expense_edited
   expense_deleted
   trip_created
+  trip_updated
   trip_deleted
 }
 

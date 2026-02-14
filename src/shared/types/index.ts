@@ -57,6 +57,13 @@ export interface Expense {
   groupId: string;
   tripId: string;
   paidBy: string;
+  createdById?: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+    imageUrl?: string;
+  };
   amount: number;
   description: string;
   date: string;
@@ -103,6 +110,8 @@ export interface Notification {
   userId: string;
   type:
     | "payment"
+    | "payment_confirmed"
+    | "payment_rejected"
     | "group_join"
     | "group_leave"
     | "activity_added"
@@ -112,6 +121,7 @@ export interface Notification {
     | "expense_edited"
     | "expense_deleted"
     | "trip_created"
+    | "trip_updated"
     | "trip_deleted";
   title: string;
   message: string;

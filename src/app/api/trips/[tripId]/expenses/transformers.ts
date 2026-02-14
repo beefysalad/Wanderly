@@ -10,6 +10,14 @@ type ExpenseWithRelations = Prisma.ExpenseGetPayload<{
         name: true;
       };
     };
+    creator: {
+      select: {
+        id: true;
+        email: true;
+        name: true;
+        imageUrl: true;
+      };
+    };
     splits: {
       include: {
         user: {
@@ -90,6 +98,15 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     groupId: prismaExpense.groupId,
     tripId: prismaExpense.tripId,
     paidBy: prismaExpense.paidBy.email,
+    createdById: prismaExpense.createdById || undefined,
+    createdBy: prismaExpense.creator
+      ? {
+          id: prismaExpense.creator.id,
+          name: prismaExpense.creator.name,
+          email: prismaExpense.creator.email,
+          imageUrl: prismaExpense.creator.imageUrl || undefined,
+        }
+      : undefined,
     amount: Number(prismaExpense.amount),
     description: prismaExpense.description,
     date: prismaExpense.date.toISOString(),

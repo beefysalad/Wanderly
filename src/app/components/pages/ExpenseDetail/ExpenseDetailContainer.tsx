@@ -120,8 +120,9 @@ const ExpenseDetailContainer = ({
     );
 
     try {
-      await api.post(`/trips/${tripId}/expenses/${expenseId}/pay`, {
-        memberId,
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: memberId,
+        isPaid: true,
       });
       // Invalidate to get fresh state
       queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
@@ -161,8 +162,24 @@ const ExpenseDetailContainer = ({
       memberNames={group?.memberNames}
       memberMetadata={group?.memberMetadata}
       activities={trip?.activities || []}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
+      onEdit={
+        !expense.createdBy
+          ? expense.paidBy === user?.email
+            ? handleEdit
+            : undefined
+          : expense.createdBy.email === user?.email
+            ? handleEdit
+            : undefined
+      }
+      onDelete={
+        !expense.createdBy
+          ? expense.paidBy === user?.email
+            ? handleDelete
+            : undefined
+          : expense.createdBy.email === user?.email
+            ? handleDelete
+            : undefined
+      }
       onMarkPaid={handleMarkPaid}
       onConfirmPayment={handleConfirmPayment}
       currentUser={user?.email || ""}
