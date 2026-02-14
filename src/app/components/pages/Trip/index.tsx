@@ -289,9 +289,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   };
   const handleViewActivity = (activity: Activity) => {
     // For now, view acts as edit since we want full page experience
-    router.push(
-      `/group/${groupId}/trip/${tripId}/activities/${activity.id}/edit`,
-    );
+    router.push(`/group/${groupId}/trip/${tripId}/activities/${activity.id}`);
   };
   const handleStatusChange = async (
     newStatus: "planning" | "finalized" | "ongoing" | "cancelled",
