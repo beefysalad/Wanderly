@@ -30,17 +30,6 @@ const HowToComponent = () => {
   const router = useRouter();
   // AuthModal state removed
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
-
-  const toggleItem = (id: string) => {
-    const newOpenItems = new Set(openItems);
-    if (newOpenItems.has(id)) {
-      newOpenItems.delete(id);
-    } else {
-      newOpenItems.add(id);
-    }
-    setOpenItems(newOpenItems);
-  };
 
   const tutorials: TutorialItem[] = [
     {
@@ -208,126 +197,120 @@ const HowToComponent = () => {
       </div>
 
       <div className='relative z-10'>
-        <Header
-          // AuthModal props removed
-          setShowQuickJoinModal={setShowQuickJoinModal}
-        />
-        <div className='max-w-4xl mx-auto px-4 py-8'>
-          <div className='space-y-8'>
-            {/* Header */}
-            <div className='text-center space-y-4'>
-              <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-4 shadow-lg'>
-                <PlayCircle className='w-10 h-10 text-white' />
-              </div>
-              <h1 className='text-4xl md:text-5xl font-bold text-white'>
-                How To{" "}
-                <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
-                  Guides
-                </span>
-              </h1>
-              <p className='text-lg text-slate-300 max-w-2xl mx-auto'>
-                Step-by-step video tutorials to help you get the most out of
-                Wanderly
-              </p>
+        <Header />
+        <div className='max-w-6xl mx-auto px-6 py-12 md:py-24 space-y-16'>
+          {/* Header */}
+          <div className='text-center space-y-6 max-w-3xl mx-auto'>
+            <div className='inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-3xl mb-4 border border-amber-500/30 shadow-2xl animate-pulse-slow'>
+              <PlayCircle className='w-12 h-12 text-amber-500' />
             </div>
+            <h1 className='text-4xl md:text-6xl font-black text-white leading-tight'>
+              Master the{" "}
+              <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
+                Art of Planning.
+              </span>
+            </h1>
+            <p className='text-xl text-slate-400 font-light'>
+              A simple guide to navigating Wanderly like a pro.
+            </p>
+          </div>
 
-            {/* Tutorial Items */}
-            <div className='bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-6 sm:p-8 md:p-10 backdrop-blur-sm shadow-2xl'>
-              <div className='space-y-4'>
-                {tutorials.map((tutorial) => {
-                  const isOpen = openItems.has(tutorial.id);
-                  return (
-                    <div
-                      key={tutorial.id}
-                      className='bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all overflow-hidden'
-                    >
-                      <button
-                        onClick={() => toggleItem(tutorial.id)}
-                        className='w-full p-5 text-left flex items-start gap-4 hover:bg-white/5 transition-colors'
-                      >
-                        <div className='p-2 bg-amber-500/20 rounded-lg shrink-0'>
-                          {tutorial.icon}
-                        </div>
-                        <div className='flex-1'>
-                          <h3 className='font-semibold text-white mb-1 pr-8'>
-                            {tutorial.title}
-                          </h3>
-                          <p className='text-sm text-slate-400 mb-2'>
-                            {tutorial.description}
-                          </p>
-                          <div
-                            className={`overflow-hidden transition-all duration-300 ${
-                              isOpen
-                                ? "max-h-[2000px] opacity-100"
-                                : "max-h-0 opacity-0"
-                            }`}
-                          >
-                            <div className='space-y-4 pt-4'>
-                              {/* Video Section */}
-                              <CloudinaryVideo videoId={tutorial.videoId} />
+          {/* Visual Step Cards / Timeline */}
+          <div className='space-y-24 relative'>
+            {/* Vertical Line Connector (Desktop) */}
+            <div className='absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-amber-500/50 via-slate-800 to-transparent hidden md:block -translate-x-1/2'></div>
 
-                              {/* Instructions Section */}
-                              {tutorial.instructions && (
-                                <div className='bg-white/5 rounded-lg p-4 border border-amber-500/10'>
-                                  <h4 className='text-sm font-semibold text-amber-400 mb-3'>
-                                    Step-by-Step Instructions:
-                                  </h4>
-                                  <div className='text-sm leading-relaxed'>
-                                    {tutorial.instructions}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className='shrink-0'>
-                          <svg
-                            className={`w-5 h-5 text-amber-400 transition-transform duration-300 ${
-                              isOpen ? "rotate-180" : ""
-                            }`}
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M19 9l-7 7-7-7'
-                            />
-                          </svg>
-                        </div>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Help Section */}
-            <div className='text-center space-y-4'>
-              <p className='text-slate-300'>
-                Need more help? Check out our FAQ or get started with Wanderly!
-              </p>
-              <div className='flex flex-col sm:flex-row gap-3 justify-center'>
-                <button
-                  onClick={() => {
-                    router.push("/register");
-                  }}
-                  className='px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 active:scale-[0.98]'
+            {tutorials.map((tutorial, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <div
+                  key={tutorial.id}
+                  className={`flex flex-col md:flex-row items-center gap-12 md:gap-24 relative ${isEven ? "" : "md:flex-row-reverse text-right"}`}
                 >
-                  Get Started
+                  {/* Step Number Indicator */}
+                  <div className='absolute left-1/2 top-0 -translate-x-1/2 -translate-y-12 hidden md:flex w-12 h-12 rounded-full bg-slate-900 border-2 border-amber-500 items-center justify-center font-black text-amber-400 z-20 shadow-xl shadow-amber-500/20'>
+                    {index + 1}
+                  </div>
+
+                  {/* Text Content */}
+                  <div className='flex-1 space-y-6 md:w-1/2'>
+                    <div
+                      className={`space-y-4 ${isEven ? "" : "flex flex-col items-end"}`}
+                    >
+                      <div className='p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl w-fit'>
+                        {tutorial.icon}
+                      </div>
+                      <h2 className='text-3xl font-bold text-white'>
+                        {tutorial.title}
+                      </h2>
+                      <p className='text-lg text-slate-400 font-light max-w-md'>
+                        {tutorial.description}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl ${isEven ? "text-left" : "text-left"}`}
+                    >
+                      <h4 className='text-xs font-bold uppercase tracking-widest text-amber-500/70 mb-4'>
+                        Instructions:
+                      </h4>
+                      <div className='text-slate-300 text-sm'>
+                        {tutorial.instructions}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual / Video Placeholder */}
+                  <div className='flex-1 w-full md:w-1/2'>
+                    <div className='relative group'>
+                      <div className='absolute inset-0 bg-amber-500/5 blur-2xl rounded-3xl group-hover:bg-amber-500/10 transition-colors'></div>
+                      <div className='relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl'>
+                        <CloudinaryVideo videoId={tutorial.videoId} />
+                      </div>
+                      {/* Decorative Tag */}
+                      <div
+                        className={`absolute -bottom-4 ${isEven ? "-right-4" : "-left-4"} px-4 py-2 bg-slate-900 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-tighter text-amber-400 shadow-xl`}
+                      >
+                        Tutorial Card #{index + 1}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Help Section */}
+          <div className='pt-12 border-t border-white/5'>
+            <div className='bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-[3rem] p-12 text-center space-y-8'>
+              <div className='space-y-4'>
+                <h2 className='text-3xl font-bold italic'>
+                  Need a bit more help?
+                </h2>
+                <p className='text-slate-300 max-w-xl mx-auto'>
+                  If our guides didn&apos;t clear things up, our FAQ might have
+                  what you&apos;re looking for. Or just start a group and see
+                  where it takes you.
+                </p>
+              </div>
+              <div className='flex flex-wrap items-center justify-center gap-6'>
+                <button
+                  onClick={() => router.push("/register")}
+                  className='px-10 py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 transition-all font-bold shadow-xl shadow-amber-500/20'
+                >
+                  Start Planning Now
                 </button>
                 <button
                   onClick={() => router.push("/faq")}
-                  className='px-6 py-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 transition-all font-semibold active:scale-[0.98]'
+                  className='px-10 py-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-medium'
                 >
-                  View FAQ
+                  Check the FAQ
                 </button>
               </div>
             </div>
           </div>
         </div>
+
         <Footer />
       </div>
 

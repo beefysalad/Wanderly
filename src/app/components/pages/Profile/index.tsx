@@ -38,9 +38,6 @@ const ProfileComponent = () => {
   const { user, loading } = useCurrentUser();
   const { data: groupsData } = useGroups();
   const groups = groupsData?.groups || [];
-  const [activeTab, setActiveTab] = useState<
-    "dashboard" | "trips" | "groups" | "profile"
-  >("profile");
   const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -81,16 +78,6 @@ const ProfileComponent = () => {
 
   const handleLogout = async () => {
     await signOut(auth);
-  };
-
-  const handleTabChange = (
-    tab: "dashboard" | "trips" | "groups" | "profile",
-  ) => {
-    if (tab === "profile") {
-      setActiveTab("profile");
-    } else {
-      router.push(`/dashboard?tab=${tab}`);
-    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

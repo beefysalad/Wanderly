@@ -27,10 +27,6 @@ const DashboardGroupCards = ({
   const hasMoreGroups = limit && totalGroups && totalGroups > limit;
 
   // Get average color scheme for header icon (or use first group's color)
-  const headerColor =
-    groups.length > 0
-      ? getGroupColorClasses(groups[0].colorScheme)
-      : getGroupColorClasses("orange");
 
   return (
     <div className='flex-1'>

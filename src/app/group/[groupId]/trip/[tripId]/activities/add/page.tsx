@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar,
   Clock,
-  FileText,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -27,9 +26,7 @@ import {
 import { useCreateActivity } from "@/src/hooks/useActivities";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
-import { Trip } from "@/src/shared/types";
-import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
   "commute",
   "car",
@@ -40,6 +37,9 @@ const transportationModes = [
   "walking",
   "other",
 ] as const;
+
+import { Trip } from "@/src/shared/types";
+import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 
 type Step = 1 | 2 | 3;
 
@@ -324,7 +324,8 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                 form.handleSubmit(onSubmit, (errors) => {
                   console.error("Form validation errors:", errors);
                   const errorMessages = Object.values(errors)
-                    .map((err: { message: string }) => err.message)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .map((err: any) => err.message)
                     .join(", ");
                   setError(`Validation failed: ${errorMessages}`);
                 })(e);

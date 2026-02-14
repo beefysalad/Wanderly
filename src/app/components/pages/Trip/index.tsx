@@ -677,7 +677,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             selectedActivity
           }
           expenses={expenses}
-          tripId={tripId}
           onClose={() => {
             setShowActivityDetailModal(false);
             setSelectedActivity(null);
@@ -695,7 +694,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               done: !selectedActivity.done,
             });
           }}
-          onSelectExpense={(expense) => {
+          onSelectExpense={() => {
             handleTabChange("expenses");
             setShowActivityDetailModal(false);
           }}

@@ -1,6 +1,6 @@
 "use client";
-import { Trip, Group, Expense } from "@/src/shared/types";
-import { ArrowLeft, Users } from "lucide-react";
+import { Trip, Expense } from "@/src/shared/types";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
@@ -38,7 +38,7 @@ const GuestExpensesComponent = ({
   const paymentLogs = paymentLogsData?.paymentLogs || [];
 
   const [expenseSubTab, setExpenseSubTab] = useState<"unsettled" | "settled">(
-    "unsettled"
+    "unsettled",
   );
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,18 +50,18 @@ const GuestExpensesComponent = ({
   };
 
   const unsettledExpenses = expenses.filter(
-    (expense) => !isExpenseSettled(expense)
+    (expense) => !isExpenseSettled(expense),
   );
   const settledExpenses = expenses.filter((expense) =>
-    isExpenseSettled(expense)
+    isExpenseSettled(expense),
   );
 
   if (loadingGroup) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8'>
-          <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-700 font-medium'>Loading expenses...</p>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading expenses...</p>
         </div>
       </main>
     );
@@ -69,15 +69,13 @@ const GuestExpensesComponent = ({
 
   if (!trip) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center p-4'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-2xl shadow-xl border border-white/5 p-8 max-w-md'>
+          <div className='w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-slate-900 mb-2'>
-            Trip Not Found
-          </h2>
-          <p className='text-slate-600 mb-6'>
+          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
+          <p className='text-slate-400 mb-6'>
             This trip doesn&apos;t exist or has been removed.
           </p>
           <button
@@ -92,80 +90,89 @@ const GuestExpensesComponent = ({
   }
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-6'>
-      <div className='max-w-4xl mx-auto px-4 py-4 md:py-6'>
-        <div className='mb-8'>
-          {/* Header Card with Integrated Back Button */}
-          <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6 mb-6'>
-            <div className='flex items-start justify-between gap-4'>
-              <div className='flex items-start gap-4 flex-1 min-w-0'>
-                <button
-                  onClick={() =>
-                    router.push(`/guest/group/${groupId}/trip/${tripId}`)
-                  }
-                  className='p-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
-                  aria-label='Go back'
-                >
-                  <ArrowLeft className='w-5 h-5' />
-                </button>
-                <div className='flex-1 min-w-0'>
-                  <h1 className='text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-2'>
-                    Expenses
-                  </h1>
-                  <p className='text-sm text-slate-600 flex items-center gap-2 mb-2'>
-                    <span className='text-lg'>📅</span>
-                    <span>{trip.name}</span>
-                  </p>
-                  {guestSession && (
-                    <p className='text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-lg inline-flex items-center gap-2 mt-2'>
-                      <Users className='w-4 h-4' />
-                      Viewing as Guest: {guestSession.guestName}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+    <main className='min-h-screen bg-slate-950 pb-6 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+      </div>
 
-            {/* Filter Tabs */}
-            <div className='mt-4 flex items-center gap-2 overflow-x-auto pb-1'>
-              <button
-                onClick={() => setExpenseSubTab("unsettled")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                  expenseSubTab === "unsettled"
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                Unsettled ({unsettledExpenses.length})
-              </button>
-              <button
-                onClick={() => setExpenseSubTab("settled")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                  expenseSubTab === "settled"
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                Settled ({settledExpenses.length})
-              </button>
+      <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
+        <div className='mb-8'>
+          {/* Header Navigation */}
+          <div className='flex items-center justify-between mb-8'>
+            <button
+              onClick={() =>
+                router.push(`/guest/group/${groupId}/trip/${tripId}`)
+              }
+              className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white group'
+            >
+              <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-1' />
+              <span className='font-medium'>Back</span>
+            </button>
+
+            <div className='flex items-center gap-2'>
+              <span className='px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter'>
+                GUEST VIEW
+              </span>
+            </div>
+          </div>
+
+          <div className='bg-slate-800/20 backdrop-blur-xl border border-white/5 rounded-2xl p-6 sm:p-8 mb-8'>
+            <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
+              <div>
+                <div className='flex items-center gap-2 mb-3'>
+                  <span className='px-3 py-1 bg-orange-500/10 text-orange-400 rounded-lg text-xs font-bold border border-orange-500/20'>
+                    {guestSession?.guestName?.toUpperCase() || "GUEST"}
+                  </span>
+                </div>
+                <h1 className='text-3xl font-bold text-white mb-2 leading-tight'>
+                  Trip Expenses
+                </h1>
+                <p className='text-sm text-slate-400 flex items-center gap-2'>
+                  <span className='text-lg'>📅</span>
+                  <span>{trip.name}</span>
+                </p>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className='flex items-center gap-2 bg-slate-900/50 p-1 rounded-xl border border-white/5'>
+                <button
+                  onClick={() => setExpenseSubTab("unsettled")}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                    expenseSubTab === "unsettled"
+                      ? "bg-amber-500 text-white shadow-lg"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Unsettled ({unsettledExpenses.length})
+                </button>
+                <button
+                  onClick={() => setExpenseSubTab("settled")}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                    expenseSubTab === "settled"
+                      ? "bg-amber-500 text-white shadow-lg"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Settled ({settledExpenses.length})
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6'>
+        <div className='bg-slate-800/20 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-8 min-h-[400px]'>
           <div className='relative z-10'>
-
             {loadingExpenses || loadingPaymentLogs ? (
               <div className='text-center py-12'>
-                <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                <p className='text-slate-600 font-medium'>
+                <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                <p className='text-slate-400 font-medium'>
                   Loading expenses...
                 </p>
               </div>
             ) : (
               <ExpensesList
-                tripId={tripId}
-                groupId={groupId}
                 expenses={
                   expenseSubTab === "unsettled"
                     ? unsettledExpenses

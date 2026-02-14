@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "./useSocket";
-import type { Notification } from "@/src/shared/types";
 
 /**
  * Hook to listen for real-time notification events via Socket.IO
@@ -14,7 +13,7 @@ export function useSocketNotifications() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNotification = (notification: Notification) => {
+    const handleNotification = () => {
       // Invalidate notifications queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({
@@ -29,4 +28,3 @@ export function useSocketNotifications() {
     };
   }, [socket, queryClient]);
 }
-

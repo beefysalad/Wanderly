@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/src/shared/types";
-import { Plus, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
 
@@ -148,7 +148,7 @@ const TravelCalendar = ({
               {/* Activities - Compact List */}
               {dayActivities.length > 0 ? (
                 <div className='space-y-1 mb-4'>
-                  {dayActivities.slice(0, 5).map((activity, idx) => (
+                  {dayActivities.slice(0, 5).map((activity) => (
                     <div
                       key={activity.id}
                       className={`py-2 px-2.5 rounded-xl transition-all ${

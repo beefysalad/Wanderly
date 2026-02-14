@@ -29,8 +29,8 @@ import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { Trip, Activity } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import api from "@/lib/axios";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
   "commute",
   "car",
@@ -336,7 +336,8 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                 form.handleSubmit(onSubmit, (errors) => {
                   console.error("Form validation errors:", errors);
                   const errorMessages = Object.values(errors)
-                    .map((err: { message: string }) => err.message)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .map((err: any) => err.message)
                     .join(", ");
                   setError(`Validation failed: ${errorMessages}`);
                 })(e);

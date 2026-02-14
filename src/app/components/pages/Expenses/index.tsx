@@ -8,9 +8,8 @@ import React, { useState, useEffect } from "react";
 import ExpensesList from "./ExpenseList";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
+import { toast } from "sonner";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
-import api from "@/lib/axios";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 
 interface IExpensesComponent {
@@ -25,7 +24,6 @@ const ExpensesComponent = ({
   isEmbedded = false,
 }: IExpensesComponent) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
   const { data: expensesData, isLoading: loadingExpenses } =
     useExpenses(tripId);
@@ -110,12 +108,11 @@ const ExpensesComponent = ({
           JSON.stringify(selectedExpense.paymentStatusMap || {}) !==
             JSON.stringify(updatedExpense.paymentStatusMap || {}) ||
           JSON.stringify(selectedExpense.paidMembers || []) !==
-            JSON.stringify(updatedExpense.paidMembers || []) ||
-          JSON.stringify(selectedExpense.pendingPayments || []) !==
-            JSON.stringify(updatedExpense.pendingPayments || []);
+            JSON.stringify(updatedExpense.paidMembers || []);
 
         if (paymentDataChanged) {
           setSelectedExpense(updatedExpense);
+          toast.success("Expense updated successfully!");
         }
       }
     }
@@ -203,25 +200,6 @@ const ExpensesComponent = ({
   };
 
   const filteredExpenses = getFilteredExpenses();
-
-  const handleDeleteExpense = async (expenseId: string) => {
-    if (!expenseId) return;
-    try {
-      await api.delete(`/trips/${tripId}/expenses/${expenseId}`);
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      setSelectedExpense(null);
-    } catch (error) {
-      console.error("Failed to delete expense:", error);
-    }
-  };
-
-  const handleUpdateExpense = () => {
-    // This is handled by the ExpenseList component when marking as paid
-    // The actual update is done via API call in ExpenseList
-  };
 
   const handleEditExpense = (expense: Expense) => {
     router.push(
@@ -592,6 +570,7 @@ const ExpensesComponent = ({
                       <p className='text-sm font-bold text-red-400 uppercase tracking-widest mb-1'>
                         You Owe
                       </p>
+
                       <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
                         ₱{unsettledStats.youOwe.toFixed(2)}
                       </p>
@@ -604,6 +583,7 @@ const ExpensesComponent = ({
                       <p className='text-sm font-bold text-emerald-400 uppercase tracking-widest mb-1'>
                         You&apos;re Owed
                       </p>
+
                       <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
                         ₱{unsettledStats.youAreOwed.toFixed(2)}
                       </p>
@@ -633,12 +613,7 @@ const ExpensesComponent = ({
                   members={group.memberEmails || []}
                   memberNames={group.memberNames}
                   memberMetadata={group.memberMetadata}
-                  tripId={tripId}
-                  groupId={groupId}
                   activities={trip.activities || []}
-                  onDeleteExpense={handleDeleteExpense}
-                  onUpdateExpense={handleUpdateExpense}
-                  onEditExpense={handleEditExpense}
                   onSelectExpense={handleEditExpense}
                   currentUser={user?.email ?? ""}
                 />

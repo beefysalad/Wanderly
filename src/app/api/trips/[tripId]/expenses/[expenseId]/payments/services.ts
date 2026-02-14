@@ -78,7 +78,7 @@ export async function markExpensePaidService(
     createPaymentLog?: boolean; // whether to create a payment log
   },
 ) {
-  const { trip: _trip, user } = await verifyTripAccess(token, tripId);
+  const { user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
   const expense = await prisma.expense.findUnique({
@@ -232,7 +232,7 @@ export async function confirmPaymentService(
     status: "confirmed" | "rejected"; // new status
   },
 ) {
-  const { trip: _trip, user } = await verifyTripAccess(token, tripId);
+  const { user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
   const expense = await prisma.expense.findUnique({

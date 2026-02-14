@@ -74,7 +74,7 @@ export async function createActivityService(
     dropoffLocation?: string;
   },
 ) {
-  const { user, trip: _trip } = await verifyTripAccess(token, tripId);
+  const { user } = await verifyTripAccess(token, tripId);
 
   const activity = await prisma.activity.create({
     data: {

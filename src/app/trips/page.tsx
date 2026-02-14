@@ -11,7 +11,6 @@ import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav
 const TripsPage = () => {
   const router = useRouter();
   const { data: groupsData, isLoading } = useGroups();
-  const allGroups = groupsData?.groups || [];
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("all");
 
   const handleLogout = async () => {
@@ -19,6 +18,7 @@ const TripsPage = () => {
   };
 
   const allTrips = useMemo(() => {
+    const allGroups = groupsData?.groups || [];
     const trips: Array<
       Trip & { groupId: string; groupName: string; groupColor: string }
     > = [];
@@ -49,7 +49,7 @@ const TripsPage = () => {
       const dateB = new Date(b.startDate).getTime();
       return dateA - dateB;
     });
-  }, [allGroups]);
+  }, [groupsData?.groups]);
 
   const filteredTrips = useMemo(() => {
     const today = new Date();

@@ -4,8 +4,6 @@ import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups, useJoinGroup } from "@/src/hooks/useGroups";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
-// AuthModal import removed
-import PulseBackground from "@/src/app/components/pages/LandingPage/PulseBackground";
 import Footer from "@/src/app/components/shared/Footer";
 import Header from "@/src/app/components/shared/Header";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
@@ -166,7 +164,6 @@ export default function InvitePage({
     user,
     userLoading,
     isJoining,
-    isJoining,
     shouldJoinAfterAuth,
     groupCode,
     joinGroup,
@@ -179,14 +176,15 @@ export default function InvitePage({
 
   if (userLoading || isJoining || isNavigating) {
     return (
-      <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative flex flex-col'>
-        <PulseBackground />
+      <main className='min-h-screen bg-slate-950 text-white relative flex flex-col'>
+        <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+          <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+          <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
+        </div>
         <div className='relative z-10 flex-1 flex flex-col'>
-          <Header
-          // AuthModal props removed
-          />
+          <Header />
           <div className='flex-1 flex items-center justify-center p-4'>
-            <div className='text-center bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-8 max-w-md'>
+            <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 p-8 max-w-md'>
               <div className='w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
               <p className='text-slate-300 font-medium'>
                 {userLoading
@@ -205,14 +203,15 @@ export default function InvitePage({
 
   if (error) {
     return (
-      <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative flex flex-col'>
-        <PulseBackground />
+      <main className='min-h-screen bg-slate-950 text-white relative flex flex-col'>
+        <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+          <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+          <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
+        </div>
         <div className='relative z-10 flex-1 flex flex-col'>
-          <Header
-          // AuthModal props removed
-          />
+          <Header />
           <div className='flex-1 flex items-center justify-center p-4'>
-            <div className='text-center bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-6 sm:p-8 max-w-md'>
+            <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 p-6 sm:p-8 max-w-md'>
               <div className='w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30'>
                 <span className='text-3xl'>😞</span>
               </div>
@@ -220,7 +219,7 @@ export default function InvitePage({
               <p className='text-slate-300 mb-6'>{error}</p>
               <button
                 onClick={() => router.push("/dashboard")}
-                className='px-6 py-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
               >
                 Go to Dashboard
               </button>
@@ -233,17 +232,18 @@ export default function InvitePage({
   }
 
   return (
-    <main className='min-h-screen bg-linear-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative flex flex-col'>
-      <PulseBackground />
+    <main className='min-h-screen bg-slate-950 text-white relative flex flex-col'>
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
+      </div>
       <div className='relative z-10 flex-1 flex flex-col'>
-        <Header
-        // AuthModal props removed
-        />
+        <Header />
         <div className=' flex-1 flex items-center justify-center p-4 py-8'>
           <div className='w-full max-w-2xl'>
-            <div className='text-center bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-8 sm:p-12'>
+            <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 p-8 sm:p-12'>
               <div className='mb-6'>
-                <div className='inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-amber-500 to-orange-500 rounded-2xl mb-4 shadow-lg'>
+                <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl mb-4 shadow-lg'>
                   <Users className='w-10 h-10 text-white' />
                 </div>
                 <h1 className='text-3xl md:text-4xl font-bold text-white mb-3'>
@@ -258,7 +258,7 @@ export default function InvitePage({
                 </p>
               </div>
 
-              <div className='flex items-center justify-center gap-2 mb-6 p-4 bg-white/5 rounded-xl border border-amber-500/20'>
+              <div className='flex items-center justify-center gap-2 mb-6 p-4 bg-white/5 rounded-xl border border-white/5'>
                 <span className='text-sm text-slate-300'>
                   Group Code:{" "}
                   <span className='font-mono font-bold text-amber-400'>
@@ -267,7 +267,7 @@ export default function InvitePage({
                 </span>
               </div>
 
-              <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+              <div className='flex flex-col sm:flex-row gap-4 justify-center'>
                 <button
                   onClick={() => {
                     router.push(
@@ -276,7 +276,7 @@ export default function InvitePage({
                       )}`,
                     );
                   }}
-                  className='px-6 py-3 bg-linear-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group'
+                  className='px-8 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group animate-gradient-shift'
                 >
                   <UserPlus className='w-4 h-4' />
                   <span>Sign Up to Join</span>
@@ -289,7 +289,7 @@ export default function InvitePage({
                       )}`,
                     );
                   }}
-                  className='px-6 py-3 bg-transparent hover:bg-orange-600/10 border-2 border-linear-to-r from-orange-500 via-amber-500 to-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50 group overflow-hidden'
+                  className='px-8 py-3 bg-transparent hover:bg-orange-600/10 border-2 border-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50'
                 >
                   <LogIn className='w-4 h-4' />
                   <span>Sign In</span>
@@ -298,9 +298,9 @@ export default function InvitePage({
             </div>
           </div>
         </div>
+        <Footer />
       </div>
 
-      {/* AuthModal rendering removed */}
       {isNavigating && <NavigationLoader message='Redirecting...' />}
     </main>
   );

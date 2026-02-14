@@ -1,6 +1,5 @@
 "use client";
 import { useGroups } from "@/src/hooks/useGroups";
-import { Group } from "@/src/shared/types";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import {

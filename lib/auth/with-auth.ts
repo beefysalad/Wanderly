@@ -131,7 +131,7 @@ export function withOptionalAuth(
               isGuest: false,
             };
             return await handler(req, authContext);
-          } catch (_error) {
+          } catch (error) {
             // Token invalid, fall through to guest check
             logger.warn("Token validation failed, checking for guest access");
           }

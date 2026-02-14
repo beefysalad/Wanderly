@@ -2,7 +2,7 @@
 
 import SignUpForm from "@/src/app/components/shared/AuthForm/SignUpForm";
 import Link from "next/link";
-import { Compass } from "lucide-react";
+import { Compass, ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
@@ -24,6 +24,17 @@ function RegisterForm() {
       </div>
 
       <div className='w-full max-w-md z-10'>
+        {/* Back to Home - Floating */}
+        <div className='absolute top-6 left-6 z-20'>
+          <Link
+            href='/'
+            className='group flex items-center gap-2 px-4 py-2.5 bg-slate-900/40 backdrop-blur-xl border border-white/10 hover:border-amber-500/30 rounded-xl transition-all hover:bg-slate-900/60 text-slate-400 hover:text-white text-sm font-medium shadow-lg'
+          >
+            <ArrowLeft className='w-4 h-4 group-hover:-translate-x-1 transition-transform' />
+            <span>Home</span>
+          </Link>
+        </div>
+
         {/* Logo */}
         <div className='flex flex-col items-center mb-8'>
           <div className='relative mb-4'>

@@ -38,6 +38,7 @@ const NotificationPanel = () => {
   const hasUnread = notifications.some((n) => !n.read);
 
   const groupedNotifications = useMemo(() => {
+    const notifications = data?.notifications || [];
     const groups: Record<string, Notification[]> = {};
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -68,7 +69,7 @@ const NotificationPanel = () => {
     });
 
     return groups;
-  }, [notifications]);
+  }, [data?.notifications]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {

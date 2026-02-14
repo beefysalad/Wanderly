@@ -1,8 +1,6 @@
 "use client";
 
-import { Compass, LogIn, Menu, UserPlus, X } from "lucide-react";
-import Link from "next/link";
-import React, { Fragment } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetClose,
@@ -10,15 +8,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { getAppVersion } from "@/lib/helper";
+import { Compass, LogIn, Menu, UserPlus, X } from "lucide-react";
+import Link from "next/link";
+import { Fragment } from "react";
 
-interface IHeaderProps {
-  // Removed AuthModal props as they are no longer needed
-  setShowQuickJoinModal?: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const Header = ({ setShowQuickJoinModal }: IHeaderProps) => {
+const Header = () => {
   return (
     <Fragment>
       <header className='hidden md:flex items-center px-8 py-3 bg-white/5 backdrop-blur-xl border-b border-white/10 animate-fade-in-down relative'>
@@ -119,7 +114,6 @@ const Header = ({ setShowQuickJoinModal }: IHeaderProps) => {
                     href='/register'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
-                    <UserPlus className='w-4 h-4' />
                     Sign Up
                   </Link>
                 </SheetClose>
@@ -129,7 +123,6 @@ const Header = ({ setShowQuickJoinModal }: IHeaderProps) => {
                     href='/login'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
-                    <LogIn className='w-4 h-4' />
                     Login
                   </Link>
                 </SheetClose>

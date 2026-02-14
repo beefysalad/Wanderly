@@ -16,20 +16,21 @@ import TripsListComponent from "./TripsList";
 import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
-import { getGroupColorClasses } from "@/lib/utils/groupColors";
 import NavigationLoader from "../../shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import { toast } from "sonner";
 
 interface IGroupComponent {
   param: string;
 }
+
 const GroupComponent = ({ param }: IGroupComponent) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
+
   const router = useRouter();
   const { data: groupData, isLoading, error } = useGroup(param);
   const group = groupData?.group || null;
@@ -50,6 +51,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(group.code);
         setCopied(true);
+        toast.success("Group code copied to clipboard!");
         setTimeout(() => setCopied(false), 2000);
       } else {
         const textArea = document.createElement("textarea");
@@ -65,19 +67,22 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           const successful = document.execCommand("copy");
           if (successful) {
             setCopied(true);
+            toast.success("Group code copied to clipboard!");
             setTimeout(() => setCopied(false), 2000);
           } else {
             console.error("Failed to copy using fallback method");
+            toast.error("Failed to copy group code");
           }
         } catch (err) {
           console.error("Fallback copy failed:", err);
+          toast.error("Failed to copy group code");
         } finally {
           document.body.removeChild(textArea);
         }
       }
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
-      alert("Failed to copy code. Please copy manually: " + group.code);
+      toast.error("Failed to copy group code");
     }
   };
 
@@ -89,8 +94,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(inviteLink);
-        setInviteLinkCopied(true);
-        setTimeout(() => setInviteLinkCopied(false), 2000);
+        toast.success("Invite link copied!", {
+          description: "Send it to your friend to join the group.",
+        });
       } else {
         const textArea = document.createElement("textarea");
         textArea.value = inviteLink;
@@ -104,26 +110,30 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         try {
           const successful = document.execCommand("copy");
           if (successful) {
-            setInviteLinkCopied(true);
-            setTimeout(() => setInviteLinkCopied(false), 2000);
+            toast.success("Invite link copied!", {
+              description: "Send it to your friend to join the group.",
+            });
           } else {
             console.error("Failed to copy using fallback method");
+            toast.error("Failed to copy invite link");
           }
         } catch (err) {
           console.error("Fallback copy failed:", err);
+          toast.error("Failed to copy invite link");
         } finally {
           document.body.removeChild(textArea);
         }
       }
     } catch (err) {
       console.error("Failed to copy invite link:", err);
-      alert("Failed to copy invite link. Please copy manually: " + inviteLink);
+      toast.error("Failed to copy invite link");
     }
   };
 
   const goBack = () => {
     router.push("/groups");
   };
+
   const handleLeaveGroup = async () => {
     if (!group) return;
     try {
@@ -136,6 +146,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       console.error("Failed to leave group:", error);
     }
   };
+
   const handleDeleteGroup = async () => {
     if (!group) return;
     try {
@@ -148,14 +159,6 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       console.error("Failed to delete group:", error);
     }
   };
-  const handleUpdateGroup = () => {
-    console.log("HANDLE");
-  };
-
-  // Get color scheme for the group (default to orange if not loaded yet)
-  group
-    ? getGroupColorClasses(group.colorScheme)
-    : getGroupColorClasses("orange");
 
   if (isLoading) {
     return (
@@ -191,6 +194,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       </main>
     );
   }
+
   return (
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
       {/* Background Effects */}
@@ -283,7 +287,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
                 {group.code}
               </div>
               <div className='text-xs text-slate-400 font-medium'>
-                Group Code
+                Group Code (Click to copy)
               </div>
             </button>
           </div>
@@ -293,14 +297,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         <div>
           <div className='flex items-center justify-between mb-4 px-1'>
             <h2 className='text-xl font-bold text-white'>Trips</h2>
-            {/* Filter buttons could go here */}
           </div>
 
-          <TripsListComponent
-            group={group}
-            groupId={group.id}
-            onUpdateGroup={handleUpdateGroup}
-          />
+          <TripsListComponent group={group} groupId={group.id} />
         </div>
 
         {/* Floating Create Button */}

@@ -192,109 +192,250 @@ const FAQComponent = () => {
       </div>
 
       <div className='relative z-10'>
-        <Header
-          // AuthModal props removed
-          setShowQuickJoinModal={setShowQuickJoinModal}
-        />
-        <div className='max-w-4xl mx-auto px-4 py-8'>
-          <div className='space-y-8'>
-            {/* Header */}
-            <div className='text-center space-y-4'>
-              <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-4 shadow-lg'>
-                <HelpCircle className='w-10 h-10 text-white' />
-              </div>
-              <h1 className='text-4xl md:text-5xl font-bold text-white'>
-                Frequently Asked{" "}
-                <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
-                  Questions
-                </span>
-              </h1>
-              <p className='text-lg text-slate-300 max-w-2xl mx-auto'>
-                Everything you need to know about Wanderly
-              </p>
+        <Header />
+        <div className='max-w-6xl mx-auto px-6 py-12 md:py-24 space-y-16'>
+          {/* Header */}
+          <div className='text-center space-y-6 max-w-3xl mx-auto'>
+            <div className='inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-3xl mb-4 border border-amber-500/30 shadow-2xl animate-pulse-slow'>
+              <HelpCircle className='w-12 h-12 text-amber-500' />
             </div>
+            <h1 className='text-4xl md:text-6xl font-black text-white leading-tight'>
+              Got{" "}
+              <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
+                Questions?
+              </span>
+              <br />
+              I&apos;ve got answers.
+            </h1>
+            <p className='text-xl text-slate-400 font-light'>
+              Everything you need to know about planning your next group
+              adventure with Wanderly.
+            </p>
+          </div>
 
-            {/* FAQ Items */}
-            <div className='bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-amber-500/20 rounded-2xl p-6 sm:p-8 md:p-10 backdrop-blur-sm shadow-2xl'>
+          {/* Categorized FAQ Sections */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+            {/* Category: The Basics */}
+            <div className='space-y-6'>
+              <div className='flex items-center gap-3 px-2'>
+                <h2 className='text-xl font-bold uppercase tracking-widest text-slate-500'>
+                  The Basics
+                </h2>
+              </div>
               <div className='space-y-4'>
-                {faqs.map((faq) => {
-                  const isOpen = openItems.has(faq.id);
-                  return (
-                    <div
-                      key={faq.id}
-                      className='bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all overflow-hidden'
-                    >
-                      <button
-                        onClick={() => toggleItem(faq.id)}
-                        className='w-full p-5 text-left flex items-start gap-4 hover:bg-white/5 transition-colors'
+                {faqs
+                  .filter((f) =>
+                    ["what-is-wanderly", "no-account"].includes(f.id),
+                  )
+                  .map((faq) => {
+                    const isOpen = openItems.has(faq.id);
+                    return (
+                      <div
+                        key={faq.id}
+                        className='group bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300'
                       >
-                        <div className='p-2 bg-amber-500/20 rounded-lg shrink-0'>
-                          {faq.icon}
-                        </div>
-                        <div className='flex-1'>
-                          <h3 className='font-semibold text-white mb-2 pr-8'>
-                            {faq.question}
-                          </h3>
+                        <button
+                          onClick={() => toggleItem(faq.id)}
+                          className='w-full p-6 text-left flex flex-col gap-2'
+                        >
+                          <div className='flex items-center justify-between w-full'>
+                            <h3 className='font-bold text-lg text-white group-hover:text-amber-400 transition-colors'>
+                              {faq.question}
+                            </h3>
+                            <Plus
+                              className={`w-5 h-5 text-amber-500 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                            />
+                          </div>
                           <div
-                            className={`overflow-hidden transition-all duration-300 ${
-                              isOpen
-                                ? "max-h-[1000px] opacity-100"
-                                : "max-h-0 opacity-0"
-                            }`}
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] mt-4 opacity-100" : "max-h-0 opacity-0"}`}
                           >
-                            <div className='text-sm text-slate-300 leading-relaxed pt-2'>
+                            <div className='text-slate-400 leading-relaxed font-light border-t border-white/5 pt-4'>
                               {faq.answer}
                             </div>
                           </div>
-                        </div>
-                        <div className='shrink-0'>
-                          <svg
-                            className={`w-5 h-5 text-amber-400 transition-transform duration-300 ${
-                              isOpen ? "rotate-180" : ""
-                            }`}
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M19 9l-7 7-7-7'
-                            />
-                          </svg>
-                        </div>
-                      </button>
-                    </div>
-                  );
-                })}
+                        </button>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
 
-            {/* Help Section */}
-            <div className='text-center space-y-4'>
-              <p className='text-slate-300'>
-                Still have questions? We&apos;re here to help!
-              </p>
-              <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+            {/* Category: Group Coordination */}
+            <div className='space-y-6'>
+              <div className='flex items-center gap-3 px-2'>
+                <h2 className='text-xl font-bold uppercase tracking-widest text-slate-500'>
+                  Coordination
+                </h2>
+              </div>
+              <div className='space-y-4'>
+                {faqs
+                  .filter((f) =>
+                    [
+                      "join-group",
+                      "invite-friends",
+                      "delete-trip-group",
+                    ].includes(f.id),
+                  )
+                  .map((faq) => {
+                    const isOpen = openItems.has(faq.id);
+                    return (
+                      <div
+                        key={faq.id}
+                        className='group bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300'
+                      >
+                        <button
+                          onClick={() => toggleItem(faq.id)}
+                          className='w-full p-6 text-left flex flex-col gap-2'
+                        >
+                          <div className='flex items-center justify-between w-full'>
+                            <h3 className='font-bold text-lg text-white group-hover:text-amber-400 transition-colors'>
+                              {faq.question}
+                            </h3>
+                            <Plus
+                              className={`w-5 h-5 text-amber-500 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                            />
+                          </div>
+                          <div
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] mt-4 opacity-100" : "max-h-0 opacity-0"}`}
+                          >
+                            <div className='text-slate-400 leading-relaxed font-light border-t border-white/5 pt-4'>
+                              {faq.answer}
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Category: Planning & Tech */}
+            <div className='space-y-6'>
+              <div className='flex items-center gap-3 px-2'>
+                <Calendar className='w-5 h-5 text-amber-500' />
+                <h2 className='text-xl font-bold uppercase tracking-widest text-slate-500'>
+                  Planning & Sync
+                </h2>
+              </div>
+              <div className='space-y-4'>
+                {faqs
+                  .filter((f) =>
+                    [
+                      "create-trip",
+                      "export-schedule",
+                      "calendar-vs-schedule",
+                      "ics-file",
+                    ].includes(f.id),
+                  )
+                  .map((faq) => {
+                    const isOpen = openItems.has(faq.id);
+                    return (
+                      <div
+                        key={faq.id}
+                        className='group bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300'
+                      >
+                        <button
+                          onClick={() => toggleItem(faq.id)}
+                          className='w-full p-6 text-left flex flex-col gap-2'
+                        >
+                          <div className='flex items-center justify-between w-full'>
+                            <h3 className='font-bold text-lg text-white group-hover:text-amber-400 transition-colors'>
+                              {faq.question}
+                            </h3>
+                            <Plus
+                              className={`w-5 h-5 text-amber-500 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                            />
+                          </div>
+                          <div
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] mt-4 opacity-100" : "max-h-0 opacity-0"}`}
+                          >
+                            <div className='text-slate-400 leading-relaxed font-light border-t border-white/5 pt-4'>
+                              {faq.answer}
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Category: Money & Security */}
+            <div className='space-y-6'>
+              <div className='flex items-center gap-3 px-2'>
+                <Shield className='w-5 h-5 text-amber-500' />
+                <h2 className='text-xl font-bold uppercase tracking-widest text-slate-500'>
+                  Money & Safety
+                </h2>
+              </div>
+              <div className='space-y-4'>
+                {faqs
+                  .filter((f) =>
+                    ["expense-splitting", "data-security"].includes(f.id),
+                  )
+                  .map((faq) => {
+                    const isOpen = openItems.has(faq.id);
+                    return (
+                      <div
+                        key={faq.id}
+                        className='group bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300'
+                      >
+                        <button
+                          onClick={() => toggleItem(faq.id)}
+                          className='w-full p-6 text-left flex flex-col gap-2'
+                        >
+                          <div className='flex items-center justify-between w-full'>
+                            <h3 className='font-bold text-lg text-white group-hover:text-amber-400 transition-colors'>
+                              {faq.question}
+                            </h3>
+                            <Plus
+                              className={`w-5 h-5 text-amber-500 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                            />
+                          </div>
+                          <div
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] mt-4 opacity-100" : "max-h-0 opacity-0"}`}
+                          >
+                            <div className='text-slate-400 leading-relaxed font-light border-t border-white/5 pt-4'>
+                              {faq.answer}
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+
+          {/* Help Section */}
+          <div className='pt-12 border-t border-white/5'>
+            <div className='bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-[3rem] p-12 text-center space-y-8'>
+              <div className='space-y-4'>
+                <h2 className='text-3xl font-bold italic'>Still confused?</h2>
+                <p className='text-slate-300 max-w-xl mx-auto'>
+                  Don&apos;t worry, even we get confused sometimes. If your
+                  question is really specific, feel free to reach out or just
+                  jump in and try it out.
+                </p>
+              </div>
+              <div className='flex flex-wrap items-center justify-center gap-6'>
                 <button
-                  onClick={() => {
-                    router.push("/register");
-                  }}
-                  className='px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 active:scale-[0.98]'
+                  onClick={() => router.push("/register")}
+                  className='px-10 py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 transition-all font-bold shadow-xl shadow-amber-500/20'
                 >
-                  Get Started
+                  Start Your First Trip
                 </button>
                 <button
                   onClick={() => router.push("/about")}
-                  className='px-6 py-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 transition-all font-semibold active:scale-[0.98]'
+                  className='px-10 py-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-medium'
                 >
-                  Learn More About Wanderly
+                  The Story Behind Wanderly
                 </button>
               </div>
             </div>
           </div>
         </div>
+
         <Footer />
       </div>
 

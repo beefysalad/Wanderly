@@ -17,7 +17,6 @@ import { formatTime12Hour } from "@/lib/utils";
 interface IActivityDetailModal {
   activity: Activity;
   expenses?: Expense[]; // expenses from the trip
-  tripId?: string; // tripId to fetch expenses if not provided
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -29,7 +28,6 @@ interface IActivityDetailModal {
 const ActivityDetailModal = ({
   activity,
   expenses = [],
-  tripId,
   onClose,
   onEdit,
   onDelete,
@@ -41,7 +39,7 @@ const ActivityDetailModal = ({
 
   // Filter expenses linked to this activity
   const linkedExpenses = expenses.filter(
-    (exp) => exp.activityId === activity.id
+    (exp) => exp.activityId === activity.id,
   );
 
   return (
@@ -132,11 +130,11 @@ const ActivityDetailModal = ({
                 <p className='text-slate-900 dark:text-white'>
                   {activity.startTime && activity.endTime
                     ? `${formatTime12Hour(
-                        activity.startTime
+                        activity.startTime,
                       )} - ${formatTime12Hour(activity.endTime)}`
                     : activity.startTime
-                    ? `Starts at ${formatTime12Hour(activity.startTime)}`
-                    : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
+                      ? `Starts at ${formatTime12Hour(activity.startTime)}`
+                      : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
                 </p>
               </div>
             </div>

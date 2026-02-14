@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Crown, Mail, Users, Calendar, User } from "lucide-react";
+import { ArrowLeft, Crown, Mail, Users, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useGroup } from "@/src/hooks/useGroups";
@@ -111,7 +111,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
                       ) : (
                         <div
                           className={`w-14 h-14 ${getAvatarColor(
-                            index
+                            index,
                           )} rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}
                         >
                           {getInitials(email)}

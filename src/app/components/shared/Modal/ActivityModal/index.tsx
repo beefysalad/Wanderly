@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { activitySchema, TActivitySchema } from "./activityAddZod";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
   "commute",
   "car",
@@ -105,52 +106,6 @@ const ActivityModal = ({
       }
     }
   }, [editingActivity]);
-
-  // Helper function to get transportation mode icon
-  const getTransportationIcon = (mode?: string) => {
-    switch (mode) {
-      case "car":
-        return "🚗";
-      case "bus":
-        return "🚌";
-      case "plane":
-        return "✈️";
-      case "train":
-        return "🚊";
-      case "taxi":
-        return "🚕";
-      case "walking":
-        return "🚶";
-      case "commute":
-        return "🚌";
-      default:
-        return "🚗";
-    }
-  };
-
-  // Helper function to get transportation mode display text
-  const getTransportationLabel = (mode: string) => {
-    switch (mode) {
-      case "commute":
-        return "🚌 Commute (Public Transport)";
-      case "car":
-        return "🚗 Car (Private Vehicle)";
-      case "plane":
-        return "✈️ Plane (Air Travel)";
-      case "bus":
-        return "🚌 Bus";
-      case "train":
-        return "🚊 Train";
-      case "taxi":
-        return "🚕 Taxi/Rideshare";
-      case "walking":
-        return "🚶 Walking";
-      case "other":
-        return "Other";
-      default:
-        return "Select mode...";
-    }
-  };
 
   const onSubmit = async (values: TActivitySchema) => {
     try {

@@ -2,8 +2,6 @@
 import { Expense, Activity } from "@/src/shared/types";
 import { CheckCircle, Link2, User, Clock, AlertCircle } from "lucide-react";
 import React from "react";
-import api from "@/lib/axios";
-import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 
 interface IExpensesListProps {
@@ -14,18 +12,14 @@ interface IExpensesListProps {
     string,
     { joinedAt: string; name?: string; imageUrl?: string }
   >; // email -> metadata with imageUrl
-  tripId: string;
-  groupId: string;
   activities?: Activity[]; // activities from the trip
-  onDeleteExpense?: (id: string) => void;
-  onUpdateExpense?: (expense: Expense) => void;
-  onEditExpense?: (expense: Expense) => void;
   onSelectExpense?: (expense: Expense) => void;
   currentUser?: string;
   readOnly?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paymentLogs?: any[]; // For guest view to calculate settled status
 }
+
 const categoryEmojis: Record<string, string> = {
   accommodation: "🏨",
   food: "🍽️",
@@ -34,24 +28,18 @@ const categoryEmojis: Record<string, string> = {
   activities: "🎯",
   other: "📌",
 };
+
 const ExpensesList = ({
   expenses,
   members,
   memberNames,
   memberMetadata,
-  tripId,
-  groupId,
   activities = [],
-  onDeleteExpense,
-  onEditExpense,
-  onUpdateExpense,
   onSelectExpense,
   currentUser,
   readOnly = false,
   paymentLogs = [],
 }: IExpensesListProps) => {
-  const queryClient = useQueryClient();
-
   // Helper to get activity by id
   const getActivityById = (activityId?: string): Activity | undefined => {
     if (!activityId) return undefined;
@@ -100,105 +88,6 @@ const ExpensesList = ({
       const splitCount = exp.splitWith?.length || members.length;
       return sum + exp.amount / splitCount;
     }, 0);
-
-  const handleMarkPaid = async (expenseId: string, memberId: string) => {
-    if (readOnly) return;
-
-    // Only allow self-marking
-    if (memberId !== currentUser) {
-      alert("You can only mark yourself as paid");
-      return;
-    }
-
-    const expense = expenses.find((e) => e.id === expenseId);
-    if (!expense) return;
-
-    const paidMembers = expense.paidMembers || [];
-    const pendingPayments = expense.pendingPayments || [];
-    const paymentStatus = expense.paymentStatusMap?.[memberId];
-
-    // Check if already confirmed paid
-    const isPaid = paidMembers.includes(memberId);
-    // Check if pending
-    const isPending =
-      paymentStatus === "pending" || pendingPayments.includes(memberId);
-
-    // If already confirmed, allow unmarking
-    // If pending, allow unmarking
-    // Otherwise, mark as pending
-    const shouldMarkPending = !isPaid && !isPending;
-    const shouldUnmark = isPaid || isPending;
-
-    const newPaidMembers = shouldUnmark
-      ? paidMembers.filter((m) => m !== memberId)
-      : paidMembers;
-    const newPendingPayments = shouldUnmark
-      ? pendingPayments.filter((m) => m !== memberId)
-      : shouldMarkPending
-        ? [...pendingPayments, memberId]
-        : pendingPayments;
-
-    // Optimistically update the expense in the cache
-    queryClient.setQueryData<{ expenses: Expense[] }>(
-      ["expenses", tripId],
-      (old) => {
-        if (!old) return old;
-        return {
-          expenses: old.expenses.map((e) => {
-            if (e.id !== expenseId) return e;
-            const updatedExpense = {
-              ...e,
-              paidMembers: newPaidMembers,
-              pendingPayments: newPendingPayments,
-            };
-            // Update payment status map
-            if (shouldMarkPending) {
-              updatedExpense.paymentStatusMap = {
-                ...e.paymentStatusMap,
-                [memberId]: "pending",
-              };
-            } else if (shouldUnmark) {
-              const { [memberId]: _, ...rest } = e.paymentStatusMap || {};
-              updatedExpense.paymentStatusMap = rest;
-            }
-            return updatedExpense;
-          }),
-        };
-      },
-    );
-
-    try {
-      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
-        memberEmail: memberId,
-        isPaid: shouldMarkPending,
-        createPaymentLog: false, // Don't create log until confirmed
-      });
-
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-    } catch (error) {
-      // Revert optimistic update on error
-      queryClient.setQueryData<{ expenses: Expense[] }>(
-        ["expenses", tripId],
-        (old) => {
-          if (!old) return old;
-          return {
-            expenses: old.expenses.map((e) =>
-              e.id === expenseId ? expense : e,
-            ),
-          };
-        },
-      );
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to mark expense as paid. Please try again.",
-      );
-      console.error("Failed to mark expense as paid:", error);
-    }
-  };
 
   // Helper to check if expense is settled (for guest view)
   const isExpenseSettled = (expense: Expense) => {
@@ -282,7 +171,6 @@ const ExpensesList = ({
                   const splitCount =
                     expense.splitWith?.length || members.length;
                   const perPersonAmount = expense.amount / splitCount;
-                  const paidCount = expense.paidMembers?.length || 0;
                   const totalOwed = splitCount - 1; // excluding payer
                   const allPaid = readOnly
                     ? isExpenseSettled(expense)
@@ -402,21 +290,24 @@ const ExpensesList = ({
                             </div>
 
                             {/* Payment Status */}
-                            {!allPaid && paidCount > 0 && totalOwed > 0 && (
-                              <div className='flex items-center gap-1 text-xs'>
-                                <div className='w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden'>
-                                  <div
-                                    className='h-full bg-emerald-500 rounded-full'
-                                    style={{
-                                      width: `${(paidCount / totalOwed) * 100}%`,
-                                    }}
-                                  />
+                            {!allPaid &&
+                              (expense.paidMembers?.length || 0) > 0 &&
+                              totalOwed > 0 && (
+                                <div className='flex items-center gap-1 text-xs'>
+                                  <div className='w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden'>
+                                    <div
+                                      className='h-full bg-emerald-500 rounded-full'
+                                      style={{
+                                        width: `${((expense.paidMembers?.length || 0) / totalOwed) * 100}%`,
+                                      }}
+                                    />
+                                  </div>
+                                  <span className='text-emerald-400 font-medium'>
+                                    {expense.paidMembers?.length || 0}/
+                                    {totalOwed} paid
+                                  </span>
                                 </div>
-                                <span className='text-emerald-400 font-medium'>
-                                  {paidCount}/{totalOwed} paid
-                                </span>
-                              </div>
-                            )}
+                              )}
                           </div>
                         </div>
 

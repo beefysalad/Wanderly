@@ -1,148 +1,104 @@
 import { getAppVersion } from "@/lib/helper";
-import { Compass, HelpCircle, Home, Info, PlayCircle } from "lucide-react";
+import { Compass } from "lucide-react";
 import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className='relative z-10 px-4 md:px-8 py-6 md:py-12 mt-16 md:mt-24 border-t border-white/10 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl'>
-      <div className='max-w-7xl mx-auto'>
-        {/* Mobile: Simplified Layout */}
-        <div className='md:hidden space-y-6 mb-6'>
-          {/* Brand */}
-
-          {/* Quick Links - Compact Grid */}
-          <nav className='grid grid-cols-2 gap-2'>
-            <Link
-              href='/'
-              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
-            >
-              <Home className='w-3.5 h-3.5' />
-              <span>Home</span>
-            </Link>
-            <Link
-              href='/about'
-              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
-            >
-              <Info className='w-3.5 h-3.5' />
-              <span>About</span>
-            </Link>
-            <Link
-              href='/faq'
-              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
-            >
-              <HelpCircle className='w-3.5 h-3.5' />
-              <span>FAQ</span>
-            </Link>
-            <Link
-              href='/how-to'
-              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
-            >
-              <PlayCircle className='w-3.5 h-3.5' />
-              <span>How To</span>
-            </Link>
-            <Link
-              href='/reviews'
-              className='flex items-center justify-center gap-1.5 py-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 text-xs'
-            >
-              <span>Reviews</span>
-            </Link>
-          </nav>
-        </div>
-
-        {/* Desktop: Full Layout */}
-        <div className='hidden md:grid grid-cols-3 gap-12 mb-8'>
+    <footer className='relative z-10 px-6 py-12 md:py-16 mt-24 border-t border-white/5'>
+      <div className='max-w-6xl mx-auto'>
+        {/* Main Content */}
+        <div className='grid grid-cols-1 md:grid-cols-12 gap-12 mb-12'>
           {/* Brand Section */}
-          <div className='space-y-4'>
+          <div className='md:col-span-5 space-y-6'>
             <div className='flex items-center gap-3'>
               <div className='relative'>
-                <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl blur-md opacity-50 animate-pulse-glow'></div>
-                <div className='relative w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg'>
-                  <Compass className='w-6 h-6 text-purple-950' />
+                <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl blur-lg opacity-40'></div>
+                <div className='relative w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center'>
+                  <Compass className='w-7 h-7 text-purple-950' />
                 </div>
               </div>
               <div>
-                <h3 className='text-xl font-bold bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
+                <h3 className='text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
                   Wanderly
                 </h3>
-                <p className='text-xs text-slate-400'>Plan your trip</p>
+                <p className='text-xs text-slate-500 font-medium'>
+                  Plan trips, not chaos
+                </p>
               </div>
             </div>
-            <p className='text-sm text-slate-400 leading-relaxed'>
-              The all-in-one platform for seamless group trip planning
+            <p className='text-slate-400 leading-relaxed max-w-sm'>
+              The all-in-one platform for seamless group trip planning. Built
+              for travelers who want less friction and more adventure.
             </p>
           </div>
 
-          {/* Quick Links Section */}
-          <div className='space-y-4'>
-            <h4 className='text-base font-semibold text-white mb-4'>
-              Quick Links
+          {/* Navigation Links */}
+          <div className='md:col-span-4 space-y-4'>
+            <h4 className='text-sm font-bold text-white uppercase tracking-wider'>
+              Explore
             </h4>
             <nav className='flex flex-col gap-3'>
               <Link
                 href='/'
-                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+                className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
               >
-                <Home className='w-4 h-4 group-hover:scale-110 transition-transform' />
-                <span className='text-sm'>Home</span>
+                Home
               </Link>
               <Link
                 href='/about'
-                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+                className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
               >
-                <Info className='w-4 h-4 group-hover:scale-110 transition-transform' />
-                <span className='text-sm'>About</span>
+                About
               </Link>
               <Link
                 href='/faq'
-                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+                className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
               >
-                <HelpCircle className='w-4 h-4 group-hover:scale-110 transition-transform' />
-                <span className='text-sm'>FAQ</span>
+                FAQ
               </Link>
               <Link
                 href='/how-to'
-                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+                className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
               >
-                <PlayCircle className='w-4 h-4 group-hover:scale-110 transition-transform' />
-                <span className='text-sm'>How To</span>
+                How To
               </Link>
               <Link
                 href='/reviews'
-                className='flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors duration-300 group'
+                className='text-slate-400 hover:text-amber-400 transition-colors text-sm'
               >
-                <span className='text-sm'>Reviews</span>
+                Reviews
               </Link>
             </nav>
           </div>
 
-          {/* Contact/Info Section */}
-          <div className='space-y-4'>
-            <h4 className='text-base font-semibold text-white mb-4'>About</h4>
-            <div className='space-y-3 text-sm text-slate-400'>
-              <p className='leading-relaxed'>
-                Built with precision and care for travelers who want to plan
-                better trips.
-              </p>
-              <div className='pt-2 border-t border-white/10'>
-                <p className='text-xs text-slate-500'>
-                  Made by Ptrck for Ptrck
-                </p>
+          {/* Status Section */}
+          <div className='md:col-span-3 space-y-4'>
+            <h4 className='text-sm font-bold text-white uppercase tracking-wider'>
+              Status
+            </h4>
+            <div className='space-y-3'>
+              <div className='inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full'>
+                <div className='w-2 h-2 bg-amber-400 rounded-full animate-pulse'></div>
+                <span className='text-xs font-bold text-amber-300 uppercase tracking-wider'>
+                  Beta
+                </span>
               </div>
+              <p className='text-xs text-slate-500'>
+                Version {getAppVersion()}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className='pt-4 md:pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 text-xs md:text-sm'>
-          <p className='text-slate-400 text-center md:text-left text-xs'>
+        <div className='pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4'>
+          <p className='text-slate-500 text-xs'>
             © 2025 Wanderly. All rights reserved.
           </p>
-          <div className='flex items-center gap-3 md:gap-4'>
-            <span className='text-slate-400 text-xs'>{getAppVersion()}</span>
-            <span className='px-2.5 md:px-3 py-0.5 md:py-1 bg-amber-500/10 text-amber-300 text-[10px] md:text-xs font-semibold rounded-full border border-amber-500/30'>
-              BETA
-            </span>
-          </div>
+          <p className='text-slate-600 text-xs'>
+            Made with care by{" "}
+            <span className='text-slate-400 font-medium'>Patrick</span>
+          </p>
         </div>
       </div>
     </footer>

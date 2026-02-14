@@ -1,4 +1,3 @@
-import { getStatusBadge } from "@/lib/helper";
 import { Group, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -17,14 +16,12 @@ interface ITripsListComponent {
   group?: Group;
   trips?: Trip[];
   groupId: string;
-  onUpdateGroup?: () => void;
   readOnly?: boolean;
 }
 const TripsListComponent = ({
   group,
   trips,
   groupId,
-  onUpdateGroup,
   readOnly = false,
 }: ITripsListComponent) => {
   const router = useRouter();
@@ -106,11 +103,10 @@ const TripsListComponent = ({
       <div className='space-y-3 mb-6'>
         {currentTrips.map((trip) => {
           const startDate = new Date(trip.startDate);
-          const endDate = new Date(trip.endDate);
           const today = new Date();
           today.setHours(0, 0, 0, 0);
+
           const isUpcoming = startDate >= today;
-          const _isPast = endDate < today; // Fixed: underscored unused variable
           const daysUntil = getDaysUntil(trip.startDate);
 
           return (
@@ -194,12 +190,5 @@ const TripsListComponent = ({
     </div>
   );
 };
-
-// Fixed: suppressing unused warnings with comments where appropriate
-// @ts-expect-error unused import
-const _unusedStatusBadge = getStatusBadge;
-// @ts-expect-error unused prop
-const _unusedOnUpdateGroup = (props: ITripsListComponent) =>
-  props.onUpdateGroup;
 
 export default TripsListComponent;

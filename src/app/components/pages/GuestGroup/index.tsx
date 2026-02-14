@@ -33,10 +33,10 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-600 font-medium'>Loading group...</p>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center'>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading group...</p>
         </div>
       </main>
     );
@@ -44,20 +44,20 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
 
   if (!group || error) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
-        <div className='text-center bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 max-w-md'>
-          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <span className='text-3xl'>😞</span>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md'>
+          <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6'>
+            <span className='text-4xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-slate-900 mb-2'>
+          <h2 className='text-2xl font-bold text-white mb-3'>
             Group Not Found
           </h2>
-          <p className='text-slate-600 mb-6'>
+          <p className='text-slate-400 mb-8'>
             This group doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={goBack}
-            className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
           >
             Go Home
           </button>
@@ -67,63 +67,81 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
   }
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 pb-20'>
-      <div className='max-w-4xl mx-auto px-4 py-6'>
+    <main className='min-h-screen bg-slate-950 pb-20 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+      </div>
+
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         <button
           onClick={goBack}
-          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
+          className='mb-8 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white group'
         >
-          <ArrowLeft className='w-5 h-5' />
-          Back to Home
+          <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-1' />
+          <span className='font-medium'>Back to Home</span>
         </button>
 
-        <div className='mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200'>
-          <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6'>
-            <div className='flex-1'>
-              <div className='flex items-center gap-2 mb-3'>
-                <span className='px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm font-semibold border border-amber-200'>
-                  Viewing as Guest: {guestSession?.guestName || "Guest"}
-                </span>
-              </div>
-              <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-2 text-balance'>
-                {group.name}
-              </h1>
-              <div className='flex items-center gap-2 flex-wrap mb-2'>
-                <span className='text-sm text-slate-600'>Group Code:</span>
-                <code className='px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg font-mono font-bold text-amber-600 text-lg'>
-                  {group.code}
-                </code>
-                <button
-                  onClick={copyCode}
-                  className='px-3 py-1 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors font-medium flex items-center gap-1'
-                >
-                  <Share2 className='w-3 h-3' />
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
-              {group.createdBy && (
-                <p className='text-xs text-slate-500 flex items-center gap-1.5'>
-                  <span>Group creator {group.createdBy}</span>
-                </p>
-              )}
+        <div className='mb-8'>
+          <div className='flex items-center gap-2 mb-4'>
+            <span className='px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-xs font-bold border border-amber-500/20'>
+              VIEWING AS GUEST:{" "}
+              {guestSession?.guestName?.toUpperCase() || "GUEST"}
+            </span>
+          </div>
+          <h1 className='text-4xl font-bold text-white mb-4 break-words'>
+            {group.name}
+          </h1>
+
+          <div className='flex items-center gap-3 flex-wrap mb-8'>
+            <div className='px-4 py-2 bg-slate-800/40 border border-white/5 rounded-xl flex items-center gap-3'>
+              <span className='text-xs font-medium text-slate-400 uppercase tracking-wider'>
+                Code
+              </span>
+              <code className='font-mono font-bold text-amber-400 text-lg'>
+                {group.code}
+              </code>
             </div>
+            <button
+              onClick={copyCode}
+              className='px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl transition-all font-medium flex items-center gap-2 active:scale-95'
+            >
+              <Share2 className='w-4 h-4' />
+              <span>{copied ? "Copied!" : "Copy Code"}</span>
+            </button>
           </div>
 
-          <div className='grid grid-cols-2 gap-2 mt-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <button
               onClick={() => router.push(`/guest/group/${group.id}/members`)}
-              className='px-4 py-5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-slate-200 group'
+              className='p-6 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left flex items-center justify-between group'
             >
-              <span className='text-3xl group-hover:scale-110 transition-transform'>
-                👥
-              </span>
-              <span className='text-slate-700 font-semibold'>View Members</span>
+              <div className='flex items-center gap-4'>
+                <div className='w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400'>
+                  <span className='text-2xl group-hover:scale-110 transition-transform'>
+                    👥
+                  </span>
+                </div>
+                <div>
+                  <div className='text-lg font-bold text-white'>
+                    Group Members
+                  </div>
+                  <div className='text-xs text-slate-400 font-medium'>
+                    View contributors
+                  </div>
+                </div>
+              </div>
+              <ArrowLeft className='w-4 h-4 text-slate-500 rotate-180 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1' />
             </button>
           </div>
         </div>
 
-        <div className=' p-6 sm:p-8 '>
-          <h2 className='text-2xl font-bold text-slate-900 mb-6'>Trips</h2>
+        <div className='mt-12'>
+          <div className='flex items-center justify-between mb-6 px-1'>
+            <h2 className='text-2xl font-bold text-white'>Trips</h2>
+            <div className='h-px flex-1 bg-white/5 ml-6'></div>
+          </div>
           <TripsListComponent
             trips={group.trips || []}
             groupId={group.id}

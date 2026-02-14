@@ -100,12 +100,9 @@ const TripsView = ({ groups }: ITripsViewProps) => {
     <>
       <div className='space-y-4'>
         {paginatedTrips.map((trip) => {
-          const startDate = new Date(trip.startDate);
-          const endDate = new Date(trip.endDate);
           const today = new Date();
+
           today.setHours(0, 0, 0, 0);
-          const _isUpcoming = startDate >= today;
-          const _isPast = endDate < today;
 
           return (
             <button

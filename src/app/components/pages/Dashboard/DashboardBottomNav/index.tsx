@@ -1,5 +1,6 @@
+"use client";
 import { Home, Calendar, Building2, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface IDashboardBottomNavProps {
   onLogout: () => void;
@@ -7,14 +8,13 @@ interface IDashboardBottomNavProps {
 
 const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "trips", label: "Trips", icon: Calendar, path: "/trips" },
     { id: "groups", label: "Groups", icon: Building2, path: "/groups" },
   ];
-
-  const isActive = (path: string) => false; // Pathname logic removed as it was unused or broken in this context if we want to suppress warning. Actually, let's see why it was there.
 
   return (
     <div
@@ -32,36 +32,26 @@ const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
           <nav className='flex items-center justify-around'>
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.path);
+              const active = pathname?.startsWith(item.path);
 
               return (
                 <button
                   key={item.id}
                   onClick={() => router.push(item.path)}
-                  className='relative flex flex-col items-center justify-center gap-1 px-4 py-2.5 rounded-2xl transition-all duration-300 ease-out group min-w-[70px]'
+                  className={`flex flex-col items-center justify-center py-2 px-1 gap-1 min-w-[64px] rounded-2xl transition-all duration-300 ${
+                    active
+                      ? "bg-orange-500/10 text-orange-400"
+                      : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  }`}
                 >
-                  {/* Active background */}
-                  {active && (
-                    <div className='absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg shadow-orange-500/30' />
-                  )}
-
-                  {/* Icon */}
-                  <div className='relative z-10'>
-                    <Icon
-                      className={`w-6 h-6 transition-all duration-300 ${
-                        active
-                          ? "text-white scale-110"
-                          : "text-slate-400 group-hover:text-slate-300 group-hover:scale-105"
-                      }`}
-                    />
-                  </div>
-
-                  {/* Label */}
+                  <Icon
+                    className={`w-6 h-6 transition-transform duration-300 ${
+                      active ? "scale-110" : "scale-100"
+                    }`}
+                  />
                   <span
-                    className={`relative z-10 text-[10px] font-semibold transition-all duration-300 ${
-                      active
-                        ? "text-white"
-                        : "text-slate-400 group-hover:text-slate-300"
+                    className={`text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                      active ? "opacity-100" : "opacity-60"
                     }`}
                   >
                     {item.label}
@@ -70,15 +60,14 @@ const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
               );
             })}
 
-            {/* Logout button */}
+            <div className='w-px h-8 bg-white/5 mx-1' />
+
             <button
               onClick={onLogout}
-              className='relative flex flex-col items-center justify-center gap-1 px-4 py-2.5 rounded-2xl transition-all duration-300 ease-out group min-w-[70px]'
+              className='flex flex-col items-center justify-center py-2 px-1 gap-1 min-w-[64px] rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300'
             >
-              <div className='relative z-10'>
-                <LogOut className='w-6 h-6 text-slate-400 group-hover:text-red-400 group-hover:scale-105 transition-all duration-300' />
-              </div>
-              <span className='relative z-10 text-[10px] font-semibold text-slate-400 group-hover:text-red-400 transition-all duration-300'>
+              <LogOut className='w-6 h-6' />
+              <span className='text-[10px] font-bold uppercase tracking-widest opacity-60'>
                 Logout
               </span>
             </button>

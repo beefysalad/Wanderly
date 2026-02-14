@@ -1,7 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Users, X } from "lucide-react";
+import { X } from "lucide-react";
 import React, { useState } from "react";
 import GroupCodeForm from "./GroupCodeForm";
 import GuestNameForm from "./GuestNameForm";
@@ -10,7 +7,7 @@ interface IQuickJoinModalProps {
   onJoin: (code: string, guestName: string) => void;
 }
 
-const QuickJoinModal = ({ onClose, onJoin }: IQuickJoinModalProps) => {
+const QuickJoinModal = ({ onClose }: IQuickJoinModalProps) => {
   const [step, setStep] = useState<"code" | "name">("code");
   const [groupCode, setGroupCode] = useState<string>("");
 
