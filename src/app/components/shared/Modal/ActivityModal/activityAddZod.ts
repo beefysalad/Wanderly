@@ -17,8 +17,8 @@ export const activitySchema = z
 
     date: z.string().min(1, "Date is required"), // expects "YYYY-MM-DD" string
 
-    startTime: z.string().min(1, "Start time is required"), // "HH:MM" string
-    endTime: z.string().min(1, "End time is required"), // "HH:MM" string
+    startTime: z.string().optional(), // "HH:MM" string
+    endTime: z.string().optional(), // "HH:MM" string
 
     notes: z.string().optional(), // optional notes
 
@@ -37,7 +37,7 @@ export const activitySchema = z
     {
       message: "Start time must be before end time",
       path: ["startTime"],
-    }
+    },
   )
   // Validate pickupTime format if provided
   .refine(
@@ -48,7 +48,7 @@ export const activitySchema = z
     {
       message: "Pickup time must be in HH:MM format",
       path: ["pickupTime"],
-    }
+    },
   );
 
 export type TActivitySchema = z.infer<typeof activitySchema>;

@@ -42,7 +42,7 @@ export function useCreateActivity(tripId: string, groupId: string) {
     mutationFn: async (data) => {
       const response = await api.post<ActivityResponse>(
         `/trips/${tripId}/activities`,
-        data
+        data,
       );
       return response.data;
     },
@@ -57,14 +57,21 @@ export function useCreateActivity(tripId: string, groupId: string) {
 /**
  * Mutation hook to update an activity
  */
-export function useUpdateActivity(tripId: string, activityId: string, groupId: string) {
+/**
+ * Mutation hook to update an activity
+ */
+export function useUpdateActivity(tripId: string, groupId: string) {
   const queryClient = useQueryClient();
 
-  return useMutation<ActivityResponse, Error, UpdateActivityRequest>({
-    mutationFn: async (data) => {
+  return useMutation<
+    ActivityResponse,
+    Error,
+    { activityId: string; updates: UpdateActivityRequest }
+  >({
+    mutationFn: async ({ activityId, updates }) => {
       const response = await api.patch<ActivityResponse>(
         `/trips/${tripId}/activities/${activityId}`,
-        data
+        updates,
       );
       return response.data;
     },
@@ -79,7 +86,11 @@ export function useUpdateActivity(tripId: string, activityId: string, groupId: s
 /**
  * Mutation hook to delete an activity
  */
-export function useDeleteActivity(tripId: string, activityId: string, groupId: string) {
+export function useDeleteActivity(
+  tripId: string,
+  activityId: string,
+  groupId: string,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, void>({
@@ -93,4 +104,3 @@ export function useDeleteActivity(tripId: string, activityId: string, groupId: s
     },
   });
 }
-

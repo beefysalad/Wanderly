@@ -1,18 +1,16 @@
 "use client";
 
-import { use } from "react";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
-import { useJoinGroup, useGroups } from "@/src/hooks/useGroups";
-import AuthModal from "@/src/app/components/shared/Modal/AuthModal";
-import { auth } from "@/lib/firebase";
+import { useGroups, useJoinGroup } from "@/src/hooks/useGroups";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+// AuthModal import removed
+import PulseBackground from "@/src/app/components/pages/LandingPage/PulseBackground";
+import Footer from "@/src/app/components/shared/Footer";
+import Header from "@/src/app/components/shared/Header";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
-import PulseBackground from "@/src/app/components/pages/LandingPage/PulseBackground";
-import { Users, Sparkles, LogIn, UserPlus } from "lucide-react";
-import Header from "@/src/app/components/shared/Header";
-import Footer from "@/src/app/components/shared/Footer";
+import { LogIn, UserPlus, Users } from "lucide-react";
 
 export default function InvitePage({
   params,
@@ -25,10 +23,7 @@ export default function InvitePage({
   const joinGroup = useJoinGroup();
   // Only fetch groups if user is authenticated to avoid 401 errors
   const { data: groupsData } = useGroups(!!user);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
-    "signup"
-  );
+  // AuthModal state removed
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [shouldJoinAfterAuth, setShouldJoinAfterAuth] = useState(false);
@@ -67,7 +62,7 @@ export default function InvitePage({
             // Wait a bit for groups to load if not yet loaded
             if (groupsData?.groups) {
               const existingGroup = groupsData.groups.find(
-                (g) => g.code.toUpperCase() === groupCode.toUpperCase()
+                (g) => g.code.toUpperCase() === groupCode.toUpperCase(),
               );
               if (existingGroup) {
                 router.push(`/group/${existingGroup.id}`);
@@ -76,7 +71,7 @@ export default function InvitePage({
             }
             // If groups not loaded yet, show friendly message
             setError(
-              "You're already a member of this group. Redirecting to dashboard..."
+              "You're already a member of this group. Redirecting to dashboard...",
             );
             setTimeout(() => {
               router.push("/dashboard");
@@ -90,7 +85,7 @@ export default function InvitePage({
             message.includes("Group not found")
           ) {
             setError(
-              "Invalid invite link. This group may have been deleted or the link is incorrect."
+              "Invalid invite link. This group may have been deleted or the link is incorrect.",
             );
             return;
           }
@@ -107,7 +102,7 @@ export default function InvitePage({
         user &&
         !userLoading &&
         !isJoining &&
-        !showAuthModal &&
+        !isJoining &&
         !shouldJoinAfterAuth
       ) {
         setIsJoining(true);
@@ -133,7 +128,7 @@ export default function InvitePage({
           if (message.includes("already a member")) {
             if (groupsData?.groups) {
               const existingGroup = groupsData.groups.find(
-                (g) => g.code.toUpperCase() === groupCode.toUpperCase()
+                (g) => g.code.toUpperCase() === groupCode.toUpperCase(),
               );
               if (existingGroup) {
                 router.push(`/group/${existingGroup.id}`);
@@ -141,7 +136,7 @@ export default function InvitePage({
               }
             }
             setError(
-              "You're already a member of this group. Redirecting to dashboard..."
+              "You're already a member of this group. Redirecting to dashboard...",
             );
             setTimeout(() => {
               router.push("/dashboard");
@@ -154,7 +149,7 @@ export default function InvitePage({
             message.includes("Group not found")
           ) {
             setError(
-              "Invalid invite link. This group may have been deleted or the link is incorrect."
+              "Invalid invite link. This group may have been deleted or the link is incorrect.",
             );
             return;
           }
@@ -171,7 +166,7 @@ export default function InvitePage({
     user,
     userLoading,
     isJoining,
-    showAuthModal,
+    isJoining,
     shouldJoinAfterAuth,
     groupCode,
     joinGroup,
@@ -180,103 +175,7 @@ export default function InvitePage({
     groupsData,
   ]);
 
-  const handleAuthSuccess = async () => {
-    setShowAuthModal(false);
-    // Set flag to trigger auto-join once user state is available
-    setShouldJoinAfterAuth(true);
-
-    // Wait for user state to be available (polling approach)
-    // The useEffect will also handle this, but this ensures we don't miss it
-    const checkUserAndJoin = async (attempts = 0) => {
-      if (attempts > 30) {
-        // 3 seconds max wait
-        console.error("Timeout waiting for user state");
-        return;
-      }
-
-      // Check if user is now available via auth state
-      const currentUser = auth.currentUser;
-      if (currentUser && !isJoining) {
-        setIsJoining(true);
-        setError(null);
-        setShouldJoinAfterAuth(false);
-
-        try {
-          await withNavigation(async () => {
-            const result = await joinGroup.mutateAsync({
-              groupCode: groupCode.toUpperCase(),
-            });
-            if (result.group) {
-              router.push(`/group/${result.group.id}`);
-            }
-          });
-        } catch (err: unknown) {
-          let message = "Failed to join group";
-          if (err && typeof err === "object") {
-            if (
-              "response" in err &&
-              err.response &&
-              typeof err.response === "object" &&
-              "data" in err.response
-            ) {
-              const data = err.response.data;
-              if (
-                data &&
-                typeof data === "object" &&
-                "error" in data &&
-                typeof data.error === "string"
-              ) {
-                message = data.error;
-              }
-            } else if ("message" in err && typeof err.message === "string") {
-              message = err.message;
-            }
-          } else if (err instanceof Error) {
-            message = err.message;
-          }
-
-          if (message.includes("already a member")) {
-            if (groupsData?.groups) {
-              const existingGroup = groupsData.groups.find(
-                (g) => g.code.toUpperCase() === groupCode.toUpperCase()
-              );
-              if (existingGroup) {
-                router.push(`/group/${existingGroup.id}`);
-                return;
-              }
-            }
-            setError(
-              "You're already a member of this group. Redirecting to dashboard..."
-            );
-            setTimeout(() => {
-              router.push("/dashboard");
-            }, 2000);
-            return;
-          }
-
-          if (
-            message.includes("not found") ||
-            message.includes("Group not found")
-          ) {
-            setError(
-              "Invalid invite link. This group may have been deleted or the link is incorrect."
-            );
-            return;
-          }
-
-          setError(message);
-        } finally {
-          setIsJoining(false);
-        }
-      } else {
-        // User not available yet, check again
-        setTimeout(() => checkUserAndJoin(attempts + 1), 100);
-      }
-    };
-
-    // Start checking after a small delay
-    setTimeout(() => checkUserAndJoin(), 200);
-  };
+  // handleAuthSuccess logic removed as it's no longer needed with page redirection
 
   if (userLoading || isJoining || isNavigating) {
     return (
@@ -284,8 +183,7 @@ export default function InvitePage({
         <PulseBackground />
         <div className='relative z-10 flex-1 flex flex-col'>
           <Header
-            setAuthDefaultTab={setAuthDefaultTab}
-            setShowAuthModal={setShowAuthModal}
+          // AuthModal props removed
           />
           <div className='flex-1 flex items-center justify-center p-4'>
             <div className='text-center bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-8 max-w-md'>
@@ -294,8 +192,8 @@ export default function InvitePage({
                 {userLoading
                   ? "Loading..."
                   : isJoining
-                  ? "Joining group..."
-                  : "Redirecting..."}
+                    ? "Joining group..."
+                    : "Redirecting..."}
               </p>
             </div>
           </div>
@@ -311,8 +209,7 @@ export default function InvitePage({
         <PulseBackground />
         <div className='relative z-10 flex-1 flex flex-col'>
           <Header
-            setAuthDefaultTab={setAuthDefaultTab}
-            setShowAuthModal={setShowAuthModal}
+          // AuthModal props removed
           />
           <div className='flex-1 flex items-center justify-center p-4'>
             <div className='text-center bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-6 sm:p-8 max-w-md'>
@@ -340,8 +237,7 @@ export default function InvitePage({
       <PulseBackground />
       <div className='relative z-10 flex-1 flex flex-col'>
         <Header
-          setAuthDefaultTab={setAuthDefaultTab}
-          setShowAuthModal={setShowAuthModal}
+        // AuthModal props removed
         />
         <div className=' flex-1 flex items-center justify-center p-4 py-8'>
           <div className='w-full max-w-2xl'>
@@ -363,7 +259,6 @@ export default function InvitePage({
               </div>
 
               <div className='flex items-center justify-center gap-2 mb-6 p-4 bg-white/5 rounded-xl border border-amber-500/20'>
-                <Sparkles className='w-5 h-5 text-amber-400' />
                 <span className='text-sm text-slate-300'>
                   Group Code:{" "}
                   <span className='font-mono font-bold text-amber-400'>
@@ -372,44 +267,40 @@ export default function InvitePage({
                 </span>
               </div>
 
-              {!showAuthModal && (
-                <div className='flex flex-col sm:flex-row gap-3 justify-center'>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signup");
-                      setShowAuthModal(true);
-                    }}
-                    className='px-6 py-3 bg-linear-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group'
-                  >
-                    <UserPlus className='w-4 h-4' />
-                    <span>Sign Up to Join</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signin");
-                      setShowAuthModal(true);
-                    }}
-                    className='px-6 py-3 bg-transparent hover:bg-orange-600/10 border-2 border-linear-to-r from-orange-500 via-amber-500 to-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50 group overflow-hidden'
-                  >
-                    <LogIn className='w-4 h-4' />
-                    <span>Sign In</span>
-                  </button>
-                </div>
-              )}
+              <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+                <button
+                  onClick={() => {
+                    router.push(
+                      `/register?redirect=${encodeURIComponent(
+                        `/invite/${groupCode}`,
+                      )}`,
+                    );
+                  }}
+                  className='px-6 py-3 bg-linear-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group'
+                >
+                  <UserPlus className='w-4 h-4' />
+                  <span>Sign Up to Join</span>
+                </button>
+                <button
+                  onClick={() => {
+                    router.push(
+                      `/login?redirect=${encodeURIComponent(
+                        `/invite/${groupCode}`,
+                      )}`,
+                    );
+                  }}
+                  className='px-6 py-3 bg-transparent hover:bg-orange-600/10 border-2 border-linear-to-r from-orange-500 via-amber-500 to-orange-500 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 text-sm shadow-lg hover:shadow-orange-500/50 group overflow-hidden'
+                >
+                  <LogIn className='w-4 h-4' />
+                  <span>Sign In</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => {
-            setShowAuthModal(false);
-          }}
-          defaultTab={authDefaultTab}
-          onAuthSuccess={handleAuthSuccess}
-        />
-      )}
+      {/* AuthModal rendering removed */}
       {isNavigating && <NavigationLoader message='Redirecting...' />}
     </main>
   );

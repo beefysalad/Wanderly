@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Header from "../../shared/Header";
 import Footer from "../../shared/Footer";
-import AuthModal from "../../shared/Modal/AuthModal";
+// AuthModal import removed
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 interface FAQItem {
@@ -29,10 +29,7 @@ interface FAQItem {
 
 const FAQComponent = () => {
   const router = useRouter();
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
-    "signin"
-  );
+  // AuthModal state removed
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
@@ -187,19 +184,16 @@ const FAQComponent = () => {
   ];
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
-      <div className='fixed inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute top-0 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl'></div>
-        <div
-          className='absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl'
-          style={{ animationDelay: "1s" }}
-        ></div>
+    <main className='min-h-screen bg-slate-950 text-white relative flex flex-col overflow-hidden'>
+      {/* Background Effects matching Login/Register */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
       </div>
 
       <div className='relative z-10'>
         <Header
-          setAuthDefaultTab={setAuthDefaultTab}
-          setShowAuthModal={setShowAuthModal}
+          // AuthModal props removed
           setShowQuickJoinModal={setShowQuickJoinModal}
         />
         <div className='max-w-4xl mx-auto px-4 py-8'>
@@ -285,8 +279,7 @@ const FAQComponent = () => {
               <div className='flex flex-col sm:flex-row gap-3 justify-center'>
                 <button
                   onClick={() => {
-                    setAuthDefaultTab("signup");
-                    setShowAuthModal(true);
+                    router.push("/register");
                   }}
                   className='px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 active:scale-[0.98]'
                 >
@@ -305,12 +298,7 @@ const FAQComponent = () => {
         <Footer />
       </div>
 
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          defaultTab={authDefaultTab}
-        />
-      )}
+      {/* AuthModal rendering removed */}
       {showQuickJoinModal && (
         <QuickJoinModal
           onClose={() => setShowQuickJoinModal(false)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, LogIn, Menu, PlayCircle, UserPlus, X } from "lucide-react";
+import { Compass, LogIn, Menu, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import React, { Fragment } from "react";
 import {
@@ -14,15 +14,11 @@ import { Button } from "@/components/ui/button";
 import { getAppVersion } from "@/lib/helper";
 
 interface IHeaderProps {
-  setShowAuthModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setAuthDefaultTab: React.Dispatch<React.SetStateAction<"signin" | "signup">>;
+  // Removed AuthModal props as they are no longer needed
   setShowQuickJoinModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }
-const Header = ({
-  setAuthDefaultTab,
-  setShowAuthModal,
-  setShowQuickJoinModal,
-}: IHeaderProps) => {
+
+const Header = ({ setShowQuickJoinModal }: IHeaderProps) => {
   return (
     <Fragment>
       <header className='hidden md:flex items-center px-8 py-3 bg-white/5 backdrop-blur-xl border-b border-white/10 animate-fade-in-down relative'>
@@ -53,7 +49,7 @@ const Header = ({
           </SheetTrigger>
           <SheetContent
             side='right'
-            className='bg-gradient-to-br from-slate-900 via-purple-900/95 to-slate-900 border-l border-amber-500/20 p-0 w-80 max-w-[85vw]'
+            className='bg-slate-950 border-l border-amber-500/20 p-0 w-80 max-w-[85vw]'
           >
             <div className='flex flex-col h-full'>
               {/* Header */}
@@ -119,29 +115,23 @@ const Header = ({
                 </SheetClose>
 
                 <SheetClose asChild>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signup");
-                      setShowAuthModal(true);
-                    }}
+                  <Link
+                    href='/register'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
                     <UserPlus className='w-4 h-4' />
                     Sign Up
-                  </button>
+                  </Link>
                 </SheetClose>
 
                 <SheetClose asChild>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signin");
-                      setShowAuthModal(true);
-                    }}
+                  <Link
+                    href='/login'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
                     <LogIn className='w-4 h-4' />
                     Login
-                  </button>
+                  </Link>
                 </SheetClose>
               </nav>
 
@@ -186,7 +176,7 @@ const Header = ({
           </SheetTrigger>
           <SheetContent
             side='right'
-            className='bg-gradient-to-br from-slate-900 via-purple-900/95 to-slate-900 border-l border-amber-500/20 p-0 w-80 max-w-[85vw]'
+            className='bg-slate-950 border-l border-amber-500/20 p-0 w-80 max-w-[85vw]'
           >
             <div className='flex flex-col h-full'>
               {/* Header */}
@@ -252,29 +242,23 @@ const Header = ({
                 </SheetClose>
 
                 <SheetClose asChild>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signup");
-                      setShowAuthModal(true);
-                    }}
+                  <Link
+                    href='/register'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
                     <UserPlus className='w-4 h-4' />
                     Sign Up
-                  </button>
+                  </Link>
                 </SheetClose>
 
                 <SheetClose asChild>
-                  <button
-                    onClick={() => {
-                      setAuthDefaultTab("signin");
-                      setShowAuthModal(true);
-                    }}
+                  <Link
+                    href='/login'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
                     <LogIn className='w-4 h-4' />
                     Login
-                  </button>
+                  </Link>
                 </SheetClose>
               </nav>
 

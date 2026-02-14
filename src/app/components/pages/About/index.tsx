@@ -1,44 +1,35 @@
 "use client";
 
-import { Calendar, Code2, DollarSign, Sparkles, Users } from "lucide-react";
+import { Calendar, Code2, DollarSign, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import Footer from "../../shared/Footer";
 import Header from "../../shared/Header";
-import AuthModal from "../../shared/Modal/AuthModal";
+// AuthModal import removed
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 const AboutComponent = () => {
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
-    "signin"
-  );
+  // AuthModal state removed
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
-      <div className='fixed inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute top-0 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl'></div>
-        <div
-          className='absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl'
-          style={{ animationDelay: "1s" }}
-        ></div>
+    <main className='min-h-screen bg-slate-950 text-white relative flex flex-col overflow-hidden'>
+      {/* Background Effects matching Login/Register */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
       </div>
 
       <div className='relative z-10'>
         <Header
-          setAuthDefaultTab={setAuthDefaultTab}
-          setShowAuthModal={setShowAuthModal}
+          // AuthModal props removed
           setShowQuickJoinModal={setShowQuickJoinModal}
         />
         <div className='max-w-4xl mx-auto px-4 py-8'>
           <div className='space-y-8'>
             {/* Header */}
             <div className='text-center space-y-4'>
-              <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-4 shadow-lg'>
-                <Sparkles className='w-10 h-10 text-white' />
-              </div>
               <h1 className='text-4xl md:text-5xl font-bold text-white'>
                 About{" "}
                 <span className='bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent'>
@@ -147,9 +138,6 @@ const AboutComponent = () => {
 
                     <div className='p-5 bg-white/5 backdrop-blur-sm rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all'>
                       <div className='flex items-start gap-4'>
-                        <div className='p-2 bg-amber-500/20 rounded-lg'>
-                          <Sparkles className='w-6 h-6 text-amber-400' />
-                        </div>
                         <div>
                           <h4 className='font-semibold text-white mb-1'>
                             Made for Travel
@@ -265,7 +253,6 @@ const AboutComponent = () => {
                     </p>
                     <Link href={"/"}>
                       <button className='px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 flex items-center justify-center gap-2 active:scale-[0.98] transform mx-auto'>
-                        <Sparkles className='w-5 h-5' />
                         <span>Get Started with Wanderly</span>
                       </button>
                     </Link>
@@ -278,12 +265,7 @@ const AboutComponent = () => {
         <Footer />
       </div>
 
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          defaultTab={authDefaultTab}
-        />
-      )}
+      {/* AuthModal rendering removed */}
       {showQuickJoinModal && (
         <QuickJoinModal
           onClose={() => setShowQuickJoinModal(false)}

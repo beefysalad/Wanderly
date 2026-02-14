@@ -2,10 +2,9 @@ import { auth } from "@/lib/firebase";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import type { Trip } from "@/src/shared/types/index";
 import { signOut } from "firebase/auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
-import CreateGroupModal from "../../shared/Modal/CreateGroupModal";
+// CreateGroupModal import removed
 import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
 import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
@@ -13,34 +12,15 @@ import DashboardGroupCards from "./DashboardGroupCards";
 import DashboardHeader from "./DashboardHeader";
 import DashboardBottomNav from "./DashboardBottomNav";
 import DashboardStatistics from "./DashboardStatistics";
-import TripsView from "./TripsView";
-import GroupsView from "./GroupsView";
+
 import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
 import { useQueryClient } from "@tanstack/react-query";
 
 const DashboardComponent = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCalendar, setShowCalendar] = useState(true);
-
-  // Get initial tab from URL query param, default to "dashboard"
-  const tabParam = searchParams.get("tab") as
-    | "dashboard"
-    | "trips"
-    | "groups"
-    | "profile"
-    | null;
-  const [activeTab, setActiveTab] = useState<
-    "dashboard" | "trips" | "groups" | "profile"
-  >(
-    tabParam && ["dashboard", "trips", "groups", "profile"].includes(tabParam)
-      ? tabParam
-      : "dashboard"
-  );
   const { user } = useCurrentUser();
   const { data: groupsData, isLoading: loading } = useGroups();
   const allGroups = groupsData?.groups || [];
@@ -85,33 +65,16 @@ const DashboardComponent = () => {
     router.push(`/group/${groupId}`);
   };
 
-  // Handle tab changes - update URL for non-profile tabs
-  const handleTabChange = (
-    tab: "dashboard" | "trips" | "groups" | "profile"
-  ) => {
-    setActiveTab(tab);
-    if (tab !== "profile") {
-      router.replace(`/dashboard?tab=${tab}`, { scroll: false });
-    }
-  };
-
   const handleViewAllGroups = () => {
-    handleTabChange("groups");
+    router.push("/groups");
   };
-
-  // Redirect to profile page when profile tab is clicked
-  useEffect(() => {
-    if (activeTab === "profile") {
-      router.push("/profile");
-    }
-  }, [activeTab, router]);
 
   if (loading) {
     return (
-      <main className='min-h-screen flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-600 font-medium'>Loading your groups...</p>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading your groups...</p>
         </div>
       </main>
     );
@@ -156,7 +119,7 @@ const DashboardComponent = () => {
     const normalizedDate = new Date(
       date.getFullYear(),
       date.getMonth(),
-      date.getDate()
+      date.getDate(),
     );
 
     return allTrips.filter((trip) => {
@@ -167,12 +130,12 @@ const DashboardComponent = () => {
       const normalizedStartDate = new Date(
         startDate.getFullYear(),
         startDate.getMonth(),
-        startDate.getDate()
+        startDate.getDate(),
       );
       const normalizedEndDate = new Date(
         endDate.getFullYear(),
         endDate.getMonth(),
-        endDate.getDate()
+        endDate.getDate(),
       );
 
       return (
@@ -183,100 +146,56 @@ const DashboardComponent = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/20 pb-36 md:pb-28'>
-      <div className='max-w-4xl mx-auto px-4 py-4 md:py-6'>
-        {activeTab === "dashboard" && (
-          <>
-            <DashboardHeader
-              handleLogout={handleLogout}
-              userEmail={user?.email ?? ""}
-            />
+    <main className='min-h-screen bg-slate-950 pb-36 md:pb-28 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+      </div>
 
-            <DashboardStatistics groups={sortedGroups} />
+      <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
+        <DashboardHeader
+          handleLogout={handleLogout}
+          userEmail={user?.email ?? ""}
+        />
 
-            <DashboardCTA
-              setShowCreateModal={setShowCreateModal}
-              setShowJoinModal={setShowJoinModal}
-            />
+        <DashboardStatistics groups={sortedGroups} />
 
-            {sortedGroups.length > 0 && (
-              <div className='mt-6'>
-                <div className='flex flex-col lg:flex-row gap-4 md:gap-6'>
-                  {/* Groups Section - Show first on mobile, second on desktop */}
-                  <div className='order-1 lg:order-2 flex-1'>
-                    <DashboardGroupCards
-                      groups={limitedGroups}
-                      handleNavigateToGroup={handleNavigateToGroup}
-                      limit={6}
-                      totalGroups={sortedGroups.length}
-                      onViewAll={handleViewAllGroups}
-                    />
-                  </div>
+        <DashboardCTA setShowJoinModal={setShowJoinModal} />
 
-                  {/* Calendar Sidebar - Show second on mobile, first on desktop */}
-                  {showCalendar && (
-                    <div className='order-2 lg:order-1'>
-                      <DashboardCalendar
-                        getTripsForDate={getTripsForDate}
-                        groups={sortedGroups}
-                        setShowCalendar={setShowCalendar}
-                        showCalendar={showCalendar}
-                      />
-                    </div>
-                  )}
-                </div>
+        {sortedGroups.length > 0 && (
+          <div className='mt-6'>
+            <div className='flex flex-col lg:flex-row gap-4 md:gap-6'>
+              {/* Groups Section - Show first on mobile, second on desktop */}
+              <div className='order-1 lg:order-2 flex-1'>
+                <DashboardGroupCards
+                  groups={limitedGroups}
+                  handleNavigateToGroup={handleNavigateToGroup}
+                  limit={6}
+                  totalGroups={sortedGroups.length}
+                  onViewAll={handleViewAllGroups}
+                />
               </div>
-            )}
-          </>
-        )}
 
-        {activeTab === "trips" && (
-          <div>
-            <button
-              onClick={() => handleTabChange("dashboard")}
-              className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
-            >
-              <ArrowLeft className='w-5 h-5' />
-              Back to Dashboard
-            </button>
-            <div className='mb-6'>
-              <h2 className='text-2xl font-bold text-slate-900'>All Trips</h2>
-              <p className='text-slate-600 text-sm mt-1'>
-                View all your trips across all groups
-              </p>
+              {/* Calendar Sidebar - Show second on mobile, first on desktop */}
+              {showCalendar && (
+                <div className='order-2 lg:order-1'>
+                  <DashboardCalendar
+                    getTripsForDate={getTripsForDate}
+                    groups={sortedGroups}
+                    setShowCalendar={setShowCalendar}
+                    showCalendar={showCalendar}
+                  />
+                </div>
+              )}
             </div>
-            <TripsView groups={sortedGroups} />
-          </div>
-        )}
-
-        {activeTab === "groups" && (
-          <div>
-            <button
-              onClick={() => handleTabChange("dashboard")}
-              className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
-            >
-              <ArrowLeft className='w-5 h-5' />
-              Back to Dashboard
-            </button>
-            <div className='mb-6'>
-              <h2 className='text-2xl font-bold text-slate-900'>All Groups</h2>
-              <p className='text-slate-600 text-sm mt-1'>
-                Manage your travel groups
-              </p>
-            </div>
-            <GroupsView
-              groups={sortedGroups}
-              handleNavigateToGroup={handleNavigateToGroup}
-            />
           </div>
         )}
       </div>
 
-      <DashboardBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <DashboardBottomNav onLogout={handleLogout} />
 
-      {showCreateModal && (
-        <CreateGroupModal onClose={() => setShowCreateModal(false)} />
-      )}
+      {/* CreateGroupModal rendering removed */}
 
       {showJoinModal && (
         <JoinGroupModal onClose={() => setShowJoinModal(false)} />

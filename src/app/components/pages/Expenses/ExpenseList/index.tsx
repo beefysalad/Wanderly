@@ -1,6 +1,6 @@
 "use client";
 import { Expense, Activity } from "@/src/shared/types";
-import { CheckCircle, Link2, User } from "lucide-react";
+import { CheckCircle, Link2, User, Clock, AlertCircle } from "lucide-react";
 import React from "react";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,10 @@ interface IExpensesListProps {
   expenses: Expense[];
   members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
-  memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with imageUrl
+  memberMetadata?: Record<
+    string,
+    { joinedAt: string; name?: string; imageUrl?: string }
+  >; // email -> metadata with imageUrl
   tripId: string;
   groupId: string;
   activities?: Activity[]; // activities from the trip
@@ -70,23 +73,24 @@ const ExpensesList = ({
     return email.substring(0, 2).toUpperCase();
   };
 
-  const groupedExpenses = expenses.reduce((acc, expense) => {
-    const date = new Date(expense.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(expense);
-    return acc;
-  }, {} as Record<string, Expense[]>);
+  const groupedExpenses = expenses.reduce(
+    (acc, expense) => {
+      // Format date specifically for display
+      const dateObj = new Date(expense.date);
+      const dateKey = dateObj.toISOString().split("T")[0]; // Use ISO string key for sorting
 
-  const sortedDates = Object.keys(groupedExpenses).sort(
-    (a, b) =>
-      new Date(groupedExpenses[b][0].date).getTime() -
-      new Date(groupedExpenses[a][0].date).getTime()
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(expense);
+      return acc;
+    },
+    {} as Record<string, Expense[]>,
+  );
+
+  // Sort dates descending
+  const sortedDateKeys = Object.keys(groupedExpenses).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
   const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -112,26 +116,27 @@ const ExpensesList = ({
     const paidMembers = expense.paidMembers || [];
     const pendingPayments = expense.pendingPayments || [];
     const paymentStatus = expense.paymentStatusMap?.[memberId];
-    
+
     // Check if already confirmed paid
     const isPaid = paidMembers.includes(memberId);
     // Check if pending
-    const isPending = paymentStatus === "pending" || pendingPayments.includes(memberId);
-    
+    const isPending =
+      paymentStatus === "pending" || pendingPayments.includes(memberId);
+
     // If already confirmed, allow unmarking
     // If pending, allow unmarking
     // Otherwise, mark as pending
     const shouldMarkPending = !isPaid && !isPending;
     const shouldUnmark = isPaid || isPending;
-    
+
     const newPaidMembers = shouldUnmark
       ? paidMembers.filter((m) => m !== memberId)
       : paidMembers;
     const newPendingPayments = shouldUnmark
       ? pendingPayments.filter((m) => m !== memberId)
       : shouldMarkPending
-      ? [...pendingPayments, memberId]
-      : pendingPayments;
+        ? [...pendingPayments, memberId]
+        : pendingPayments;
 
     // Optimistically update the expense in the cache
     queryClient.setQueryData<{ expenses: Expense[] }>(
@@ -159,7 +164,7 @@ const ExpensesList = ({
             return updatedExpense;
           }),
         };
-      }
+      },
     );
 
     try {
@@ -181,15 +186,15 @@ const ExpensesList = ({
           if (!old) return old;
           return {
             expenses: old.expenses.map((e) =>
-              e.id === expenseId ? expense : e
+              e.id === expenseId ? expense : e,
             ),
           };
-        }
+        },
       );
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to mark expense as paid. Please try again."
+          : "Failed to mark expense as paid. Please try again.",
       );
       console.error("Failed to mark expense as paid:", error);
     }
@@ -211,143 +216,229 @@ const ExpensesList = ({
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 gap-3 md:gap-4 mb-6'>
-        <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow'>
-          <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide'>
+        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'>
+          <p className='text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-2'>
+            <User className='w-3 h-3 text-orange-400' />
             My Expenses
           </p>
-          <p className='text-2xl font-bold text-orange-600 dark:text-orange-400'>
+          <p className='text-3xl font-bold text-orange-400 group-hover:scale-105 transition-transform origin-left'>
             ₱{myExpenses.toFixed(2)}
           </p>
         </div>
-        <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow'>
-          <p className='text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide'>
-            Trip Expenses
+        <div className='bg-slate-800/40 backdrop-blur-md rounded-2xl p-5 border border-white/5 hover:border-amber-500/20 transition-all hover:bg-slate-800/60 group'>
+          <p className='text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest flex items-center gap-2'>
+            <Clock className='w-3 h-3 text-amber-400' />
+            Total Trip
           </p>
-          <p className='text-2xl font-bold text-amber-600 dark:text-amber-400'>
+          <p className='text-3xl font-bold text-amber-400 group-hover:scale-105 transition-transform origin-left'>
             ₱{totalSpent.toFixed(2)}
           </p>
         </div>
       </div>
 
-      {sortedDates.length === 0 ? (
-        <div className='bg-slate-50 rounded-xl p-12 text-center border border-slate-200'>
-          <div className='w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <span className='text-3xl'>💰</span>
+      {sortedDateKeys.length === 0 ? (
+        <div className='bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl p-12 text-center h-64 flex flex-col items-center justify-center'>
+          <div className='w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4 group hover:bg-slate-700 transition-colors'>
+            <span className='text-3xl group-hover:scale-110 transition-transform'>
+              💰
+            </span>
           </div>
-          <p className='text-slate-600 font-medium mb-1'>No expenses yet</p>
+          <p className='text-slate-300 font-bold text-lg mb-1'>
+            No expenses yet
+          </p>
           <p className='text-sm text-slate-500'>
             Add your first expense to get started
           </p>
         </div>
       ) : (
-        sortedDates.map((date) => (
-          <div key={date}>
-            <h3 className='text-lg font-semibold text-slate-900 dark:text-white mb-3'>
-              {date}
-            </h3>
-            <div className='space-y-2'>
-              {groupedExpenses[date].map((expense) => {
-                const splitCount = expense.splitWith?.length || members.length;
-                const perPersonAmount = expense.amount / splitCount;
-                const paidCount = expense.paidMembers?.length || 0;
-                const totalOwed = splitCount - 1; // excluding payer
-                const allPaid = readOnly
-                  ? isExpenseSettled(expense)
-                  : expense.paidMembers?.length === totalOwed;
+        sortedDateKeys.map((dateKey) => {
+          const dateObj = new Date(dateKey);
+          const displayDate = dateObj.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          });
+          const displayYear =
+            dateObj.getFullYear() !== new Date().getFullYear()
+              ? dateObj.getFullYear()
+              : null;
 
-                const Component =
-                  readOnly && !onSelectExpense ? "div" : "button";
-                const onClick = onSelectExpense
-                  ? () => onSelectExpense(expense)
-                  : undefined;
+          return (
+            <div
+              key={dateKey}
+              className='animate-in fade-in slide-in-from-bottom-4 duration-500'
+            >
+              <div className='flex items-baseline gap-2 mb-3 px-1'>
+                <h3 className='text-lg font-bold text-white'>{displayDate}</h3>
+                {displayYear && (
+                  <span className='text-sm font-medium text-slate-500'>
+                    {displayYear}
+                  </span>
+                )}
+              </div>
 
-                return (
-                  <Component
-                    key={expense.id}
-                    onClick={onClick}
-                    className={`w-full bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 ${
-                      onSelectExpense
-                        ? "hover:border-orange-400 dark:hover:border-orange-600 transition-all hover:shadow-md cursor-pointer"
-                        : ""
-                    }`}
-                  >
-                    <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0'>
-                        {expense.category
-                          ? categoryEmojis[expense.category] || "📌"
-                          : "📌"}
-                      </div>
-                      <div className='flex-1 text-left min-w-0'>
-                        <div className='flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1'>
-                          <h4 className='font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate'>
-                            {expense.description}
-                          </h4>
-                          <div className='flex items-center gap-2 flex-wrap'>
-                            {expense.activityId &&
-                              getActivityById(expense.activityId) && (
-                                <span
-                                  className='text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center gap-1 w-fit'
-                                  title={
-                                    getActivityById(expense.activityId)?.title
-                                  }
-                                >
-                                  <Link2 className='w-3 h-3' />
-                                  <span className='truncate max-w-[120px]'>
-                                    {getActivityById(expense.activityId)?.title}
+              <div className='space-y-3'>
+                {groupedExpenses[dateKey].map((expense) => {
+                  const splitCount =
+                    expense.splitWith?.length || members.length;
+                  const perPersonAmount = expense.amount / splitCount;
+                  const paidCount = expense.paidMembers?.length || 0;
+                  const totalOwed = splitCount - 1; // excluding payer
+                  const allPaid = readOnly
+                    ? isExpenseSettled(expense)
+                    : expense.paidMembers?.length === totalOwed;
+
+                  const isUserPayer = expense.paidBy === currentUser;
+                  const isUserInvolved = expense.splitWith?.includes(
+                    currentUser || "",
+                  );
+                  const userPaid = expense.paidMembers?.includes(
+                    currentUser || "",
+                  );
+                  const userPending = expense.pendingPayments?.includes(
+                    currentUser || "",
+                  );
+
+                  const Component =
+                    readOnly && !onSelectExpense ? "div" : "button";
+                  const onClick = onSelectExpense
+                    ? () => onSelectExpense(expense)
+                    : undefined;
+
+                  return (
+                    <Component
+                      key={expense.id}
+                      onClick={onClick}
+                      className={`w-full text-left bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-white/5 relative overflow-hidden group ${
+                        onSelectExpense
+                          ? "hover:border-orange-500/30 hover:bg-slate-800/60 hover:shadow-lg hover:shadow-orange-500/5 hover:-translate-y-0.5 transition-all cursor-pointer"
+                          : ""
+                      }`}
+                    >
+                      {/* Hover Gradient Overlay */}
+                      <div className='absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none' />
+
+                      <div className='flex items-start gap-4 relative z-10'>
+                        {/* Category Icon */}
+                        <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-white/10 flex items-center justify-center text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform duration-300'>
+                          {expense.category
+                            ? categoryEmojis[expense.category] || "📌"
+                            : "📌"}
+                        </div>
+
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1.5'>
+                            <h4 className='font-bold text-base sm:text-lg text-white truncate pr-2'>
+                              {expense.description}
+                            </h4>
+
+                            {/* Badges */}
+                            <div className='flex items-center gap-2 flex-wrap'>
+                              {expense.activityId &&
+                                getActivityById(expense.activityId) && (
+                                  <span
+                                    className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1 w-fit max-w-[150px]'
+                                    title={
+                                      getActivityById(expense.activityId)?.title
+                                    }
+                                  >
+                                    <Link2 className='w-3 h-3' />
+                                    <span className='truncate'>
+                                      {
+                                        getActivityById(expense.activityId)
+                                          ?.title
+                                      }
+                                    </span>
                                   </span>
+                                )}
+
+                              {allPaid && (
+                                <span className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 w-fit'>
+                                  <CheckCircle className='w-3 h-3' />
+                                  Settled
                                 </span>
                               )}
-                            {allPaid && (
-                              <span className='text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 flex items-center gap-1 w-fit'>
-                                <CheckCircle className='w-3 h-3' />
-                                Settled
+
+                              {!isUserPayer &&
+                                isUserInvolved &&
+                                !userPaid &&
+                                !userPending &&
+                                !allPaid && (
+                                  <span className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1 w-fit'>
+                                    <AlertCircle className='w-3 h-3' />
+                                    You Owe
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+
+                          <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400'>
+                            {/* Paid By Section */}
+                            <div className='flex items-center gap-1.5'>
+                              <span className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
+                                Paid by
                               </span>
+                              <div className='flex items-center gap-1.5 bg-slate-900/40 rounded-full pl-0.5 pr-2 py-0.5 border border-white/5'>
+                                {getMemberAvatar(expense.paidBy) ? (
+                                  <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-600 flex-shrink-0'>
+                                    <Image
+                                      src={getMemberAvatar(expense.paidBy)!}
+                                      alt={getDisplayName(expense.paidBy)}
+                                      fill
+                                      className='object-cover'
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
+                                    {getMemberInitials(expense.paidBy)}
+                                  </div>
+                                )}
+                                <span className='font-semibold text-slate-300 text-xs'>
+                                  {isUserPayer
+                                    ? "You"
+                                    : getDisplayName(expense.paidBy)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Payment Status */}
+                            {!allPaid && paidCount > 0 && totalOwed > 0 && (
+                              <div className='flex items-center gap-1 text-xs'>
+                                <div className='w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden'>
+                                  <div
+                                    className='h-full bg-emerald-500 rounded-full'
+                                    style={{
+                                      width: `${(paidCount / totalOwed) * 100}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className='text-emerald-400 font-medium'>
+                                  {paidCount}/{totalOwed} paid
+                                </span>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className='flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400'>
-                          <span>Paid by</span>
-                          <div className='flex items-center gap-1.5'>
-                            {getMemberAvatar(expense.paidBy) ? (
-                              <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
-                                <Image
-                                  src={getMemberAvatar(expense.paidBy)!}
-                                  alt={getDisplayName(expense.paidBy)}
-                                  fill
-                                  className='object-cover'
-                                />
-                              </div>
-                            ) : (
-                              <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
-                                {getMemberInitials(expense.paidBy)}
-                              </div>
-                            )}
-                            <strong>{getDisplayName(expense.paidBy)}</strong>
-                          </div>
-                          {paidCount > 0 && totalOwed > 0 && (
-                            <span className='ml-1 sm:ml-2 text-emerald-600 dark:text-emerald-400'>
-                              • {paidCount}/{totalOwed} paid
-                            </span>
+
+                        {/* Amount Section */}
+                        <div className='text-right flex-shrink-0 flex flex-col justify-center self-center pl-2 border-l border-white/5'>
+                          <p className='text-lg sm:text-xl font-bold text-white tracking-tight'>
+                            ₱{expense.amount.toFixed(2)}
+                          </p>
+                          {splitCount > 1 && (
+                            <p className='text-xs font-medium text-slate-500'>
+                              ₱{perPersonAmount.toFixed(2)} / person
+                            </p>
                           )}
                         </div>
                       </div>
-                      <div className='text-right flex-shrink-0'>
-                        <p className='text-base sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap'>
-                          ₱{expense.amount.toFixed(2)}
-                        </p>
-                        {splitCount > 1 && (
-                          <p className='text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap'>
-                            ₱{perPersonAmount.toFixed(2)} each
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </Component>
-                );
-              })}
+                    </Component>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );

@@ -3,35 +3,23 @@
 import React from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import NotificationPanel from "./NotificationPanel";
 import { useUnreadCount } from "@/src/hooks/useNotifications";
+import { useRouter } from "next/navigation";
 
 const NotificationBell = () => {
+  const router = useRouter();
+
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative text-slate-700 hover:bg-slate-100 transition-all duration-200 hover:scale-105 active:scale-95"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <UnreadBadge />
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="bg-gradient-to-br from-slate-50 via-white to-slate-50 border-l border-amber-500/20 p-0 w-full sm:w-96 max-w-[85vw] backdrop-blur-xl bg-white/95"
-      >
-        <NotificationPanel />
-      </SheetContent>
-    </Sheet>
+    <Button
+      variant='ghost'
+      size='icon'
+      onClick={() => router.push("/notifications")}
+      className='relative text-slate-300 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-105 active:scale-95'
+      aria-label='Notifications'
+    >
+      <Bell className='h-5 w-5' />
+      <UnreadBadge />
+    </Button>
   );
 };
 
@@ -43,9 +31,10 @@ const UnreadBadge = () => {
 
   return (
     <span
-      className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold shadow-lg animate-pulse"
+      className='absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold shadow-lg shadow-orange-500/30'
       style={{
-        animation: count > 0 ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+        animation:
+          count > 0 ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
       }}
     >
       {count > 99 ? "99+" : count}
@@ -54,4 +43,3 @@ const UnreadBadge = () => {
 };
 
 export default NotificationBell;
-

@@ -58,17 +58,17 @@ const DashboardCalendar = ({
   };
   return (
     <div className='w-full lg:w-80 flex-shrink-0 mb-4 lg:mb-0'>
-      <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6 lg:sticky lg:top-8'>
+      <div className='bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-xl border border-white/5 p-4 sm:p-6 lg:sticky lg:top-8'>
         <div className='flex items-center justify-between mb-3'>
-          <h3 className='text-sm font-bold text-slate-900 flex items-center gap-2'>
-            <CalendarIcon className='w-4 h-4 text-amber-500' />
+          <h3 className='text-sm font-bold text-white flex items-center gap-2'>
+            <CalendarIcon className='w-4 h-4 text-amber-400' />
             Trip Calendar
           </h3>
           <Button
             variant='ghost'
             size='sm'
             onClick={() => setShowCalendar(!showCalendar)}
-            className='h-7 px-2 text-xs hover:bg-amber-50'
+            className='h-7 px-2 text-xs hover:bg-amber-500/10 text-slate-300 hover:text-amber-400'
           >
             {showCalendar ? "Hide" : "Show"}
           </Button>
@@ -81,18 +81,18 @@ const DashboardCalendar = ({
                 variant='ghost'
                 size='icon'
                 onClick={previousMonth}
-                className='hover:bg-amber-50 hover:text-amber-600 h-8 w-8'
+                className='hover:bg-amber-500/10 hover:text-amber-400 h-8 w-8 text-slate-300'
               >
                 <ChevronLeft className='w-4 h-4' />
               </Button>
-              <h4 className='text-sm font-semibold text-slate-900'>
+              <h4 className='text-sm font-semibold text-white'>
                 {monthNames[currentMonth]} {currentYear}
               </h4>
               <Button
                 variant='ghost'
                 size='icon'
                 onClick={nextMonth}
-                className='hover:bg-amber-50 hover:text-amber-600 h-8 w-8'
+                className='hover:bg-amber-500/10 hover:text-amber-400 h-8 w-8 text-slate-300'
               >
                 <ChevronRight className='w-4 h-4' />
               </Button>
@@ -102,7 +102,7 @@ const DashboardCalendar = ({
               {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
                 <div
                   key={idx}
-                  className='text-center text-xs font-semibold text-slate-600 py-1'
+                  className='text-center text-xs font-semibold text-slate-400 py-1'
                 >
                   {day}
                 </div>
@@ -126,11 +126,11 @@ const DashboardCalendar = ({
                     key={day}
                     className={`aspect-square border rounded flex flex-col items-center justify-center relative text-xs ${
                       isToday
-                        ? "border-amber-500 bg-amber-50"
-                        : "border-slate-200"
+                        ? "border-amber-500 bg-amber-500/10"
+                        : "border-white/10"
                     } ${
                       tripsOnDate.length > 0
-                        ? "cursor-pointer hover:bg-slate-50"
+                        ? "cursor-pointer hover:bg-white/5"
                         : ""
                     }`}
                     title={tripsOnDate
@@ -139,7 +139,7 @@ const DashboardCalendar = ({
                   >
                     <span
                       className={`font-medium ${
-                        isToday ? "text-amber-600" : "text-slate-700"
+                        isToday ? "text-amber-400" : "text-slate-300"
                       }`}
                     >
                       {day}
@@ -153,7 +153,7 @@ const DashboardCalendar = ({
                           />
                         ))}
                         {tripsOnDate.length > 2 && (
-                          <span className='text-[8px] text-slate-500'>
+                          <span className='text-[8px] text-slate-400'>
                             +{tripsOnDate.length - 2}
                           </span>
                         )}
@@ -164,8 +164,8 @@ const DashboardCalendar = ({
               })}
             </div>
 
-            <div className='mt-3 pt-3 border-t border-slate-200'>
-              <p className='text-xs font-semibold text-slate-600 mb-2'>
+            <div className='mt-3 pt-3 border-t border-white/10'>
+              <p className='text-xs font-semibold text-slate-400 mb-2'>
                 Legend:
               </p>
               <div className='space-y-1'>
@@ -184,7 +184,7 @@ const DashboardCalendar = ({
                           colors[index % colors.length]
                         }`}
                       />
-                      <span className='text-xs text-slate-600 truncate'>
+                      <span className='text-xs text-slate-400 truncate'>
                         {group.name}
                       </span>
                     </div>

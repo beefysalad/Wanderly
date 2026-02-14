@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Header from "../../shared/Header";
 import Footer from "../../shared/Footer";
-import AuthModal from "../../shared/Modal/AuthModal";
+// AuthModal import removed
 import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 interface TutorialItem {
@@ -28,10 +28,7 @@ interface TutorialItem {
 
 const HowToComponent = () => {
   const router = useRouter();
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [authDefaultTab, setAuthDefaultTab] = useState<"signin" | "signup">(
-    "signin"
-  );
+  // AuthModal state removed
   const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
@@ -95,7 +92,9 @@ const HowToComponent = () => {
             <li>Click the &quot;Create Trip&quot; button</li>
             <li>Enter trip details: name, start date, end date</li>
             <li>Add location (optional)</li>
-            <li>Set initial status (Planning, Finalized, Ongoing, or Cancelled)</li>
+            <li>
+              Set initial status (Planning, Finalized, Ongoing, or Cancelled)
+            </li>
             <li>Click &quot;Create Trip&quot; to finish</li>
           </ol>
         </>
@@ -151,8 +150,12 @@ const HowToComponent = () => {
             <li>Select &quot;Export as Calendar (.ics)&quot;</li>
             <li>Download the .ics file to your device</li>
             <li>Open the file on your phone</li>
-            <li>Choose your calendar app (Google Calendar, Apple Calendar, etc.)</li>
-            <li>All activities will be imported with dates, times, and details</li>
+            <li>
+              Choose your calendar app (Google Calendar, Apple Calendar, etc.)
+            </li>
+            <li>
+              All activities will be imported with dates, times, and details
+            </li>
           </ol>
         </>
       ),
@@ -168,9 +171,7 @@ const HowToComponent = () => {
         <div className='w-full aspect-video bg-gradient-to-br from-purple-900/40 to-violet-900/40 border border-amber-500/30 rounded-xl flex items-center justify-center'>
           <div className='text-center space-y-3'>
             <Video className='w-16 h-16 text-amber-400 mx-auto opacity-50' />
-            <p className='text-slate-400 text-sm'>
-              Video tutorial coming soon
-            </p>
+            <p className='text-slate-400 text-sm'>Video tutorial coming soon</p>
             <p className='text-xs text-slate-500'>
               Add Cloudinary video ID to display tutorial
             </p>
@@ -182,8 +183,9 @@ const HowToComponent = () => {
     // Cloudinary video player embed
     // Format: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
     // Replace YOUR_CLOUD_NAME with your actual Cloudinary cloud name
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "YOUR_CLOUD_NAME";
-    
+    const cloudName =
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "YOUR_CLOUD_NAME";
+
     return (
       <div className='w-full aspect-video rounded-xl overflow-hidden border border-amber-500/30 bg-black'>
         <iframe
@@ -198,19 +200,16 @@ const HowToComponent = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-hidden relative'>
-      <div className='fixed inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute top-0 left-1/4 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl'></div>
-        <div
-          className='absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl'
-          style={{ animationDelay: "1s" }}
-        ></div>
+    <main className='min-h-screen bg-slate-950 text-white relative flex flex-col overflow-hidden'>
+      {/* Background Effects matching Login/Register */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
       </div>
 
       <div className='relative z-10'>
         <Header
-          setAuthDefaultTab={setAuthDefaultTab}
-          setShowAuthModal={setShowAuthModal}
+          // AuthModal props removed
           setShowQuickJoinModal={setShowQuickJoinModal}
         />
         <div className='max-w-4xl mx-auto px-4 py-8'>
@@ -313,8 +312,7 @@ const HowToComponent = () => {
               <div className='flex flex-col sm:flex-row gap-3 justify-center'>
                 <button
                   onClick={() => {
-                    setAuthDefaultTab("signup");
-                    setShowAuthModal(true);
+                    router.push("/register");
                   }}
                   className='px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all font-semibold shadow-lg hover:shadow-amber-500/50 active:scale-[0.98]'
                 >
@@ -333,12 +331,7 @@ const HowToComponent = () => {
         <Footer />
       </div>
 
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          defaultTab={authDefaultTab}
-        />
-      )}
+      {/* AuthModal rendering removed */}
       {showQuickJoinModal && (
         <QuickJoinModal
           onClose={() => setShowQuickJoinModal(false)}
@@ -352,4 +345,3 @@ const HowToComponent = () => {
 };
 
 export default HowToComponent;
-

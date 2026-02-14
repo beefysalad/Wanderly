@@ -11,7 +11,7 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
     const totalGroups = groups.length;
     const totalTrips = groups.reduce(
       (acc, group) => acc + (group.trips?.length || 0),
-      0
+      0,
     );
 
     const allTrips: Trip[] = [];
@@ -54,62 +54,67 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
 
   const statCards = [
     {
-      label: "Travel Groups",
+      label: "Groups",
       value: stats.totalGroups,
       icon: Users,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      borderColor: "border-amber-200",
+      color: "text-amber-400",
+      bgGradient: "from-amber-500/10 to-orange-500/10",
+      iconBg: "bg-amber-500/20",
+      borderColor: "border-amber-500/20",
+      shadowColor: "shadow-amber-500/10",
     },
     {
-      label: "Total Trips",
+      label: "Trips",
       value: stats.totalTrips,
       icon: Calendar,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
+      color: "text-orange-400",
+      bgGradient: "from-orange-500/10 to-red-500/10",
+      iconBg: "bg-orange-500/20",
+      borderColor: "border-orange-500/20",
+      shadowColor: "shadow-orange-500/10",
     },
     {
-      label: "Upcoming Trips",
+      label: "Upcoming",
       value: stats.upcomingTrips,
       icon: Plane,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      color: "text-blue-400",
+      bgGradient: "from-blue-500/10 to-cyan-500/10",
+      iconBg: "bg-blue-500/20",
+      borderColor: "border-blue-500/20",
+      shadowColor: "shadow-blue-500/10",
     },
     {
-      label: "Days Until Next Trip",
-      value: stats.daysUntilNextTrip !== null ? stats.daysUntilNextTrip : "—",
+      label: "Next Trip",
+      value:
+        stats.daysUntilNextTrip !== null ? `${stats.daysUntilNextTrip}d` : "—",
       icon: Clock,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
-      borderColor: "border-emerald-200",
+      color: "text-emerald-400",
+      bgGradient: "from-emerald-500/10 to-teal-500/10",
+      iconBg: "bg-emerald-500/20",
+      borderColor: "border-emerald-500/20",
+      shadowColor: "shadow-emerald-500/10",
     },
   ];
 
   return (
-    <div className='grid grid-cols-2 gap-4 mb-6'>
+    <div className='grid grid-cols-4 gap-2 mb-6'>
       {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.label}
-            className={`bg-white rounded-xl border ${stat.borderColor} p-4 ${stat.bgColor}/30`}
+            className={`bg-gradient-to-br ${stat.bgGradient} backdrop-blur-xl rounded-xl border ${stat.borderColor} p-3 transition-all duration-300 shadow-lg ${stat.shadowColor} relative overflow-hidden`}
           >
-            <div className='flex items-center gap-3 mb-2'>
+            <div className='flex flex-col items-center text-center'>
               <div
-                className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}
+                className={`w-8 h-8 ${stat.iconBg} backdrop-blur-sm rounded-lg flex items-center justify-center mb-2`}
               >
-                <Icon className={`w-5 h-5 ${stat.color}`} />
+                <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
-              <div className='flex-1 min-w-0'>
-                <p className='text-xs font-medium text-slate-600 mb-0.5'>
-                  {stat.label}
-                </p>
-                <p className={`text-2xl font-bold ${stat.color}`}>
-                  {stat.value}
-                </p>
-              </div>
+              <p className='text-xs font-medium text-slate-400 mb-1 uppercase tracking-wide'>
+                {stat.label}
+              </p>
+              <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
             </div>
           </div>
         );

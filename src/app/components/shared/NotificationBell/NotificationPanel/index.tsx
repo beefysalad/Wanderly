@@ -16,7 +16,6 @@ import {
   Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SheetTitle } from "@/components/ui/sheet";
 import {
   useNotifications,
   useMarkNotificationRead,
@@ -28,7 +27,7 @@ import type { Notification } from "@/src/shared/types";
 const NotificationPanel = () => {
   // Enable real-time notifications via Socket.IO
   useSocketNotifications();
-  
+
   const { data, isLoading } = useNotifications({ limit: 50 });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
@@ -84,7 +83,7 @@ const NotificationPanel = () => {
     // Navigate to related page
     if (notification.relatedTripId && notification.relatedGroupId) {
       router.push(
-        `/group/${notification.relatedGroupId}/trip/${notification.relatedTripId}`
+        `/group/${notification.relatedGroupId}/trip/${notification.relatedTripId}`,
       );
     } else if (notification.relatedGroupId) {
       router.push(`/group/${notification.relatedGroupId}`);
@@ -147,11 +146,6 @@ const NotificationPanel = () => {
   if (isLoading) {
     return (
       <div className='flex flex-col h-full'>
-        <div className='p-4 border-b border-slate-200'>
-          <SheetTitle className='text-xl font-bold text-slate-900'>
-            Notifications
-          </SheetTitle>
-        </div>
         <div className='flex-1 flex items-center justify-center'>
           <Loader2 className='h-8 w-8 animate-spin text-amber-500' />
         </div>
@@ -162,15 +156,10 @@ const NotificationPanel = () => {
   if (notifications.length === 0) {
     return (
       <div className='flex flex-col h-full'>
-        <div className='p-4 border-b border-slate-200'>
-          <SheetTitle className='text-xl font-bold text-slate-900'>
-            Notifications
-          </SheetTitle>
-        </div>
         <div className='flex-1 flex flex-col items-center justify-center p-8 text-center'>
-          <BellOff className='h-16 w-16 text-slate-300 mb-4' />
-          <p className='text-slate-600 font-medium mb-1'>No notifications</p>
-          <p className='text-sm text-slate-500'>
+          <BellOff className='h-16 w-16 text-slate-600 mb-4' />
+          <p className='text-white font-medium mb-1'>No notifications</p>
+          <p className='text-sm text-slate-400'>
             You&apos;re all caught up! New notifications will appear here.
           </p>
         </div>
@@ -181,18 +170,15 @@ const NotificationPanel = () => {
   return (
     <div className='flex flex-col h-full'>
       {/* Header */}
-      <div className='p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm'>
-        <div className='flex items-center justify-between mb-2'>
-          <SheetTitle className='text-xl font-bold text-slate-900'>
-            Notifications
-          </SheetTitle>
+      <div className='p-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-sm'>
+        <div className='flex items-center justify-between'>
           {hasUnread && (
             <Button
               variant='ghost'
               size='sm'
               onClick={handleMarkAllRead}
               disabled={markAllRead.isPending}
-              className='text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+              className='text-xs text-amber-400 hover:text-amber-300 hover:bg-white/10'
             >
               {markAllRead.isPending ? (
                 <Loader2 className='h-3 w-3 animate-spin mr-1' />
@@ -210,8 +196,8 @@ const NotificationPanel = () => {
         {Object.entries(groupedNotifications).map(
           ([dateGroup, groupNotifications]) => (
             <div key={dateGroup} className='mb-4'>
-              <div className='px-4 py-2 bg-slate-50/50 border-b border-slate-100'>
-                <p className='text-xs font-semibold text-slate-600 uppercase tracking-wide'>
+              <div className='px-4 py-2 bg-slate-800/30 border-b border-white/5'>
+                <p className='text-xs font-semibold text-slate-400 uppercase tracking-wide'>
                   {dateGroup}
                 </p>
               </div>
@@ -228,7 +214,7 @@ const NotificationPanel = () => {
                 ))}
               </div>
             </div>
-          )
+          ),
         )}
       </div>
     </div>
@@ -256,11 +242,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       disabled={isMarkingRead}
       className={`
         w-full px-4 py-3 text-left transition-all duration-200
-        hover:bg-slate-50 active:bg-slate-100
+        hover:bg-slate-800/50 active:bg-slate-700/50
         border-l-4 ${
           notification.read
-            ? "border-transparent bg-white/50 opacity-75"
-            : "border-amber-500 bg-amber-50/30"
+            ? "border-transparent bg-slate-900/20 opacity-75"
+            : "border-amber-500 bg-amber-500/10"
         }
         ${isMarkingRead ? "opacity-50 cursor-wait" : "cursor-pointer"}
       `}
@@ -271,7 +257,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           <div className='flex items-start justify-between gap-2 mb-1'>
             <h3
               className={`text-sm font-semibold ${
-                notification.read ? "text-slate-700" : "text-slate-900"
+                notification.read ? "text-slate-300" : "text-white"
               }`}
             >
               {notification.title}
@@ -282,12 +268,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           </div>
           <p
             className={`text-sm mb-1 ${
-              notification.read ? "text-slate-500" : "text-slate-700"
+              notification.read ? "text-slate-400" : "text-slate-300"
             }`}
           >
             {notification.message}
           </p>
-          <p className='text-xs text-slate-400'>{timeAgo}</p>
+          <p className='text-xs text-slate-500'>{timeAgo}</p>
         </div>
       </div>
     </button>

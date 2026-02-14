@@ -1,15 +1,15 @@
 "use client";
 import { Expense, Trip, PaymentLog } from "@/src/shared/types";
-import { ArrowLeft, Plus, Receipt, Calendar, User } from "lucide-react";
+import { ArrowLeft, Plus, Receipt, Calendar, User, Wallet } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import ExpensesList from "./ExpenseList";
-import AddExpenseModal from "../../shared/Modal/AddExpenseModal";
 import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
-import { useExpenses, usePaymentLogs, useConfirmPayment } from "@/src/hooks/useExpenses";
+import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
@@ -17,8 +17,14 @@ import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 interface IExpensesComponent {
   groupId: string;
   tripId: string;
+  isEmbedded?: boolean;
 }
-const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
+
+const ExpensesComponent = ({
+  groupId,
+  tripId,
+  isEmbedded = false,
+}: IExpensesComponent) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
@@ -32,10 +38,8 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const expenses = expensesData?.expenses || [];
   const paymentLogs = paymentLogsData?.paymentLogs || [];
   const [view, setView] = useState<"all" | "unsettled" | "settled" | "logs">(
-    "all"
+    "all",
   );
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
 
@@ -53,34 +57,37 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     if (type === "payee" && log.payeeImageUrl) {
       return log.payeeImageUrl;
     }
-    
+
     // Fallback to memberMetadata lookup using email
     const email = type === "payer" ? log.payerEmail : log.payeeEmail;
     if (email && group?.memberMetadata?.[email]) {
       return group.memberMetadata[email].imageUrl;
     }
-    
+
     // Try to find by name or email string
     const nameOrEmail = type === "payer" ? log.payer : log.payee;
-    const memberEmail = group?.memberEmails?.find((e) => 
-      e === nameOrEmail || e.split("@")[0] === nameOrEmail
+    const memberEmail = group?.memberEmails?.find(
+      (e) => e === nameOrEmail || e.split("@")[0] === nameOrEmail,
     );
     if (memberEmail && group?.memberMetadata?.[memberEmail]) {
       return group.memberMetadata[memberEmail].imageUrl;
     }
-    
+
     // Try to find by name
     const foundEmail = Object.entries(group?.memberNames || {}).find(
-      ([email, name]) => name === nameOrEmail
+      ([email, name]) => name === nameOrEmail,
     )?.[0];
     if (foundEmail && group?.memberMetadata?.[foundEmail]) {
       return group.memberMetadata[foundEmail].imageUrl;
     }
-    
+
     return undefined;
   };
 
-  const getMemberInitialsFromLog = (log: PaymentLog, type: "payer" | "payee"): string => {
+  const getMemberInitialsFromLog = (
+    log: PaymentLog,
+    type: "payer" | "payee",
+  ): string => {
     const nameOrEmail = type === "payer" ? log.payer : log.payee;
     // If it looks like an email, use first 2 chars
     if (nameOrEmail.includes("@")) {
@@ -100,11 +107,14 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       const updatedExpense = expenses.find((e) => e.id === selectedExpense.id);
       if (updatedExpense) {
         // Only update if payment-related data changed
-        const paymentDataChanged = 
-          JSON.stringify(selectedExpense.paymentStatusMap || {}) !== JSON.stringify(updatedExpense.paymentStatusMap || {}) ||
-          JSON.stringify(selectedExpense.paidMembers || []) !== JSON.stringify(updatedExpense.paidMembers || []) ||
-          JSON.stringify(selectedExpense.pendingPayments || []) !== JSON.stringify(updatedExpense.pendingPayments || []);
-        
+        const paymentDataChanged =
+          JSON.stringify(selectedExpense.paymentStatusMap || {}) !==
+            JSON.stringify(updatedExpense.paymentStatusMap || {}) ||
+          JSON.stringify(selectedExpense.paidMembers || []) !==
+            JSON.stringify(updatedExpense.paidMembers || []) ||
+          JSON.stringify(selectedExpense.pendingPayments || []) !==
+            JSON.stringify(updatedExpense.pendingPayments || []);
+
         if (paymentDataChanged) {
           setSelectedExpense(updatedExpense);
         }
@@ -119,7 +129,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     const paidMembers = expense.paidMembers || [];
     // An expense is settled if all members who should split have paid (or are the payer)
     return splitWith.every(
-      (member) => member === expense.paidBy || paidMembers.includes(member)
+      (member) => member === expense.paidBy || paidMembers.includes(member),
     );
   };
 
@@ -134,10 +144,10 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
 
   // Filter by user involvement for settled/unsettled tabs
   const unsettledExpenses = allUnsettledExpenses.filter((exp) =>
-    isUserInvolved(exp)
+    isUserInvolved(exp),
   );
   const settledExpenses = allSettledExpenses.filter((exp) =>
-    isUserInvolved(exp)
+    isUserInvolved(exp),
   );
 
   // Calculate summary statistics
@@ -155,7 +165,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
         // User paid, calculate what others owe
         const unpaidCount = splitWith.filter(
           (member) =>
-            member !== currentUserEmail && !paidMembers.includes(member)
+            member !== currentUserEmail && !paidMembers.includes(member),
         ).length;
         youAreOwed += shareAmount * unpaidCount;
       } else if (splitWith.includes(currentUserEmail)) {
@@ -203,6 +213,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
       queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      setSelectedExpense(null);
     } catch (error) {
       console.error("Failed to delete expense:", error);
     }
@@ -211,14 +222,14 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const handleConfirmPayment = async (
     expenseId: string,
     memberEmail: string,
-    status: "confirmed" | "rejected"
+    status: "confirmed" | "rejected",
   ) => {
     if (!selectedExpense || selectedExpense.id !== expenseId) return;
 
     // Optimistically update the selectedExpense
     const previousExpense = selectedExpense;
     const updatedExpense = { ...selectedExpense };
-    
+
     // Update payment status map
     if (!updatedExpense.paymentStatusMap) {
       updatedExpense.paymentStatusMap = {};
@@ -228,9 +239,9 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     // Update paidMembers and pendingPayments arrays
     if (status === "confirmed") {
       // Move from pending to confirmed
-      updatedExpense.pendingPayments = (updatedExpense.pendingPayments || []).filter(
-        (email) => email !== memberEmail
-      );
+      updatedExpense.pendingPayments = (
+        updatedExpense.pendingPayments || []
+      ).filter((email) => email !== memberEmail);
       if (!updatedExpense.paidMembers?.includes(memberEmail)) {
         updatedExpense.paidMembers = [
           ...(updatedExpense.paidMembers || []),
@@ -239,12 +250,12 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       }
     } else if (status === "rejected") {
       // Remove from pending
-      updatedExpense.pendingPayments = (updatedExpense.pendingPayments || []).filter(
-        (email) => email !== memberEmail
-      );
+      updatedExpense.pendingPayments = (
+        updatedExpense.pendingPayments || []
+      ).filter((email) => email !== memberEmail);
       // Remove from paidMembers if it was there
       updatedExpense.paidMembers = (updatedExpense.paidMembers || []).filter(
-        (email) => email !== memberEmail
+        (email) => email !== memberEmail,
       );
     }
 
@@ -257,7 +268,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
         {
           memberEmail,
           status,
-        }
+        },
       );
 
       // Update with the actual response from server
@@ -276,7 +287,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to confirm payment. Please try again."
+          : "Failed to confirm payment. Please try again.",
       );
     }
   };
@@ -298,10 +309,10 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
         if (!old) return old;
         return {
           expenses: old.expenses.map((e) =>
-            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e
+            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e,
           ),
         };
-      }
+      },
     );
 
     // Also update selectedExpense if it's the one being modified
@@ -331,10 +342,10 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
           if (!old) return old;
           return {
             expenses: old.expenses.map((e) =>
-              e.id === expenseId ? expense : e
+              e.id === expenseId ? expense : e,
             ),
           };
-        }
+        },
       );
       if (selectedExpense?.id === expenseId) {
         setSelectedExpense(expense);
@@ -348,49 +359,52 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
     // The actual update is done via API call in ExpenseList
   };
 
-  const handleAddExpense = () => {
-    // This is handled by AddExpenseModal
-    setShowAddModal(false);
-    setEditingExpense(null);
-  };
-
-  const handleCloseModal = () => {
-    setShowAddModal(false);
-    setEditingExpense(null);
-  };
-
   const handleEditExpense = (expense: Expense) => {
-    setEditingExpense(expense);
-    setShowAddModal(true);
+    router.push(
+      `/group/${groupId}/expenses/${expense.id}/edit?tripId=${tripId}`,
+    );
   };
 
   if (loadingGroup) {
+    if (isEmbedded) {
+      return (
+        <div className='flex items-center justify-center py-20'>
+          <div className='w-8 h-8 border-2 border-slate-700 border-t-orange-500 rounded-full animate-spin mr-3'></div>
+          <p className='text-slate-400 font-medium'>Loading expenses...</p>
+        </div>
+      );
+    }
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-700 font-medium'>Loading expenses...</p>
+          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading expenses...</p>
         </div>
       </main>
     );
   }
 
   if (!group || !trip) {
+    if (isEmbedded) {
+      return (
+        <div className='text-center py-10'>
+          <p className='text-slate-400'>Trip not found.</p>
+        </div>
+      );
+    }
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center p-4'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-xl border border-white/5 p-8 max-w-md'>
+          <div className='w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-slate-900 mb-2'>
-            Trip Not Found
-          </h2>
-          <p className='text-slate-600 mb-6'>
+          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
+          <p className='text-slate-400 mb-6'>
             This trip doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push(`/group/${groupId}/trip/${tripId}`)}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-md hover:shadow-lg'
+            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-orange-500/20'
           >
             Go Back to Trip
           </button>
@@ -398,143 +412,205 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
       </main>
     );
   }
+
+  const Wrapper = isEmbedded ? "div" : "main";
+  const wrapperClass = isEmbedded
+    ? ""
+    : "min-h-screen bg-slate-950 pb-6 relative overflow-hidden";
+
+  // Shared Tabs Component
+  const FilterTabs = () => (
+    <div
+      className={`flex items-center p-1.5 ${isEmbedded ? "bg-slate-800/40" : "bg-slate-950/50"} rounded-2xl border border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar`}
+    >
+      {[
+        {
+          id: "all",
+          label: "All Expenses",
+          icon: "📊",
+          count: expenses.length,
+        },
+        {
+          id: "unsettled",
+          label: "Unsettled",
+          icon: "⏳",
+          count: unsettledExpenses.length,
+        },
+        {
+          id: "settled",
+          label: "Settled",
+          icon: "✅",
+          count: settledExpenses.length,
+        },
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setView(tab.id as any)}
+          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center justify-center gap-2 ${
+            view === tab.id
+              ? "bg-slate-700 text-white shadow-lg border border-white/10 scale-[1.02]"
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+          }`}
+        >
+          <span>{tab.icon}</span>
+          <span>{tab.label}</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs ${
+              view === tab.id
+                ? "bg-slate-900 text-slate-300"
+                : "bg-slate-800 text-slate-500 group-hover:bg-slate-700"
+            }`}
+          >
+            {tab.count}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <>
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-6'>
-        <div className='max-w-4xl mx-auto px-4 py-4 md:py-6'>
+      <Wrapper className={wrapperClass}>
+        {/* Background Effects */}
+        {!isEmbedded && (
+          <div className='fixed inset-0 pointer-events-none'>
+            <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px]'></div>
+            <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[100px]'></div>
+          </div>
+        )}
+
+        <div
+          className={`max-w-4xl mx-auto ${!isEmbedded ? "px-4 py-4 md:py-6" : ""} relative z-10`}
+        >
           <div className='mb-8'>
-            {/* Header Card with Integrated Back Button and Actions */}
-            <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6 mb-6'>
-              <div className='flex items-start justify-between gap-4'>
-                <div className='flex items-start gap-4 flex-1 min-w-0'>
-                  <button
-                    onClick={() => router.back()}
-                    className='p-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-all flex items-center justify-center flex-shrink-0'
-                    aria-label='Go back'
-                  >
-                    <ArrowLeft className='w-5 h-5' />
-                  </button>
-                  <div className='flex-1 min-w-0'>
-                    <h1 className='text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-2'>
-                      Expenses
-                    </h1>
-                    <p className='text-sm text-slate-600 flex items-center gap-2'>
-                      <Calendar className='w-4 h-4 text-orange-500' />
-                      <span>{trip.name}</span>
-                    </p>
+            {/* Header Rendering */}
+            {!isEmbedded ? (
+              <div className='bg-slate-900/40 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-6 mb-6 relative overflow-hidden group/header'>
+                <div className='absolute inset-0 bg-gradient-to-br from-orange-500/5 to-purple-500/5 opacity-0 group-hover/header:opacity-100 transition-opacity duration-500'></div>
+
+                <div className='flex items-start justify-between gap-4 relative z-10'>
+                  <div className='flex items-start gap-4 flex-1 min-w-0'>
+                    <button
+                      onClick={() => router.back()}
+                      className='p-3 rounded-2xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-all border border-white/5 hover:border-white/10 flex-shrink-0 group'
+                    >
+                      <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-1' />
+                    </button>
+                    <div className='flex-1 min-w-0'>
+                      <h1 className='text-3xl sm:text-4xl font-bold text-white leading-tight mb-2 tracking-tight'>
+                        Trip Expenses
+                      </h1>
+                      <p className='text-sm font-medium text-slate-400 flex items-center gap-2'>
+                        <span className='p-1 rounded-md bg-orange-500/10 border border-orange-500/20'>
+                          <Wallet className='w-3.5 h-3.5 text-orange-400' />
+                        </span>
+                        <span>{trip.name}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-2 flex-shrink-0'>
+                    <button
+                      onClick={() => setView("logs")}
+                      className={`p-3 rounded-2xl transition-all border flex items-center justify-center active:scale-95 ${
+                        view === "logs"
+                          ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+                          : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
+                      }`}
+                      title='Payment History'
+                    >
+                      <Receipt className='w-6 h-6' />
+                    </button>
+                    <Link
+                      href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+                      className='p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 flex items-center justify-center active:scale-95 transition-all w-12 h-12'
+                      title='Add Expense'
+                    >
+                      <Plus className='w-6 h-6' />
+                    </Link>
                   </div>
                 </div>
-                <div className='flex items-center gap-2 flex-shrink-0'>
-                  <button
-                    onClick={() => setView("logs")}
-                    className={`p-3 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center active:scale-[0.95] transform ${
-                      view === "logs"
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                        : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
-                    }`}
-                    aria-label='Payment logs'
-                  >
-                    <Receipt className='w-5 h-5' />
-                  </button>
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className='p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0 active:scale-[0.95] transform'
-                    aria-label='Add expense'
-                  >
-                    <Plus className='w-5 h-5' />
-                  </button>
+
+                {/* Filter Tabs - Floating Pill Style */}
+                <div className='mt-8'>
+                  <FilterTabs />
                 </div>
               </div>
-
-              {/* Filter Tabs */}
-              <div className='mt-4 flex items-center gap-2 overflow-x-auto pb-1'>
-                <button
-                  onClick={() => setView("all")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                    view === "all"
-                      ? "bg-orange-500 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      view === "all" ? "bg-white" : "bg-slate-400"
-                    }`}
-                  ></div>
-                  <span>All Expenses ({expenses.length})</span>
-                </button>
-                <button
-                  onClick={() => setView("unsettled")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                    view === "unsettled"
-                      ? "bg-red-500 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      view === "unsettled" ? "bg-white" : "bg-red-400"
-                    }`}
-                  ></div>
-                  <span>Unsettled ({unsettledExpenses.length})</span>
-                </button>
-                <button
-                  onClick={() => setView("settled")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                    view === "settled"
-                      ? "bg-emerald-500 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      view === "settled" ? "bg-white" : "bg-emerald-400"
-                    }`}
-                  ></div>
-                  <span>Settled ({settledExpenses.length})</span>
-                </button>
+            ) : (
+              // Embedded Header
+              <div className='flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
+                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+                  <FilterTabs />
+                  <div className='flex items-center gap-2 self-end sm:self-auto'>
+                    <button
+                      onClick={() => setView("logs")}
+                      className={`px-4 py-2.5 rounded-xl transition-all border flex items-center gap-2 active:scale-95 text-sm font-medium ${
+                        view === "logs"
+                          ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+                          : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
+                      }`}
+                    >
+                      <Receipt className='w-4 h-4' />
+                      <span>History</span>
+                    </button>
+                    {/* Inline Add Expense for desktop context mainly, mobile uses floating FAB */}
+                    <Link
+                      href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+                      className='hidden sm:flex px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 items-center gap-2 active:scale-95 transition-all text-sm font-bold'
+                    >
+                      <Plus className='w-4 h-4' />
+                      <span>Add Expense</span>
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Content Area Card */}
-          <div className='bg-white rounded-xl shadow-lg border border-slate-200 p-4 sm:p-6'>
+          {/* Content Area */}
+          <div className='space-y-6'>
             {view === "logs" ? (
               loadingLogs ? (
-                <div className='text-center py-12'>
-                  <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                  <p className='text-slate-600 font-medium'>
-                    Loading payment logs...
+                <div className='text-center py-20'>
+                  <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                  <p className='text-slate-400 font-medium'>
+                    Loading payment history...
                   </p>
                 </div>
               ) : (
-                <div className='space-y-3'>
+                <div className='space-y-4 animate-in fade-in zoom-in-95 duration-300'>
+                  <h3 className='text-xl font-bold text-white px-1 flex items-center gap-2'>
+                    <Receipt className='w-5 h-5 text-orange-400' />
+                    Payment History
+                  </h3>
+
                   {paymentLogs.length === 0 ? (
-                    <div className='bg-slate-50 rounded-xl p-8 text-center border border-slate-200'>
-                      <Receipt className='w-16 h-16 text-slate-300 mx-auto mb-3' />
-                      <p className='text-slate-600 font-medium mb-1'>
+                    <div className='bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl p-12 text-center'>
+                      <div className='w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4'>
+                        <Receipt className='w-8 h-8 text-slate-600' />
+                      </div>
+                      <p className='text-slate-400 font-medium mb-1'>
                         No payment logs yet
                       </p>
-                      <p className='text-sm text-slate-500'>
-                        Payment history will appear here
+                      <p className='text-sm text-slate-600'>
+                        Payments and settlements will appear here
                       </p>
                     </div>
                   ) : (
-                    paymentLogs
-                      .sort(
-                        (a, b) =>
-                          new Date(b.timestamp).getTime() -
-                          new Date(a.timestamp).getTime()
-                      )
-                      .map((log) => (
-                        <div
-                          key={log.id}
-                          className='bg-white rounded-xl p-4 border border-slate-200 hover:shadow-md transition-shadow'
-                        >
-                          <div className='flex items-start justify-between gap-4'>
-                            <div className='flex-1 min-w-0'>
-                              <div className='flex items-center gap-2 mb-2'>
-                                <span className='text-xl flex-shrink-0'>
+                    <div className='grid gap-3'>
+                      {paymentLogs
+                        .sort(
+                          (a, b) =>
+                            new Date(b.timestamp).getTime() -
+                            new Date(a.timestamp).getTime(),
+                        )
+                        .map((log) => (
+                          <div
+                            key={log.id}
+                            className='bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'
+                          >
+                            <div className='flex items-start justify-between gap-4'>
+                              <div className='flex items-start gap-4 flex-1 min-w-0'>
+                                <span className='text-2xl mt-1'>
                                   {log.paymentMethod === "cash" && "💵"}
                                   {log.paymentMethod === "bank" && "🏦"}
                                   {log.paymentMethod === "maya" && "💳"}
@@ -542,141 +618,146 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                                   {!log.paymentMethod && "💵"}
                                 </span>
                                 <div className='flex-1 min-w-0'>
-                                  <p className='font-semibold text-slate-900 truncate'>
+                                  <p className='font-bold text-white truncate mb-1 text-lg'>
                                     {log.expenseDescription}
                                   </p>
-                                  <p className='text-xs text-slate-500'>
-                                    {new Date(log.timestamp).toLocaleString(
-                                      "en-US",
-                                      {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                      }
-                                    )}
-                                  </p>
+
+                                  <div className='flex items-center gap-3 text-sm flex-wrap relative z-10'>
+                                    <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
+                                      {getMemberAvatarFromLog(log, "payer") ? (
+                                        <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
+                                          <Image
+                                            src={
+                                              getMemberAvatarFromLog(
+                                                log,
+                                                "payer",
+                                              )!
+                                            }
+                                            alt={log.payer.split("@")[0]}
+                                            fill
+                                            className='object-cover'
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
+                                          {getMemberInitialsFromLog(
+                                            log,
+                                            "payer",
+                                          )}
+                                        </div>
+                                      )}
+                                      <span className='font-medium text-slate-300 truncate max-w-[100px]'>
+                                        {log.payer.split("@")[0]}
+                                      </span>
+                                    </div>
+
+                                    <span className='text-slate-500'>→</span>
+
+                                    <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
+                                      {getMemberAvatarFromLog(log, "payee") ? (
+                                        <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
+                                          <Image
+                                            src={
+                                              getMemberAvatarFromLog(
+                                                log,
+                                                "payee",
+                                              )!
+                                            }
+                                            alt={log.payee.split("@")[0]}
+                                            fill
+                                            className='object-cover'
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
+                                          {getMemberInitialsFromLog(
+                                            log,
+                                            "payee",
+                                          )}
+                                        </div>
+                                      )}
+                                      <span className='font-medium text-slate-300 truncate max-w-[100px]'>
+                                        {log.payee.split("@")[0]}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                              <div className='flex items-center gap-2 text-sm flex-wrap'>
-                                <div className='flex items-center gap-1.5'>
-                                  {getMemberAvatarFromLog(log, "payer") ? (
-                                    <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
-                                      <Image
-                                        src={getMemberAvatarFromLog(log, "payer")!}
-                                        alt={log.payer.split("@")[0]}
-                                        fill
-                                        className='object-cover'
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
-                                      {getMemberInitialsFromLog(log, "payer")}
-                                    </div>
+
+                              <div className='text-right flex-shrink-0'>
+                                <p className='text-xl font-bold text-emerald-400 tracking-tight'>
+                                  ₱{log.amount.toFixed(2)}
+                                </p>
+                                <p className='text-xs text-slate-500 mt-1'>
+                                  {new Date(log.timestamp).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    },
                                   )}
-                                  <span className='font-medium text-slate-700 truncate'>
-                                    {log.payer.split("@")[0]}
-                                  </span>
-                                </div>
-                                <span className='text-slate-400'>→</span>
-                                <div className='flex items-center gap-1.5'>
-                                  {getMemberAvatarFromLog(log, "payee") ? (
-                                    <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-300 flex-shrink-0'>
-                                      <Image
-                                        src={getMemberAvatarFromLog(log, "payee")!}
-                                        alt={log.payee.split("@")[0]}
-                                        fill
-                                        className='object-cover'
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0'>
-                                      {getMemberInitialsFromLog(log, "payee")}
-                                    </div>
-                                  )}
-                                  <span className='font-medium text-slate-700 truncate'>
-                                    {log.payee.split("@")[0]}
-                                  </span>
-                                </div>
+                                </p>
                               </div>
-                            </div>
-                            <div className='text-right flex-shrink-0'>
-                              <p className='text-lg font-bold text-emerald-600'>
-                                ₱{log.amount.toFixed(2)}
-                              </p>
-                              <span className='inline-block px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 font-medium mt-1'>
-                                Paid
-                              </span>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                    </div>
                   )}
                 </div>
               )
             ) : loadingExpenses ? (
-              <div className='text-center py-12'>
-                <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                <p className='text-slate-600 font-medium'>
+              <div className='text-center py-20'>
+                <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+                <p className='text-slate-400 font-medium'>
                   Loading expenses...
                 </p>
               </div>
             ) : (
-              <>
+              <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
                 {/* Summary Statistics for Unsettled Tab */}
                 {view === "unsettled" && (
-                  <div className='mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                    <div className='bg-red-50 border border-red-200 rounded-xl p-4'>
-                      <div className='flex items-center justify-between'>
-                        <div>
-                          <p className='text-sm font-medium text-red-700 mb-1'>
-                            You Owe
-                          </p>
-                          <p className='text-2xl font-bold text-red-900'>
-                            ₱{unsettledStats.youOwe.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className='w-12 h-12 bg-red-100 rounded-full flex items-center justify-center'>
-                          <span className='text-2xl'>📤</span>
-                        </div>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                    <div className='bg-gradient-to-br from-red-500/10 to-red-900/20 border border-red-500/20 rounded-3xl p-6 relative overflow-hidden group'>
+                      <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
+                        <span className='text-6xl'>📤</span>
                       </div>
+                      <p className='text-sm font-bold text-red-400 uppercase tracking-widest mb-1'>
+                        You Owe
+                      </p>
+                      <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
+                        ₱{unsettledStats.youOwe.toFixed(2)}
+                      </p>
                     </div>
-                    <div className='bg-emerald-50 border border-emerald-200 rounded-xl p-4'>
-                      <div className='flex items-center justify-between'>
-                        <div>
-                          <p className='text-sm font-medium text-emerald-700 mb-1'>
-                            You&apos;re Owed
-                          </p>
-                          <p className='text-2xl font-bold text-emerald-900'>
-                            ₱{unsettledStats.youAreOwed.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center'>
-                          <span className='text-2xl'>📥</span>
-                        </div>
+
+                    <div className='bg-gradient-to-br from-emerald-500/10 to-emerald-900/20 border border-emerald-500/20 rounded-3xl p-6 relative overflow-hidden group'>
+                      <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
+                        <span className='text-6xl'>📥</span>
                       </div>
+                      <p className='text-sm font-bold text-emerald-400 uppercase tracking-widest mb-1'>
+                        You're Owed
+                      </p>
+                      <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
+                        ₱{unsettledStats.youAreOwed.toFixed(2)}
+                      </p>
                     </div>
                   </div>
                 )}
 
                 {/* Summary Statistics for Settled Tab */}
                 {view === "settled" && (
-                  <div className='mb-6'>
-                    <div className='bg-slate-50 border border-slate-200 rounded-xl p-4'>
-                      <div className='flex items-center justify-between'>
-                        <div>
-                          <p className='text-sm font-medium text-slate-700 mb-1'>
-                            Total Settled
-                          </p>
-                          <p className='text-2xl font-bold text-slate-900'>
-                            ₱{settledStats.totalSettled.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className='w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center'>
-                          <span className='text-2xl'>✓</span>
-                        </div>
-                      </div>
+                  <div className='bg-slate-800/40 border border-white/5 rounded-3xl p-6 flex items-center justify-between'>
+                    <div>
+                      <p className='text-sm font-medium text-slate-400 mb-1'>
+                        Total Settled Amount
+                      </p>
+                      <p className='text-3xl font-bold text-white tracking-tight'>
+                        ₱{settledStats.totalSettled.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className='w-14 h-14 bg-slate-700/50 rounded-2xl flex items-center justify-center'>
+                      <span className='text-2xl'>✓</span>
                     </div>
                   </div>
                 )}
@@ -692,55 +773,14 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
                   onDeleteExpense={handleDeleteExpense}
                   onUpdateExpense={handleUpdateExpense}
                   onEditExpense={handleEditExpense}
-                  onSelectExpense={setSelectedExpense}
+                  onSelectExpense={handleEditExpense}
                   currentUser={user?.email ?? ""}
                 />
-              </>
+              </div>
             )}
           </div>
         </div>
-      </main>
-
-      {/* Render modals outside main to avoid container constraints */}
-      {showAddModal && trip && (
-        <AddExpenseModal
-          tripId={tripId}
-          groupId={groupId}
-          members={group.memberEmails || []}
-          memberNames={group.memberNames}
-          activities={trip.activities || []}
-          onAddExpense={handleAddExpense}
-          onClose={handleCloseModal}
-          editingExpense={editingExpense || undefined}
-        />
-      )}
-
-      {selectedExpense && trip && (
-        <ExpenseDetailModal
-          expense={selectedExpense}
-          members={group.memberEmails || []}
-          memberNames={group.memberNames}
-          memberMetadata={group.memberMetadata}
-          activities={trip.activities || []}
-          onClose={() => setSelectedExpense(null)}
-          onMarkPaid={(memberId) => {
-            handleMarkPaid(selectedExpense.id, memberId);
-          }}
-          onConfirmPayment={(memberEmail, status) => {
-            handleConfirmPayment(selectedExpense.id, memberEmail, status);
-          }}
-          onEdit={() => {
-            setEditingExpense(selectedExpense);
-            setSelectedExpense(null);
-            setShowAddModal(true);
-          }}
-          onDelete={() => {
-            handleDeleteExpense(selectedExpense.id);
-            setSelectedExpense(null);
-          }}
-          currentUser={user?.email ?? ""}
-        />
-      )}
+      </Wrapper>
     </>
   );
 };

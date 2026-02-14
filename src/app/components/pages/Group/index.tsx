@@ -1,8 +1,17 @@
 "use client";
-import { ArrowLeft, Plus, Share2, Edit, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Share2,
+  Edit,
+  UserPlus,
+  Users,
+  Trash2,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import CreateTripModal from "../../shared/Modal/CreateTripModal";
 import EditGroupModal from "../../shared/Modal/EditGroupModal";
 import TripsListComponent from "./TripsList";
 import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
@@ -17,7 +26,6 @@ interface IGroupComponent {
   param: string;
 }
 const GroupComponent = ({ param }: IGroupComponent) => {
-  const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -40,13 +48,11 @@ const GroupComponent = ({ param }: IGroupComponent) => {
     if (!group) return;
 
     try {
-      // Try modern clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(group.code);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } else {
-        // Fallback for older browsers or insecure contexts
         const textArea = document.createElement("textarea");
         textArea.value = group.code;
         textArea.style.position = "fixed";
@@ -72,7 +78,6 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       }
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
-      // Optionally show an error message to user
       alert("Failed to copy code. Please copy manually: " + group.code);
     }
   };
@@ -118,7 +123,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   };
 
   const goBack = () => {
-    router.push("/dashboard");
+    router.push("/groups");
   };
   const handleLeaveGroup = async () => {
     if (!group) return;
@@ -126,7 +131,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       await withNavigation(async () => {
         await leaveGroup.mutateAsync(group.id);
         setShowLeaveModal(false);
-        router.push("/dashboard");
+        router.push("/groups");
       });
     } catch (error) {
       console.error("Failed to leave group:", error);
@@ -138,7 +143,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       await withNavigation(async () => {
         await deleteGroup.mutateAsync(group.id);
         setShowDeleteModal(false);
-        router.push("/dashboard");
+        router.push("/groups");
       });
     } catch (error) {
       console.error("Failed to delete group:", error);
@@ -155,142 +160,142 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-600 font-medium'>Loading group...</p>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading group...</p>
         </div>
       </main>
     );
   }
 
   if (!group || error) {
-    const errorColors = getGroupColorClasses("orange");
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 flex items-center justify-center p-4'>
-        <div className='text-center bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200 max-w-md'>
-          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <span className='text-3xl'>😞</span>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md'>
+          <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6'>
+            <span className='text-4xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-slate-900 mb-2'>
+          <h2 className='text-2xl font-bold text-white mb-3'>
             Group Not Found
           </h2>
-          <p className='text-slate-600 mb-6'>
-            This group doesnt exist or has been removed.
+          <p className='text-slate-400 mb-8'>
+            This group doesn't exist or has been removed.
           </p>
           <button
             onClick={goBack}
-            className={`px-6 py-3 bg-gradient-to-r ${errorColors.gradient} ${errorColors.gradientHover} text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
+            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
           >
-            Go Home
+            Go to Groups
           </button>
         </div>
       </main>
     );
   }
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-orange-50/30 pb-20'>
-      <div className='max-w-4xl mx-auto px-4 py-6'>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className='mb-6 px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          Back to Groups
-        </button>
+    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+      </div>
 
-        <div className='mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200'>
-          <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6'>
-            <div className='flex-1'>
-              <div className='flex items-start justify-between gap-4 mb-2'>
-                <h1 className='text-3xl md:text-4xl font-bold text-slate-900 text-balance'>
-                  {group.name}
-                </h1>
-                {isCreator && (
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className='p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0'
-                    title='Edit Group'
-                  >
-                    <Edit className='w-5 h-5 text-slate-600' />
-                  </button>
-                )}
-              </div>
-              <div className='flex items-center gap-2 flex-wrap mb-2'>
-                <span className='text-sm text-slate-600'>Group Code:</span>
-                <code
-                  className={`px-3 py-1 ${colors.bgLight} border ${colors.borderLight} rounded-lg font-mono font-bold ${colors.text} text-lg`}
-                >
-                  {group.code}
-                </code>
-                <button
-                  onClick={copyCode}
-                  className={`px-3 py-1 text-sm ${colors.bg} ${colors.hoverBg} text-white rounded-lg transition-colors font-medium flex items-center gap-1`}
-                >
-                  <Share2 className='w-3 h-3' />
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-                <button
-                  onClick={copyInviteLink}
-                  className={`px-3 py-1 text-sm ${colors.bg} ${colors.hoverBg} text-white rounded-lg transition-colors font-medium flex items-center gap-1`}
-                >
-                  <UserPlus className='w-3 h-3' />
-                  {inviteLinkCopied ? "Link Copied!" : "Invite Friend"}
-                </button>
-              </div>
-              {group.createdBy && (
-                <p className='text-xs text-slate-500 flex items-center gap-1.5'>
-                  <span>Group creator {group.createdBy}</span>
-                </p>
-              )}
-            </div>
-          </div>
-
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
+        {/* Header Navigation */}
+        <div className='flex items-center justify-between mb-8'>
           <button
-            onClick={() => setShowCreateTripModal(true)}
-            className={`w-full px-6 py-4 rounded-xl bg-gradient-to-r ${colors.gradient} ${colors.gradientHover} text-white transition-all font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
+            onClick={goBack}
+            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
           >
-            <Plus className='w-6 h-6' />
-            Create New Trip
+            <ArrowLeft className='w-5 h-5' />
           </button>
 
-          <div className='grid grid-cols-2 gap-2 mt-4'>
+          <div className='flex items-center gap-2'>
             <button
-              onClick={() => router.push(`/group/${group.id}/members`)}
-              className='px-4 py-5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-slate-200 group'
+              onClick={copyInviteLink}
+              className='p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/5'
+              title='Invite Friends'
             >
-              <span className='text-slate-700 font-semibold'>
-                Members{" "}
-                <span
-                  className={`text-xs font-bold ${colors.text} ${colors.bgLighter} px-2.5 py-1 rounded-full min-w-[2rem]`}
-                >
-                  {group.memberEmails?.length || 0}
-                </span>
-              </span>
+              <UserPlus className='w-5 h-5' />
             </button>
-
-            {isCreator ? (
+            {isCreator && (
               <button
-                onClick={() => setShowDeleteModal(true)}
-                className='text-red-600 font-semiboldpx-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium  gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
+                onClick={() => setShowEditModal(true)}
+                className='p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 text-white transition-colors border border-white/5'
+                title='Group Settings'
               >
-                Delete
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowLeaveModal(true)}
-                className='text-red-600 font-semibold px-4 py-5 rounded-xl bg-gradient-to-br from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 transition-all font-medium flex flex-col items-center gap-2 text-sm shadow-md hover:shadow-lg border border-red-200 group'
-              >
-                Leave
+                <Settings className='w-5 h-5' />
               </button>
             )}
           </div>
         </div>
 
+        {/* Group Info */}
+        <div className='mb-8'>
+          <h1 className='text-4xl font-bold text-white mb-2 break-words'>
+            {group.name}
+          </h1>
+          <div className='flex items-center gap-3 text-slate-400 mb-6'>
+            <div className='flex items-center gap-2'>
+              <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></span>
+              <span className='text-sm font-medium'>Active Group</span>
+            </div>
+            {group.createdBy && (
+              <>
+                <span className='w-1 h-1 rounded-full bg-slate-600'></span>
+                <span className='text-sm'>By {group.createdBy}</span>
+              </>
+            )}
+          </div>
+
+          {/* Stats Grid */}
+          <div className='grid grid-cols-2 gap-3'>
+            <button
+              onClick={() => router.push(`/group/${group.id}/members`)}
+              className='p-4 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left group'
+            >
+              <div className='flex items-center justify-between mb-2'>
+                <div className='p-2 rounded-xl bg-blue-500/10 text-blue-400'>
+                  <Users className='w-5 h-5' />
+                </div>
+                <ArrowLeft className='w-4 h-4 text-slate-500 rotate-180 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1' />
+              </div>
+              <div className='text-2xl font-bold text-white mb-0.5'>
+                {group.memberEmails?.length || 0}
+              </div>
+              <div className='text-xs text-slate-400 font-medium'>Members</div>
+            </button>
+
+            <button
+              onClick={copyCode}
+              className='p-4 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left'
+            >
+              <div className='flex items-center justify-between mb-2'>
+                <div className='p-2 rounded-xl bg-purple-500/10 text-purple-400'>
+                  <Share2 className='w-5 h-5' />
+                </div>
+                {copied && (
+                  <span className='text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg'>
+                    Copied!
+                  </span>
+                )}
+              </div>
+              <div className='text-2xl font-bold text-white mb-0.5 tracking-wider'>
+                {group.code}
+              </div>
+              <div className='text-xs text-slate-400 font-medium'>
+                Group Code
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Trips Section */}
         <div>
-          <h2 className='text-2xl font-bold text-slate-900 mb-4 px-1'>
-            Your Trips
-          </h2>
+          <div className='flex items-center justify-between mb-4 px-1'>
+            <h2 className='text-xl font-bold text-white'>Trips</h2>
+            {/* Filter buttons could go here */}
+          </div>
 
           <TripsListComponent
             group={group}
@@ -298,14 +303,40 @@ const GroupComponent = ({ param }: IGroupComponent) => {
             onUpdateGroup={handleUpdateGroup}
           />
         </div>
-      </div>
 
-      {showCreateTripModal && group && (
-        <CreateTripModal
-          groupId={group.id}
-          onClose={() => setShowCreateTripModal(false)}
-        />
-      )}
+        {/* Floating Create Button */}
+        <div className='fixed bottom-6 right-6 z-50'>
+          <button
+            onClick={() => router.push(`/group/${group.id}/trips/create`)}
+            className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
+            title='Create New Trip'
+          >
+            <Plus className='w-7 h-7 transition-transform group-hover:rotate-90' />
+            <span className='sr-only'>Create Trip</span>
+          </button>
+        </div>
+
+        {/* Danger Zone */}
+        <div className='mt-12 pt-8 border-t border-white/5'>
+          {isCreator ? (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className='w-full p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 transition-all flex items-center justify-center gap-2 text-sm font-medium'
+            >
+              <Trash2 className='w-4 h-4' />
+              Delete Group
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLeaveModal(true)}
+              className='w-full p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 transition-all flex items-center justify-center gap-2 text-sm font-medium'
+            >
+              <LogOut className='w-4 h-4' />
+              Leave Group
+            </button>
+          )}
+        </div>
+      </div>
 
       {showEditModal && group && (
         <EditGroupModal group={group} onClose={() => setShowEditModal(false)} />

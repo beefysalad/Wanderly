@@ -1,11 +1,19 @@
 "use client";
 import { Trip, Activity, Group } from "@/src/shared/types";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Calendar,
+  List,
+  DollarSign,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import BottomNav from "./BottomNav";
+// BottomNav import removed
 import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
+import ExpensesComponent from "../Expenses";
 import { getStatusBadge } from "@/lib/helper";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
@@ -29,8 +37,12 @@ interface ITripComponent {
   tripId: string;
   groupId: string;
 }
+
+type TabType = "calendar" | "schedule" | "expenses";
+
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: groupData, isLoading: loading } = useGroup(groupId);
   const { data: expensesData } = useExpenses(tripId);
   const group = groupData?.group || null;
@@ -38,27 +50,13 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const expenses = expensesData?.expenses || [];
   const { user: firebaseUser } = useCurrentUser();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "calendar" | "schedule" | "dashboard" | "profile"
-  >("calendar");
+  const [activeTab, setActiveTab] = useState<TabType>("schedule");
 
-  // Handle tab changes - navigate for dashboard/profile, switch view for calendar/schedule
-  const handleTabChange = (
-    tab: "calendar" | "schedule" | "dashboard" | "profile"
-  ) => {
-    if (tab === "dashboard") {
-      router.push("/dashboard");
-    } else if (tab === "profile") {
-      router.push("/dashboard?tab=profile");
-    } else {
-      setActiveTab(tab);
-    }
-  };
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [showActivityDetailModal, setShowActivityDetailModal] =
     useState<boolean>(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
-    null
+    null,
   );
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [showDeleteActivityModal, setShowDeleteActivityModal] =
@@ -76,6 +74,24 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
+
+  // Sync active tab with URL search params
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "expenses" || tab === "calendar" || tab === "schedule") {
+      setActiveTab(tab as TabType);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes (optional, but good for bookmarking)
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    // Use replace to prevent history stack buildup for every tab click
+    // or push to allow back button navigation
+    router.replace(`/group/${groupId}/trip/${tripId}?tab=${tab}`, {
+      scroll: false,
+    });
+  };
 
   // Fetch current user's database ID
   useEffect(() => {
@@ -108,7 +124,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to delete trip. Please try again."
+          : "Failed to delete trip. Please try again.",
       );
     }
   };
@@ -135,7 +151,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to export schedule. Please try again."
+          : "Failed to export schedule. Please try again.",
       );
     } finally {
       setIsExporting(false);
@@ -144,7 +160,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   const handleUpdateActivity = async (
     id: string,
-    updates: Partial<Activity>
+    updates: Partial<Activity>,
   ) => {
     try {
       await api.patch(`/trips/${tripId}/activities/${id}`, updates);
@@ -153,7 +169,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to update activity. Please try again."
+          : "Failed to update activity. Please try again.",
       );
     }
   };
@@ -171,7 +187,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to delete activity. Please try again."
+          : "Failed to delete activity. Please try again.",
       );
     } finally {
       setIsDeletingActivity(false);
@@ -202,7 +218,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             return {
               ...t,
               activities: t.activities?.map((a) =>
-                a.id === id ? { ...a, done: newDoneState } : a
+                a.id === id ? { ...a, done: newDoneState } : a,
               ),
             };
           }),
@@ -231,7 +247,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               return {
                 ...t,
                 activities: t.activities?.map((a) =>
-                  a.id === id ? { ...a, done: previousState } : a
+                  a.id === id ? { ...a, done: previousState } : a,
                 ),
               };
             }),
@@ -241,9 +257,15 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to update activity. Please try again."
+          : "Failed to update activity. Please try again.",
       );
     }
+  };
+
+  const resolveDates = (dateInput: Date | string) => {
+    if (!dateInput) return null;
+    const d = new Date(dateInput);
+    return isNaN(d.getTime()) ? null : d;
   };
 
   const addActivity = () => {
@@ -259,18 +281,20 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     handleToggleDone(id);
   };
 
+  /* Navigation Handlers */
   const handleEditActivity = (activity: Activity) => {
-    setEditingActivity(activity);
-    setShowActivityDetailModal(false);
-    setShowActivityModal(true);
+    router.push(
+      `/group/${groupId}/trip/${tripId}/activities/${activity.id}/edit`,
+    );
   };
-
   const handleViewActivity = (activity: Activity) => {
-    setSelectedActivity(activity);
-    setShowActivityDetailModal(true);
+    // For now, view acts as edit since we want full page experience
+    router.push(
+      `/group/${groupId}/trip/${tripId}/activities/${activity.id}/edit`,
+    );
   };
   const handleStatusChange = async (
-    newStatus: "planning" | "finalized" | "ongoing" | "cancelled"
+    newStatus: "planning" | "finalized" | "ongoing" | "cancelled",
   ) => {
     if (!trip) return;
 
@@ -325,17 +349,17 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       alert(
         err instanceof Error
           ? err.message
-          : "Failed to update trip status. Please try again."
+          : "Failed to update trip status. Please try again.",
       );
     }
   };
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8'>
-          <div className='w-12 h-12 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-700 font-medium'>Loading trip...</p>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-slate-400 font-medium'>Loading trip...</p>
         </div>
       </main>
     );
@@ -343,15 +367,13 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (!trip) {
     return (
-      <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 flex items-center justify-center p-4'>
-        <div className='text-center bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 max-w-md'>
+          <div className='w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-slate-900 mb-2'>
-            Trip Not Found
-          </h2>
-          <p className='text-slate-600 mb-6'>
+          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
+          <p className='text-slate-400 mb-6'>
             This trip doesn&apos;t exist or has been removed.
           </p>
           <button
@@ -364,226 +386,247 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       </main>
     );
   }
-  const startDate = new Date(trip.startDate);
-  const endDate = new Date(trip.endDate);
+  const startDate = resolveDates(trip.startDate) || new Date();
+  const endDate = resolveDates(trip.endDate) || new Date();
   const activities = trip.activities || [];
   const statusBadge = getStatusBadge(trip.status);
+
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/50 pb-32 md:pb-24'>
-      <div className='max-w-4xl mx-auto px-4 py-6'>
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className='mb-6 px-4 py-2 rounded-lg cursor-pointer transition-all flex items-center gap-2 font-medium text-slate-700 hover:text-slate-900 hover:bg-white/60 backdrop-blur-sm'
-          aria-label='Go back'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          Back
-        </button>
-
-        {/* Content wrapper to match calendar cards alignment */}
-        <div className='p-4 sm:p-6'>
-          {/* Trip Header Info */}
-          <div className='mb-6'>
-            <div className='flex items-start justify-between gap-4 mb-3'>
-              <h1 className='text-3xl sm:text-4xl font-bold text-slate-900 leading-tight'>
-                {trip.name}
-              </h1>
-            </div>
-
-            {/* Status Badge */}
-            <div className='mb-3'>
-              {!isEditingStatus ? (
-                <button
-                  onClick={() => setIsEditingStatus(true)}
-                  className={`${statusBadge.bg} ${statusBadge.text} text-xs font-semibold px-4 py-2 rounded-full border ${statusBadge.border} hover:opacity-90 transition-opacity shadow-sm inline-flex items-center`}
-                >
-                  {statusBadge.label}
-                </button>
-              ) : (
-                <select
-                  value={trip.status || "planning"}
-                  onChange={(e) =>
-                    handleStatusChange(
-                      e.target.value as
-                        | "planning"
-                        | "finalized"
-                        | "ongoing"
-                        | "cancelled"
-                    )
-                  }
-                  onBlur={() => setIsEditingStatus(false)}
-                  autoFocus
-                  className='text-xs font-semibold px-3 py-2 rounded-full border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white shadow-sm'
-                >
-                  <option value='planning'>Planning</option>
-                  <option value='finalized'>Finalized</option>
-                  <option value='ongoing'>Ongoing</option>
-                  <option value='cancelled'>Cancelled</option>
-                </select>
-              )}
-            </div>
-
-            <p className='text-sm sm:text-base text-slate-600 flex items-center gap-2 mb-2'>
-              <span className='text-lg'>📅</span>
-              <span>
-                {startDate.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}{" "}
-                -{" "}
-                {endDate.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
-            </p>
-            {trip.createdBy && (
-              <p className='text-xs text-slate-600 flex items-center gap-1.5'>
-                <span>Trip created by {trip.createdBy}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Action Buttons Group - Modern Redesign */}
-          <div className='mb-6'>
-            <div className='flex flex-col sm:flex-row gap-3'>
-              {/* Primary Action Button */}
-              <button
-                onClick={() => {
-                  setSelectedDate(null);
-                  setShowActivityModal(true);
-                }}
-                className='w-full sm:w-auto sm:flex-initial px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all duration-200 font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transform'
-              >
-                <Plus className='w-5 h-5' />
-                <span>Add Activity</span>
-              </button>
-
-              {/* Secondary Action Buttons - Consistent Sizing */}
-              <div className='flex gap-3 w-full sm:w-auto'>
-                {/* Expenses Button */}
-                <button
-                  onClick={() =>
-                    router.push(`/group/${groupId}/trip/${tripId}/expenses`)
-                  }
-                  className='flex-1 sm:flex-initial min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
-                >
-                  <span className='text-lg flex-shrink-0'>💰</span>
-                  <span className='hidden sm:inline truncate'>Expenses</span>
-                </button>
-
-                {/* Export Button with Dropdown */}
-                {activeTab === "schedule" && (
-                  <div className='relative flex-1 sm:flex-initial min-w-0'>
-                    <button
-                      onClick={() => setShowExportMenu(!showExportMenu)}
-                      disabled={isExporting || !trip}
-                      className='w-full min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-white text-slate-700 border border-slate-200/50 hover:border-slate-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
-                    >
-                      <span className='hidden sm:inline truncate'>
-                        {isExporting ? "Exporting..." : "Export"}
-                      </span>
-                      <span className='sm:hidden truncate'>
-                        {isExporting ? "..." : "Export"}
-                      </span>
-                      <ChevronDown className='w-4 h-4 flex-shrink-0' />
-                    </button>
-                    {showExportMenu && (
-                      <>
-                        <div
-                          className='fixed inset-0 z-10'
-                          onClick={() => setShowExportMenu(false)}
-                        />
-                        <div className='absolute top-full right-0 mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20'>
-                          <button
-                            onClick={() => {
-                              handleExportSchedule("png");
-                              setShowExportMenu(false);
-                            }}
-                            disabled={isExporting}
-                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
-                          >
-                            <span className='text-slate-700 font-medium text-sm'>
-                              Export as PNG
-                            </span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleExportSchedule("ics");
-                              setShowExportMenu(false);
-                            }}
-                            disabled={isExporting}
-                            className='w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed border-t border-slate-100'
-                          >
-                            <span className='text-slate-700 font-medium text-sm'>
-                              Export as Calendar (.ics)
-                            </span>
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Delete Button */}
-                {isTripCreator && (
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className='flex-1 sm:flex-initial min-w-0 px-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm hover:bg-red-50 text-red-600 border border-red-200/50 hover:border-red-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-[0.98]'
-                  >
-                    <Trash2 className='w-4 h-4 flex-shrink-0' />
-                    <span className='hidden sm:inline truncate'>Delete</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Area Card */}
-        <div
-          id='schedule-export-container'
-          className='p-4 sm:p-6 relative overflow-hidden'
-        >
-          <div className='relative z-10'>
-            {activeTab === "calendar" ? (
-              <TravelCalendar
-                startDate={startDate}
-                endDate={endDate}
-                activities={activities}
-                onAddActivity={addActivity}
-                onUpdateActivity={updateActivity}
-                onDeleteActivity={deleteActivity}
-                onToggleDone={toggleDone}
-                onEditActivity={handleEditActivity}
-                onViewActivity={handleViewActivity}
-                onOpenAddModal={(date) => {
-                  setSelectedDate(date);
-                  setEditingActivity(null);
-                  setShowActivityModal(true);
-                }}
-              />
-            ) : (
-              <TravelSchedule
-                startDate={startDate}
-                endDate={endDate}
-                activities={activities}
-                onAddActivity={addActivity}
-                onUpdateActivity={updateActivity}
-                onDeleteActivity={deleteActivity}
-                onToggleDone={toggleDone}
-                onEditActivity={handleEditActivity}
-                onViewActivity={handleViewActivity}
-                tripName={trip.name}
-              />
-            )}
-          </div>
-        </div>
+    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
+      {/* Background Effects */}
+      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
+        {/* Navigation Bar */}
+        <div className='flex items-center justify-between mb-8'>
+          <button
+            onClick={() => router.push(`/group/${groupId}`)}
+            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
+          >
+            <ArrowLeft className='w-5 h-5' />
+          </button>
+          <div className='flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-md border border-white/5'>
+            <button
+              onClick={() => handleTabChange("schedule")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "schedule"
+                  ? "bg-slate-700 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <span className='flex items-center gap-2'>
+                <List className='w-4 h-4' />
+                <span className='hidden sm:inline'>Timeline</span>
+              </span>
+            </button>
+            <button
+              onClick={() => handleTabChange("calendar")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "calendar"
+                  ? "bg-slate-700 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <span className='flex items-center gap-2'>
+                <Calendar className='w-4 h-4' />
+                <span className='hidden sm:inline'>Calendar</span>
+              </span>
+            </button>
+            <button
+              onClick={() => handleTabChange("expenses")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "expenses"
+                  ? "bg-slate-700 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <span className='flex items-center gap-2'>
+                <DollarSign className='w-4 h-4' />
+                <span className='hidden sm:inline'>Expenses</span>
+              </span>
+            </button>
+          </div>
+          <div className='w-9' /> {/* Spacer for balance */}
+        </div>
+
+        {/* Trip Header */}
+        <div className='mb-8'>
+          <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
+            <div>
+              <div className='flex items-center gap-3 mb-2'>
+                {!isEditingStatus ? (
+                  <button
+                    onClick={() => setIsEditingStatus(true)}
+                    className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-lg border ${statusBadge.border} ${statusBadge.bg} ${statusBadge.text} hover:opacity-80 transition-opacity`}
+                  >
+                    {statusBadge.label}
+                  </button>
+                ) : (
+                  <select
+                    value={trip.status || "planning"}
+                    onChange={(e) =>
+                      handleStatusChange(
+                        e.target.value as
+                          | "planning"
+                          | "finalized"
+                          | "ongoing"
+                          | "cancelled",
+                      )
+                    }
+                    onBlur={() => setIsEditingStatus(false)}
+                    autoFocus
+                    className='text-[10px] uppercase font-bold px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 text-white focus:outline-none focus:border-orange-500'
+                  >
+                    <option value='planning'>PLANNING</option>
+                    <option value='finalized'>FINALIZED</option>
+                    <option value='ongoing'>ONGOING</option>
+                    <option value='cancelled'>CANCELLED</option>
+                  </select>
+                )}
+                {trip.createdBy && (
+                  <span className='text-xs text-slate-500'>
+                    by {trip.createdBy}
+                  </span>
+                )}
+              </div>
+              <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
+                {trip.name}
+              </h1>
+              <div className='flex items-center gap-2 text-slate-400'>
+                <Calendar className='w-4 h-4' />
+                <span>
+                  {startDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {" - "}
+                  {endDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            </div>
+
+            <div className='flex gap-3'>
+              {activeTab === "schedule" && (
+                <div className='relative'>
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    disabled={isExporting}
+                    className='px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 hover:text-white transition-all font-medium text-sm flex items-center gap-2 disabled:opacity-50'
+                  >
+                    {isExporting ? "Exporting..." : "Export"}
+                    <ChevronDown className='w-4 h-4' />
+                  </button>
+                  {showExportMenu && (
+                    <>
+                      <div
+                        className='fixed inset-0 z-10'
+                        onClick={() => setShowExportMenu(false)}
+                      />
+                      <div className='absolute top-full right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-xl border border-white/10 overflow-hidden z-20'>
+                        <button
+                          onClick={() => {
+                            handleExportSchedule("png");
+                            setShowExportMenu(false);
+                          }}
+                          className='w-full px-4 py-3 text-left hover:bg-slate-700 text-slate-300 hover:text-white text-sm transition-colors'
+                        >
+                          Export as PNG
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleExportSchedule("ics");
+                            setShowExportMenu(false);
+                          }}
+                          className='w-full px-4 py-3 text-left hover:bg-slate-700 text-slate-300 hover:text-white text-sm transition-colors border-t border-white/5'
+                        >
+                          Export as Calendar (.ics)
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {isTripCreator && (
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className='p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 transition-all'
+                  title='Delete Trip'
+                >
+                  <Trash2 className='w-5 h-5' />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className='bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-4 sm:p-6 min-h-[400px]'>
+          {activeTab === "calendar" ? (
+            <TravelCalendar
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+              onAddActivity={addActivity}
+              onUpdateActivity={updateActivity}
+              onDeleteActivity={deleteActivity}
+              onToggleDone={toggleDone}
+              onEditActivity={handleEditActivity}
+              onViewActivity={handleViewActivity}
+              onOpenAddModal={(date) => {
+                const dateStr = date ? date.toISOString().split("T")[0] : "";
+                router.push(
+                  `/group/${groupId}/trip/${tripId}/activities/add${dateStr ? `?date=${dateStr}` : ""}`,
+                );
+              }}
+            />
+          ) : activeTab === "expenses" ? (
+            <ExpensesComponent
+              groupId={groupId}
+              tripId={tripId}
+              isEmbedded={true}
+            />
+          ) : (
+            <TravelSchedule
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+              onAddActivity={addActivity}
+              onUpdateActivity={updateActivity}
+              onDeleteActivity={deleteActivity}
+              onToggleDone={toggleDone}
+              onEditActivity={handleEditActivity}
+              onViewActivity={handleViewActivity}
+              tripName={trip.name}
+            />
+          )}
+        </div>
+
+        {/* Floating Add Activity/Expense Button */}
+        <div className='fixed bottom-6 right-6 z-50'>
+          <button
+            onClick={() =>
+              activeTab === "expenses"
+                ? router.push(`/group/${groupId}/expenses/add?tripId=${tripId}`)
+                : router.push(`/group/${groupId}/trip/${tripId}/activities/add`)
+            }
+            className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
+            title={activeTab === "expenses" ? "Add Expense" : "Add Activity"}
+          >
+            <Plus className='w-7 h-7 transition-transform group-hover:rotate-90' />
+            <span className='sr-only'>
+              {activeTab === "expenses" ? "Add Expense" : "Add Activity"}
+            </span>
+          </button>
+        </div>
+      </div>
 
       {showActivityModal && (
         <ActivityModal
@@ -653,7 +696,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             });
           }}
           onSelectExpense={(expense) => {
-            router.push(`/group/${groupId}/trip/${tripId}/expenses`);
+            handleTabChange("expenses");
+            setShowActivityDetailModal(false);
           }}
         />
       )}
