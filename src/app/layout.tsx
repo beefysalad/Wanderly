@@ -6,6 +6,7 @@ import { SocketProvider } from "@/components/socket-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 import AuthLayout from "./components/shared/auth-layout";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +37,10 @@ export default function RootLayout({
         <QueryProvider>
           <SocketProvider>
             <AuthLayout>{children}</AuthLayout>
-            <Toaster position="bottom-right" richColors closeButton />
+            <Toaster position='bottom-right' richColors closeButton />
           </SocketProvider>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   );
