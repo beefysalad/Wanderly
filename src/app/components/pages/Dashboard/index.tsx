@@ -12,6 +12,7 @@ import DashboardGroupCards from "./DashboardGroupCards";
 import DashboardHeader from "./DashboardHeader";
 import DashboardBottomNav from "./DashboardBottomNav";
 import DashboardStatistics from "./DashboardStatistics";
+import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
 
 import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
@@ -20,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const DashboardComponent = () => {
   const router = useRouter();
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [showCalendar, setShowCalendar] = useState(true);
   const { user } = useCurrentUser();
   const { data: groupsData, isLoading: loading } = useGroups();
@@ -47,6 +49,18 @@ const DashboardComponent = () => {
       socket.off("trip:created", handleTripCreated);
     };
   }, [socket, queryClient]);
+
+  useEffect(() => {
+    const hasSeenWhatsNew = localStorage.getItem("whats_new_seen_v1");
+    if (!hasSeenWhatsNew) {
+      setShowWhatsNew(true);
+    }
+  }, []);
+
+  const handleCloseWhatsNew = () => {
+    setShowWhatsNew(false);
+    localStorage.setItem("whats_new_seen_v1", "true");
+  };
 
   // Sort groups by createdAt descending (most recent first)
   const sortedGroups = [...allGroups].sort((a, b) => {
@@ -197,6 +211,8 @@ const DashboardComponent = () => {
       {showJoinModal && (
         <JoinGroupModal onClose={() => setShowJoinModal(false)} />
       )}
+
+      {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} />}
     </main>
   );
 };
