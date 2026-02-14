@@ -201,10 +201,8 @@ const ExpensesComponent = ({
 
   const filteredExpenses = getFilteredExpenses();
 
-  const handleEditExpense = (expense: Expense) => {
-    router.push(
-      `/group/${groupId}/expenses/${expense.id}/edit?tripId=${tripId}`,
-    );
+  const handleViewExpense = (expense: Expense) => {
+    router.push(`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`);
   };
 
   if (loadingGroup) {
@@ -614,7 +612,7 @@ const ExpensesComponent = ({
                   memberNames={group.memberNames}
                   memberMetadata={group.memberMetadata}
                   activities={trip.activities || []}
-                  onSelectExpense={handleEditExpense}
+                  onSelectExpense={handleViewExpense}
                   currentUser={user?.email ?? ""}
                 />
               </div>
