@@ -51,7 +51,7 @@ const DashboardComponent = () => {
   }, [socket, queryClient]);
 
   useEffect(() => {
-    const hasSeenWhatsNew = localStorage.getItem("whats_new_seen_v1");
+    const hasSeenWhatsNew = localStorage.getItem("whats_new_seen_v2");
     if (!hasSeenWhatsNew) {
       setShowWhatsNew(true);
     }
@@ -59,7 +59,7 @@ const DashboardComponent = () => {
 
   const handleCloseWhatsNew = () => {
     setShowWhatsNew(false);
-    localStorage.setItem("whats_new_seen_v1", "true");
+    localStorage.setItem("whats_new_seen_v2", "true");
   };
 
   // Sort groups by createdAt descending (most recent first)
