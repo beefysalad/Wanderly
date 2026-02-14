@@ -10,6 +10,7 @@ import {
   emitExpenseUpdated,
   emitExpenseDeleted,
 } from "@/lib/socket-events";
+import type { ExpenseWithRelations } from "./transformers";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -196,6 +197,14 @@ export async function listExpensesForGuestService(
           name: true,
         },
       },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
       splits: {
         include: {
           user: {
@@ -307,7 +316,7 @@ export async function createExpenseService(
     splitWith: string[]; // emails
     activityId?: string;
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { trip, user: userAccess } = await verifyTripAccess(token, tripId);
 
   // Get full user info for notifications
@@ -368,6 +377,14 @@ export async function createExpenseService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
@@ -486,7 +503,7 @@ export async function updateExpenseService(
     splitWith?: string[]; // emails
     activityId?: string;
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { user: userAccess } = await verifyTripAccess(token, tripId);
 
   // Get full user info for notifications
@@ -611,6 +628,14 @@ export async function updateExpenseService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
@@ -824,7 +849,7 @@ export async function confirmPaymentService(
     memberEmail: string;
     status: "confirmed" | "rejected";
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { user } = await verifyTripAccess(token, tripId);
 
   // Get member user ID
@@ -842,6 +867,14 @@ export async function confirmPaymentService(
       },
       paidBy: {
         select: { id: true, email: true, name: true },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
       },
     },
   });

@@ -1,7 +1,7 @@
 import type { Expense, PaymentLog } from "@/src/shared/types";
 import type { Prisma } from "@prisma/client";
 
-type ExpenseWithRelations = Prisma.ExpenseGetPayload<{
+export type ExpenseWithRelations = Prisma.ExpenseGetPayload<{
   include: {
     paidBy: {
       select: {

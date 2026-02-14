@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { syncUserToDatabaseService } from "../../../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { Decimal } from "@prisma/client/runtime/library";
+import { ExpenseWithRelations } from "../../transformers";
 
 /**
  * Gets or creates a user in the database from Firebase token
@@ -77,7 +78,7 @@ export async function markExpensePaidService(
     isPaid: boolean; // true to mark as paid, false to unmark
     createPaymentLog?: boolean; // whether to create a payment log
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
@@ -193,6 +194,14 @@ export async function markExpensePaidService(
           name: true,
         },
       },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
       splits: {
         include: {
           user: {
@@ -231,7 +240,7 @@ export async function confirmPaymentService(
     memberEmail: string; // email of member whose payment is being confirmed/rejected
     status: "confirmed" | "rejected"; // new status
   },
-) {
+): Promise<ExpenseWithRelations> {
   const { user } = await verifyTripAccess(token, tripId);
 
   // Verify expense exists and belongs to trip
@@ -312,6 +321,14 @@ export async function confirmPaymentService(
           id: true,
           email: true,
           name: true,
+        },
+      },
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          imageUrl: true,
         },
       },
       splits: {
