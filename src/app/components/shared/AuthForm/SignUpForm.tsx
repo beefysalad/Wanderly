@@ -5,7 +5,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Loader2, Mail, Lock, User, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { signUpSchema, TSignUpSchema } from "./authSchema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +25,8 @@ interface ISignUpFormProps {
 export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<TSignUpSchema>({
     resolver: zodResolver(signUpSchema),
@@ -112,10 +122,24 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
           <Lock className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
           <Input
             {...form.register("password")}
-            type='password'
+            type={showPassword ? "text" : "password"}
             placeholder='Password'
-            className='pl-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
+            className='pl-10 pr-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
           />
+          <button
+            type='button'
+            onClick={() => setShowPassword(!showPassword)}
+            className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors'
+          >
+            {showPassword ? (
+              <EyeOff className='w-4 h-4' />
+            ) : (
+              <Eye className='w-4 h-4' />
+            )}
+            <span className='sr-only'>
+              {showPassword ? "Hide password" : "Show password"}
+            </span>
+          </button>
         </div>
         {form.formState.errors.password && (
           <p className='text-xs text-red-400 pl-1'>
@@ -129,10 +153,24 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
           <Lock className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
           <Input
             {...form.register("confirmPassword")}
-            type='password'
+            type={showConfirmPassword ? "text" : "password"}
             placeholder='Confirm Password'
-            className='pl-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
+            className='pl-10 pr-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
           />
+          <button
+            type='button'
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors'
+          >
+            {showConfirmPassword ? (
+              <EyeOff className='w-4 h-4' />
+            ) : (
+              <Eye className='w-4 h-4' />
+            )}
+            <span className='sr-only'>
+              {showConfirmPassword ? "Hide password" : "Show password"}
+            </span>
+          </button>
         </div>
         {form.formState.errors.confirmPassword && (
           <p className='text-xs text-red-400 pl-1'>

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import { useForm } from "react-hook-form";
 import {
   editProfileSchema,
@@ -243,19 +244,17 @@ const ProfileComponent = () => {
     updateProfileMutation.isPending || updatePasswordMutation.isPending;
 
   return (
-    <main className='min-h-screen bg-slate-50 pb-36 md:pb-28'>
+    <main className='min-h-screen bg-slate-950 pb-36 md:pb-28'>
       <div className='max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
-        {/* Back Button */}
-        <button
-          onClick={() => router.push("/dashboard")}
-          className='mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium'
-        >
-          <ArrowLeft className='w-4 h-4' />
-          Back to Dashboard
-        </button>
+        {/* Header */}
+        <DashboardLayoutHeader
+          showBack={true}
+          backUrl='/dashboard'
+          title='My Profile'
+        />
 
         {/* Profile Header Card */}
-        <div className='bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden'>
+        <div className='bg-slate-900 rounded-xl shadow-sm border border-white/5 mb-6 overflow-hidden'>
           <div className='p-6 sm:p-8'>
             {!isEditMode ? (
               // View Mode
@@ -263,7 +262,7 @@ const ProfileComponent = () => {
                 {/* Avatar */}
                 <div className='relative flex-shrink-0'>
                   {avatarUrl ? (
-                    <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-200'>
+                    <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-800'>
                       <Image
                         src={avatarUrl}
                         alt={displayName}
@@ -272,7 +271,7 @@ const ProfileComponent = () => {
                       />
                     </div>
                   ) : (
-                    <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200'>
+                    <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700'>
                       <User className='w-10 h-10 sm:w-12 sm:h-12 text-slate-400' />
                     </div>
                   )}
@@ -281,7 +280,7 @@ const ProfileComponent = () => {
                 {/* Name and Email */}
                 <div className='flex-1 text-center sm:text-left w-full sm:w-auto'>
                   <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-3'>
-                    <h1 className='text-2xl sm:text-3xl font-bold text-slate-900'>
+                    <h1 className='text-2xl sm:text-3xl font-bold text-white'>
                       {displayName}
                     </h1>
                     <button
@@ -293,7 +292,7 @@ const ProfileComponent = () => {
                       Edit Profile
                     </button>
                   </div>
-                  <div className='flex items-center justify-center sm:justify-start gap-2 text-slate-600'>
+                  <div className='flex items-center justify-center sm:justify-start gap-2 text-slate-400'>
                     <Mail className='w-4 h-4 flex-shrink-0' />
                     <span className='text-sm break-all'>{email}</span>
                   </div>
@@ -305,8 +304,8 @@ const ProfileComponent = () => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className='space-y-6'
               >
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200'>
-                  <h2 className='text-2xl font-bold text-slate-900'>
+                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/5'>
+                  <h2 className='text-2xl font-bold text-white'>
                     Edit Profile
                   </h2>
                   <div className='flex gap-2 w-full sm:w-auto'>
@@ -315,7 +314,7 @@ const ProfileComponent = () => {
                       onClick={handleCancel}
                       disabled={isPending}
                       variant='outline'
-                      className='flex-1 sm:flex-none'
+                      className='flex-1 sm:flex-none border-white/10 text-slate-300 hover:bg-white/5 hover:text-white'
                     >
                       <X className='w-4 h-4 mr-2' />
                       Cancel
@@ -342,13 +341,13 @@ const ProfileComponent = () => {
 
                 {/* Photo Upload */}
                 <div className='space-y-3'>
-                  <Label className='text-sm font-medium text-slate-700'>
+                  <Label className='text-sm font-medium text-slate-400'>
                     Profile Photo
                   </Label>
                   <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4'>
                     <div className='relative flex-shrink-0'>
                       {avatarUrl ? (
-                        <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-200'>
+                        <div className='relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-800'>
                           <Image
                             src={avatarUrl}
                             alt='Profile'
@@ -357,7 +356,7 @@ const ProfileComponent = () => {
                           />
                         </div>
                       ) : (
-                        <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200'>
+                        <div className='w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700'>
                           <User className='w-10 h-10 sm:w-12 sm:h-12 text-slate-400' />
                         </div>
                       )}
@@ -380,7 +379,7 @@ const ProfileComponent = () => {
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploadingImage}
                         variant='outline'
-                        className='w-full sm:w-auto'
+                        className='w-full sm:w-auto border-white/10 text-slate-300 hover:bg-white/5 hover:text-white'
                       >
                         {uploadingImage ? (
                           <>
@@ -411,7 +410,7 @@ const ProfileComponent = () => {
                       className={`text-sm font-medium ${
                         form.formState.errors.name
                           ? "text-red-500"
-                          : "text-slate-700"
+                          : "text-slate-400"
                       }`}
                     >
                       {form.formState.errors.name
@@ -423,23 +422,23 @@ const ProfileComponent = () => {
                       type='text'
                       {...form.register("name")}
                       placeholder='Your name'
-                      className={
+                      className={`bg-slate-800 border-white/10 text-white placeholder:text-slate-500 ${
                         form.formState.errors.name
                           ? "border-red-500 focus-visible:border-red-500"
                           : ""
-                      }
+                      }`}
                     />
                   </div>
 
                   <div className='space-y-2'>
-                    <Label className='text-sm font-medium text-slate-700'>
+                    <Label className='text-sm font-medium text-slate-400'>
                       Email Address
                     </Label>
                     <Input
                       type='email'
                       value={email}
                       disabled
-                      className='bg-slate-50 text-slate-500 cursor-not-allowed'
+                      className='bg-slate-900 border-white/5 text-slate-500 cursor-not-allowed'
                     />
                     <p className='text-xs text-slate-500'>
                       Email cannot be changed
@@ -452,7 +451,7 @@ const ProfileComponent = () => {
                   <button
                     type='button'
                     onClick={() => setShowPasswordSection(!showPasswordSection)}
-                    className='flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors'
+                    className='flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors'
                   >
                     <Lock className='w-4 h-4' />
                     {showPasswordSection
@@ -463,14 +462,14 @@ const ProfileComponent = () => {
 
                 {/* Password Fields */}
                 {showPasswordSection && (
-                  <div className='space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200'>
+                  <div className='space-y-4 p-4 bg-slate-900/50 rounded-lg border border-white/5'>
                     <div className='space-y-2'>
                       <Label
                         htmlFor='currentPassword'
                         className={`text-sm font-medium ${
                           form.formState.errors.currentPassword
                             ? "text-red-500"
-                            : "text-slate-700"
+                            : "text-slate-400"
                         }`}
                       >
                         {form.formState.errors.currentPassword
@@ -482,11 +481,11 @@ const ProfileComponent = () => {
                         type='password'
                         {...form.register("currentPassword")}
                         placeholder='Enter current password'
-                        className={
+                        className={`bg-slate-800 border-white/10 text-white placeholder:text-slate-500 ${
                           form.formState.errors.currentPassword
                             ? "border-red-500 focus-visible:border-red-500"
                             : ""
-                        }
+                        }`}
                       />
                     </div>
 
@@ -497,7 +496,7 @@ const ProfileComponent = () => {
                           className={`text-sm font-medium ${
                             form.formState.errors.newPassword
                               ? "text-red-500"
-                              : "text-slate-700"
+                              : "text-slate-400"
                           }`}
                         >
                           {form.formState.errors.newPassword
@@ -509,11 +508,11 @@ const ProfileComponent = () => {
                           type='password'
                           {...form.register("newPassword")}
                           placeholder='Min 8 characters'
-                          className={
+                          className={`bg-slate-800 border-white/10 text-white placeholder:text-slate-500 ${
                             form.formState.errors.newPassword
                               ? "border-red-500 focus-visible:border-red-500"
                               : ""
-                          }
+                          }`}
                         />
                       </div>
 
@@ -523,7 +522,7 @@ const ProfileComponent = () => {
                           className={`text-sm font-medium ${
                             form.formState.errors.confirmPassword
                               ? "text-red-500"
-                              : "text-slate-700"
+                              : "text-slate-400"
                           }`}
                         >
                           {form.formState.errors.confirmPassword
@@ -535,11 +534,11 @@ const ProfileComponent = () => {
                           type='password'
                           {...form.register("confirmPassword")}
                           placeholder='Confirm new password'
-                          className={
+                          className={`bg-slate-800 border-white/10 text-white placeholder:text-slate-500 ${
                             form.formState.errors.confirmPassword
                               ? "border-red-500 focus-visible:border-red-500"
                               : ""
-                          }
+                          }`}
                         />
                       </div>
                     </div>
@@ -548,7 +547,7 @@ const ProfileComponent = () => {
 
                 {/* Error Message */}
                 {error && (
-                  <div className='p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm'>
+                  <div className='p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm'>
                     {error}
                   </div>
                 )}
@@ -557,15 +556,15 @@ const ProfileComponent = () => {
 
             {/* Info Cards Section - Only show in view mode */}
             {!isEditMode && (
-              <div className='mt-8 pt-8 border-t border-slate-200'>
+              <div className='mt-8 pt-8 border-t border-white/10'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   {/* Account Information Card */}
-                  <div className='bg-slate-50 rounded-lg p-5 border border-slate-200'>
+                  <div className='bg-slate-900 rounded-lg p-5 border border-white/5'>
                     <div className='flex items-center gap-2 mb-4'>
-                      <div className='w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center'>
-                        <User className='w-4 h-4 text-orange-600' />
+                      <div className='w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center'>
+                        <User className='w-4 h-4 text-orange-400' />
                       </div>
-                      <h3 className='text-lg font-semibold text-slate-900'>
+                      <h3 className='text-lg font-semibold text-white'>
                         Account Information
                       </h3>
                     </div>
@@ -574,7 +573,7 @@ const ProfileComponent = () => {
                         <p className='text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide'>
                           Email Address
                         </p>
-                        <p className='text-sm font-medium text-slate-900 break-all'>
+                        <p className='text-sm font-medium text-slate-300 break-all'>
                           {email}
                         </p>
                       </div>
@@ -584,8 +583,8 @@ const ProfileComponent = () => {
                             Member Since
                           </p>
                           <div className='flex items-center gap-2'>
-                            <Calendar className='w-4 h-4 text-slate-400' />
-                            <p className='text-sm font-medium text-slate-900'>
+                            <Calendar className='w-4 h-4 text-slate-500' />
+                            <p className='text-sm font-medium text-slate-300'>
                               {accountCreated.toLocaleDateString("en-US", {
                                 month: "long",
                                 day: "numeric",
@@ -599,35 +598,35 @@ const ProfileComponent = () => {
                   </div>
 
                   {/* Statistics Card */}
-                  <div className='bg-slate-50 rounded-lg p-5 border border-slate-200'>
+                  <div className='bg-slate-900 rounded-lg p-5 border border-white/5'>
                     <div className='flex items-center gap-2 mb-4'>
-                      <div className='w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center'>
-                        <MapPin className='w-4 h-4 text-amber-600' />
+                      <div className='w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center'>
+                        <MapPin className='w-4 h-4 text-amber-400' />
                       </div>
-                      <h3 className='text-lg font-semibold text-slate-900'>
+                      <h3 className='text-lg font-semibold text-white'>
                         Your Statistics
                       </h3>
                     </div>
                     <div className='space-y-3'>
-                      <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
+                      <div className='flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-white/5'>
                         <div className='flex items-center gap-2'>
-                          <Users className='w-4 h-4 text-orange-500' />
-                          <span className='text-sm font-medium text-slate-700'>
+                          <Users className='w-4 h-4 text-orange-400' />
+                          <span className='text-sm font-medium text-slate-300'>
                             Travel Groups
                           </span>
                         </div>
-                        <span className='text-xl font-bold text-orange-600'>
+                        <span className='text-xl font-bold text-orange-400'>
                           {totalGroups}
                         </span>
                       </div>
-                      <div className='flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200'>
+                      <div className='flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-white/5'>
                         <div className='flex items-center gap-2'>
-                          <MapPin className='w-4 h-4 text-amber-500' />
-                          <span className='text-sm font-medium text-slate-700'>
+                          <MapPin className='w-4 h-4 text-amber-400' />
+                          <span className='text-sm font-medium text-slate-300'>
                             Total Trips
                           </span>
                         </div>
-                        <span className='text-xl font-bold text-amber-600'>
+                        <span className='text-xl font-bold text-amber-400'>
                           {totalTrips}
                         </span>
                       </div>

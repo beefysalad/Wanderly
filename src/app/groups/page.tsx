@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { getGroupColorClasses } from "@/lib/utils/groupColors";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
+import DashboardLayoutHeader from "../components/shared/DashboardLayoutHeader";
 
 const GroupsPage = () => {
   const router = useRouter();
@@ -55,26 +56,12 @@ const GroupsPage = () => {
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         {/* Header */}
-        <div className='mb-8'>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className='mb-4 p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-          >
-            <ArrowLeft className='w-4 h-4' />
-            <span className='text-sm font-medium'>Back</span>
-          </button>
-          <div className='flex items-end justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold text-white mb-2'>
-                Your Groups
-              </h1>
-              <p className='text-sm text-slate-400'>
-                {sortedGroups.length}{" "}
-                {sortedGroups.length === 1 ? "group" : "groups"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <DashboardLayoutHeader
+          showBack={true}
+          backUrl='/dashboard'
+          title='Your Groups'
+          description={`${sortedGroups.length} ${sortedGroups.length === 1 ? "group" : "groups"}`}
+        />
 
         {/* Groups List */}
         {sortedGroups.length === 0 ? (

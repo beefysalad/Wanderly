@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   Circle,
-  MoreVertical,
 } from "lucide-react";
 import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
@@ -41,7 +40,6 @@ const ActivityDetail = ({
 }: IActivityDetailProps) => {
   const router = useRouter();
   const activityDate = new Date(activity.date);
-  const [showMenu, setShowMenu] = useState(false);
 
   // Filter expenses linked to this activity
   const linkedExpenses = expenses.filter(
@@ -56,68 +54,37 @@ const ActivityDetail = ({
         <div className='absolute bottom-[-20%] right-[-20%] w-[70%] h-[70%] bg-purple-500/10 rounded-full blur-[120px] opacity-60'></div>
       </div>
 
-      <div className='max-w-3xl mx-auto relative z-10'>
-        {/* Navigation & Actions Header */}
-        <div className='sticky top-0 z-50 flex items-center justify-between px-4 py-4 md:py-6 bg-slate-950/80 backdrop-blur-xl border-b border-white/5'>
-          <button
-            onClick={() => router.back()}
-            className='p-2.5 -ml-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95 group'
-          >
-            <ArrowLeft className='w-6 h-6 group-hover:-translate-x-1 transition-transform' />
-          </button>
+      {/* Header */}
+      <div className='p-4 md:p-6 z-20 relative flex items-center justify-between'>
+        <button
+          onClick={() => router.back()}
+          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
+        >
+          <ArrowLeft className='w-5 h-5' />
+          <span className='font-medium'>Back</span>
+        </button>
 
+        {!readOnly && (
           <div className='flex items-center gap-2'>
-            {!readOnly && (
-              <>
-                <button
-                  onClick={onEdit}
-                  className='max-md:hidden px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-sm font-medium transition-colors border border-white/5'
-                >
-                  Edit
-                </button>
-                <div className='relative'>
-                  <button
-                    onClick={() => setShowMenu(!showMenu)}
-                    className='p-2.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95'
-                  >
-                    <MoreVertical className='w-6 h-6' />
-                  </button>
-                  {showMenu && (
-                    <>
-                      <div
-                        className='fixed inset-0 z-10'
-                        onClick={() => setShowMenu(false)}
-                      />
-                      <div className='absolute right-0 mt-2 w-48 bg-slate-900 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-20 py-1 animate-in fade-in zoom-in-95 duration-200'>
-                        <button
-                          onClick={() => {
-                            onEdit?.();
-                            setShowMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 md:hidden'
-                        >
-                          <Pencil className='w-4 h-4' />
-                          Edit Activity
-                        </button>
-                        <button
-                          onClick={() => {
-                            onDelete?.();
-                            setShowMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2'
-                        >
-                          <Trash2 className='w-4 h-4' />
-                          Delete Activity
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
+            <button
+              onClick={() => onEdit && onEdit()}
+              className='p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors'
+              title='Edit Activity'
+            >
+              <Pencil className='w-5 h-5' />
+            </button>
+            <button
+              onClick={() => onDelete && onDelete()}
+              className='p-2 rounded-xl bg-slate-800/50 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors'
+              title='Delete Activity'
+            >
+              <Trash2 className='w-5 h-5' />
+            </button>
           </div>
-        </div>
+        )}
+      </div>
 
+      <div className='max-w-4xl mx-auto relative z-10'>
         {/* Hero Section */}
         <div className='px-5 pt-8 pb-10'>
           <div className='flex flex-col gap-6'>

@@ -7,6 +7,7 @@ import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
+import DashboardLayoutHeader from "../components/shared/DashboardLayoutHeader";
 
 const TripsPage = () => {
   const router = useRouter();
@@ -102,25 +103,12 @@ const TripsPage = () => {
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         {/* Header */}
-        <div className='mb-8'>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className='mb-4 p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-          >
-            <ArrowLeft className='w-4 h-4' />
-            <span className='text-sm font-medium'>Back</span>
-          </button>
-          <div className='flex items-end justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold text-white mb-2'>Your Trips</h1>
-              <p className='text-sm text-slate-400'>
-                {filteredTrips.length}{" "}
-                {filteredTrips.length === 1 ? "trip" : "trips"}{" "}
-                {filter !== "all" && `• ${filter}`}
-              </p>
-            </div>
-          </div>
-        </div>
+        <DashboardLayoutHeader
+          showBack={true}
+          backUrl='/dashboard'
+          title='Your Trips'
+          description={`${filteredTrips.length} ${filteredTrips.length === 1 ? "trip" : "trips"} ${filter !== "all" ? `• ${filter}` : ""}`}
+        />
 
         {/* Filters */}
         <div className='flex gap-2 mb-6 bg-slate-800/30 backdrop-blur-xl rounded-2xl p-1.5 border border-white/5 w-fit'>
