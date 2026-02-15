@@ -114,12 +114,12 @@ export default function CreateGroupPage() {
               {/* Group Name */}
               <div className='space-y-4'>
                 <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                  What should we call this?
+                  What should we call this group?
                 </Label>
                 <div className='relative'>
                   <Input
                     {...form.register("groupName")}
-                    placeholder='e.g., Summer Road Trip 2025'
+                    placeholder='e.g., Paraluman'
                     className='h-16 px-6 text-xl bg-slate-900 text-white border-white/5 focus:border-orange-500/50 rounded-2xl transition-all'
                   />
                   {form.formState.errors.groupName && (
