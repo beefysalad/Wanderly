@@ -2,7 +2,7 @@
 
 import SignUpForm from "@/src/app/components/shared/AuthForm/SignUpForm";
 import Link from "next/link";
-import { Compass, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 

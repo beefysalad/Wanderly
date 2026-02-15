@@ -2,7 +2,7 @@
 
 import SignInForm from "@/src/app/components/shared/AuthForm/SignInForm";
 import Link from "next/link";
-import { Compass, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 

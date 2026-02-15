@@ -17,6 +17,8 @@ model User {
   firebaseId       String   @unique
   firebaseDisabled Boolean  @default(false)
   lastSeenWhatsNew String?  @default("")
+  bio              String?
+  travelStyle      String?
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")

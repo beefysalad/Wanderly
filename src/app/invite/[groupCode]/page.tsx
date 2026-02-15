@@ -8,7 +8,7 @@ import Footer from "@/src/app/components/shared/Footer";
 import Header from "@/src/app/components/shared/Header";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
-import { LogIn, UserPlus, Users } from "lucide-react";
+import { LogIn, Users } from "lucide-react";
 
 export default function InvitePage({
   params,

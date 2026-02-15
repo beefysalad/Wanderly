@@ -8,81 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUpdateGroup } from "@/src/hooks/useGroups";
 import { Group } from "@/src/shared/types";
+import {
+  VIBES,
+  getVibeInfo,
+  getGroupColorClasses,
+} from "@/lib/utils/groupColors";
 
-const COLOR_SCHEMES = [
-  {
-    value: "orange",
-    label: "Orange",
-    bg: "bg-orange-500",
-    hover: "hover:bg-orange-600",
-  },
-  {
-    value: "blue",
-    label: "Blue",
-    bg: "bg-blue-500",
-    hover: "hover:bg-blue-600",
-  },
-  {
-    value: "green",
-    label: "Green",
-    bg: "bg-green-500",
-    hover: "hover:bg-green-600",
-  },
-  {
-    value: "purple",
-    label: "Purple",
-    bg: "bg-purple-500",
-    hover: "hover:bg-purple-600",
-  },
-  {
-    value: "pink",
-    label: "Pink",
-    bg: "bg-pink-500",
-    hover: "hover:bg-pink-600",
-  },
-  { value: "red", label: "Red", bg: "bg-red-500", hover: "hover:bg-red-600" },
-  {
-    value: "amber",
-    label: "Amber",
-    bg: "bg-amber-500",
-    hover: "hover:bg-amber-600",
-  },
-  {
-    value: "emerald",
-    label: "Emerald",
-    bg: "bg-emerald-500",
-    hover: "hover:bg-emerald-600",
-  },
-  {
-    value: "indigo",
-    label: "Indigo",
-    bg: "bg-indigo-500",
-    hover: "hover:bg-indigo-600",
-  },
-  {
-    value: "cyan",
-    label: "Cyan",
-    bg: "bg-cyan-500",
-    hover: "hover:bg-cyan-600",
-  },
-] as const;
-
-const COMMON_EMOJIS = [
-  "✈️",
-  "🏖️",
-  "🗺️",
-  "🎒",
-  "🏔️",
-  "🌴",
-  "🏕️",
-  "🚗",
-  "🚢",
-  "🎡",
-  "🎉",
-  "🌟",
-  "🔥",
-  "🎯",
-];
+// Vibes are imported from groupColors
 
 interface IEditGroupModalProps {
   group: Group;
@@ -116,6 +48,20 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
   const selectedColorScheme = form.watch("colorScheme");
   const selectedEmoji = form.watch("emoji");
 
+  // Sync emoji with vibe default when vibe changes, UNLESS the user has set a custom emoji
+  useEffect(() => {
+    const vibe = getVibeInfo(selectedColorScheme);
+    if (
+      !selectedEmoji ||
+      Object.values(VIBES).some((v) => v.emoji === selectedEmoji)
+    ) {
+      form.setValue("emoji", vibe.emoji);
+    }
+  }, [selectedColorScheme, form, selectedEmoji]);
+
+  const currentColors = getGroupColorClasses(selectedColorScheme);
+  const currentVibe = getVibeInfo(selectedColorScheme);
+
   const onSubmit = async (values: TEditGroupSchema) => {
     try {
       setError(null);
@@ -134,26 +80,46 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-      <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-md w-full max-h-[75vh] flex flex-col overflow-hidden'>
-        {/* Header */}
-        <div className='flex-shrink-0 p-6 border-b border-slate-200 flex items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-bold text-slate-900 dark:text-white'>
-              Edit Group
-            </h2>
-            <p className='text-sm text-slate-600 mt-1'>
-              Update group name, color, and emoji
-            </p>
-          </div>
+    <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50'>
+      <div className='bg-slate-950 rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/10'>
+        {/* Header with Vibe Background */}
+        <div className='flex-shrink-0 p-8 relative overflow-hidden'>
+          <div
+            className='absolute inset-0 opacity-20'
+            style={{ backgroundColor: currentColors.bg.replace("bg-", "") }}
+          />
+          <div className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-950 to-transparent' />
 
-          <button
-            onClick={onClose}
-            className='p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex-shrink-0 relative z-10'
-            title='Close'
-          >
-            <X className='w-5 h-5 text-slate-500' />
-          </button>
+          <div className='relative z-10 flex items-center justify-between'>
+            <div className='flex items-center gap-4'>
+              <div
+                className={`w-16 h-16 ${currentColors.bg} rounded-2xl flex items-center justify-center text-3xl shadow-xl border border-white/20`}
+              >
+                {selectedEmoji || currentVibe.emoji}
+              </div>
+              <div>
+                <h2 className='text-2xl font-black text-white tracking-tight'>
+                  Edit Group
+                </h2>
+                <div className='flex items-center gap-2 mt-1'>
+                  <span
+                    className={`w-2 h-2 rounded-full ${currentColors.bg} animate-pulse`}
+                  ></span>
+                  <span className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
+                    {currentVibe.name} Vibe
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className='p-2 hover:bg-white/5 rounded-xl transition-colors flex-shrink-0 text-slate-400 hover:text-white border border-transparent hover:border-white/5'
+              title='Close'
+            >
+              <X className='w-5 h-5' />
+            </button>
+          </div>
         </div>
 
         {/* Form */}
@@ -162,102 +128,101 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
           className='flex-1 overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4'
         >
           {/* Group Name */}
-          <div className='space-y-2 mt-5'>
-            <Label
-              htmlFor='groupName'
-              className={`${
-                form.formState.errors.groupName
-                  ? "text-red-500"
-                  : "text-slate-700 dark:text-slate-300"
-              } transition-colors`}
-            >
-              {form.formState.errors.groupName
-                ? form.formState.errors.groupName.message
-                : "Group Name"}
+          <div className='space-y-3 px-2'>
+            <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+              Group Name
             </Label>
             <Input
-              id='groupName'
-              type='text'
               {...form.register("groupName")}
               placeholder='e.g., Our Adventure 2025'
-              className={`w-full px-3 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-400 border transition-colors ${
-                form.formState.errors.groupName
-                  ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                  : "border-slate-200 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
-              }`}
+              className='h-12 bg-slate-900 text-white border-white/5 focus:border-orange-500/50 rounded-xl transition-all'
             />
+            {form.formState.errors.groupName && (
+              <p className='text-red-400 text-xs font-medium'>
+                {form.formState.errors.groupName.message}
+              </p>
+            )}
           </div>
 
-          {/* Color Scheme */}
-          <div className='space-y-2'>
-            <Label className='text-slate-700 dark:text-slate-300'>
-              Color Scheme
+          {/* Vibe Selection */}
+          <div className='space-y-3 px-2'>
+            <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+              Select Vibe
             </Label>
-            <div className='grid grid-cols-5 gap-2'>
-              {COLOR_SCHEMES.map((color) => (
-                <button
-                  key={color.value}
-                  type='button'
-                  onClick={() => form.setValue("colorScheme", color.value)}
-                  className={`w-full h-10 rounded-lg transition-all ${
-                    selectedColorScheme === color.value
-                      ? `${color.bg} ring-2 ring-offset-2 ring-slate-300 scale-105`
-                      : `${color.bg} ${color.hover} opacity-60 hover:opacity-100`
-                  }`}
-                  title={color.label}
-                />
-              ))}
+            <div className='grid grid-cols-2 gap-3 pb-2'>
+              {Object.entries(VIBES).map(([key, vibe]) => {
+                const vibeColors = getGroupColorClasses(key);
+                const isSelected = selectedColorScheme === key;
+
+                return (
+                  <button
+                    key={key}
+                    type='button'
+                    onClick={() =>
+                      form.setValue(
+                        "colorScheme",
+                        key as TEditGroupSchema["colorScheme"],
+                      )
+                    }
+                    className={`group relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 text-left ${
+                      isSelected
+                        ? "bg-slate-900 border-orange-500/50 shadow-lg shadow-orange-500/5"
+                        : "bg-slate-900/40 border-white/5 hover:border-white/10 hover:bg-slate-900/60"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isSelected ? vibeColors.bg : "bg-slate-800"}`}
+                    >
+                      {vibe.emoji}
+                    </div>
+                    <div>
+                      <h4
+                        className={`font-bold text-[11px] ${isSelected ? "text-white" : "text-slate-400"}`}
+                      >
+                        {vibe.name}
+                      </h4>
+                      <p className='text-[8px] text-slate-500 leading-tight line-clamp-1'>
+                        {vibe.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             <input type='hidden' {...form.register("colorScheme")} />
           </div>
 
-          {/* Emoji */}
-          <div className='space-y-2'>
-            <Label className='text-slate-700 dark:text-slate-300'>
-              Emoji (Optional)
+          {/* Custom Emoji Override */}
+          <div className='space-y-3 px-2'>
+            <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+              Custom Icon{" "}
+              <span className='text-[10px] lowercase font-normal opacity-50'>
+                (optional)
+              </span>
             </Label>
-            <div className='flex flex-wrap gap-2 mb-2'>
-              {COMMON_EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type='button'
-                  onClick={() => {
-                    const newEmoji = selectedEmoji === emoji ? null : emoji;
-                    form.setValue("emoji", newEmoji);
-                  }}
-                  className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
-                    selectedEmoji === emoji
-                      ? "bg-orange-100 border-2 border-orange-500 scale-110"
-                      : "bg-slate-100 hover:bg-slate-200 border-2 border-transparent"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
             <div className='flex items-center gap-2'>
               <Input
                 type='text'
-                placeholder='Or type custom emoji'
+                placeholder='Type a custom emoji...'
                 maxLength={2}
                 value={selectedEmoji || ""}
                 onChange={(e) => {
                   const value = e.target.value || null;
                   form.setValue("emoji", value);
                 }}
-                className='flex-1'
+                className='h-10 bg-slate-900 text-white border-white/5 focus:border-orange-500/50 rounded-lg'
               />
               {selectedEmoji && (
                 <button
                   type='button'
                   onClick={() => form.setValue("emoji", null)}
-                  className='px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors'
+                  className='p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors border border-white/5'
+                  title='Clear custom emoji'
                 >
-                  Clear
+                  <X className='w-4 h-4' />
                 </button>
               )}
             </div>
-            <input type='hidden' {...form.register("emoji")} />
           </div>
 
           {/* General Error Message */}
@@ -268,21 +233,21 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
           )}
 
           {/* Buttons */}
-          <div className='flex gap-3 pt-4'>
+          <div className='flex gap-4 pt-4 px-2'>
             <Button
               type='button'
               onClick={onClose}
               disabled={updateGroup.isPending}
-              className='flex-1 px-4 py-2 border bg-slate-150 border-slate-300 rounded-lg text-slate-700  font-medium hover:bg-slate-200  transition-colors'
+              className='flex-1 h-12 bg-slate-900 hover:bg-slate-800 text-slate-400 border border-white/5 rounded-xl font-bold transition-all'
             >
               Cancel
             </Button>
             <Button
               type='submit'
               disabled={updateGroup.isPending}
-              className='flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl shadow-lg shadow-orange-500/10 transition-all active:scale-[0.98]'
             >
-              {updateGroup.isPending ? "Updating..." : "Update"}
+              {updateGroup.isPending ? "Syncing..." : "Save Changes"}
             </Button>
           </div>
         </form>

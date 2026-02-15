@@ -64,38 +64,38 @@ const DashboardGroupCards = ({
               <button
                 key={group.id}
                 onClick={() => handleNavigateToGroup(group.id)}
-                className='group relative flex flex-col items-start p-3 h-full bg-slate-800/40 hover:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-300 active:scale-[0.98] text-left overflow-hidden shadow-lg shadow-black/20'
+                className='group relative flex flex-col items-start p-4 h-full bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/5 hover:border-orange-500/20 transition-all duration-300 active:scale-[0.98] text-left overflow-hidden shadow-lg shadow-black/20'
               >
                 {/* Background Gradient Hover Effect */}
                 <div
                   className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-tr ${colors.bg.replace("bg-", "from-")} to-transparent`}
                 />
 
-                <div className='flex items-start justify-between w-full mb-3'>
+                <div className='flex items-start justify-between w-full mb-4'>
                   <div
-                    className={`w-10 h-10 ${hasEmoji ? "bg-slate-700/50" : colors.bg} rounded-xl flex items-center justify-center text-lg shadow-inner border border-white/5`}
+                    className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/10`}
                   >
-                    {group.emoji || <Compass className='w-5 h-5 text-white' />}
+                    {group.emoji || <Compass className='w-6 h-6 text-white' />}
                   </div>
-                  <div className='flex items-center justify-center w-6 h-6 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors'>
-                    <ArrowRight className='w-3 h-3 text-slate-400 group-hover:text-white -rotate-45 group-hover:rotate-0 transition-all duration-300' />
+                  <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors'>
+                    <ArrowRight className='w-4 h-4 text-slate-400 group-hover:text-white -rotate-45 group-hover:rotate-0 transition-all duration-300' />
                   </div>
                 </div>
 
                 <div className='w-full'>
-                  <h3 className='text-sm font-bold text-white mb-1.5 truncate leading-tight group-hover:text-orange-200 transition-colors'>
+                  <h3 className='text-base font-bold text-white mb-2 truncate leading-tight group-hover:text-orange-200 transition-colors'>
                     {group.name}
                   </h3>
 
                   <div className='flex flex-wrap gap-2'>
                     {/* Member Count */}
-                    <div className='flex items-center gap-1 text-[10px] text-slate-400 bg-slate-900/50 px-1.5 py-0.5 rounded-md'>
+                    <div className='flex items-center gap-1.5 text-[10px] text-slate-400 bg-slate-950 px-2 py-1 rounded-md border border-white/5'>
                       <Users className='w-3 h-3' />
                       <span>{group.memberEmails?.length || 0}</span>
                     </div>
 
                     {/* Trip Count */}
-                    <div className='flex items-center gap-1 text-[10px] text-slate-400 bg-slate-900/50 px-1.5 py-0.5 rounded-md'>
+                    <div className='flex items-center gap-1.5 text-[10px] text-slate-400 bg-slate-950 px-2 py-1 rounded-md border border-white/5'>
                       <CalendarIcon className='w-3 h-3' />
                       <span>{group.trips?.length || 0}</span>
                     </div>

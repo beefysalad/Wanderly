@@ -3,7 +3,7 @@
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
-import { LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { User, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -95,7 +95,6 @@ const UserMenu = () => {
                 onClick={() => setIsOpen(false)}
                 className='flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors'
               >
-                <User className='w-4 h-4' />
                 Profile
               </Link>
             </div>
@@ -105,7 +104,6 @@ const UserMenu = () => {
                 onClick={handleLogout}
                 className='w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors'
               >
-                <LogOut className='w-4 h-4' />
                 Sign Out
               </button>
             </div>

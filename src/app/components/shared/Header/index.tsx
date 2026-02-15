@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { getAppVersion } from "@/lib/helper";
-import { Compass, LogIn, Menu, UserPlus, X } from "lucide-react";
+import { Compass, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { Fragment } from "react";
 
