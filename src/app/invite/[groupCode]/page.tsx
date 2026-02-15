@@ -278,7 +278,6 @@ export default function InvitePage({
                   }}
                   className='px-8 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 bg-[length:200%_100%] hover:bg-[length:100%_100%] rounded-lg font-semibold transition-all duration-500 flex items-center justify-center gap-2 shadow-lg hover:shadow-amber-500/60 text-sm overflow-hidden group animate-gradient-shift'
                 >
-                  <UserPlus className='w-4 h-4' />
                   <span>Sign Up to Join</span>
                 </button>
                 <button

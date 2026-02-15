@@ -172,6 +172,13 @@ const LandingPage = ({ onQuickJoin }: ILandingPropsPage) => {
               I know, I know. You want an app. I&apos;m a one man team making
               the web experience perfect first.
             </p>
+            <button
+              onClick={() => router.push("/how-to#save-to-home-screen")}
+              className='text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2 mx-auto transition-colors group'
+            >
+              <span>Add to your home screen instead</span>
+              <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
+            </button>
             <div className='bg-slate-800/40 border border-white/10 rounded-2xl p-8 max-w-lg mx-auto backdrop-blur-md relative overflow-hidden group hover:border-blue-500/30 transition-colors'>
               <div className='absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2'></div>
               <h3 className='text-xl font-bold text-white mb-2'>My Promise</h3>

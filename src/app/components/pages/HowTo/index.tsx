@@ -6,6 +6,8 @@ import {
   Download,
   PlayCircle,
   Plus,
+  Share,
+  Smartphone,
   UserPlus,
   Users,
   Video,
@@ -37,6 +39,7 @@ const HowToComponent = () => {
       title: "Creating a Group",
       description: "Learn how to create your first travel group",
       icon: <Users className='w-6 h-6 text-amber-400' />,
+      videoId: "creating-group",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -54,6 +57,7 @@ const HowToComponent = () => {
       title: "Joining a Group",
       description: "How to join an existing group with a code",
       icon: <UserPlus className='w-6 h-6 text-amber-400' />,
+      videoId: "joining-group",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -74,6 +78,7 @@ const HowToComponent = () => {
       title: "Creating a Trip",
       description: "How to create a new trip within a group",
       icon: <Plus className='w-6 h-6 text-amber-400' />,
+      videoId: "creating-trip",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -94,6 +99,7 @@ const HowToComponent = () => {
       title: "Adding Activities",
       description: "How to add activities to your trip schedule",
       icon: <Calendar className='w-6 h-6 text-amber-400' />,
+      videoId: "adding-activity",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -112,6 +118,7 @@ const HowToComponent = () => {
       title: "Managing Expenses",
       description: "How to track and split expenses",
       icon: <DollarSign className='w-6 h-6 text-amber-400' />,
+      videoId: "expenses",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -131,6 +138,7 @@ const HowToComponent = () => {
       title: "Exporting to Calendar",
       description: "How to export your schedule to phone calendar",
       icon: <Download className='w-6 h-6 text-amber-400' />,
+      videoId: "calendar",
       instructions: (
         <>
           <ol className='list-decimal list-inside space-y-2 text-slate-300'>
@@ -144,6 +152,33 @@ const HowToComponent = () => {
             </li>
             <li>
               All activities will be imported with dates, times, and details
+            </li>
+          </ol>
+        </>
+      ),
+    },
+    {
+      id: "save-to-home-screen",
+      title: "Save to Home Screen",
+      description:
+        "How to add Wanderly to your iOS Home Screen for quick access",
+      icon: <Smartphone className='w-6 h-6 text-amber-400' />,
+      videoId: "how-to-pwa_d6ehwz",
+      instructions: (
+        <>
+          <ol className='list-decimal list-inside space-y-2 text-slate-300'>
+            <li>Open Safari and navigate to wanderly.app</li>
+            <li>
+              Tap the &quot;Share&quot; icon at the bottom of the screen (the
+              square with an arrow pointing up)
+            </li>
+            <li>Scroll down and tap &quot;Add to Home Screen&quot;</li>
+            <li>
+              Edit the name if you wish, then tap &quot;Add&quot; in the top
+              right corner
+            </li>
+            <li>
+              Wanderly will now appear on your Home Screen as a standalone app!
             </li>
           </ol>
         </>
@@ -173,12 +208,15 @@ const HowToComponent = () => {
     // Format: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
     // Replace YOUR_CLOUD_NAME with your actual Cloudinary cloud name
     const cloudName =
-      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "YOUR_CLOUD_NAME";
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== "YOUR_CLOUD_NAME"
+        ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+        : "ddmrbjevx"; // Fallback to the one found in .env if not set
 
     return (
       <div className='w-full aspect-video rounded-xl overflow-hidden border border-amber-500/30 bg-black'>
         <iframe
-          src={`https://player.cloudinary.com/embed?public_id=${videoId}&cloud_name=${cloudName}`}
+          src={`https://player.cloudinary.com/embed/?public_id=${videoId}&cloud_name=${cloudName}&profile=default`}
           className='w-full h-full'
           allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
           allowFullScreen
@@ -271,7 +309,7 @@ const HowToComponent = () => {
                       <div
                         className={`absolute -bottom-4 ${isEven ? "-right-4" : "-left-4"} px-4 py-2 bg-slate-900 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-tighter text-amber-400 shadow-xl`}
                       >
-                        Tutorial Card #{index + 1}
+                        {tutorial.title}
                       </div>
                     </div>
                   </div>
