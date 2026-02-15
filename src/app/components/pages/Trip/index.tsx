@@ -163,10 +163,32 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     id: string,
     updates: Partial<Activity>,
   ) => {
+    // Optimistically update the cache
+    queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+      if (!old) return old;
+      return {
+        group: {
+          ...old.group,
+          trips: old.group.trips?.map((t) => {
+            if (t.id !== tripId) return t;
+            return {
+              ...t,
+              activities: t.activities?.map((a) =>
+                a.id === id ? { ...a, ...updates } : a,
+              ),
+            };
+          }),
+        },
+      };
+    });
+
     try {
       await api.patch(`/trips/${tripId}/activities/${id}`, updates);
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      // Success - refetch to ensure sync
+      queryClient.refetchQueries({ queryKey: ["groups", groupId] });
     } catch (err) {
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
       alert(
         err instanceof Error
           ? err.message
