@@ -7,15 +7,16 @@ import {
 } from "@/src/app/components/shared/Modal/ActivityModal/activityAddZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Calendar,
   Clock,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  Navigation,
-  ArrowLeft,
+  Calendar,
+  Plane,
+  Car,
+  MapPin,
+  Utensils,
+  Hotel,
+  Ticket,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -26,6 +27,12 @@ import {
 import { useCreateActivity } from "@/src/hooks/useActivities";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
+import { Trip } from "@/src/shared/types";
+import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
+import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
   "commute",
@@ -38,10 +45,12 @@ const transportationModes = [
   "other",
 ] as const;
 
-import { Trip } from "@/src/shared/types";
-import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-
-type Step = 1 | 2 | 3;
+type ActivityType =
+  | "general"
+  | "flight"
+  | "transport"
+  | "accommodation"
+  | "food";
 
 interface AddActivityPageProps {
   params: Promise<{
@@ -66,7 +75,8 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
   }
 
   const [error, setError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [selectedType, setSelectedType] = useState<ActivityType | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Fetch trip data to get dates
@@ -104,6 +114,27 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
       );
     }
   }, [trip, form, preSelectedDate]);
+
+  // Handle Type Selection
+  const handleTypeSelect = (type: ActivityType) => {
+    setSelectedType(type);
+
+    // Auto-fill logic based on type
+    if (type === "flight") {
+      form.setValue("transportationMode", "plane");
+    } else if (type === "transport") {
+      // Default to car or leave empty for user to pick
+      if (!form.getValues("transportationMode")) {
+        form.setValue("transportationMode", "car");
+      }
+    } else {
+      // Clear transport mode if switching back to general/food/accommodation
+      // unless user explicitly wants it? Let's clear it for simplicity
+      form.setValue("transportationMode", undefined);
+    }
+
+    setCurrentStep(2);
+  };
 
   const onSubmit = async (values: TActivitySchema) => {
     console.log("Submitting activity form:", values);
@@ -152,61 +183,6 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
     }
   }
 
-  // Step validation
-  const validateStep = async (step: Step): Promise<boolean> => {
-    if (step === 1) {
-      return await form.trigger(["title", "date"]);
-    } else if (step === 2) {
-      return true;
-    } else if (step === 3) {
-      return true;
-    }
-    return false;
-  };
-
-  const handleNext = async () => {
-    const isValid = await validateStep(currentStep);
-    if (isValid && currentStep < 3) {
-      setCurrentStep((prev) => (prev + 1) as Step);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => (prev - 1) as Step);
-    }
-  };
-
-  const handleSkipTransportation = async () => {
-    // Clear transportation fields and submit
-    form.setValue("transportationMode", undefined);
-    form.setValue("pickupTime", undefined);
-    form.setValue("pickupLocation", undefined);
-    form.setValue("dropoffLocation", undefined);
-    await form.handleSubmit(onSubmit)();
-  };
-
-  const steps = [
-    {
-      number: 1,
-      title: "Basic Info",
-      icon: Calendar,
-      description: "Title and date",
-    },
-    {
-      number: 2,
-      title: "Time & Details",
-      icon: Clock,
-      description: "Schedule and notes",
-    },
-    {
-      number: 3,
-      title: "Transportation",
-      icon: Navigation,
-      description: "Optional travel details",
-    },
-  ];
-
   if (isLoadingGroup) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
@@ -235,436 +211,371 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
   }
 
   return (
-    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
+    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden font-sans selection:bg-orange-500/30'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px]'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[120px]'></div>
       </div>
+
       {isNavigating && <NavigationLoader message='Adding activity...' />}
 
-      {/* Top Bar */}
-      {/* Header */}
-      <div className='p-4 md:p-6 z-20 relative'>
-        <button
-          onClick={() => router.back()}
-          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span className='font-medium'>Back</span>
-        </button>
+      <div className='relative z-20'>
+        <DashboardLayoutHeader showBack={true} title='Add Activity' />
       </div>
 
-      <div className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pb-24 relative z-10'>
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-white mb-2'>Add Activity</h1>
-          <p className='text-slate-400'>Add to {trip.name}</p>
-        </div>
-        {/* Stepper */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-center relative px-4'>
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              const isActive = currentStep === step.number;
-              const isCompleted = currentStep > step.number;
-              const isLast = index === steps.length - 1;
+      <div className='flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 pb-24 relative z-10 pt-4'>
+        <AnimatePresence mode='wait'>
+          {/* Step 1: Type Selection */}
+          {currentStep === 1 && (
+            <motion.div
+              key='step1'
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className='space-y-6'
+            >
+              <div className='text-center mb-8'>
+                <h2 className='text-2xl font-bold text-white mb-2'>
+                  What kind of activity?
+                </h2>
+                <p className='text-slate-400'>
+                  Choose a category to get started.
+                </p>
+              </div>
 
-              return (
-                <React.Fragment key={step.number}>
-                  <div className='flex items-center justify-center flex-1 relative'>
-                    {/* Step Circle */}
-                    <div className='flex flex-col items-center gap-2 flex-shrink-0 z-10'>
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
-                          isCompleted
-                            ? "bg-orange-500 border-orange-500 text-white"
-                            : isActive
-                              ? "bg-orange-900/30 border-orange-500 text-orange-400"
-                              : "bg-slate-800 border-slate-600 text-slate-400"
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <Check className='w-5 h-5' />
-                        ) : (
-                          <StepIcon className='w-5 h-5' />
-                        )}
-                      </div>
-                      <div className='text-center hidden sm:block'>
-                        <p
-                          className={`text-xs font-semibold ${
-                            isActive ? "text-white" : "text-slate-400"
-                          }`}
-                        >
-                          {step.title}
-                        </p>
-                      </div>
-                    </div>
-                    {/* Connector Line */}
-                    {!isLast && (
-                      <div
-                        className={`absolute left-[50%] right-0 h-0.5 top-[20px] transition-all duration-200 ${
-                          isCompleted
-                            ? "bg-orange-500"
-                            : "bg-slate-200 dark:bg-slate-700"
-                        }`}
-                        style={{ width: "calc(100% - 2.5rem)" }}
-                      />
-                    )}
+              <div className='grid grid-cols-2 gap-4'>
+                <button
+                  onClick={() => handleTypeSelect("general")}
+                  className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-orange-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                >
+                  <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors'>
+                    <Ticket className='w-7 h-7' />
                   </div>
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </div>
+                  <span className='font-semibold text-white'>General</span>
+                </button>
 
-        {/* Form Content */}
-        <div className='bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-xl border border-white/5 p-6 flex-1 flex flex-col z-20'>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (currentStep === 3) {
-                form.handleSubmit(onSubmit, (errors) => {
-                  console.error("Form validation errors:", errors);
-                  const errorMessages = Object.values(errors)
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .map((err: any) => err.message)
-                    .join(", ");
-                  setError(`Validation failed: ${errorMessages}`);
-                })(e);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && currentStep !== 3) {
-                e.preventDefault();
-              }
-            }}
-            className='flex-1 flex flex-col'
-          >
-            <div className='flex-1'>
-              {/* Step 1: Basic Information */}
-              {currentStep === 1 && (
-                <div className='space-y-6 animate-in fade-in slide-in-from-right-4 duration-200'>
-                  <div>
-                    <h3 className='text-xl font-bold text-white mb-2'>
-                      Basic Information
-                    </h3>
-                    <p className='text-slate-400 mb-6'>
-                      Give your activity a descriptive title and select the
-                      date.
-                    </p>
+                <button
+                  onClick={() => handleTypeSelect("flight")}
+                  className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                >
+                  <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors'>
+                    <Plane className='w-7 h-7' />
+                  </div>
+                  <span className='font-semibold text-white'>Flight</span>
+                </button>
 
-                    <div className='space-y-4'>
+                <button
+                  onClick={() => handleTypeSelect("transport")}
+                  className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-purple-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                >
+                  <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors'>
+                    <Car className='w-7 h-7' />
+                  </div>
+                  <span className='font-semibold text-white'>Transport</span>
+                </button>
+
+                <button
+                  onClick={() => handleTypeSelect("accommodation")}
+                  className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-emerald-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                >
+                  <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors'>
+                    <Hotel className='w-7 h-7' />
+                  </div>
+                  <span className='font-semibold text-white'>Hotel / Stay</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 2: Details Form */}
+          {currentStep === 2 && (
+            <motion.div
+              key='step2'
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className='flex-1 flex flex-col'
+            >
+              <div className='bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 p-6 shadow-2xl'>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className='space-y-6'
+                >
+                  {/* Form Header */}
+                  <div className='flex items-center gap-3 mb-6'>
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg",
+                        selectedType === "flight"
+                          ? "bg-blue-500"
+                          : selectedType === "transport"
+                            ? "bg-purple-500"
+                            : selectedType === "accommodation"
+                              ? "bg-emerald-500"
+                              : "bg-orange-500",
+                      )}
+                    >
+                      {selectedType === "flight" && (
+                        <Plane className='w-5 h-5' />
+                      )}
+                      {selectedType === "transport" && (
+                        <Car className='w-5 h-5' />
+                      )}
+                      {selectedType === "accommodation" && (
+                        <Hotel className='w-5 h-5' />
+                      )}
+                      {selectedType === "general" && (
+                        <Ticket className='w-5 h-5' />
+                      )}
+                      {selectedType === "food" && (
+                        <Utensils className='w-5 h-5' />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className='text-lg font-bold text-white leading-tight'>
+                        {selectedType === "flight"
+                          ? "Add Flight Details"
+                          : selectedType === "transport"
+                            ? "Add Transport Details"
+                            : selectedType === "accommodation"
+                              ? "Add Stay Details"
+                              : "New Activity"}
+                      </h3>
+                      <p className='text-xs text-slate-400'>
+                        Fill in the missing details
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Basic Info */}
+                  <div className='space-y-4'>
+                    <div>
+                      <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                        {selectedType === "flight"
+                          ? "Flight Number / Airline"
+                          : selectedType === "accommodation"
+                            ? "Hotel Name"
+                            : "Activity Title"}
+                      </label>
+                      <input
+                        type='text'
+                        {...form.register("title")}
+                        placeholder={
+                          selectedType === "flight"
+                            ? "e.g. PR 2808 or PAL Flight"
+                            : selectedType === "transport"
+                              ? "e.g. Bus to Baguio"
+                              : "e.g. Visit Louvre Museum"
+                        }
+                        className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium'
+                        autoFocus
+                      />
+                      {form.formState.errors.title && (
+                        <p className='mt-1 text-xs text-red-400 ml-1'>
+                          {form.formState.errors.title.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-4'>
                       <div>
-                        <label className='block text-sm font-medium text-slate-300 mb-2'>
-                          Activity Title
-                        </label>
-                        <input
-                          type='text'
-                          {...form.register("title")}
-                          placeholder='e.g., Louvre Museum Tour'
-                          className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all'
-                          autoFocus
-                        />
-                        {form.formState.errors.title && (
-                          <p className='mt-2 text-sm text-red-400'>
-                            {form.formState.errors.title.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-sm font-medium text-slate-300 mb-2'>
+                        <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
                           Date
                         </label>
-                        <select
-                          {...form.register("date")}
-                          disabled={Boolean(preSelectedDate)}
-                          className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none'
-                        >
-                          {availableDates.map((d) => (
-                            <option
-                              key={d.toISOString()}
-                              value={d.toISOString().split("T")[0]}
-                            >
-                              {d.toLocaleDateString("en-US", {
-                                weekday: "long",
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </option>
-                          ))}
-                        </select>
-                        {/* Make select arrows better */}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Time & Details */}
-              {currentStep === 2 && (
-                <div className='space-y-6 animate-in fade-in slide-in-from-right-4 duration-200'>
-                  <div>
-                    <h3 className='text-xl font-bold text-white mb-2'>
-                      Time & Details
-                    </h3>
-                    <p className='text-slate-400 mb-6'>
-                      Set the time range and add any specific notes.
-                    </p>
-
-                    <div className='grid grid-cols-2 gap-4 mb-6'>
-                      <div>
-                        <label className='block text-sm font-medium text-slate-300 mb-2'>
-                          Start Time
-                        </label>
-                        <Input
-                          type='time'
-                          {...form.register("startTime")}
-                          className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all h-auto'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium text-slate-300 mb-2'>
-                          End Time
-                        </label>
-                        <Input
-                          type='time'
-                          {...form.register("endTime")}
-                          className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all h-auto'
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className='block text-sm font-medium text-slate-300 mb-2'>
-                        Notes
-                      </label>
-                      <textarea
-                        {...form.register("notes")}
-                        placeholder='Add details, reservation numbers, etc...'
-                        rows={5}
-                        className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none'
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Transportation */}
-              {currentStep === 3 && (
-                <div className='space-y-6 animate-in fade-in slide-in-from-right-4 duration-200'>
-                  <div>
-                    <h3 className='text-xl font-bold text-white mb-2'>
-                      Transportation
-                    </h3>
-                    <p className='text-slate-400 mb-6'>
-                      Optional travel details for getting there or getting
-                      around.
-                    </p>
-
-                    <div className='space-y-4'>
-                      <div>
-                        <label className='block text-sm font-medium text-slate-300 mb-2'>
-                          Mode of Transportation
-                        </label>
-                        <Select
-                          value={form.watch("transportationMode") || ""}
-                          onValueChange={(value) => {
-                            const modeValue =
-                              value === ""
-                                ? undefined
-                                : (value as (typeof transportationModes)[number]);
-                            form.setValue("transportationMode", modeValue, {
-                              shouldValidate: false,
-                            });
-                          }}
-                        >
-                          <SelectTrigger className='w-full h-12 bg-slate-800 border-slate-700 rounded-xl text-white'>
-                            <SelectValue placeholder='Select mode...' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='commute'>
-                              🚌 Commute (Public Transport)
-                            </SelectItem>
-                            <SelectItem value='car'>
-                              🚗 Car (Private Vehicle)
-                            </SelectItem>
-                            <SelectItem value='plane'>
-                              ✈️ Plane (Air Travel)
-                            </SelectItem>
-                            <SelectItem value='bus'>🚌 Bus</SelectItem>
-                            <SelectItem value='train'>🚊 Train</SelectItem>
-                            <SelectItem value='taxi'>
-                              🚕 Taxi/Rideshare
-                            </SelectItem>
-                            <SelectItem value='walking'>🚶 Walking</SelectItem>
-                            <SelectItem value='other'>Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Dynamic Transportation Fields */}
-                      {form.watch("transportationMode") && (
-                        <div className='space-y-4 pt-4 border-t border-slate-700 animate-in fade-in slide-in-from-top-2'>
-                          {/* Pickup Time */}
-                          {form.watch("transportationMode") !== "plane" &&
-                            form.watch("transportationMode") !== "walking" && (
-                              <div>
-                                <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                  Pickup Time
-                                </label>
-                                <input
-                                  type='time'
-                                  {...form.register("pickupTime")}
-                                  className='w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                />
-                              </div>
-                            )}
-
-                          {/* Locations */}
-                          {form.watch("transportationMode") !== "plane" &&
-                            form.watch("transportationMode") !== "walking" && (
-                              <>
-                                <div>
-                                  <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                    Pickup Location
-                                  </label>
-                                  <input
-                                    type='text'
-                                    {...form.register("pickupLocation")}
-                                    placeholder='e.g. Hotel Lobby'
-                                    className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                  />
-                                </div>
-                                <div>
-                                  <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                    Dropoff Location
-                                  </label>
-                                  <input
-                                    type='text'
-                                    {...form.register("dropoffLocation")}
-                                    placeholder='e.g. Activity Site'
-                                    className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                  />
-                                </div>
-                              </>
-                            )}
-
-                          {/* Flight Fields */}
-                          {form.watch("transportationMode") === "plane" && (
-                            <>
-                              <div className='grid grid-cols-2 gap-4'>
-                                <div>
-                                  <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                    Departure Airport
-                                  </label>
-                                  <input
-                                    type='text'
-                                    {...form.register("pickupLocation")}
-                                    placeholder='e.g. JFK'
-                                    className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                  />
-                                </div>
-                                <div>
-                                  <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                    Arrival Airport
-                                  </label>
-                                  <input
-                                    type='text'
-                                    {...form.register("dropoffLocation")}
-                                    placeholder='e.g. LHR'
-                                    className='w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                  />
-                                </div>
-                              </div>
-                              <div>
-                                <label className='block text-sm font-medium text-slate-300 mb-2'>
-                                  Departure Time
-                                </label>
-                                <input
-                                  type='time'
-                                  {...form.register("pickupTime")}
-                                  className='w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all'
-                                />
-                              </div>
-                            </>
-                          )}
-
-                          <button
-                            type='button'
-                            onClick={handleSkipTransportation}
-                            className='text-sm text-red-500 hover:text-red-600 font-medium pt-2'
+                        <div className='relative'>
+                          <select
+                            {...form.register("date")}
+                            className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all appearance-none font-medium'
                           >
-                            Clear Transportation Details
-                          </button>
+                            {availableDates.map((d) => (
+                              <option
+                                key={d.toISOString()}
+                                value={d.toISOString().split("T")[0]}
+                                className='bg-slate-800 text-white'
+                              >
+                                {d.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                            <Calendar className='w-4 h-4' />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Transport Mode (Only for Transport type) */}
+                      {selectedType === "transport" && (
+                        <div>
+                          <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                            Mode
+                          </label>
+                          <Select
+                            value={form.watch("transportationMode") || ""}
+                            onValueChange={(value) => {
+                              const modeValue =
+                                value === ""
+                                  ? undefined
+                                  : (value as (typeof transportationModes)[number]);
+                              form.setValue("transportationMode", modeValue);
+                            }}
+                          >
+                            <SelectTrigger className='w-full h-[46px] bg-slate-800/50 border-white/10 rounded-xl text-white'>
+                              <SelectValue placeholder='Select...' />
+                            </SelectTrigger>
+                            <SelectContent className='bg-slate-900 border-slate-800 text-white'>
+                              <SelectItem value='car'>🚗 Car</SelectItem>
+                              <SelectItem value='bus'>🚌 Bus</SelectItem>
+                              <SelectItem value='train'>🚊 Train</SelectItem>
+                              <SelectItem value='taxi'>🚕 Taxi</SelectItem>
+                              <SelectItem value='walking'>
+                                🚶 Walking
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                     </div>
+
+                    {/* Time */}
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                          {selectedType === "flight"
+                            ? "Departure Time"
+                            : "Start Time"}
+                        </label>
+                        <div className='relative'>
+                          <input
+                            type='time'
+                            {...form.register("startTime")}
+                            className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium appearance-none' // appearance-none needed for mobile
+                          />
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                            <Clock className='w-4 h-4' />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                          {selectedType === "flight"
+                            ? "Arrival Time"
+                            : "End Time"}
+                        </label>
+                        <div className='relative'>
+                          <input
+                            type='time'
+                            {...form.register("endTime")}
+                            className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium appearance-none'
+                          />
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                            <Clock className='w-4 h-4' />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* General Error Message */}
-            {error && (
-              <div className='mt-4 p-4 bg-red-900/20 text-red-400 rounded-xl text-sm border border-red-800'>
-                {error}
+                  {/* Flight/Transport Specific Fields */}
+                  {(selectedType === "flight" ||
+                    selectedType === "transport") && (
+                    <div className='space-y-4 pt-4 border-t border-white/5'>
+                      <div className='grid grid-cols-2 gap-4'>
+                        <div>
+                          <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                            {selectedType === "flight"
+                              ? "Dep Airport"
+                              : "Pickup / From"}
+                          </label>
+                          <div className='relative'>
+                            <input
+                              type='text'
+                              {...form.register("pickupLocation")}
+                              placeholder={
+                                selectedType === "flight"
+                                  ? "MNL"
+                                  : "Station/Location"
+                              }
+                              className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium'
+                            />
+                            <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                              <MapPin className='w-4 h-4' />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                            {selectedType === "flight"
+                              ? "Arr Airport"
+                              : "Dropoff / To"}
+                          </label>
+                          <div className='relative'>
+                            <input
+                              type='text'
+                              {...form.register("dropoffLocation")}
+                              placeholder={
+                                selectedType === "flight"
+                                  ? "NRT"
+                                  : "Station/Location"
+                              }
+                              className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium'
+                            />
+                            <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                              <MapPin className='w-4 h-4' />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  <div>
+                    <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                      Notes
+                    </label>
+                    <textarea
+                      {...form.register("notes")}
+                      placeholder='Add reservation numbers, gate info, or packing notes...'
+                      rows={4}
+                      className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all resize-none font-medium'
+                    />
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className='p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium'>
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className='flex gap-3 pt-2'>
+                    <button
+                      type='button'
+                      onClick={() => setCurrentStep(1)}
+                      className='px-5 py-3 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-all'
+                    >
+                      Back
+                    </button>
+                    <button
+                      type='submit'
+                      disabled={isLoading}
+                      className='flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed'
+                    >
+                      {isLoading ? "Saving..." : "Create Activity"}
+                    </button>
+                  </div>
+                </form>
               </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className='flex items-center justify-between gap-4 pt-6 border-t border-slate-700 mt-6'>
-              <div className='flex items-center gap-2'>
-                {currentStep > 1 && (
-                  <button
-                    key='back-button'
-                    type='button'
-                    onClick={handlePrevious}
-                    disabled={isLoading}
-                    className='px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-700 transition-all font-medium flex items-center gap-2'
-                  >
-                    <ChevronLeft className='w-4 h-4' />
-                    Back
-                  </button>
-                )}
-                {currentStep === 3 && (
-                  <button
-                    key='skip-button'
-                    type='button'
-                    onClick={handleSkipTransportation}
-                    disabled={isLoading}
-                    className='px-4 py-2 text-slate-400 hover:text-slate-200 font-medium text-sm'
-                  >
-                    Skip
-                  </button>
-                )}
-              </div>
-
-              {currentStep < 3 ? (
-                <button
-                  key='next-button'
-                  type='button'
-                  onClick={handleNext}
-                  disabled={isLoading}
-                  className='px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2'
-                >
-                  Next
-                  <ChevronRight className='w-4 h-4' />
-                </button>
-              ) : (
-                <button
-                  key='submit-button'
-                  type='submit'
-                  disabled={isLoading}
-                  className='px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-orange-500/25'
-                >
-                  {isLoading ? "Adding Activity..." : "Create Activity"}
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );

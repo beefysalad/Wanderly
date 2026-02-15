@@ -10,14 +10,16 @@ import {
   Navigation2,
   DollarSign,
   Link2,
-  ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Circle,
+  MapPin,
 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 import { formatTime12Hour } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 
 interface IActivityDetailProps {
   activity: Activity;
@@ -47,72 +49,68 @@ const ActivityDetail = ({
   );
 
   return (
-    <div className='min-h-screen bg-slate-950 pb-24 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
+    <div className='min-h-screen bg-slate-950 pb-32 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
       {/* Immersive Background */}
       <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-20%] left-[-20%] w-[70%] h-[70%] bg-orange-500/10 rounded-full blur-[120px] opacity-60'></div>
-        <div className='absolute bottom-[-20%] right-[-20%] w-[70%] h-[70%] bg-purple-500/10 rounded-full blur-[120px] opacity-60'></div>
+        <div className='absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-orange-500/5 rounded-full blur-[150px] opacity-40'></div>
+        <div className='absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-blue-500/5 rounded-full blur-[150px] opacity-40'></div>
       </div>
 
-      {/* Header */}
-      <div className='p-4 md:p-6 z-20 relative flex items-center justify-between'>
-        <button
-          onClick={() => router.back()}
-          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span className='font-medium'>Back</span>
-        </button>
-
-        {!readOnly && (
-          <div className='flex items-center gap-2'>
-            <button
-              onClick={() => onEdit && onEdit()}
-              className='p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors'
-              title='Edit Activity'
-            >
-              <Pencil className='w-5 h-5' />
-            </button>
-            <button
-              onClick={() => onDelete && onDelete()}
-              className='p-2 rounded-xl bg-slate-800/50 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors'
-              title='Delete Activity'
-            >
-              <Trash2 className='w-5 h-5' />
-            </button>
-          </div>
-        )}
+      <div className='relative z-20'>
+        <DashboardLayoutHeader
+          showBack={true}
+          rightContent={
+            !readOnly && (
+              <div className='flex items-center gap-2'>
+                <button
+                  onClick={() => onEdit && onEdit()}
+                  className='p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
+                  title='Edit Activity'
+                >
+                  <Pencil className='w-5 h-5' />
+                </button>
+                <button
+                  onClick={() => onDelete && onDelete()}
+                  className='p-2 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all'
+                  title='Delete Activity'
+                >
+                  <Trash2 className='w-5 h-5' />
+                </button>
+              </div>
+            )
+          }
+        />
       </div>
 
-      <div className='max-w-4xl mx-auto relative z-10'>
-        {/* Hero Section */}
-        <div className='px-5 pt-8 pb-10'>
+      <div className='max-w-3xl mx-auto relative z-10 px-4 sm:px-6'>
+        {/* Title & Status Section */}
+        <div className='pt-4 pb-8'>
           <div className='flex flex-col gap-6'>
-            {/* Status Badge */}
-            <div className='flex items-center gap-3'>
+            {/* Badges */}
+            <div className='flex flex-wrap items-center gap-3'>
               <button
                 onClick={!readOnly ? onToggleDone : undefined}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border shadow-sm",
                   activity.done
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                    : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500",
+                    : "bg-slate-800/80 text-orange-400 border-orange-500/20 hover:bg-slate-800",
                 )}
               >
                 {activity.done ? (
                   <>
-                    <CheckCircle2 className='w-4 h-4' />
+                    <CheckCircle2 className='w-3.5 h-3.5' />
                     <span>Completed</span>
                   </>
                 ) : (
                   <>
-                    <Circle className='w-4 h-4' />
+                    <Circle className='w-3.5 h-3.5' />
                     <span>Planned</span>
                   </>
                 )}
               </button>
 
-              <span className='text-slate-500 text-sm font-medium flex items-center gap-1.5'>
+              <span className='px-3 py-1.5 rounded-full bg-slate-800/50 border border-white/5 text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
                 <Calendar className='w-3.5 h-3.5' />
                 {activityDate.toLocaleDateString("en-US", {
                   weekday: "short",
@@ -123,71 +121,74 @@ const ActivityDetail = ({
             </div>
 
             {/* Title */}
-            <h1
-              className={cn(
-                "text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight",
-                activity.done &&
-                  "text-slate-500 line-through decoration-slate-700 decoration-4",
-              )}
-            >
-              {activity.title}
-            </h1>
+            <div>
+              <h1
+                className={cn(
+                  "text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-2",
+                  activity.done &&
+                    "text-slate-500 line-through decoration-slate-700 decoration-4",
+                )}
+              >
+                {activity.title}
+              </h1>
 
-            {/* Time Badge */}
-            {(activity.startTime || activity.endTime) && (
-              <div className='inline-flex items-center gap-2 text-xl md:text-2xl font-medium text-orange-400'>
-                <Clock className='w-6 h-6' />
-                <span>
-                  {activity.startTime && activity.endTime
-                    ? `${formatTime12Hour(activity.startTime)} - ${formatTime12Hour(activity.endTime)}`
-                    : activity.startTime
-                      ? `Starts at ${formatTime12Hour(activity.startTime)}`
-                      : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
-                </span>
-              </div>
-            )}
+              {/* Time */}
+              {(activity.startTime || activity.endTime) && (
+                <div className='inline-flex items-center gap-2 text-lg sm:text-xl font-medium text-orange-400/90'>
+                  <Clock className='w-5 h-5' />
+                  <span>
+                    {activity.startTime && activity.endTime
+                      ? `${formatTime12Hour(activity.startTime)} - ${formatTime12Hour(activity.endTime)}`
+                      : activity.startTime
+                        ? `Starts at ${formatTime12Hour(activity.startTime)}`
+                        : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className='px-4 pb-20 space-y-6'>
-          {/* Notes Section - if exists */}
+        {/* Content Cards */}
+        <div className='space-y-6'>
+          {/* Notes Card */}
           {activity.notes && (
-            <div className='bg-slate-900/50 rounded-3xl p-6 md:p-8 border border-white/5'>
-              <div className='flex items-center gap-3 mb-4 text-slate-400'>
-                <FileText className='w-5 h-5' />
-                <span className='text-sm font-bold uppercase tracking-widest'>
+            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm'>
+              <div className='flex items-center gap-3 mb-4 text-slate-500'>
+                <FileText className='w-4 h-4' />
+                <span className='text-xs font-bold uppercase tracking-widest'>
                   Notes
                 </span>
               </div>
-              <p className='text-lg text-slate-300 leading-relaxed whitespace-pre-wrap'>
+              <p className='text-base text-slate-300 leading-relaxed whitespace-pre-wrap font-medium'>
                 {activity.notes}
               </p>
             </div>
           )}
 
-          {/* Transport Section */}
+          {/* Transportation Card */}
           {(activity.transportationMode ||
             activity.pickupTime ||
             activity.pickupLocation ||
             activity.dropoffLocation) && (
-            <div className='bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-3xl p-6 md:p-8 border border-white/5 relative overflow-hidden'>
-              <div className='absolute top-0 right-0 p-6 opacity-10'>
-                <Navigation2 className='w-24 h-24 text-blue-400' />
+            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm relative overflow-hidden group'>
+              {/* Decorative Icon */}
+              <div className='absolute -right-6 -top-6 text-slate-800/50 transform rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none'>
+                <Navigation2 className='w-32 h-32' />
               </div>
 
               <div className='relative z-10'>
                 <div className='flex items-center gap-3 mb-6 text-blue-400'>
-                  <Navigation2 className='w-5 h-5' />
-                  <span className='text-sm font-bold uppercase tracking-widest'>
-                    Transportation
+                  <Navigation2 className='w-4 h-4' />
+                  <span className='text-xs font-bold uppercase tracking-widest'>
+                    Journey Details
                   </span>
                 </div>
 
-                <div className='grid gap-6'>
+                <div className='grid gap-8'>
                   {activity.transportationMode && (
                     <div className='flex items-center gap-4'>
-                      <div className='w-12 h-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-2xl border border-white/5'>
+                      <div className='w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-white/5 shadow-inner'>
                         {activity.transportationMode === "car" && "🚗"}
                         {activity.transportationMode === "bus" && "🚌"}
                         {activity.transportationMode === "plane" && "✈️"}
@@ -197,37 +198,39 @@ const ActivityDetail = ({
                         {activity.transportationMode === "commute" && "🚌"}
                       </div>
                       <div>
-                        <p className='text-sm text-slate-500 font-medium uppercase tracking-wide'>
+                        <p className='text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5'>
                           Mode
                         </p>
-                        <p className='text-xl font-bold text-white capitalize'>
+                        <p className='text-lg font-bold text-white capitalize'>
                           {activity.transportationMode}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* Locations */}
-                  <div className='space-y-4'>
+                  {/* Locations Flow */}
+                  <div className='relative pl-4 space-y-8'>
+                    {/* Vertical Line */}
+                    {activity.pickupLocation && activity.dropoffLocation && (
+                      <div className='absolute left-[21px] top-3 bottom-8 w-0.5 bg-gradient-to-b from-slate-700/50 to-slate-800/20' />
+                    )}
+
                     {(activity.pickupLocation || activity.pickupTime) && (
-                      <div className='flex gap-4'>
-                        <div className='flex flex-col items-center'>
-                          <div className='w-3 h-3 rounded-full bg-slate-600 ring-4 ring-slate-900' />
-                          {activity.dropoffLocation && (
-                            <div className='w-0.5 h-full bg-slate-800 my-1' />
-                          )}
+                      <div className='relative flex gap-4'>
+                        <div className='flex flex-col items-center pt-1'>
+                          <div className='w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-slate-900/50' />
                         </div>
-                        <div className='pb-2'>
-                          <p className='text-xs text-slate-500 font-bold uppercase mb-0.5'>
+                        <div>
+                          <p className='text-xs text-slate-500 font-bold uppercase mb-1'>
                             {activity.transportationMode === "plane"
                               ? "Departure"
                               : "Pickup"}
                           </p>
-                          <p className='text-lg font-medium text-white'>
+                          <p className='text-base font-medium text-white'>
                             {activity.pickupLocation || "No location set"}
                           </p>
                           {activity.pickupTime && (
-                            <p className='text-sm text-blue-400 font-medium mt-0.5'>
+                            <p className='text-sm text-blue-400 font-medium mt-1 bg-blue-500/10 inline-block px-2 py-0.5 rounded-md'>
                               {formatTime12Hour(activity.pickupTime)}
                             </p>
                           )}
@@ -236,17 +239,17 @@ const ActivityDetail = ({
                     )}
 
                     {activity.dropoffLocation && (
-                      <div className='flex gap-4'>
-                        <div className='flex flex-col items-center'>
-                          <div className='w-3 h-3 rounded-full bg-orange-500 ring-4 ring-slate-900' />
+                      <div className='relative flex gap-4'>
+                        <div className='flex flex-col items-center pt-1'>
+                          <div className='w-2.5 h-2.5 rounded-full bg-orange-500 ring-4 ring-slate-900/50' />
                         </div>
                         <div>
-                          <p className='text-xs text-slate-500 font-bold uppercase mb-0.5'>
+                          <p className='text-xs text-slate-500 font-bold uppercase mb-1'>
                             {activity.transportationMode === "plane"
                               ? "Arrival"
                               : "Dropoff"}
                           </p>
-                          <p className='text-lg font-medium text-white'>
+                          <p className='text-base font-medium text-white'>
                             {activity.dropoffLocation}
                           </p>
                         </div>
@@ -260,15 +263,15 @@ const ActivityDetail = ({
 
           {/* Linked Expenses */}
           {linkedExpenses.length > 0 && (
-            <div className='bg-slate-900/30 rounded-3xl p-6 md:p-8 border border-white/5'>
+            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm'>
               <div className='flex items-center justify-between mb-6'>
                 <div className='flex items-center gap-3 text-emerald-500'>
-                  <DollarSign className='w-5 h-5' />
-                  <span className='text-sm font-bold uppercase tracking-widest'>
+                  <DollarSign className='w-4 h-4' />
+                  <span className='text-xs font-bold uppercase tracking-widest'>
                     Linked Expenses
                   </span>
                 </div>
-                <span className='bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/20'>
+                <span className='bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-bold border border-emerald-500/20'>
                   {linkedExpenses.length}
                 </span>
               </div>
@@ -278,23 +281,23 @@ const ActivityDetail = ({
                   <button
                     key={expense.id}
                     onClick={() => onSelectExpense?.(expense)}
-                    className='flex items-center justify-between w-full bg-slate-800/50 hover:bg-slate-800 p-4 rounded-xl transition-all border border-white/5 hover:border-emerald-500/30 group text-left'
+                    className='flex items-center justify-between w-full bg-slate-800/40 hover:bg-slate-800/70 p-4 rounded-xl transition-all border border-white/5 hover:border-emerald-500/30 group text-left'
                   >
                     <div className='min-w-0 pr-4'>
-                      <p className='font-bold text-white group-hover:text-emerald-400 transition-colors truncate'>
+                      <p className='font-bold text-white group-hover:text-emerald-400 transition-colors truncate text-sm'>
                         {expense.description}
                       </p>
-                      <p className='text-sm text-slate-500'>
+                      <p className='text-xs text-slate-500 mt-0.5'>
                         Paid by {expense.paidBy.split("@")[0]}
                       </p>
                     </div>
                     <div className='text-right whitespace-nowrap'>
-                      <p className='font-bold text-emerald-400'>
+                      <p className='font-bold text-emerald-400 text-sm'>
                         ₱{expense.amount.toFixed(2)}
                       </p>
-                      <div className='flex items-center justify-end gap-1 text-xs text-slate-600 mt-1 uppercase font-bold tracking-wider group-hover:text-emerald-500/70 transition-colors'>
+                      <div className='flex items-center justify-end gap-1 text-[10px] text-slate-600 mt-1 uppercase font-bold tracking-wider group-hover:text-emerald-500/70 transition-colors'>
                         <span>View</span>
-                        <Link2 className='w-3 h-3' />
+                        <ArrowRight className='w-3 h-3' />
                       </div>
                     </div>
                   </button>
@@ -302,35 +305,35 @@ const ActivityDetail = ({
               </div>
             </div>
           )}
-
-          {/* Bottom Action */}
-          {!readOnly && onToggleDone && (
-            <div className='pt-6'>
-              <button
-                onClick={onToggleDone}
-                className={cn(
-                  "w-full py-4 rounded-2xl font-bold text-lg transition-all transform active:scale-[0.98] shadow-lg flex items-center justify-center gap-3",
-                  activity.done
-                    ? "bg-slate-800 text-slate-400 hover:bg-slate-700 border border-white/5"
-                    : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:brightness-110 shadow-orange-500/20",
-                )}
-              >
-                {activity.done ? (
-                  <>
-                    <Circle className='w-5 h-5' />
-                    <span>Mark as Incomplete</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className='w-5 h-5' />
-                    <span>Complete Activity</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Floating Action Button for Complete */}
+      {!readOnly && onToggleDone && (
+        <div className='fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none'>
+          <button
+            onClick={onToggleDone}
+            className={cn(
+              "pointer-events-auto px-6 py-3 rounded-full font-bold text-sm sm:text-base transition-all transform active:scale-[0.98] shadow-lg flex items-center justify-center gap-2.5 backdrop-blur-md border",
+              activity.done
+                ? "bg-slate-800/90 text-slate-400 hover:bg-slate-700/90 border-slate-700"
+                : "bg-orange-500/90 text-white hover:bg-orange-600/90 border-orange-400/50 shadow-orange-500/30",
+            )}
+          >
+            {activity.done ? (
+              <>
+                <Circle className='w-4 h-4' />
+                <span>Mark as Incomplete</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className='w-4 h-4' />
+                <span>Complete Activity</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
