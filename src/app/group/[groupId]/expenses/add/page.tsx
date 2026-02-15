@@ -4,6 +4,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import ExpenseForm from "@/src/app/components/shared/ExpenseForm";
+import { ArrowLeft } from "lucide-react";
 import React from "react";
 
 export default function AddExpensePage({
@@ -77,22 +78,21 @@ export default function AddExpensePage({
         <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
       </div>
 
-      {/* Top Bar */}
-      <div className='p-4 border-b border-white/5 bg-slate-900/50 backdrop-blur-xl flex items-center gap-4 sticky top-0 z-20'>
+      {/* Header */}
+      <div className='p-4 md:p-6 z-20 relative'>
         <button
           onClick={() => router.back()}
-          className='p-2 hover:bg-slate-800 rounded-full transition-colors'
+          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
         >
-          <Loader2 className='w-5 h-5 text-slate-400 rotate-180' />{" "}
-          {/* Temporary icon substitute if ArrowLeft not imported, checking imports next */}
+          <ArrowLeft className='w-5 h-5' />
         </button>
-        <div>
-          <h1 className='text-lg font-bold text-white'>Add Expense</h1>
-          <p className='text-xs text-slate-400'>{trip?.name}</p>
-        </div>
       </div>
 
-      <div className='flex-1 flex flex-col max-w-3xl mx-auto w-full p-4 pb-24'>
+      <div className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pb-24 relative z-10'>
+        <div className='mb-8'>
+          <h1 className='text-3xl font-bold text-white mb-2'>Add Expense</h1>
+          <p className='text-slate-400'>Add to {trip?.name}</p>
+        </div>
         <ExpenseForm
           tripId={tripId}
           groupId={groupId}

@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import TravelSchedule from "./TravelSchedule";
 import TravelCalendar from "./TravelCalendar";
 import ExpensesComponent from "../Expenses";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import { getStatusBadge } from "@/lib/helper";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
@@ -399,57 +400,53 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         {/* Navigation Bar */}
-        <div className='flex items-center justify-between mb-8'>
-          <button
-            onClick={() => router.push(`/group/${groupId}`)}
-            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-          >
-            <ArrowLeft className='w-5 h-5' />
-          </button>
-          <div className='flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-md border border-white/5'>
-            <button
-              onClick={() => handleTabChange("schedule")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "schedule"
-                  ? "bg-slate-700 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <span className='flex items-center gap-2'>
-                <List className='w-4 h-4' />
-                <span className='hidden sm:inline'>Timeline</span>
-              </span>
-            </button>
-            <button
-              onClick={() => handleTabChange("calendar")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "calendar"
-                  ? "bg-slate-700 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <span className='flex items-center gap-2'>
-                <Calendar className='w-4 h-4' />
-                <span className='hidden sm:inline'>Calendar</span>
-              </span>
-            </button>
-            <button
-              onClick={() => handleTabChange("expenses")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "expenses"
-                  ? "bg-slate-700 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <span className='flex items-center gap-2'>
-                <DollarSign className='w-4 h-4' />
-                <span className='hidden sm:inline'>Expenses</span>
-              </span>
-            </button>
-          </div>
-          <div className='w-9' /> {/* Spacer for balance */}
-        </div>
-
+        <DashboardLayoutHeader
+          showBack={true}
+          backUrl={`/group/${groupId}`}
+          centerContent={
+            <div className='flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-md border border-white/5'>
+              <button
+                onClick={() => handleTabChange("schedule")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "schedule"
+                    ? "bg-slate-700 text-white shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span className='flex items-center gap-2'>
+                  <List className='w-4 h-4' />
+                  <span className='hidden sm:inline'>Timeline</span>
+                </span>
+              </button>
+              <button
+                onClick={() => handleTabChange("calendar")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "calendar"
+                    ? "bg-slate-700 text-white shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span className='flex items-center gap-2'>
+                  <Calendar className='w-4 h-4' />
+                  <span className='hidden sm:inline'>Calendar</span>
+                </span>
+              </button>
+              <button
+                onClick={() => handleTabChange("expenses")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "expenses"
+                    ? "bg-slate-700 text-white shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span className='flex items-center gap-2'>
+                  <DollarSign className='w-4 h-4' />
+                  <span className='hidden sm:inline'>Expenses</span>
+                </span>
+              </button>
+            </div>
+          }
+        />
         {/* Trip Header */}
         <div className='mb-8'>
           <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
@@ -571,7 +568,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             </div>
           </div>
         </div>
-
         {/* Content Area */}
         <div className='bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-4 sm:p-6 min-h-[400px]'>
           {activeTab === "calendar" ? (
@@ -613,7 +609,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             />
           )}
         </div>
-
         {/* Floating Action Buttons */}
         <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
           {isTripCreator && (

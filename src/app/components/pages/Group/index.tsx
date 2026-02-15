@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import EditGroupModal from "../../shared/Modal/EditGroupModal";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import TripsListComponent from "./TripsList";
 import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
@@ -204,25 +205,21 @@ const GroupComponent = ({ param }: IGroupComponent) => {
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
-        {/* Header Navigation */}
-        <div className='flex items-center justify-between mb-8'>
-          <button
-            onClick={goBack}
-            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-          >
-            <ArrowLeft className='w-5 h-5' />
-          </button>
-
-          {isCreator && (
-            <button
-              onClick={() => setShowEditModal(true)}
-              className='p-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-              title='Group Settings'
-            >
-              <Settings className='w-5 h-5' />
-            </button>
-          )}
-        </div>
+        <DashboardLayoutHeader
+          showBack={true}
+          onBack={goBack}
+          rightContent={
+            isCreator && (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className='p-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
+                title='Group Settings'
+              >
+                <Settings className='w-5 h-5' />
+              </button>
+            )
+          }
+        />
         {/* Group Info */}
         <div className='mb-8'>
           <h1 className='text-4xl font-bold text-white mb-2 break-words text-center'>

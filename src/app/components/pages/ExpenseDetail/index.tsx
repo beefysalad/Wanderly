@@ -144,64 +144,57 @@ const ExpenseDetail = ({
         <div className='absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[100px] opacity-40'></div>
       </div>
 
-      <div className='max-w-3xl mx-auto relative z-10'>
-        {/* Navigation */}
-        <div className='sticky top-0 z-50 flex items-center justify-between px-4 py-4 md:py-6 bg-slate-950/80 backdrop-blur-xl border-b border-white/5'>
-          <button
-            onClick={() => router.back()}
-            className='p-2.5 -ml-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95 group'
-          >
-            <ArrowLeft className='w-6 h-6 group-hover:-translate-x-1 transition-transform' />
-          </button>
+      {/* Header */}
+      <div className='p-4 md:p-6 z-20 relative flex items-center justify-between'>
+        <button
+          onClick={() => router.back()}
+          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
+        >
+          <ArrowLeft className='w-5 h-5' />
+        </button>
 
-          <div className='flex items-center gap-2'>
-            {!readOnly && (
-              <div className='relative'>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className='p-2.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95'
-                >
-                  <MoreVertical className='w-6 h-6' />
-                </button>
-                {showMenu && (
-                  <>
-                    <div
-                      className='fixed inset-0 z-10'
-                      onClick={() => setShowMenu(false)}
-                    />
-                    <div className='absolute right-0 mt-2 w-48 bg-slate-900 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-20 py-1 animate-in fade-in zoom-in-95 duration-200'>
-                      {onEdit && (
-                        <button
-                          onClick={() => {
-                            onEdit();
-                            setShowMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2'
-                        >
-                          <Pencil className='w-4 h-4' />
-                          Edit Expense
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={() => {
-                            setShowDeleteConfirm(true);
-                            setShowMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2'
-                        >
-                          <Trash2 className='w-4 h-4' />
-                          Delete Expense
-                        </button>
-                      )}
-                    </div>
-                  </>
+        {!readOnly && (onEdit || onDelete) && (
+          <div className='relative'>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className='p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors'
+            >
+              <MoreVertical className='w-5 h-5' />
+            </button>
+
+            {showMenu && (
+              <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
+                {onEdit && (
+                  <button
+                    onClick={() => {
+                      onEdit();
+                      setShowMenu(false);
+                    }}
+                    className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2'
+                  >
+                    <Pencil className='w-4 h-4' />
+                    Edit Expense
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(true);
+                      setShowMenu(false);
+                    }}
+                    className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors'
+                  >
+                    <Trash2 className='w-4 h-4' />
+                    Delete Expense
+                  </button>
                 )}
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
 
+      <div className='max-w-4xl mx-auto relative z-10'>
         <div className='px-5 pt-8 pb-12'>
           {/* Header / Hero */}
           <div className='flex flex-col items-center text-center space-y-2 mb-10'>

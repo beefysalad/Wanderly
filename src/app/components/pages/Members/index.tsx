@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useGroup } from "@/src/hooks/useGroups";
 import Image from "next/image";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 
 interface IMembersComponent {
   groupId: string;
@@ -64,22 +65,13 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8'>
-      <div className='max-w-6xl mx-auto'>
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className='mb-6 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-        >
-          <ArrowLeft className='w-5 h-5' />
-        </button>
-
-        {/* Header */}
-        <div className='mb-8 text-center'>
-          <h1 className='text-3xl md:text-4xl font-bold text-white mb-2'>
-            Group Members
-          </h1>
-          <p className='text-slate-400 text-lg'>{group.name}</p>
-        </div>
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
+        <DashboardLayoutHeader
+          showBack={true}
+          title='Group Members'
+          description={group.name}
+          sticky={true}
+        />
 
         {/* Members Grid */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'>

@@ -9,10 +9,12 @@ import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
 import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
-import DashboardHeader from "./DashboardHeader";
+// DashboardHeader replaced
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import DashboardBottomNav from "./DashboardBottomNav";
 import DashboardStatistics from "./DashboardStatistics";
 import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
+import NotificationBell from "../../shared/NotificationBell";
 
 import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
@@ -168,7 +170,15 @@ const DashboardComponent = () => {
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
-        <DashboardHeader userEmail={user?.email ?? ""} />
+        <DashboardLayoutHeader
+          title='Wanderly'
+          description={user?.email || ""}
+          rightContent={
+            <div className='flex-shrink-0'>
+              <NotificationBell />
+            </div>
+          }
+        />
 
         <DashboardStatistics groups={sortedGroups} />
 

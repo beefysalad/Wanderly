@@ -11,6 +11,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { toast } from "sonner";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 
 interface IExpensesComponent {
   groupId: string;
@@ -327,56 +328,45 @@ const ExpensesComponent = ({
           <div className='mb-8'>
             {/* Header Rendering */}
             {!isEmbedded ? (
-              <div className='bg-slate-900/40 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-6 mb-6 relative overflow-hidden group/header'>
-                <div className='absolute inset-0 bg-gradient-to-br from-orange-500/5 to-purple-500/5 opacity-0 group-hover/header:opacity-100 transition-opacity duration-500'></div>
-
-                <div className='flex items-start justify-between gap-4 relative z-10'>
-                  <div className='flex items-start gap-4 flex-1 min-w-0'>
-                    <button
-                      onClick={() => router.back()}
-                      className='p-3 rounded-2xl bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-all border border-white/5 hover:border-white/10 flex-shrink-0 group'
-                    >
-                      <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-1' />
-                    </button>
-                    <div className='flex-1 min-w-0'>
-                      <h1 className='text-3xl sm:text-4xl font-bold text-white leading-tight mb-2 tracking-tight'>
-                        Trip Expenses
-                      </h1>
-                      <p className='text-sm font-medium text-slate-400 flex items-center gap-2'>
-                        <span className='p-1 rounded-md bg-orange-500/10 border border-orange-500/20'>
-                          <Wallet className='w-3.5 h-3.5 text-orange-400' />
-                        </span>
-                        <span>{trip.name}</span>
-                      </p>
+              <>
+                <DashboardLayoutHeader
+                  showBack={true}
+                  title='Trip Expenses'
+                  description={
+                    <span className='flex items-center gap-2'>
+                      <span className='p-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 inline-flex'>
+                        <Wallet className='w-3 h-3 text-orange-400' />
+                      </span>
+                      <span>{trip.name}</span>
+                    </span>
+                  }
+                  rightContent={
+                    <div className='flex items-center gap-2'>
+                      <button
+                        onClick={() => setView("logs")}
+                        className={`p-3 rounded-2xl transition-all border flex items-center justify-center active:scale-95 ${
+                          view === "logs"
+                            ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+                            : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
+                        }`}
+                        title='Payment History'
+                      >
+                        <Receipt className='w-6 h-6' />
+                      </button>
+                      <Link
+                        href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+                        className='p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 flex items-center justify-center active:scale-95 transition-all w-12 h-12'
+                        title='Add Expense'
+                      >
+                        <Plus className='w-6 h-6' />
+                      </Link>
                     </div>
-                  </div>
-                  <div className='flex items-center gap-2 flex-shrink-0'>
-                    <button
-                      onClick={() => setView("logs")}
-                      className={`p-3 rounded-2xl transition-all border flex items-center justify-center active:scale-95 ${
-                        view === "logs"
-                          ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
-                          : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
-                      }`}
-                      title='Payment History'
-                    >
-                      <Receipt className='w-6 h-6' />
-                    </button>
-                    <Link
-                      href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
-                      className='p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 flex items-center justify-center active:scale-95 transition-all w-12 h-12'
-                      title='Add Expense'
-                    >
-                      <Plus className='w-6 h-6' />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Filter Tabs - Floating Pill Style */}
-                <div className='mt-8'>
+                  }
+                />
+                <div className='mb-6'>
                   <FilterTabs />
                 </div>
-              </div>
+              </>
             ) : (
               // Embedded Header
               <div className='flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
