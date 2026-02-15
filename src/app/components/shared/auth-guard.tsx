@@ -9,12 +9,14 @@ interface AuthGuardProps {
   children: React.ReactNode;
   redirectTo?: string;
   requireAuth?: boolean;
+  guestOnly?: boolean;
 }
 
 export function AuthGuard({
   children,
   redirectTo = "/",
   requireAuth = true,
+  guestOnly = false,
 }: AuthGuardProps) {
   const { user, loading } = useCurrentUser();
   const router = useRouter();
@@ -24,10 +26,10 @@ export function AuthGuard({
 
     if (requireAuth && !user) {
       router.replace(redirectTo);
-    } else if (!requireAuth && user) {
+    } else if (guestOnly && user) {
       router.replace("/dashboard");
     }
-  }, [user, loading, router, redirectTo, requireAuth]);
+  }, [user, loading, router, redirectTo, requireAuth, guestOnly]);
 
   // Show loading while checking auth state
   if (loading) {
@@ -39,7 +41,7 @@ export function AuthGuard({
   }
 
   // Show loading while redirecting
-  if ((requireAuth && !user) || (!requireAuth && user)) {
+  if ((requireAuth && !user) || (guestOnly && user)) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <Spinner label='Redirecting...' />
