@@ -21,12 +21,21 @@ import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
-import { CURRENT_WHATS_NEW_VERSION } from "../../../config/whats-new";
+
+interface WhatsNewFeature {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+  bg: string;
+}
 
 const DashboardComponent = () => {
   const router = useRouter();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState("");
+  const [features, setFeatures] = useState<WhatsNewFeature[]>([]);
   const [showCalendar, setShowCalendar] = useState(true);
   const { user } = useCurrentUser();
   const { data: groupsData, isLoading: loading } = useGroups();
@@ -61,14 +70,23 @@ const DashboardComponent = () => {
 
     const checkWhatsNew = async () => {
       try {
-        const res = await api.get("/sync");
-        const dbUser = res.data.user;
-        if (dbUser && dbUser.lastSeenWhatsNew !== CURRENT_WHATS_NEW_VERSION) {
-          setShowWhatsNew(true);
+        const [syncRes, configRes] = await Promise.all([
+          api.get("/sync"),
+          api.get("/config/whats-new"),
+        ]);
+
+        const dbUser = syncRes.data.user;
+        const config = configRes.data;
+
+        if (config && config.version) {
+          setCurrentVersion(config.version);
+          setFeatures(config.features || []);
+          if (dbUser && dbUser.lastSeenWhatsNew !== config.version) {
+            setShowWhatsNew(true);
+          }
         }
       } catch (err) {
         console.error("Failed to check WhatsNew status:", err);
-        // Fallback to local storage if API fails, or just don't show it
       }
     };
 
@@ -77,9 +95,11 @@ const DashboardComponent = () => {
 
   const handleCloseWhatsNew = async () => {
     setShowWhatsNew(false);
+    if (!currentVersion) return;
+
     try {
       await api.patch("/user/profile", {
-        lastSeenWhatsNew: CURRENT_WHATS_NEW_VERSION,
+        lastSeenWhatsNew: currentVersion,
       });
     } catch (err) {
       console.error("Failed to update WhatsNew status:", err);
@@ -252,7 +272,9 @@ const DashboardComponent = () => {
         <JoinGroupModal onClose={() => setShowJoinModal(false)} />
       )}
 
-      {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} />}
+      {showWhatsNew && (
+        <WhatsNewModal onClose={handleCloseWhatsNew} features={features} />
+      )}
     </main>
   );
 };

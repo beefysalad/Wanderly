@@ -256,3 +256,9 @@ model Notification {
   @@index([userId, read])
   @@index([userId, createdAt])
 }
+
+model AppConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
