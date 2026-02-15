@@ -12,8 +12,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Circle,
+  MoreVertical,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
@@ -37,6 +38,7 @@ const ActivityDetail = ({
   onSelectExpense,
   readOnly = false,
 }: IActivityDetailProps) => {
+  const [showMenu, setShowMenu] = useState(false);
   const activityDate = new Date(activity.date);
 
   // Filter expenses linked to this activity
@@ -52,33 +54,61 @@ const ActivityDetail = ({
         <div className='absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-white/[0.02] rounded-full blur-[150px] opacity-40'></div>
       </div>
 
-      <div className='relative z-20'>
+      <div className='max-w-4xl mx-auto w-full px-4 relative z-20'>
         <DashboardLayoutHeader
           showBack={true}
           rightContent={
             !readOnly && (
-              <div className='flex items-center gap-2'>
+              <div className='relative'>
                 <button
-                  onClick={() => onEdit && onEdit()}
-                  className='p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
-                  title='Edit Activity'
+                  onClick={() => setShowMenu(!showMenu)}
+                  className='p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all outline-none'
+                  title='Options'
                 >
-                  <Pencil className='w-5 h-5' />
+                  <MoreVertical className='w-5 h-5' />
                 </button>
-                <button
-                  onClick={() => onDelete && onDelete()}
-                  className='p-2 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all'
-                  title='Delete Activity'
-                >
-                  <Trash2 className='w-5 h-5' />
-                </button>
+
+                {showMenu && (
+                  <>
+                    <div
+                      className='fixed inset-0 z-40'
+                      onClick={() => setShowMenu(false)}
+                    />
+                    <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
+                      <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50'>
+                        Options
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onEdit && onEdit();
+                        }}
+                        className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-2'
+                      >
+                        <Pencil className='w-4 h-4' />
+                        Edit Activity
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onDelete && onDelete();
+                        }}
+                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                        Delete Activity
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )
           }
+          className='px-0'
         />
       </div>
 
-      <div className='max-w-3xl mx-auto relative z-10 px-4 sm:px-6'>
+      <div className='max-w-3xl mx-auto w-full relative z-10 px-4 sm:px-6'>
         {/* Title & Status Section */}
         <div className='pt-4 pb-8'>
           <div className='flex flex-col gap-6'>
@@ -304,29 +334,20 @@ const ActivityDetail = ({
         </div>
       </div>
 
-      {/* Floating Action Button for Complete */}
-      {!readOnly && onToggleDone && (
-        <div className='fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none'>
+      {/* Floating Action Button for Completion */}
+      {!readOnly && (
+        <div className='fixed bottom-6 right-6 z-50'>
           <button
             onClick={onToggleDone}
             className={cn(
-              "pointer-events-auto px-8 py-4 rounded-full font-bold text-sm sm:text-base transition-all transform active:scale-[0.98] shadow-xl flex items-center justify-center gap-3 border",
+              "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95",
               activity.done
-                ? "bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-700 shadow-black/40"
-                : "bg-orange-500 text-white hover:bg-orange-600 border-orange-400 shadow-orange-500/20",
+                ? "bg-green-500 text-white shadow-green-500/30"
+                : "bg-slate-800 text-slate-400 border border-white/10 hover:bg-slate-700 hover:text-white",
             )}
+            title={activity.done ? "Mark as Incomplete" : "Mark as Complete"}
           >
-            {activity.done ? (
-              <>
-                <Circle className='w-4 h-4' />
-                <span>Mark as Incomplete</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className='w-4 h-4' />
-                <span>Complete Activity</span>
-              </>
-            )}
+            <CheckCircle2 className='w-7 h-7' />
           </button>
         </div>
       )}

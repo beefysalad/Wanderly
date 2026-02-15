@@ -76,7 +76,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
 
-  // Sync active tab with URL search params
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "expenses" || tab === "calendar" || tab === "schedule") {
@@ -84,17 +83,14 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     }
   }, [searchParams]);
 
-  // Update URL when tab changes (optional, but good for bookmarking)
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Use replace to prevent history stack buildup for every tab click
-    // or push to allow back button navigation
+
     router.replace(`/group/${groupId}/trip/${tripId}?tab=${tab}`, {
       scroll: false,
     });
   };
 
-  // Fetch current user's database ID
   useEffect(() => {
     if (firebaseUser) {
       api
@@ -110,7 +106,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     }
   }, [firebaseUser]);
 
-  // Check if current user is the trip creator
   const isTripCreator =
     trip?.createdById && currentUserId && trip.createdById === currentUserId;
 
@@ -163,7 +158,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     id: string,
     updates: Partial<Activity>,
   ) => {
-    // Optimistically update the cache
     queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
       if (!old) return old;
       return {
@@ -184,10 +178,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
     try {
       await api.patch(`/trips/${tripId}/activities/${id}`, updates);
-      // Success - refetch to ensure sync
       queryClient.refetchQueries({ queryKey: ["groups", groupId] });
     } catch (err) {
-      // Revert optimistic update on error
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
       alert(
         err instanceof Error
@@ -230,7 +222,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     const newDoneState = !activity.done;
     const previousState = activity.done;
 
-    // Optimistically update the cache immediately
     queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
       if (!old) return old;
       return {
@@ -253,13 +244,11 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       await api.patch(`/trips/${tripId}/activities/${id}`, {
         done: newDoneState,
       });
-      // Silently refetch in the background to sync with server
       queryClient.refetchQueries({
         queryKey: ["groups", groupId],
         type: "active",
       });
     } catch (err) {
-      // Revert optimistic update on error
       queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
         if (!old) return old;
         return {
@@ -507,6 +496,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         <div className='mb-8'>
           <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
             <div className='text-center md:text-left'>
+              <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
+                {trip.name}
+              </h1>
               <div className='flex items-center gap-3 mb-2 justify-center md:justify-start'>
                 {!isEditingStatus ? (
                   <button
@@ -560,9 +552,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   </span>
                 )}
               </div>
-              <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
-                {trip.name}
-              </h1>
+
               <div className='flex items-center gap-2 text-slate-400 justify-center md:justify-start'>
                 <Calendar className='w-4 h-4' />
                 <span>
