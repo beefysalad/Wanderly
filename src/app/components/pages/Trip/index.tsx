@@ -377,10 +377,15 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading trip...</p>
+          <div className='relative w-20 h-20 mx-auto mb-6'>
+            <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
+            <div className='absolute inset-0 border-4 border-t-orange-500 rounded-full animate-spin'></div>
+          </div>
+          <p className='text-slate-400 font-bold tracking-tight'>
+            Loading trip...
+          </p>
         </div>
       </main>
     );
@@ -641,36 +646,42 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         <div className='flex bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl shadow-black/50'>
           <button
             onClick={() => handleTabChange("schedule")}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "schedule"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <List className='w-4 h-4' />
-            <span>Timeline</span>
+            <List className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Timeline
+            </span>
           </button>
           <button
             onClick={() => handleTabChange("calendar")}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "calendar"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <Calendar className='w-4 h-4' />
-            <span>Calendar</span>
+            <Calendar className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Calendar
+            </span>
           </button>
           <button
             onClick={() => handleTabChange("expenses")}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "expenses"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
-                : "text-slate-400 hover:text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <DollarSign className='w-4 h-4' />
-            <span>Expenses</span>
+            <DollarSign className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Expenses
+            </span>
           </button>
         </div>
       </div>

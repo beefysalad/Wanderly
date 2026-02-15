@@ -131,7 +131,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
       setIsNavigating(true);
       // Wait a moment for cache to update and show feedback
       await new Promise((resolve) => setTimeout(resolve, 300));
-      router.push(`/group/${groupId}/trip/${tripId}/activities/${activityId}`);
+      router.push(`/group/${groupId}/trip/${tripId}`);
     } catch (err) {
       const message =
         err instanceof Error
@@ -202,13 +202,13 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
     <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/[0.02] rounded-full blur-3xl'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white/[0.02] rounded-full blur-3xl'></div>
       </div>
       {isNavigating && <NavigationLoader message='Updating activity...' />}
 
       {/* Top Bar */}
-      <div className='p-4 border-b border-white/5 bg-slate-900/50 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40'>
+      <div className='p-4 border-b border-white/5 bg-slate-900 flex items-center justify-between sticky top-0 z-40 shadow-lg shadow-black/20'>
         <div className='flex items-center gap-4'>
           <button
             onClick={() => router.back()}
@@ -241,7 +241,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
         <div className='max-w-3xl mx-auto space-y-8'>
           <form className='space-y-8'>
             {/* Basic Info Section */}
-            <section className='bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-2xl p-6'>
+            <section className='bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm'>
               <div className='flex items-center gap-2 mb-6'>
                 <Calendar className='w-5 h-5 text-orange-500' />
                 <h2 className='text-lg font-semibold text-white'>
@@ -298,7 +298,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
             </section>
 
             {/* Time & Notes Section */}
-            <section className='bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-2xl p-6'>
+            <section className='bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm'>
               <div className='flex items-center gap-2 mb-6'>
                 <Clock className='w-5 h-5 text-blue-500' />
                 <h2 className='text-lg font-semibold text-white'>
@@ -307,7 +307,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
               </div>
 
               <div className='space-y-6'>
-                <div className='grid grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label className='text-slate-300'>Start Time</Label>
                     <Input
@@ -339,7 +339,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
             </section>
 
             {/* Transportation Section */}
-            <section className='bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-2xl p-6'>
+            <section className='bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm'>
               <div className='flex items-center justify-between mb-6'>
                 <div className='flex items-center gap-2'>
                   <Navigation className='w-5 h-5 text-emerald-500' />
@@ -395,9 +395,9 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                 </div>
 
                 {form.watch("transportationMode") && (
-                  <div className='space-y-4 animate-in fade-in slide-in-from-top-2 pt-4 border-t border-slate-700/50'>
+                  <div className='space-y-4 animate-in fade-in slide-in-from-top-2 pt-4 border-t border-slate-800'>
                     {form.watch("transportationMode") === "plane" ? (
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                         <div className='space-y-2'>
                           <Label className='text-slate-300'>
                             Departure Airport

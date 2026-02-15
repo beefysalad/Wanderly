@@ -52,8 +52,8 @@ const ActivityDetail = ({
     <div className='min-h-screen bg-slate-950 pb-32 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
       {/* Immersive Background */}
       <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-orange-500/5 rounded-full blur-[150px] opacity-40'></div>
-        <div className='absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-blue-500/5 rounded-full blur-[150px] opacity-40'></div>
+        <div className='absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-white/[0.02] rounded-full blur-[150px] opacity-40'></div>
+        <div className='absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-white/[0.02] rounded-full blur-[150px] opacity-40'></div>
       </div>
 
       <div className='relative z-20'>
@@ -93,8 +93,8 @@ const ActivityDetail = ({
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border shadow-sm",
                   activity.done
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                    : "bg-slate-800/80 text-orange-400 border-orange-500/20 hover:bg-slate-800",
+                    ? "bg-emerald-500 text-slate-950 border-emerald-500 hover:bg-emerald-600"
+                    : "bg-slate-800 text-orange-400 border-orange-500/30 hover:bg-slate-700",
                 )}
               >
                 {activity.done ? (
@@ -110,7 +110,7 @@ const ActivityDetail = ({
                 )}
               </button>
 
-              <span className='px-3 py-1.5 rounded-full bg-slate-800/50 border border-white/5 text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
+              <span className='px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm'>
                 <Calendar className='w-3.5 h-3.5' />
                 {activityDate.toLocaleDateString("en-US", {
                   weekday: "short",
@@ -153,7 +153,7 @@ const ActivityDetail = ({
         <div className='space-y-6'>
           {/* Notes Card */}
           {activity.notes && (
-            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm'>
+            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
               <div className='flex items-center gap-3 mb-4 text-slate-500'>
                 <FileText className='w-4 h-4' />
                 <span className='text-xs font-bold uppercase tracking-widest'>
@@ -171,14 +171,14 @@ const ActivityDetail = ({
             activity.pickupTime ||
             activity.pickupLocation ||
             activity.dropoffLocation) && (
-            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm relative overflow-hidden group'>
+            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden group'>
               {/* Decorative Icon */}
               <div className='absolute -right-6 -top-6 text-slate-800/50 transform rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none'>
                 <Navigation2 className='w-32 h-32' />
               </div>
 
               <div className='relative z-10'>
-                <div className='flex items-center gap-3 mb-6 text-blue-400'>
+                <div className='flex items-center gap-3 mb-6 text-blue-500'>
                   <Navigation2 className='w-4 h-4' />
                   <span className='text-xs font-bold uppercase tracking-widest'>
                     Journey Details
@@ -212,7 +212,7 @@ const ActivityDetail = ({
                   <div className='relative pl-4 space-y-8'>
                     {/* Vertical Line */}
                     {activity.pickupLocation && activity.dropoffLocation && (
-                      <div className='absolute left-[21px] top-3 bottom-8 w-0.5 bg-gradient-to-b from-slate-700/50 to-slate-800/20' />
+                      <div className='absolute left-[21px] top-3 bottom-8 w-0.5 bg-slate-800' />
                     )}
 
                     {(activity.pickupLocation || activity.pickupTime) && (
@@ -263,7 +263,7 @@ const ActivityDetail = ({
 
           {/* Linked Expenses */}
           {linkedExpenses.length > 0 && (
-            <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl p-6 border border-white/5 shadow-sm'>
+            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
               <div className='flex items-center justify-between mb-6'>
                 <div className='flex items-center gap-3 text-emerald-500'>
                   <DollarSign className='w-4 h-4' />
@@ -271,7 +271,7 @@ const ActivityDetail = ({
                     Linked Expenses
                   </span>
                 </div>
-                <span className='bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-bold border border-emerald-500/20'>
+                <span className='bg-emerald-500 text-slate-950 px-2.5 py-1 rounded-full text-[10px] font-black border border-emerald-500 shadow-sm'>
                   {linkedExpenses.length}
                 </span>
               </div>
@@ -281,7 +281,7 @@ const ActivityDetail = ({
                   <button
                     key={expense.id}
                     onClick={() => onSelectExpense?.(expense)}
-                    className='flex items-center justify-between w-full bg-slate-800/40 hover:bg-slate-800/70 p-4 rounded-xl transition-all border border-white/5 hover:border-emerald-500/30 group text-left'
+                    className='flex items-center justify-between w-full bg-slate-800 hover:bg-slate-700/50 p-4 rounded-xl transition-all border border-slate-700 hover:border-emerald-500 group text-left shadow-sm'
                   >
                     <div className='min-w-0 pr-4'>
                       <p className='font-bold text-white group-hover:text-emerald-400 transition-colors truncate text-sm'>
@@ -314,10 +314,10 @@ const ActivityDetail = ({
           <button
             onClick={onToggleDone}
             className={cn(
-              "pointer-events-auto px-6 py-3 rounded-full font-bold text-sm sm:text-base transition-all transform active:scale-[0.98] shadow-lg flex items-center justify-center gap-2.5 backdrop-blur-md border",
+              "pointer-events-auto px-8 py-4 rounded-full font-bold text-sm sm:text-base transition-all transform active:scale-[0.98] shadow-xl flex items-center justify-center gap-3 border",
               activity.done
-                ? "bg-slate-800/90 text-slate-400 hover:bg-slate-700/90 border-slate-700"
-                : "bg-orange-500/90 text-white hover:bg-orange-600/90 border-orange-400/50 shadow-orange-500/30",
+                ? "bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-700 shadow-black/40"
+                : "bg-orange-500 text-white hover:bg-orange-600 border-orange-400 shadow-orange-500/20",
             )}
           >
             {activity.done ? (

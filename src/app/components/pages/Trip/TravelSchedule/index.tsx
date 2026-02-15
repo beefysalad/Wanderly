@@ -56,6 +56,7 @@ const DraggableActivity = ({
   onToggleDone,
   onEditActivity,
   onDeleteActivity,
+  onViewActivity,
   readOnly,
   isExpanded,
   onToggleExpand,
@@ -64,6 +65,7 @@ const DraggableActivity = ({
   onToggleDone?: (id: string) => void;
   onEditActivity?: (activity: Activity) => void;
   onDeleteActivity?: (id: string) => void;
+  onViewActivity?: (activity: Activity) => void;
   readOnly: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -156,7 +158,13 @@ const DraggableActivity = ({
         {/* Content */}
         <div
           className='flex-1 min-w-0 cursor-pointer'
-          onClick={() => showExpandButton && onToggleExpand()}
+          onClick={() => {
+            if (onViewActivity) {
+              onViewActivity(activity);
+            } else if (showExpandButton) {
+              onToggleExpand();
+            }
+          }}
         >
           <div className='flex items-start justify-between gap-2'>
             <h3
@@ -476,26 +484,31 @@ const TravelSchedule = ({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className='flex items-center gap-1 md:gap-2'>
+              <div className='flex items-center gap-1 md:gap-2 bg-slate-800/40 p-1 rounded-xl border border-white/5'>
                 <Button
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
                   variant='ghost'
                   size='sm'
-                  className='h-8 px-2 md:px-3 text-xs md:text-sm'
+                  className='h-8 px-2 md:px-3 text-xs md:text-sm text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:text-slate-500'
                 >
                   <ChevronLeft className='w-3 h-3 md:w-4 md:h-4' />
                   <span className='hidden sm:inline ml-1'>Prev</span>
                 </Button>
-                <span className='text-xs md:text-sm text-slate-400 px-1 md:px-2'>
-                  {currentPage}/{totalPages}
+                <div className='w-[1px] h-4 bg-white/10 mx-1 md:mx-2'></div>
+                <span className='text-xs md:text-sm font-bold text-slate-200 min-w-[2.5rem] text-center'>
+                  {currentPage}{" "}
+                  <span className='text-slate-500 font-medium'>
+                    / {totalPages}
+                  </span>
                 </span>
+                <div className='w-[1px] h-4 bg-white/10 mx-1 md:mx-2'></div>
                 <Button
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
                   variant='ghost'
                   size='sm'
-                  className='h-8 px-2 md:px-3 text-xs md:text-sm'
+                  className='h-8 px-2 md:px-3 text-xs md:text-sm text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:text-slate-500'
                 >
                   <span className='hidden sm:inline mr-1'>Next</span>
                   <ChevronRight className='w-3 h-3 md:w-4 md:h-4' />
@@ -603,6 +616,7 @@ const TravelSchedule = ({
                         onToggleExpand={() =>
                           toggleActivityExpansion(activity.id)
                         }
+                        onViewActivity={onViewActivity}
                       />
                     )) || []}
                   </DroppableDay>
