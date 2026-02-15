@@ -3,7 +3,7 @@
 import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import ExpenseForm from "@/src/app/components/shared/ExpenseForm";
 import React from "react";
 
@@ -103,7 +103,7 @@ export default function EditExpensePage({
           onClick={() => router.back()}
           className='p-2 hover:bg-slate-800 rounded-full transition-colors'
         >
-          <Loader2 className='w-5 h-5 text-slate-400 rotate-180' />
+          <ArrowLeft className='w-5 h-5 text-slate-400' />
         </button>
         <div>
           <h1 className='text-lg font-bold text-white'>Edit Expense</h1>

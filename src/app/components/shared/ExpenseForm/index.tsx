@@ -263,6 +263,29 @@ const ExpenseForm = ({
     }),
   };
 
+  // ... imports and other code ...
+
+  const steps = [
+    {
+      number: 1,
+      title: "Details",
+      icon: DollarSign,
+      description: "Amount & Info",
+    },
+    {
+      number: 2,
+      title: "Split",
+      icon: Users,
+      description: "Share the cost",
+    },
+    {
+      number: 3,
+      title: "Payment",
+      icon: CreditCard,
+      description: "Method & Proof",
+    },
+  ];
+
   return (
     <div className='flex flex-col h-full bg-slate-900 text-white rounded-3xl overflow-hidden border border-white/5 shadow-2xl'>
       {/* Header */}
@@ -286,14 +309,59 @@ const ExpenseForm = ({
         </div>
       )}
 
-      {/* Progress Bar */}
-      <div className='h-1 bg-slate-800 w-full relative'>
-        <motion.div
-          className='absolute left-0 top-0 bottom-0 bg-gradient-to-r from-orange-500 to-amber-500'
-          initial={{ width: `${((currentStep - 1) / steps.length) * 100}%` }}
-          animate={{ width: `${(currentStep / steps.length) * 100}%` }}
-          transition={{ duration: 0.3 }}
-        />
+      {/* Stepper */}
+      <div className='py-6 bg-slate-900/50 border-b border-white/5'>
+        <div className='flex items-center justify-center relative px-4'>
+          {steps.map((step, index) => {
+            const StepIcon = step.icon;
+            const isActive = currentStep === step.number;
+            const isCompleted = currentStep > step.number;
+            const isLast = index === steps.length - 1;
+
+            return (
+              <React.Fragment key={step.number}>
+                <div className='flex items-center justify-center flex-1 relative'>
+                  {/* Step Circle */}
+                  <div className='flex flex-col items-center gap-2 flex-shrink-0 z-10'>
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
+                        isCompleted
+                          ? "bg-orange-500 border-orange-500 text-white"
+                          : isActive
+                            ? "bg-orange-900/30 border-orange-500 text-orange-400"
+                            : "bg-slate-800 border-slate-600 text-slate-400"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle className='w-5 h-5' />
+                      ) : (
+                        <StepIcon className='w-5 h-5' />
+                      )}
+                    </div>
+                    <div className='text-center hidden sm:block'>
+                      <p
+                        className={`text-xs font-semibold ${
+                          isActive ? "text-white" : "text-slate-400"
+                        }`}
+                      >
+                        {step.title}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Connector Line */}
+                  {!isLast && (
+                    <div
+                      className={`absolute left-[50%] right-0 h-0.5 top-[20px] transition-all duration-200 ${
+                        isCompleted ? "bg-orange-500" : "bg-slate-700"
+                      }`}
+                      style={{ width: "calc(100% - 2.5rem)" }}
+                    />
+                  )}
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
 
       {/* Form Content */}
@@ -317,6 +385,15 @@ const ExpenseForm = ({
                 {/* STEP 1: Details */}
                 {currentStep === 1 && (
                   <div className='space-y-5'>
+                    <div className='text-center mb-6 hidden sm:block'>
+                      <h3 className='text-lg font-bold text-white'>
+                        Expense Details
+                      </h3>
+                      <p className='text-sm text-slate-400'>
+                        Enter the amount and basic info.
+                      </p>
+                    </div>
+
                     {/* Amount Input */}
                     <div className='relative'>
                       <label className='text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block'>
@@ -473,6 +550,15 @@ const ExpenseForm = ({
                 {/* STEP 2: Split */}
                 {currentStep === 2 && (
                   <div className='space-y-4'>
+                    <div className='text-center mb-2 hidden sm:block'>
+                      <h3 className='text-lg font-bold text-white'>
+                        Split Cost
+                      </h3>
+                      <p className='text-sm text-slate-400'>
+                        Who are you splitting this with?
+                      </p>
+                    </div>
+
                     <div className='flex items-center justify-between'>
                       <label className='text-sm font-semibold text-slate-300'>
                         Select Members
@@ -543,6 +629,15 @@ const ExpenseForm = ({
                 {/* STEP 3: Payment Details */}
                 {currentStep === 3 && (
                   <div className='space-y-6'>
+                    <div className='text-center mb-2 hidden sm:block'>
+                      <h3 className='text-lg font-bold text-white'>
+                        Payment Details
+                      </h3>
+                      <p className='text-sm text-slate-400'>
+                        Optional details for reimbursement.
+                      </p>
+                    </div>
+
                     <div className='bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3'>
                       <HelpCircle className='w-5 h-5 text-blue-400 flex-shrink-0' />
                       <p className='text-xs text-blue-200 leading-relaxed'>

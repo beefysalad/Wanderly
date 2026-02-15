@@ -8,6 +8,7 @@ import {
   Trash2,
   LogOut,
   Settings,
+  MoreVertical,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -30,6 +31,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const router = useRouter();
@@ -209,15 +211,70 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           showBack={true}
           onBack={goBack}
           rightContent={
-            isCreator && (
+            <div className='relative'>
               <button
-                onClick={() => setShowEditModal(true)}
-                className='p-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white'
-                title='Group Settings'
+                onClick={() => setMenuOpen(!menuOpen)}
+                className='p-2 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white'
               >
-                <Settings className='w-5 h-5' />
+                <MoreVertical className='w-5 h-5' />
               </button>
-            )
+
+              {menuOpen && (
+                <>
+                  <div
+                    className='fixed inset-0 z-40'
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
+                    <button
+                      onClick={() => {
+                        copyInviteLink();
+                        setMenuOpen(false);
+                      }}
+                      className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2'
+                    >
+                      <UserPlus className='w-4 h-4' />
+                      Invite Members
+                    </button>
+                    {isCreator && (
+                      <button
+                        onClick={() => {
+                          setShowEditModal(true);
+                          setMenuOpen(false);
+                        }}
+                        className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 border-t border-white/5'
+                      >
+                        <Settings className='w-4 h-4' />
+                        Group Settings
+                      </button>
+                    )}
+                    {isCreator ? (
+                      <button
+                        onClick={() => {
+                          setShowDeleteModal(true);
+                          setMenuOpen(false);
+                        }}
+                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                        Delete Group
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setShowLeaveModal(true);
+                          setMenuOpen(false);
+                        }}
+                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
+                      >
+                        <LogOut className='w-4 h-4' />
+                        Leave Group
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           }
         />
         {/* Group Info */}
@@ -283,30 +340,6 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         </div>
         {/* Floating Action Buttons */}
         <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
-          <button
-            onClick={copyInviteLink}
-            className='group flex items-center justify-center w-12 h-12 bg-purple-500/10 hover:bg-purple-500/20 backdrop-blur-xl border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
-            title='Invite Friends'
-          >
-            <UserPlus className='w-5 h-5 transition-transform group-hover:scale-110' />
-          </button>
-          {isCreator ? (
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
-              title='Delete Group'
-            >
-              <Trash2 className='w-5 h-5 transition-transform group-hover:scale-110' />
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowLeaveModal(true)}
-              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
-              title='Leave Group'
-            >
-              <LogOut className='w-5 h-5 transition-transform group-hover:scale-110' />
-            </button>
-          )}
           <button
             onClick={() => router.push(`/group/${group.id}/trips/create`)}
             className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
