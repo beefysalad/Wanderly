@@ -120,7 +120,7 @@ export default function DashboardLayoutHeader({
 
       {/* Right Content / Spacer if needed to balance center content */}
       <div
-        className={`flex items-center gap-2 ${centerContent ? "flex-1 justify-end" : ""}`}
+        className={`flex items-center gap-3 ${centerContent ? "flex-1 justify-end" : ""}`}
       >
         {rightContent}
       </div>

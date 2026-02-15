@@ -240,7 +240,7 @@ const TripsPage = () => {
         )}
       </div>
 
-      <DashboardBottomNav onLogout={handleLogout} />
+      <DashboardBottomNav />
     </main>
   );
 };

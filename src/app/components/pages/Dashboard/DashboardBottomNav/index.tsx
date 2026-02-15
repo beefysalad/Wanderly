@@ -1,12 +1,7 @@
-"use client";
-import { Home, Calendar, Building2, LogOut } from "lucide-react";
+import { Home, Calendar, Building2, User } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
-interface IDashboardBottomNavProps {
-  onLogout: () => void;
-}
-
-const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
+const DashboardBottomNav = () => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -14,65 +9,47 @@ const DashboardBottomNav = ({ onLogout }: IDashboardBottomNavProps) => {
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "trips", label: "Trips", icon: Calendar, path: "/trips" },
     { id: "groups", label: "Groups", icon: Building2, path: "/groups" },
+    { id: "profile", label: "Profile", icon: User, path: "/profile" },
   ];
 
   return (
-    <div
-      className='fixed bottom-0 left-0 right-0 z-[9999]'
-      style={{
-        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
-      }}
-    >
-      {/* Backdrop */}
-      <div className='absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent backdrop-blur-xl' />
-
+    <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-auto max-w-[90vw]'>
       {/* Navigation container */}
-      <div className='relative px-4 pb-3 pt-2'>
-        <div className='max-w-md mx-auto bg-slate-800/80 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl shadow-black/50 p-2'>
-          <nav className='flex items-center justify-around'>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = pathname?.startsWith(item.path);
+      <div className='bg-slate-900/80 backdrop-blur-xl rounded-full border border-white/10 shadow-lg shadow-black/50 px-6 py-3'>
+        <nav className='flex items-center gap-2 sm:gap-4'>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = pathname?.startsWith(item.path);
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => router.push(item.path)}
-                  className={`flex flex-col items-center justify-center py-2 px-1 gap-1 min-w-[64px] rounded-2xl transition-all duration-300 ${
-                    active
-                      ? "bg-orange-500/10 text-orange-400"
-                      : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+            return (
+              <button
+                key={item.id}
+                onClick={() => router.push(item.path)}
+                className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all duration-300 group ${
+                  active
+                    ? "text-orange-500 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.2)]"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Icon
+                  className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${
+                    active ? "scale-110" : "group-hover:scale-110"
                   }`}
-                >
-                  <Icon
-                    className={`w-6 h-6 transition-transform duration-300 ${
-                      active ? "scale-110" : "scale-100"
-                    }`}
-                  />
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-                      active ? "opacity-100" : "opacity-60"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+                />
 
-            <div className='w-px h-8 bg-white/5 mx-1' />
+                {/* Active Indicator Dot */}
+                {active && (
+                  <span className='absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.8)]'></span>
+                )}
 
-            <button
-              onClick={onLogout}
-              className='flex flex-col items-center justify-center py-2 px-1 gap-1 min-w-[64px] rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300'
-            >
-              <LogOut className='w-6 h-6' />
-              <span className='text-[10px] font-bold uppercase tracking-widest opacity-60'>
-                Logout
-              </span>
-            </button>
-          </nav>
-        </div>
+                {/* Tooltip-style label for desktop/tablet */}
+                <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg hidden sm:block'>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );
