@@ -417,7 +417,7 @@ const AdminWhatsNew = () => {
                   </div>
 
                   <button className='w-full py-3 bg-white text-slate-950 font-bold text-xs rounded-xl mt-4'>
-                    Let's explore!
+                    Let&apos;s explore!
                   </button>
                 </div>
               </div>
