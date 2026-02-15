@@ -1,17 +1,36 @@
-import { X } from "lucide-react";
-import React from "react";
 import {
-  WHATS_NEW_FEATURES,
-  WhatsNewFeature,
-} from "../../../../config/whats-new";
+  X,
+  Sparkles,
+  Smartphone,
+  Beaker,
+  Layout,
+  MessageSquare,
+  LucideIcon,
+} from "lucide-react";
+import React from "react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Sparkles,
+  Smartphone,
+  Beaker,
+  Layout,
+  MessageSquare,
+};
+
+export interface WhatsNewFeature {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+  bg: string;
+}
 
 interface IWhatsNewModalProps {
   onClose: () => void;
+  features: WhatsNewFeature[];
 }
 
-const WhatsNewModal = ({ onClose }: IWhatsNewModalProps) => {
-  const features: WhatsNewFeature[] = WHATS_NEW_FEATURES;
-
+const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
   return (
     <div className='fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300'>
       <div className='bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]'>
@@ -41,7 +60,7 @@ const WhatsNewModal = ({ onClose }: IWhatsNewModalProps) => {
           {/* Content */}
           <div className='p-5 md:p-8 space-y-4'>
             {features.map((feature, index) => {
-              const Icon = feature.icon;
+              const Icon = ICON_MAP[feature.icon] || Sparkles;
               return (
                 <div
                   key={index}
