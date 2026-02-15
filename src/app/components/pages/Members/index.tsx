@@ -124,10 +124,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
                             </div>
                           )}
                         </div>
-                        <div className='flex items-center gap-2 text-sm text-slate-400 mb-2'>
-                          <Mail className='w-3.5 h-3.5 flex-shrink-0' />
-                          <span className='truncate text-xs'>{email}</span>
-                        </div>
+
                         {joinedDate && (
                           <div className='flex items-center gap-2 text-xs text-slate-500'>
                             <Calendar className='w-3.5 h-3.5 flex-shrink-0' />
