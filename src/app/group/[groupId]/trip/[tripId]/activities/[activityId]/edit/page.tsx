@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { Trip, Activity } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
+import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -207,37 +208,11 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
       </div>
       {isNavigating && <NavigationLoader message='Updating activity...' />}
 
-      {/* Top Bar */}
-      <div className='p-4 border-b border-white/5 bg-slate-900 flex items-center justify-between sticky top-0 z-40 shadow-lg shadow-black/20'>
-        <div className='flex items-center gap-4'>
-          <button
-            onClick={() => router.back()}
-            className='p-2 hover:bg-slate-800 rounded-full transition-colors'
-          >
-            <ArrowLeft className='w-5 h-5 text-slate-400' />
-          </button>
-          <div>
-            <h1 className='text-lg font-bold text-white'>Edit Activity</h1>
-            <p className='text-xs text-slate-400'>{trip.name}</p>
-          </div>
-        </div>
-        <Button
-          onClick={form.handleSubmit(onSubmit)}
-          disabled={isLoading}
-          className='bg-orange-500 hover:bg-orange-600 text-white'
-        >
-          {isLoading ? (
-            <Loader2 className='w-4 h-4 animate-spin' />
-          ) : (
-            <>
-              <Save className='w-4 h-4 mr-2' />
-              Save
-            </>
-          )}
-        </Button>
+      <div className='max-w-4xl mx-auto w-full px-4 relative z-20'>
+        <DashboardLayoutHeader showBack={true} title='Edit Activity' />
       </div>
 
-      <div className='flex-1 overflow-y-auto px-4 py-6 pb-24'>
+      <div className='flex-1 overflow-y-auto px-4 py-6 pb-24 max-w-4xl mx-auto w-full'>
         <div className='max-w-3xl mx-auto space-y-8'>
           <form className='space-y-8'>
             {/* Basic Info Section */}
@@ -487,6 +462,22 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
             )}
           </form>
         </div>
+      </div>
+
+      {/* Floating Save Button */}
+      <div className='fixed bottom-6 right-6 z-50'>
+        <Button
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isLoading}
+          className='w-14 h-14 rounded-full shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white p-0 flex items-center justify-center transition-transform hover:scale-105 active:scale-95'
+          title='Save Changes'
+        >
+          {isLoading ? (
+            <Loader2 className='w-6 h-6 animate-spin' />
+          ) : (
+            <Save className='w-6 h-6' />
+          )}
+        </Button>
       </div>
     </main>
   );

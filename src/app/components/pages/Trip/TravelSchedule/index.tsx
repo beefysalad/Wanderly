@@ -11,7 +11,14 @@ import {
   ChevronUp,
   Calendar,
   GripVertical,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { formatTime12Hour } from "@/lib/utils";
@@ -108,13 +115,13 @@ const DraggableActivity = ({
       className='bg-slate-800/30 rounded-lg md:rounded-xl border border-white/5 overflow-hidden hover:border-orange-500/30 transition-all'
     >
       {/* Main Activity Row */}
-      <div className='flex items-start gap-3 p-3 md:p-4'>
+      <div className='flex items-start gap-3 p-4 md:p-5'>
         {/* Drag Handle */}
         {!readOnly && (
           <button
             {...attributes}
             {...listeners}
-            className='flex-none p-1 -ml-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none'
+            className='flex-none p-2 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none'
           >
             <GripVertical className='w-4 h-4' />
           </button>
@@ -174,31 +181,44 @@ const DraggableActivity = ({
               {activity.title}
             </h3>
 
-            {/* Action Buttons */}
-            {!readOnly && (
-              <div className='flex items-center gap-1 flex-none'>
-                {onEditActivity && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditActivity(activity);
-                    }}
-                    className='p-1.5 md:p-2 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-colors'
-                  >
-                    <Pencil className='w-3.5 h-3.5 md:w-4 md:h-4' />
-                  </button>
-                )}
-                {onDeleteActivity && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteActivity(activity.id);
-                    }}
-                    className='p-1.5 md:p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors'
-                  >
-                    <Trash2 className='w-3.5 h-3.5 md:w-4 md:h-4' />
-                  </button>
-                )}
+            {!readOnly && (onEditActivity || onDeleteActivity) && (
+              <div className='flex items-center gap-1 flex-none ml-2'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors'
+                    >
+                      <MoreVertical className='w-4 h-4' />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end' className='w-32'>
+                    {onEditActivity && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditActivity(activity);
+                        }}
+                        className='gap-2 cursor-pointer'
+                      >
+                        <Pencil className='w-3.5 h-3.5' />
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                    )}
+                    {onDeleteActivity && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteActivity(activity.id);
+                        }}
+                        className='gap-2 text-red-400 focus:text-red-400 cursor-pointer'
+                      >
+                        <Trash2 className='w-3.5 h-3.5' />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>
@@ -475,13 +495,12 @@ const TravelSchedule = ({
                 Schedule
               </h2>
               {!readOnly && (
-                <span className='text-xs text-slate-500 hidden sm:inline'>
+                <span className='text-xs text-slate-500 inline'>
                   • Drag to reschedule
                 </span>
               )}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className='flex items-center gap-1 md:gap-2 bg-slate-800/40 p-1 rounded-xl border border-white/5'>
                 <Button
@@ -518,7 +537,7 @@ const TravelSchedule = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className='flex-1 overflow-y-auto px-3 py-4 md:px-6 space-y-4 md:space-y-6'>
+        <div className='flex-1 overflow-y-auto px-4 py-4 md:px-6 space-y-4 md:space-y-6'>
           {days.map((date) => {
             const dateKey = date.toISOString().split("T")[0];
             const dayActivities = activities
