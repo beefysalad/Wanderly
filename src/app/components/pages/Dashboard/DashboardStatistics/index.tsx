@@ -97,30 +97,30 @@ const DashboardStatistics = ({ groups }: IDashboardStatisticsProps) => {
   ];
 
   return (
-    <div className='bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/5 p-4 md:p-6 mb-8 shadow-lg shadow-black/20'>
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 md:divide-x md:divide-white/5'>
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className='flex flex-col items-center justify-center p-2 md:px-4 text-center group'
-            >
-              <div
-                className={`w-10 h-10 ${stat.iconBg} rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}
-              >
-                <Icon className={`w-5 h-5 ${stat.color}`} />
-              </div>
-              <p className='text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider'>
+    <div className='flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide'>
+      {statCards.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <div
+            key={stat.label}
+            className='flex-1 min-w-[140px] bg-slate-900 rounded-xl border border-white/5 p-4 flex items-center justify-between group transition-all duration-300'
+          >
+            <div>
+              <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5'>
                 {stat.label}
               </p>
-              <p className='text-2xl font-bold text-white tracking-tight'>
+              <p className='text-xl font-black text-white tracking-tight flex items-baseline gap-1'>
                 {stat.value}
               </p>
             </div>
-          );
-        })}
-      </div>
+            <div
+              className={`w-10 h-10 ${stat.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+            >
+              <Icon className={`w-5 h-5 ${stat.color}`} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

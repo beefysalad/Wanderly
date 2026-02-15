@@ -9,15 +9,12 @@ import {
   Trash2,
   Navigation2,
   DollarSign,
-  Link2,
   ArrowRight,
   CheckCircle2,
   Circle,
-  MapPin,
 } from "lucide-react";
 import React from "react";
 import { formatTime12Hour } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 
@@ -40,7 +37,6 @@ const ActivityDetail = ({
   onSelectExpense,
   readOnly = false,
 }: IActivityDetailProps) => {
-  const router = useRouter();
   const activityDate = new Date(activity.date);
 
   // Filter expenses linked to this activity

@@ -11,7 +11,7 @@ export default function AdminLayout({
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error] = useState("");
 
   useEffect(() => {
     const auth = sessionStorage.getItem("admin_authenticated");

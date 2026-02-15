@@ -1,6 +1,5 @@
 "use client";
-import { ArrowLeft, Crown, Mail, Users, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Crown, Users, Calendar } from "lucide-react";
 import React from "react";
 import { useGroup } from "@/src/hooks/useGroups";
 import Image from "next/image";
@@ -10,7 +9,6 @@ interface IMembersComponent {
   groupId: string;
 }
 const MembersComponent = ({ groupId }: IMembersComponent) => {
-  const router = useRouter();
   const { data: groupData, isLoading: loading } = useGroup(groupId);
   const group = groupData?.group || null;
 
