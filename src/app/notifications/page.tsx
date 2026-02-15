@@ -1,11 +1,8 @@
 "use client";
 import NotificationPanel from "../components/shared/NotificationBell/NotificationPanel";
 import DashboardLayoutHeader from "../components/shared/DashboardLayoutHeader";
-import { useRouter } from "next/navigation";
 
 const NotificationsPage = () => {
-  const router = useRouter();
-
   return (
     <main className='min-h-screen bg-slate-950 pb-24'>
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>

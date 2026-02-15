@@ -1,9 +1,7 @@
 "use client";
 import { useGroups } from "@/src/hooks/useGroups";
 import { Trip } from "@/src/shared/types";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
-import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
@@ -13,10 +11,6 @@ const TripsPage = () => {
   const router = useRouter();
   const { data: groupsData, isLoading } = useGroups();
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("all");
-
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
 
   const allTrips = useMemo(() => {
     const allGroups = groupsData?.groups || [];

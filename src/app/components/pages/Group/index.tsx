@@ -22,6 +22,7 @@ import NavigationLoader from "../../shared/NavigationLoader";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { toast } from "sonner";
+import { getGroupColorClasses, getVibeInfo } from "@/lib/utils/groupColors";
 
 interface IGroupComponent {
   param: string;
@@ -198,12 +199,18 @@ const GroupComponent = ({ param }: IGroupComponent) => {
     );
   }
 
+  const colors = getGroupColorClasses(group.colorScheme);
+  const vibe = getVibeInfo(group.colorScheme);
+
   return (
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div
+          className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-3xl opacity-10'
+          style={{ backgroundColor: colors.bg.replace("bg-", "") }}
+        />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white/5 rounded-full blur-3xl opacity-5' />
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
@@ -278,54 +285,69 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           }
         />
         {/* Group Info */}
-        <div className='mb-8'>
-          <h1 className='text-4xl font-bold text-white mb-2 break-words text-center'>
+        <div className='mb-8 text-center'>
+          <div
+            className={`w-20 h-20 ${colors.bg} rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-2xl shadow-black/40 border border-white/10`}
+          >
+            {group.emoji || vibe.emoji}
+          </div>
+          <h1 className='text-4xl font-black text-white mb-2 break-words'>
             {group.name}
           </h1>
-          <div className='flex items-center gap-3 text-slate-400 mb-6 justify-center'>
-            <div className='flex items-center gap-2'>
-              <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></span>
-              <span className='text-sm font-medium'>Active Group</span>
+          <div className='flex items-center gap-3 text-slate-400 mb-8 justify-center h-6'>
+            <div className='flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5'>
+              <span
+                className={`w-2 h-2 rounded-full ${colors.bg} animate-pulse`}
+              ></span>
+              <span className='text-xs font-bold uppercase tracking-widest'>
+                {vibe.name} Vibe
+              </span>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className='grid grid-cols-2 gap-3'>
+          <div className='grid grid-cols-2 gap-4'>
             <button
               onClick={() => router.push(`/group/${group.id}/members`)}
-              className='p-4 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left group'
+              className='p-6 rounded-2xl bg-slate-900/40 hover:bg-slate-900/60 border border-white/5 backdrop-blur-xl transition-all text-left group'
             >
-              <div className='flex items-center justify-between mb-2'>
-                <div className='p-2 rounded-xl bg-blue-500/10 text-blue-400'>
-                  <Users className='w-5 h-5' />
+              <div className='flex items-center justify-between mb-4'>
+                <div
+                  className={`p-3 rounded-xl ${colors.bg.replace("bg-", "bg-")}/10 ${colors.text}`}
+                >
+                  <Users className='w-6 h-6' />
                 </div>
                 <ArrowLeft className='w-4 h-4 text-slate-500 rotate-180 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1' />
               </div>
-              <div className='text-2xl font-bold text-white mb-0.5'>
+              <div className='text-3xl font-black text-white mb-1'>
                 {group.memberEmails?.length || 0}
               </div>
-              <div className='text-xs text-slate-400 font-medium'>Members</div>
+              <div className='text-xs font-black uppercase text-slate-500 tracking-wider'>
+                Members
+              </div>
             </button>
 
             <button
               onClick={copyCode}
-              className='p-4 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left'
+              className='p-6 rounded-2xl bg-slate-900/40 hover:bg-slate-900/60 border border-white/5 backdrop-blur-xl transition-all text-left relative'
             >
-              <div className='flex items-center justify-between mb-2'>
-                <div className='p-2 rounded-xl bg-purple-500/10 text-purple-400'>
-                  <Share2 className='w-5 h-5' />
+              <div className='flex items-center justify-between mb-4'>
+                <div
+                  className={`p-3 rounded-xl ${colors.bg}/10 ${colors.text}`}
+                >
+                  <Share2 className='w-6 h-6' />
                 </div>
                 {copied && (
-                  <span className='text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg'>
+                  <span className='absolute top-6 right-6 text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20'>
                     Copied!
                   </span>
                 )}
               </div>
-              <div className='text-2xl font-bold text-white mb-0.5 tracking-wider'>
+              <div className='text-3xl font-black text-white mb-1 tracking-tighter'>
                 {group.code}
               </div>
-              <div className='text-xs text-slate-400 font-medium'>
-                Group Code (Click to copy)
+              <div className='text-xs font-black uppercase text-slate-500 tracking-wider'>
+                Group Code
               </div>
             </button>
           </div>
