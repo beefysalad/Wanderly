@@ -239,7 +239,6 @@ const Header = () => {
                     href='/register'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
-                    <UserPlus className='w-4 h-4' />
                     Sign Up
                   </Link>
                 </SheetClose>
@@ -249,7 +248,6 @@ const Header = () => {
                     href='/login'
                     className='w-full px-4 py-3 rounded-lg bg-white/5 border border-amber-500/20 hover:bg-white/10 hover:border-amber-500/40 transition-all duration-300 text-amber-400 font-medium flex items-center gap-2'
                   >
-                    <LogIn className='w-4 h-4' />
                     Login
                   </Link>
                 </SheetClose>
