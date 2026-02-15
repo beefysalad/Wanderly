@@ -1,44 +1,23 @@
-import { X, Sparkles, Smartphone, Beaker } from "lucide-react";
+import { X } from "lucide-react";
 import React from "react";
+import {
+  WHATS_NEW_FEATURES,
+  WhatsNewFeature,
+} from "../../../../config/whats-new";
 
 interface IWhatsNewModalProps {
   onClose: () => void;
 }
 
 const WhatsNewModal = ({ onClose }: IWhatsNewModalProps) => {
-  const features = [
-    {
-      icon: Sparkles,
-      title: "Fresh New Look",
-      description:
-        "I've completley overhauled the UI to be cleaner, darker, and more premium. Enjoy the new aesthetic while you plan your trips.",
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
-    },
-    {
-      icon: Smartphone,
-      title: "Mobile Optimized",
-      description:
-        "Planning on the go? The app is now fully responsive and looks great on your phone, tablet, or desktop.",
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
-    },
-    {
-      icon: Beaker,
-      title: "Beta Access",
-      description:
-        "You're one of the first to try out these new features. I'm still in beta, so your feedback is incredibly valuable to me!",
-      color: "text-rose-400",
-      bg: "bg-rose-500/10",
-    },
-  ];
+  const features: WhatsNewFeature[] = WHATS_NEW_FEATURES;
 
   return (
     <div className='fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300'>
-      <div className='bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[60vh] md:max-h-[75vh]'>
-        {/* Background Gradients */}
-        <div className='absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none'></div>
-        <div className='absolute bottom-0 left-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none'></div>
+      <div className='bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]'>
+        {/* Background Effects */}
+        <div className='absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none'></div>
+        <div className='absolute bottom-0 left-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none'></div>
 
         <button
           onClick={onClose}

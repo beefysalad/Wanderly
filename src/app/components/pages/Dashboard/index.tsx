@@ -19,7 +19,9 @@ import UserMenu from "../../shared/UserMenu";
 
 import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
+import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
+import { CURRENT_WHATS_NEW_VERSION } from "../../../config/whats-new";
 
 const DashboardComponent = () => {
   const router = useRouter();
@@ -53,16 +55,35 @@ const DashboardComponent = () => {
     };
   }, [socket, queryClient]);
 
+  // Check database for "seen" status
   useEffect(() => {
-    const hasSeenWhatsNew = localStorage.getItem("whats_new_seen_v2");
-    if (!hasSeenWhatsNew) {
-      setShowWhatsNew(true);
-    }
-  }, []);
+    if (!user) return;
 
-  const handleCloseWhatsNew = () => {
+    const checkWhatsNew = async () => {
+      try {
+        const res = await api.get("/sync");
+        const dbUser = res.data.user;
+        if (dbUser && dbUser.lastSeenWhatsNew !== CURRENT_WHATS_NEW_VERSION) {
+          setShowWhatsNew(true);
+        }
+      } catch (err) {
+        console.error("Failed to check WhatsNew status:", err);
+        // Fallback to local storage if API fails, or just don't show it
+      }
+    };
+
+    checkWhatsNew();
+  }, [user]);
+
+  const handleCloseWhatsNew = async () => {
     setShowWhatsNew(false);
-    localStorage.setItem("whats_new_seen_v2", "true");
+    try {
+      await api.patch("/user/profile", {
+        lastSeenWhatsNew: CURRENT_WHATS_NEW_VERSION,
+      });
+    } catch (err) {
+      console.error("Failed to update WhatsNew status:", err);
+    }
   };
 
   // Sort groups by createdAt descending (most recent first)
@@ -88,10 +109,15 @@ const DashboardComponent = () => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading your groups...</p>
+          <div className='relative w-20 h-20 mx-auto mb-6'>
+            <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
+            <div className='absolute inset-0 border-4 border-t-orange-500 rounded-full animate-spin'></div>
+          </div>
+          <p className='text-slate-400 font-bold tracking-tight'>
+            Loading your groups...
+          </p>
         </div>
       </main>
     );

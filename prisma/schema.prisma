@@ -16,6 +16,7 @@ model User {
   imageUrl         String?
   firebaseId       String   @unique
   firebaseDisabled Boolean  @default(false)
+  lastSeenWhatsNew String?  @default("")
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")
