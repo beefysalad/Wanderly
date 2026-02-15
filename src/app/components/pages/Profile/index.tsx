@@ -1,45 +1,43 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import api from "@/lib/axios";
+import { auth } from "@/lib/firebase";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups } from "@/src/hooks/useGroups";
 import {
+  useCurrentUserDB,
+  useUpdatePassword,
+  useUpdateProfile,
+} from "@/src/hooks/useProfile";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signOut } from "firebase/auth";
+import {
   ArrowLeft,
-  Mail,
   Calendar,
-  User,
-  Edit,
-  Save,
-  X,
   Camera,
-  Lock,
-  Loader2,
-  Users,
-  MapPin,
-  LogOut,
+  Edit,
   Globe,
-  Sparkles,
+  Loader2,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  Save,
+  User,
+  Users,
+  X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   editProfileSchema,
   TEditProfileSchema,
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  useUpdateProfile,
-  useUpdatePassword,
-  useCurrentUserDB,
-} from "@/src/hooks/useProfile";
-import api from "@/lib/axios";
-import { auth } from "@/lib/firebase";
-import { signOut, updateProfile } from "firebase/auth";
+import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
   const router = useRouter();
@@ -283,14 +281,14 @@ const ProfileComponent = () => {
         <div className='mb-6 flex items-center justify-between'>
           <button
             onClick={() => router.push("/dashboard")}
-            className='p-2 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white hover:bg-slate-800 transition-colors'
+            className='px-5 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-black/20'
           >
-            <ArrowLeft className='w-5 h-5' />
+            <ArrowLeft className='w-4 h-4' />
           </button>
           {!isEditMode && (
             <button
               onClick={() => setIsEditMode(true)}
-              className='px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2'
+              className='px-5 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white text-sm font-bold transition-all shadow-lg shadow-orange-500/25 flex items-center gap-2 hover:scale-105 active:scale-95'
             >
               <Edit className='w-4 h-4' />
               Edit Profile
@@ -305,21 +303,23 @@ const ProfileComponent = () => {
               <div className='flex flex-col md:flex-row items-center md:items-start gap-8'>
                 {/* Avatar */}
                 <div className='relative flex-shrink-0'>
-                  <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border-4 border-slate-900 shadow-2xl ring-1 ring-white/10'>
-                    {avatarUrl ? (
-                      <Image
-                        src={avatarUrl}
-                        alt={displayName}
-                        fill
-                        className='object-cover'
-                      />
-                    ) : (
-                      <div className='w-full h-full bg-slate-800 flex items-center justify-center'>
-                        <User className='w-16 h-16 text-slate-600' />
-                      </div>
-                    )}
+                  <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-slate-900 shadow-2xl ring-1 ring-white/20 p-1 bg-gradient-to-tr from-orange-500 to-amber-300'>
+                    <div className='relative w-full h-full rounded-full overflow-hidden bg-slate-800'>
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt={displayName}
+                          fill
+                          className='object-cover'
+                        />
+                      ) : (
+                        <div className='w-full h-full flex items-center justify-center'>
+                          <User className='w-16 h-16 text-slate-600' />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className='absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center border-4 border-slate-900 shadow-lg'>
+                  <div className='absolute bottom-1 right-1 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-lg'>
                     <MapPin className='w-5 h-5 text-white' />
                   </div>
                 </div>
@@ -370,14 +370,14 @@ const ProfileComponent = () => {
                       type='button'
                       onClick={handleCancel}
                       variant='outline'
-                      className='flex-1 sm:flex-none border-white/10 bg-slate-800 hover:bg-slate-700 text-white'
+                      className='flex-1 sm:flex-none border-white/10 bg-slate-800 hover:bg-slate-700 text-white rounded-full'
                     >
                       Cancel
                     </Button>
                     <Button
                       type='submit'
                       disabled={updateProfileMutation.isPending}
-                      className='flex-1 sm:flex-none bg-orange-500 hover:bg-orange-600 font-bold'
+                      className='flex-1 sm:flex-none bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 font-bold rounded-full shadow-lg shadow-orange-500/20'
                     >
                       {updateProfileMutation.isPending ? (
                         <Loader2 className='w-4 h-4 animate-spin mr-2' />
@@ -396,21 +396,23 @@ const ProfileComponent = () => {
                       Profile Image
                     </Label>
                     <div className='relative group'>
-                      <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border-2 border-white/10 mx-auto sm:mx-0'>
-                        {avatarUrl ? (
-                          <Image
-                            src={avatarUrl}
-                            alt='Profile'
-                            fill
-                            className='object-cover'
-                          />
-                        ) : (
-                          <div className='w-full h-full bg-slate-800 flex items-center justify-center'>
-                            <User className='w-12 h-12 text-slate-600' />
-                          </div>
-                        )}
+                      <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-2 border-white/20 mx-auto sm:mx-0 p-1 bg-slate-800/50'>
+                        <div className='relative w-full h-full rounded-full overflow-hidden'>
+                          {avatarUrl ? (
+                            <Image
+                              src={avatarUrl}
+                              alt='Profile'
+                              fill
+                              className='object-cover'
+                            />
+                          ) : (
+                            <div className='w-full h-full bg-slate-800 flex items-center justify-center'>
+                              <User className='w-12 h-12 text-slate-600' />
+                            </div>
+                          )}
+                        </div>
                         {uploadingImage && (
-                          <div className='absolute inset-0 bg-slate-900/80 flex items-center justify-center backdrop-blur-sm'>
+                          <div className='absolute inset-0 bg-slate-900/80 flex items-center justify-center backdrop-blur-sm rounded-full'>
                             <Loader2 className='w-6 h-6 text-orange-500 animate-spin' />
                           </div>
                         )}
@@ -418,7 +420,7 @@ const ProfileComponent = () => {
                       <button
                         type='button'
                         onClick={() => fileInputRef.current?.click()}
-                        className='absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl'
+                        className='absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full max-w-[160px] mx-auto sm:mx-0'
                       >
                         <Camera className='w-8 h-8 text-white' />
                       </button>
@@ -430,9 +432,14 @@ const ProfileComponent = () => {
                       onChange={handleImageUpload}
                       className='hidden'
                     />
-                    <p className='text-xs text-slate-500'>
-                      Click image to change. Max 5MB.
+                    <p className='text-[10px] text-slate-500 font-bold uppercase tracking-wider'>
+                      Click image to change • Max 5MB
                     </p>
+                    {uploadError && (
+                      <p className='text-xs text-red-400 font-medium'>
+                        {uploadError}
+                      </p>
+                    )}
                   </div>
 
                   {/* Fields Column */}
@@ -444,8 +451,13 @@ const ProfileComponent = () => {
                         </Label>
                         <Input
                           {...form.register("name")}
-                          className='bg-slate-800/50 border-white/10 h-12'
+                          className='bg-slate-800/50 border-white/10 h-12 focus:ring-orange-500/50'
                         />
+                        {form.formState.errors.name && (
+                          <p className='text-xs text-red-400 font-medium'>
+                            {form.formState.errors.name.message}
+                          </p>
+                        )}
                       </div>
                       <div className='space-y-2'>
                         <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
@@ -454,8 +466,13 @@ const ProfileComponent = () => {
                         <Input
                           {...form.register("travelStyle")}
                           placeholder='e.g. Backpacker, Luxury, Hybrid'
-                          className='bg-slate-800/50 border-white/10 h-12'
+                          className='bg-slate-800/50 border-white/10 h-12 focus:ring-orange-500/50'
                         />
+                        {form.formState.errors.travelStyle && (
+                          <p className='text-xs text-red-400 font-medium'>
+                            {form.formState.errors.travelStyle.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -465,9 +482,14 @@ const ProfileComponent = () => {
                       </Label>
                       <textarea
                         {...form.register("bio")}
-                        className='w-full min-h-[120px] bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-600'
+                        className='w-full min-h-[120px] bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-600 transition-all'
                         placeholder='Tell the world about your travel philosophy...'
                       />
+                      {form.formState.errors.bio && (
+                        <p className='text-xs text-red-400 font-medium'>
+                          {form.formState.errors.bio.message}
+                        </p>
+                      )}
                     </div>
 
                     <button
@@ -492,8 +514,14 @@ const ProfileComponent = () => {
                           <Input
                             type='password'
                             {...form.register("currentPassword")}
-                            className='bg-slate-800/50 border-white/10'
+                            className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
+                            placeholder='••••••••'
                           />
+                          {form.formState.errors.currentPassword && (
+                            <p className='text-xs text-red-400 font-medium'>
+                              {form.formState.errors.currentPassword.message}
+                            </p>
+                          )}
                         </div>
                         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                           <div className='space-y-2'>
@@ -503,8 +531,14 @@ const ProfileComponent = () => {
                             <Input
                               type='password'
                               {...form.register("newPassword")}
-                              className='bg-slate-800/50 border-white/10'
+                              className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
+                              placeholder='Min. 8 characters'
                             />
+                            {form.formState.errors.newPassword && (
+                              <p className='text-xs text-red-400 font-medium'>
+                                {form.formState.errors.newPassword.message}
+                              </p>
+                            )}
                           </div>
                           <div className='space-y-2'>
                             <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
@@ -513,10 +547,25 @@ const ProfileComponent = () => {
                             <Input
                               type='password'
                               {...form.register("confirmPassword")}
-                              className='bg-slate-800/50 border-white/10'
+                              className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
+                              placeholder='Match new password'
                             />
+                            {form.formState.errors.confirmPassword && (
+                              <p className='text-xs text-red-400 font-medium'>
+                                {form.formState.errors.confirmPassword.message}
+                              </p>
+                            )}
                           </div>
                         </div>
+                      </div>
+                    )}
+
+                    {error && (
+                      <div className='p-4 bg-red-500/10 border border-red-500/20 rounded-xl'>
+                        <p className='text-sm text-red-400 font-medium flex items-center gap-2'>
+                          <X className='w-4 h-4' />
+                          {error}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -558,9 +607,9 @@ const ProfileComponent = () => {
                 color: "text-emerald-400",
                 bg: "bg-emerald-500/10",
               },
-            ].map((stat, i) => (
+            ].map((stat) => (
               <div
-                key={i}
+                key={stat.label}
                 className='bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-white/10 group hover:border-orange-500/30 transition-all'
               >
                 <div
@@ -586,7 +635,7 @@ const ProfileComponent = () => {
               Recent Explorations
             </h3>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-              {groups.slice(0, 4).map((group, i) => (
+              {groups.slice(0, 4).map((group) => (
                 <div
                   key={group.id}
                   onClick={() => router.push(`/group/${group.id}`)}
@@ -609,13 +658,12 @@ const ProfileComponent = () => {
             </div>
           </div>
         )}
-
         {/* Logout Button */}
         {!isEditMode && (
-          <div className='mt-12 text-center'>
+          <div className='mt-12 text-center pb-8'>
             <button
               onClick={handleLogout}
-              className='px-6 py-2 text-sm text-red-500/60 hover:text-red-400 font-medium transition-colors flex items-center gap-2 mx-auto'
+              className='px-6 py-2.5 text-sm rounded-full border border-red-500/20 text-red-500/60 hover:text-red-400 hover:bg-red-500/5 font-bold transition-all flex items-center gap-2 mx-auto shadow-lg shadow-black/20'
             >
               <LogOut className='w-4 h-4' />
               Sign Out from Wanderly

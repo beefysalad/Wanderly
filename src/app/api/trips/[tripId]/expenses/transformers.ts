@@ -79,9 +79,6 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
   const pendingPayments = prismaExpense.payments
     .filter((p) => p.status === "pending")
     .map((p) => p.user.email);
-  const _rejectedPayments = prismaExpense.payments
-    .filter((p) => p.status === "rejected")
-    .map((p) => p.user.email);
 
   // Create payment status map
   const paymentStatusMap: Record<string, "pending" | "confirmed" | "rejected"> =

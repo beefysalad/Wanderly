@@ -12,7 +12,7 @@ import {
   Calendar,
   GripVertical,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { formatTime12Hour } from "@/lib/utils";
 import {
@@ -20,7 +20,6 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  closestCenter,
   PointerSensor,
   TouchSensor,
   useSensor,

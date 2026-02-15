@@ -93,7 +93,7 @@ export default function DashboardLayoutHeader({
         {showBack && (
           <button
             onClick={handleBack}
-            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white group'
+            className='p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-all inline-flex items-center text-slate-400 hover:text-white group shadow-sm'
             aria-label='Go back'
           >
             <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-0.5' />

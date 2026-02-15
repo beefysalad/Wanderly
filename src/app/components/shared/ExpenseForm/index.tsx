@@ -40,12 +40,6 @@ interface IExpenseFormProps {
   hideHeader?: boolean;
 }
 
-const steps = [
-  { id: 1, title: "Details", icon: DollarSign },
-  { id: 2, title: "Split", icon: Users },
-  { id: 3, title: "Payment", icon: CreditCard },
-];
-
 const ExpenseForm = ({
   tripId,
   groupId,

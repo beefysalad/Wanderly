@@ -21,7 +21,7 @@ async function emitEvent(endpoint: string, data: any) {
           "x-api-key": API_KEY,
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -51,7 +51,7 @@ export async function emitTripUpdated(groupId: string, trip: any) {
 export async function emitTripDeleted(
   groupId: string,
   tripId: string,
-  metadata?: { deletedBy?: string; tripName?: string }
+  metadata?: { deletedBy?: string; tripName?: string },
 ) {
   await emitEvent("trip/deleted", { groupId, tripId, ...metadata });
 }
@@ -60,7 +60,7 @@ export async function emitActivityCreated(
   groupId: string,
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   activity: any,
-  metadata?: { createdBy?: string }
+  metadata?: { createdBy?: string },
 ) {
   await emitEvent("activity/created", { groupId, activity, ...metadata });
 }
@@ -69,7 +69,7 @@ export async function emitActivityUpdated(
   groupId: string,
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   activity: any,
-  metadata?: { updatedBy?: string }
+  metadata?: { updatedBy?: string },
 ) {
   await emitEvent("activity/updated", { groupId, activity, ...metadata });
 }
@@ -77,7 +77,7 @@ export async function emitActivityUpdated(
 export async function emitActivityDeleted(
   groupId: string,
   activityId: string,
-  metadata?: { deletedBy?: string; activityTitle?: string }
+  metadata?: { deletedBy?: string; activityTitle?: string },
 ) {
   await emitEvent("activity/deleted", { groupId, activityId, ...metadata });
 }
@@ -104,12 +104,11 @@ export async function emitExpenseCreated(groupId: string, expense: any) {
   await emitEvent("expense/created", { groupId, expense: serializedExpense });
 }
 
-//eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function emitExpenseUpdated(
   groupId: string,
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   expense: any,
-  metadata?: { updatedBy?: string }
+  metadata?: { updatedBy?: string },
 ) {
   // Ensure expense is properly serialized
   const serializedExpense = {
@@ -144,7 +143,7 @@ export async function emitExpenseDeleted(
     deletedBy?: string;
     expenseDescription?: string;
     tripId?: string;
-  }
+  },
 ) {
   await emitEvent("expense/deleted", { groupId, expenseId, ...metadata });
 }
@@ -161,7 +160,7 @@ export async function emitGroupDeleted(groupId: string) {
 export async function emitNotificationToUser(
   userId: string,
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  notification: any
+  notification: any,
 ) {
   await emitEvent("notification/user", { userId, notification });
 }
@@ -169,7 +168,7 @@ export async function emitNotificationToUser(
 export async function emitNotificationToGroup(
   groupId: string,
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  notification: any
+  notification: any,
 ) {
   await emitEvent("notification/group", { groupId, notification });
 }

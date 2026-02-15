@@ -6,7 +6,6 @@ import {
   Download,
   PlayCircle,
   Plus,
-  Share,
   Smartphone,
   UserPlus,
   Users,

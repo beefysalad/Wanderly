@@ -1,7 +1,5 @@
-import { auth } from "@/lib/firebase";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import type { Trip } from "@/src/shared/types/index";
-import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 // CreateGroupModal import removed
@@ -59,7 +57,7 @@ const DashboardComponent = () => {
       }
     };
     handleJoinGroup();
-  }, []);
+  }, [joinGroup]);
   // Listen for group updates on dashboard (for all groups)
   useEffect(() => {
     if (!socket) return;
@@ -132,9 +130,6 @@ const DashboardComponent = () => {
   // Limit to 6 groups for dashboard display
   const limitedGroups = sortedGroups.slice(0, 6);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
   const handleNavigateToGroup = (groupId: string) => {
     router.push(`/group/${groupId}`);
   };
@@ -230,41 +225,79 @@ const DashboardComponent = () => {
         <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
       </div>
 
-      <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
-        <DashboardLayoutHeader
-          title='Wanderly'
-          description={"Welcome back, " + user?.displayName}
-          rightContent={
-            <div className='flex items-center gap-2'>
-              <UserMenu />
-              <div className='flex-shrink-0'>
-                <NotificationBell />
+      <div className='relative z-10'>
+        {/* Hero Section */}
+        <div className='bg-slate-950/80 backdrop-blur-md border-b border-white/5 pb-8 pt-6 sticky top-0 z-30'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <DashboardLayoutHeader
+              title={
+                <div className='flex flex-col'>
+                  <span className='text-xs font-medium text-slate-400 uppercase tracking-wider mb-1'>
+                    Welcome Back
+                  </span>
+                  <span className='text-2xl md:text-3xl font-bold text-white tracking-tight'>
+                    {user?.displayName || "Traveler"}
+                  </span>
+                </div>
+              }
+              rightContent={
+                <div className='flex items-center gap-3'>
+                  <div className='h-8 w-[1px] bg-white/10 mx-2 hidden md:block'></div>
+                  <UserMenu />
+                  <div className='flex-shrink-0'>
+                    <NotificationBell />
+                  </div>
+                </div>
+              }
+              sticky={false}
+              className='mb-6'
+            />
+
+            {/* Actions & Stats */}
+            <div className='space-y-6'>
+              <div className='flex justify-end'>
+                <DashboardCTA setShowJoinModal={setShowJoinModal} />
               </div>
+              <DashboardStatistics groups={sortedGroups} />
             </div>
-          }
-        />
+          </div>
+        </div>
 
-        <DashboardStatistics groups={sortedGroups} />
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          <div className='flex flex-col lg:flex-row gap-8'>
+            {/* Main Content Area */}
+            <div className='flex-1 space-y-8'>
+              {sortedGroups.length > 0 ? (
+                <div className='animate-fade-in-up'>
+                  <DashboardGroupCards
+                    groups={limitedGroups}
+                    handleNavigateToGroup={handleNavigateToGroup}
+                    limit={6}
+                    totalGroups={sortedGroups.length}
+                    onViewAll={handleViewAllGroups}
+                  />
+                </div>
+              ) : (
+                <div className='bg-slate-900/30 border border-dashed border-white/10 rounded-3xl p-12 text-center animate-fade-in-up'>
+                  <div className='w-16 h-16 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <span className='text-2xl'>✨</span>
+                  </div>
+                  <h3 className='text-xl font-bold text-white mb-2'>
+                    Start Your Journey
+                  </h3>
+                  <p className='text-slate-400 max-w-md mx-auto mb-6'>
+                    You haven&apos;t joined any trip groups yet. Create a new
+                    group to start planning or ask a friend for their invite
+                    code!
+                  </p>
+                </div>
+              )}
+            </div>
 
-        <DashboardCTA setShowJoinModal={setShowJoinModal} />
-
-        {sortedGroups.length > 0 && (
-          <div className='mt-6'>
-            <div className='flex flex-col lg:flex-row gap-4 md:gap-6'>
-              {/* Groups Section - Show first on mobile, second on desktop */}
-              <div className='order-1 lg:order-2 flex-1'>
-                <DashboardGroupCards
-                  groups={limitedGroups}
-                  handleNavigateToGroup={handleNavigateToGroup}
-                  limit={6}
-                  totalGroups={sortedGroups.length}
-                  onViewAll={handleViewAllGroups}
-                />
-              </div>
-
-              {/* Calendar Sidebar - Show second on mobile, first on desktop */}
+            {/* Sidebar Area */}
+            <div className='w-full lg:w-96 space-y-6'>
               {showCalendar && (
-                <div className='order-2 lg:order-1'>
+                <div className='animate-fade-in-left delay-100'>
                   <DashboardCalendar
                     getTripsForDate={getTripsForDate}
                     groups={sortedGroups}
@@ -275,7 +308,7 @@ const DashboardComponent = () => {
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <DashboardBottomNav />

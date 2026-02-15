@@ -56,28 +56,6 @@ async function verifyTripAccess(
 }
 
 /**
- * Maps email addresses to user IDs
- */
-async function _mapEmailsToUserIds(
-  emails: string[],
-): Promise<Map<string, string>> {
-  const emailToUserId = new Map<string, string>();
-
-  for (const email of emails) {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-
-    if (user) {
-      emailToUserId.set(email, user.id);
-    }
-  }
-
-  return emailToUserId;
-}
-
-/**
  * Gets user ID from email, throws if not found
  */
 async function getUserIdFromEmail(email: string): Promise<string> {
@@ -893,7 +871,7 @@ export async function confirmPaymentService(
   }
 
   // Update payment status
-  const payment = await prisma.expensePayment.upsert({
+  await prisma.expensePayment.upsert({
     where: {
       expenseId_userId: {
         expenseId,

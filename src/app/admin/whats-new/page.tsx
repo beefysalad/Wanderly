@@ -8,7 +8,6 @@ import {
   Save,
   Plus,
   Trash2,
-  Lock,
   ArrowLeft,
   Layout,
   MessageSquare,

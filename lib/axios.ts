@@ -15,7 +15,7 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (_error) {
+    } catch {
       // No token available, which is fine for public routes or guest access
       // Check for guest session instead
       const guestSession = getGuestSession();

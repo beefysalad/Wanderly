@@ -3,7 +3,7 @@
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
-import { User, ChevronDown } from "lucide-react";
+import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -45,30 +45,20 @@ const UserMenu = () => {
     <div className='relative' ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='flex items-center gap-2 p-1 pr-3 rounded-full bg-slate-800/50 hover:bg-slate-800 border border-white/5 hover:border-white/10 transition-all group'
+        className='relative w-9 h-9 rounded-full overflow-hidden transition-all hover:ring-2 hover:ring-white/20 outline-none'
       >
-        <div className='relative w-8 h-8 rounded-full overflow-hidden border border-slate-700 group-hover:border-slate-600'>
-          {avatarUrl ? (
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              fill
-              className='object-cover'
-            />
-          ) : (
-            <div className='w-full h-full bg-slate-700 flex items-center justify-center'>
-              <User className='w-4 h-4 text-slate-400' />
-            </div>
-          )}
-        </div>
-        <span className='text-sm font-medium text-slate-300 group-hover:text-white max-w-[100px] truncate hidden sm:block'>
-          {displayName}
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
+        {avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            alt={displayName}
+            fill
+            className='object-cover'
+          />
+        ) : (
+          <div className='w-full h-full bg-slate-800 flex items-center justify-center border border-white/10'>
+            <User className='w-5 h-5 text-slate-400' />
+          </div>
+        )}
       </button>
 
       <AnimatePresence>
