@@ -120,15 +120,14 @@ const DashboardComponent = () => {
     }
   };
 
-  // Sort groups by createdAt descending (most recent first)
   const sortedGroups = [...allGroups].sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
     return dateB - dateA;
   });
 
-  // Limit to 6 groups for dashboard display
-  const limitedGroups = sortedGroups.slice(0, 6);
+ 
+  const limitedGroups = sortedGroups.slice(0, 3);
 
   const handleNavigateToGroup = (groupId: string) => {
     router.push(`/group/${groupId}`);
@@ -272,7 +271,7 @@ const DashboardComponent = () => {
                   <DashboardGroupCards
                     groups={limitedGroups}
                     handleNavigateToGroup={handleNavigateToGroup}
-                    limit={6}
+                    limit={3}
                     totalGroups={sortedGroups.length}
                     onViewAll={handleViewAllGroups}
                   />

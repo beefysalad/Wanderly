@@ -29,7 +29,10 @@ const DashboardGroupCards = ({
     <div className='flex-1'>
       <div className='flex items-center justify-between mb-4'>
         <h2 className='text-lg font-semibold text-white flex items-center gap-2'>
-          Your Groups
+          Your Groups{" "}
+          <span className='text-xs font-normal text-slate-400'>
+            (Showing {displayGroups.length})
+          </span>
         </h2>
         {hasMoreGroups && onViewAll && (
           <button
