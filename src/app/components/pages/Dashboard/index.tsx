@@ -17,7 +17,7 @@ import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
 import NotificationBell from "../../shared/NotificationBell";
 import UserMenu from "../../shared/UserMenu";
 
-import { useGroups } from "@/src/hooks/useGroups";
+import { useGroups, useJoinGroup } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,8 +41,25 @@ const DashboardComponent = () => {
   const { data: groupsData, isLoading: loading } = useGroups();
   const allGroups = groupsData?.groups || [];
   const { socket } = useSocket();
+  const joinGroup = useJoinGroup();
+
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    const handleJoinGroup = () => {
+      if (
+        localStorage.getItem("fromInvite") === "true" &&
+        localStorage.getItem("groupCode")
+      ) {
+        joinGroup.mutateAsync({
+          groupCode: localStorage.getItem("groupCode")!,
+        });
+        localStorage.removeItem("fromInvite");
+        localStorage.removeItem("groupCode");
+      }
+    };
+    handleJoinGroup();
+  }, []);
   // Listen for group updates on dashboard (for all groups)
   useEffect(() => {
     if (!socket) return;
@@ -62,9 +79,8 @@ const DashboardComponent = () => {
       socket.off("group:updated", handleGroupUpdate);
       socket.off("trip:created", handleTripCreated);
     };
-  }, [socket, queryClient]);
+  }, [socket, queryClient, joinGroup]);
 
-  // Check database for "seen" status
   useEffect(() => {
     if (!user) return;
 
@@ -178,7 +194,6 @@ const DashboardComponent = () => {
   const getTripsForDate = (date: Date) => {
     const allTrips = getAllTripsWithGroups();
 
-    // Normalize the input date to midnight (remove time component)
     const normalizedDate = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -189,7 +204,6 @@ const DashboardComponent = () => {
       const startDate = new Date(trip.startDate);
       const endDate = new Date(trip.endDate);
 
-      // Normalize trip dates to midnight (remove time component)
       const normalizedStartDate = new Date(
         startDate.getFullYear(),
         startDate.getMonth(),
@@ -265,8 +279,6 @@ const DashboardComponent = () => {
       </div>
 
       <DashboardBottomNav />
-
-      {/* CreateGroupModal rendering removed */}
 
       {showJoinModal && (
         <JoinGroupModal onClose={() => setShowJoinModal(false)} />

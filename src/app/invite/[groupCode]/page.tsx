@@ -32,6 +32,8 @@ export default function InvitePage({
 
   // Auto-join group if user is authenticated
   useEffect(() => {
+    localStorage.setItem("fromInvite", "true");
+    localStorage.setItem("groupCode", groupCode);
     const handleAutoJoin = async () => {
       // If we're waiting for auth, check if user is now available
       if (shouldJoinAfterAuth && user && !userLoading && !isJoining) {
@@ -171,8 +173,6 @@ export default function InvitePage({
     withNavigation,
     groupsData,
   ]);
-
-  // handleAuthSuccess logic removed as it's no longer needed with page redirection
 
   if (userLoading || isJoining || isNavigating) {
     return (
