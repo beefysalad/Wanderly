@@ -197,39 +197,44 @@ const ExpenseDetail = ({
       <div className='max-w-4xl mx-auto relative z-10'>
         <div className='px-5 pt-8 pb-12'>
           {/* Header / Hero */}
-          <div className='flex flex-col items-center text-center space-y-2 mb-10'>
-            <div className='w-16 h-16 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center text-3xl shadow-2xl shadow-black/20 mb-4'>
-              {expense.category
-                ? categoryEmojis[expense.category] || "📌"
-                : "📌"}
+          <div className='flex flex-col items-center text-center space-y-4 mb-12 relative'>
+            {/* Background Glow */}
+            <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-orange-500/10 rounded-full blur-[80px] pointer-events-none' />
+
+            <div className='relative'>
+              <div className='w-20 h-20 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center text-4xl shadow-2xl shadow-black/30 mb-2 mx-auto ring-4 ring-slate-950'>
+                {expense.category
+                  ? categoryEmojis[expense.category] || "📌"
+                  : "📌"}
+              </div>
             </div>
 
-            <h1 className='text-3xl md:text-4xl font-black text-white px-4 leading-tight'>
-              {expense.description}
-            </h1>
-
-            <div className='flex items-center gap-2 text-slate-400 font-medium'>
-              <Calendar className='w-4 h-4' />
-              <span>
-                {new Date(expense.date).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
+            <div className='space-y-1 relative z-10'>
+              <h1 className='text-3xl md:text-5xl font-black text-white px-4 leading-tight tracking-tight'>
+                {expense.description}
+              </h1>
+              <div className='flex items-center justify-center gap-2 text-slate-400 font-medium text-sm md:text-base'>
+                <Calendar className='w-4 h-4' />
+                <span>
+                  {new Date(expense.date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
             </div>
 
-            <div className='mt-8 relative group cursor-default'>
-              <div className='absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500' />
-              <div className='relative'>
-                <span className='text-xl md:text-2xl text-slate-500 align-top font-bold'>
+            <div className='my-8 relative group cursor-default z-10 scale-110'>
+              <div className='flex items-baseline justify-center gap-1'>
+                <span className='text-3xl font-bold text-slate-500 -translate-y-4'>
                   ₱
                 </span>
-                <span className='text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-300 tracking-tighter'>
+                <span className='text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 tracking-tighter drop-shadow-2xl'>
                   {expense.amount.toFixed(2)}
                 </span>
               </div>
-              <div className='text-slate-400 font-medium mt-1 bg-white/5 px-4 py-1 rounded-full text-sm inline-block border border-white/5'>
+              <div className='text-orange-400 font-bold mt-2 bg-orange-500/10 px-6 py-2 rounded-full text-sm inline-block border border-orange-500/20 shadow-lg shadow-orange-500/10'>
                 ₱{perPersonAmount.toFixed(2)} per person
               </div>
             </div>
@@ -255,7 +260,7 @@ const ExpenseDetail = ({
             )}
 
             {/* Paid By Card */}
-            <div className='bg-slate-900/40 rounded-3xl p-6 border border-white/5'>
+            <div className='bg-slate-800/40 backdrop-blur-md rounded-3xl p-6 border border-white/5'>
               <h3 className='text-sm font-bold text-slate-500 uppercase tracking-widest mb-4'>
                 Payer
               </h3>
@@ -296,7 +301,7 @@ const ExpenseDetail = ({
             </div>
 
             {/* Split List */}
-            <div className='bg-slate-900/40 rounded-3xl p-6 border border-white/5'>
+            <div className='bg-slate-800/40 backdrop-blur-md rounded-3xl p-6 border border-white/5'>
               <div className='flex items-center justify-between mb-6'>
                 <h3 className='text-sm font-bold text-slate-500 uppercase tracking-widest'>
                   Shared With{" "}
@@ -336,7 +341,7 @@ const ExpenseDetail = ({
                   return (
                     <div
                       key={member}
-                      className='flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5'
+                      className='flex items-center justify-between p-4 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-white/10 transition-colors'
                     >
                       <div className='flex items-center gap-3 min-w-0'>
                         {getMemberAvatar(member) ? (
@@ -425,7 +430,7 @@ const ExpenseDetail = ({
             {/* Details Grid - Payment Info */}
             {expense.paymentMethod && (
               <div className='grid grid-cols-1 gap-4'>
-                <div className='bg-slate-900/40 rounded-3xl p-6 border border-white/5 space-y-6'>
+                <div className='bg-slate-800/40 backdrop-blur-md rounded-3xl p-6 border border-white/5 space-y-6'>
                   <h3 className='text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2'>
                     <Receipt className='w-4 h-4' />
                     Payment Info

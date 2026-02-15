@@ -7,6 +7,7 @@ import {
   Calendar,
   List,
   DollarSign,
+  MoreVertical,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -446,6 +447,78 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               </button>
             </div>
           }
+          rightContent={
+            <div className='relative'>
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className='p-2 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white'
+              >
+                <MoreVertical className='w-5 h-5' />
+              </button>
+
+              {showExportMenu && (
+                <>
+                  <div
+                    className='fixed inset-0 z-40'
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
+                    <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50'>
+                      Export
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleExportSchedule("png");
+                        setShowExportMenu(false);
+                      }}
+                      disabled={isExporting}
+                      className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-2'
+                    >
+                      {isExporting ? (
+                        <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
+                      ) : (
+                        <ChevronDown className='w-4 h-4 -rotate-90' />
+                      )}
+                      Export as PNG
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportSchedule("ics");
+                        setShowExportMenu(false);
+                      }}
+                      disabled={isExporting}
+                      className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors border-t border-white/5 flex items-center gap-2'
+                    >
+                      {isExporting ? (
+                        <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
+                      ) : (
+                        <Calendar className='w-4 h-4' />
+                      )}
+                      Export as Calendar
+                    </button>
+
+                    {isTripCreator && (
+                      <>
+                        <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50 border-t border-white/5'>
+                          Danger Zone
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowDeleteModal(true);
+                            setShowExportMenu(false);
+                          }}
+                          className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors'
+                        >
+                          <Trash2 className='w-4 h-4' />
+                          Delete Trip
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          }
         />
         {/* Trip Header */}
         <div className='mb-8'>
@@ -523,49 +596,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                 </span>
               </div>
             </div>
-
-            <div className='flex gap-3'>
-              {activeTab === "schedule" && (
-                <div className='relative'>
-                  <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    disabled={isExporting}
-                    className='px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/5 text-slate-300 hover:text-white transition-all font-medium text-sm flex items-center gap-2 disabled:opacity-50'
-                  >
-                    {isExporting ? "Exporting..." : "Export"}
-                    <ChevronDown className='w-4 h-4' />
-                  </button>
-                  {showExportMenu && (
-                    <>
-                      <div
-                        className='fixed inset-0 z-10'
-                        onClick={() => setShowExportMenu(false)}
-                      />
-                      <div className='absolute top-full right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-xl border border-white/10 overflow-hidden z-20'>
-                        <button
-                          onClick={() => {
-                            handleExportSchedule("png");
-                            setShowExportMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left hover:bg-slate-700 text-slate-300 hover:text-white text-sm transition-colors'
-                        >
-                          Export as PNG
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleExportSchedule("ics");
-                            setShowExportMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left hover:bg-slate-700 text-slate-300 hover:text-white text-sm transition-colors border-t border-white/5'
-                        >
-                          Export as Calendar (.ics)
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
         </div>
         {/* Content Area */}
@@ -611,15 +641,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         </div>
         {/* Floating Action Buttons */}
         <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
-          {isTripCreator && (
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className='group flex items-center justify-center w-12 h-12 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-xl border border-red-500/30 hover:border-red-500/50 text-red-500 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95'
-              title='Delete Trip'
-            >
-              <Trash2 className='w-5 h-5 transition-transform group-hover:scale-110' />
-            </button>
-          )}
           <button
             onClick={() =>
               activeTab === "expenses"

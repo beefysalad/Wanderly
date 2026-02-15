@@ -208,31 +208,44 @@ const ExpensesList = ({
                       {/* Hover Gradient Overlay */}
                       <div className='absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none' />
 
-                      <div className='flex items-start gap-4 relative z-10'>
+                      <div className='flex items-start gap-3 sm:gap-4 relative z-10'>
                         {/* Category Icon */}
-                        <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-white/10 flex items-center justify-center text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform duration-300'>
+                        <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-slate-700/50 to-slate-800/50 border border-white/10 flex items-center justify-center text-xl sm:text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform duration-300'>
                           {expense.category
                             ? categoryEmojis[expense.category] || "📌"
                             : "📌"}
                         </div>
 
                         <div className='flex-1 min-w-0'>
-                          <div className='flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1.5'>
-                            <h4 className='font-bold text-base sm:text-lg text-white truncate pr-2'>
-                              {expense.description}
-                            </h4>
+                          <div className='flex flex-col gap-1 mb-2'>
+                            <div className='flex items-start justify-between gap-2'>
+                              <h4 className='font-bold text-base text-white break-words leading-tight'>
+                                {expense.description}
+                              </h4>
+                              {/* Amount Section - Mobile Optimized Position */}
+                              <div className='text-right flex-shrink-0 pl-2'>
+                                <p className='text-base font-bold text-white tracking-tight leading-none'>
+                                  ₱{expense.amount.toFixed(2)}
+                                </p>
+                                {splitCount > 1 && (
+                                  <p className='text-[10px] sm:text-xs font-medium text-slate-500 mt-0.5'>
+                                    ₱{perPersonAmount.toFixed(2)}/p
+                                  </p>
+                                )}
+                              </div>
+                            </div>
 
-                            {/* Badges */}
-                            <div className='flex items-center gap-2 flex-wrap'>
+                            {/* Badges moved below title/amount for better mobile layout */}
+                            <div className='flex items-center gap-1.5 flex-wrap mt-0.5'>
                               {expense.activityId &&
                                 getActivityById(expense.activityId) && (
                                   <span
-                                    className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1 w-fit max-w-[150px]'
+                                    className='text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1 max-w-full'
                                     title={
                                       getActivityById(expense.activityId)?.title
                                     }
                                   >
-                                    <Link2 className='w-3 h-3' />
+                                    <Link2 className='w-3 h-3 flex-shrink-0' />
                                     <span className='truncate'>
                                       {
                                         getActivityById(expense.activityId)
@@ -242,35 +255,34 @@ const ExpensesList = ({
                                   </span>
                                 )}
 
-                              {allPaid && (
-                                <span className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 w-fit'>
-                                  <CheckCircle className='w-3 h-3' />
+                              {allPaid ? (
+                                <span className='text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1'>
+                                  <CheckCircle className='w-3 h-3 flex-shrink-0' />
                                   Settled
                                 </span>
-                              )}
-
-                              {!isUserPayer &&
+                              ) : (
+                                !isUserPayer &&
                                 isUserInvolved &&
                                 !userPaid &&
-                                !userPending &&
-                                !allPaid && (
-                                  <span className='text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1 w-fit'>
-                                    <AlertCircle className='w-3 h-3' />
+                                !userPending && (
+                                  <span className='text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1'>
+                                    <AlertCircle className='w-3 h-3 flex-shrink-0' />
                                     You Owe
                                   </span>
-                                )}
+                                )
+                              )}
                             </div>
                           </div>
 
-                          <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400'>
+                          <div className='flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-400 mt-2'>
                             {/* Paid By Section */}
-                            <div className='flex items-center gap-1.5'>
-                              <span className='text-xs font-medium text-slate-500 uppercase tracking-wide'>
-                                Paid by
-                              </span>
-                              <div className='flex items-center gap-1.5 bg-slate-900/40 rounded-full pl-0.5 pr-2 py-0.5 border border-white/5'>
+                            <div className='flex items-center gap-2'>
+                              <div className='flex items-center gap-1.5 bg-slate-900/60 rounded-full pl-1 pr-2 py-1 border border-white/5'>
+                                <span className='text-[10px] font-semibold text-slate-500 uppercase tracking-wide ml-1'>
+                                  Paid by
+                                </span>
                                 {getMemberAvatar(expense.paidBy) ? (
-                                  <div className='relative w-5 h-5 rounded-full overflow-hidden border border-slate-600 flex-shrink-0'>
+                                  <div className='relative w-4 h-4 rounded-full overflow-hidden border border-slate-600 flex-shrink-0'>
                                     <Image
                                       src={getMemberAvatar(expense.paidBy)!}
                                       alt={getDisplayName(expense.paidBy)}
@@ -279,7 +291,7 @@ const ExpensesList = ({
                                     />
                                   </div>
                                 ) : (
-                                  <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
+                                  <div className='w-4 h-4 rounded-full bg-orange-500 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0'>
                                     {getMemberInitials(expense.paidBy)}
                                   </div>
                                 )}
@@ -291,12 +303,12 @@ const ExpensesList = ({
                               </div>
                             </div>
 
-                            {/* Payment Status */}
+                            {/* Payment Status Bar */}
                             {!allPaid &&
                               (expense.paidMembers?.length || 0) > 0 &&
                               totalOwed > 0 && (
-                                <div className='flex items-center gap-1 text-xs'>
-                                  <div className='w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden'>
+                                <div className='flex items-center gap-1.5 text-[10px] bg-slate-900/40 px-2 py-1 rounded-lg border border-white/5'>
+                                  <div className='w-12 h-1 bg-slate-700 rounded-full overflow-hidden'>
                                     <div
                                       className='h-full bg-emerald-500 rounded-full'
                                       style={{
@@ -311,18 +323,6 @@ const ExpensesList = ({
                                 </div>
                               )}
                           </div>
-                        </div>
-
-                        {/* Amount Section */}
-                        <div className='text-right flex-shrink-0 flex flex-col justify-center self-center pl-2 md:pl-4 border-l border-white/5 min-w-0'>
-                          <p className='text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate'>
-                            ₱{expense.amount.toFixed(2)}
-                          </p>
-                          {splitCount > 1 && (
-                            <p className='text-xs font-medium text-slate-500 truncate'>
-                              ₱{perPersonAmount.toFixed(2)} / person
-                            </p>
-                          )}
                         </div>
                       </div>
                     </Component>
