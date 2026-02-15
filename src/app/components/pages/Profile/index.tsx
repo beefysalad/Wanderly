@@ -14,6 +14,7 @@ import {
   Loader2,
   Users,
   MapPin,
+  LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -561,8 +562,8 @@ const ProfileComponent = () => {
                   {/* Account Information Card */}
                   <div className='bg-slate-900 rounded-lg p-5 border border-white/5'>
                     <div className='flex items-center gap-2 mb-4'>
-                      <div className='w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center'>
-                        <User className='w-4 h-4 text-orange-400' />
+                      <div className='w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center'>
+                        <User className='w-4 h-4 text-blue-400' />
                       </div>
                       <h3 className='text-lg font-semibold text-white'>
                         Account Information
@@ -573,7 +574,7 @@ const ProfileComponent = () => {
                         <p className='text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide'>
                           Email Address
                         </p>
-                        <p className='text-sm font-medium text-slate-300 break-all'>
+                        <p className='text-sm font-medium text-slate-300 break-all bg-slate-800/50 p-2 rounded-lg border border-white/5'>
                           {email}
                         </p>
                       </div>
@@ -582,7 +583,7 @@ const ProfileComponent = () => {
                           <p className='text-xs font-medium text-slate-500 mb-1 uppercase tracking-wide'>
                             Member Since
                           </p>
-                          <div className='flex items-center gap-2'>
+                          <div className='flex items-center gap-2 bg-slate-800/50 p-2 rounded-lg border border-white/5'>
                             <Calendar className='w-4 h-4 text-slate-500' />
                             <p className='text-sm font-medium text-slate-300'>
                               {accountCreated.toLocaleDateString("en-US", {
@@ -639,7 +640,7 @@ const ProfileComponent = () => {
         </div>
       </div>
 
-      <DashboardBottomNav onLogout={handleLogout} />
+      <DashboardBottomNav />
     </main>
   );
 };

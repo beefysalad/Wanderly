@@ -15,6 +15,7 @@ import DashboardBottomNav from "./DashboardBottomNav";
 import DashboardStatistics from "./DashboardStatistics";
 import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
 import NotificationBell from "../../shared/NotificationBell";
+import UserMenu from "../../shared/UserMenu";
 
 import { useGroups } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
@@ -172,10 +173,13 @@ const DashboardComponent = () => {
       <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
         <DashboardLayoutHeader
           title='Wanderly'
-          description={user?.email || ""}
+          description={"Welcome back, " + user?.displayName}
           rightContent={
-            <div className='flex-shrink-0'>
-              <NotificationBell />
+            <div className='flex items-center gap-2'>
+              <UserMenu />
+              <div className='flex-shrink-0'>
+                <NotificationBell />
+              </div>
             </div>
           }
         />
@@ -214,7 +218,7 @@ const DashboardComponent = () => {
         )}
       </div>
 
-      <DashboardBottomNav onLogout={handleLogout} />
+      <DashboardBottomNav />
 
       {/* CreateGroupModal rendering removed */}
 

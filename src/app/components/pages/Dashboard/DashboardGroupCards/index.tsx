@@ -26,86 +26,85 @@ const DashboardGroupCards = ({
   const displayGroups = limit ? groups.slice(0, limit) : groups;
   const hasMoreGroups = limit && totalGroups && totalGroups > limit;
 
-  // Get average color scheme for header icon (or use first group's color)
-
   return (
     <div className='flex-1'>
-      <h2 className='text-lg font-semibold text-white mb-3 flex items-center gap-2'>
-        Your Groups
-      </h2>
+      <div className='flex items-center justify-between mb-4'>
+        <h2 className='text-lg font-semibold text-white flex items-center gap-2'>
+          Your Groups
+        </h2>
+        {hasMoreGroups && onViewAll && (
+          <button
+            onClick={onViewAll}
+            className='text-xs text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1 transition-colors'
+          >
+            Show All ({totalGroups})
+            <ChevronRight className='w-3 h-3' />
+          </button>
+        )}
+      </div>
+
       {groups.length === 0 ? (
-        <div className='bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-dashed border-white/10 p-12 text-center'>
-          <div className='w-16 h-16 bg-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4'>
-            <Compass className='w-8 h-8 text-amber-400' />
+        <div className='bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-dashed border-white/10 p-8 text-center'>
+          <div className='w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center mx-auto mb-3'>
+            <Compass className='w-6 h-6 text-amber-400' />
           </div>
-          <h3 className='text-base font-semibold text-white mb-2'>
+          <h3 className='text-sm font-semibold text-white mb-1'>
             No groups yet
           </h3>
-          <p className='text-sm text-slate-400'>
+          <p className='text-xs text-slate-400'>
             Create your first group to start planning!
           </p>
         </div>
       ) : (
-        <>
-          <div className='space-y-2'>
-            {displayGroups.map((group) => {
-              const colors = getGroupColorClasses(group.colorScheme);
-              const hasEmoji = !!group.emoji;
-              return (
-                <button
-                  key={group.id}
-                  onClick={() => handleNavigateToGroup(group.id)}
-                  className='group w-full bg-slate-800/30 hover:bg-slate-700/40 backdrop-blur-xl rounded-2xl p-4 border border-white/5 hover:border-orange-500/30 transition-all duration-300 text-left active:scale-[0.98]'
-                >
-                  <div className='flex items-center gap-3'>
-                    <div
-                      className={`w-12 h-12 ${hasEmoji ? "bg-slate-700/50" : colors.bg} rounded-xl flex items-center justify-center flex-shrink-0 ${hasEmoji ? "" : "text-white"} text-xl`}
-                    >
-                      {group.emoji || <Compass className='w-5 h-5' />}
-                    </div>
-                    <div className='flex-1 min-w-0'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <h3 className='text-base font-semibold text-white truncate group-hover:text-orange-400 transition-colors'>
-                          {group.name}
-                        </h3>
-                        <div className='flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 bg-slate-700/50 text-slate-300 rounded-full border border-white/10 flex-shrink-0'>
-                          <Code2 className='w-2.5 h-2.5' />
-                          {group.code}
-                        </div>
-                      </div>
-                      <div className='flex items-center gap-3 text-xs text-slate-400'>
-                        <div className='flex items-center gap-1'>
-                          <CalendarIcon className='w-3 h-3 text-orange-400' />
-                          <span className='font-medium text-white'>
-                            {group.trips?.length || 0}
-                          </span>
-                          <span>trips</span>
-                        </div>
-                        <div className='flex items-center gap-1'>
-                          <Users className='w-3 h-3 text-amber-400' />
-                          <span className='font-medium text-white'>
-                            {group.memberEmails?.length || 0}
-                          </span>
-                          <span>members</span>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className='w-5 h-5 text-slate-400 group-hover:text-orange-400 group-hover:translate-x-1 transition-all flex-shrink-0' />
+        <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4'>
+          {displayGroups.map((group) => {
+            const colors = getGroupColorClasses(group.colorScheme);
+            const hasEmoji = !!group.emoji;
+            return (
+              <button
+                key={group.id}
+                onClick={() => handleNavigateToGroup(group.id)}
+                className='group relative flex flex-col items-start p-3 h-full bg-slate-800/40 hover:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-300 active:scale-[0.98] text-left overflow-hidden shadow-lg shadow-black/20'
+              >
+                {/* Background Gradient Hover Effect */}
+                <div
+                  className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-tr ${colors.bg.replace("bg-", "from-")} to-transparent`}
+                />
+
+                <div className='flex items-start justify-between w-full mb-3'>
+                  <div
+                    className={`w-10 h-10 ${hasEmoji ? "bg-slate-700/50" : colors.bg} rounded-xl flex items-center justify-center text-lg shadow-inner border border-white/5`}
+                  >
+                    {group.emoji || <Compass className='w-5 h-5 text-white' />}
                   </div>
-                </button>
-              );
-            })}
-          </div>
-          {hasMoreGroups && onViewAll && (
-            <button
-              onClick={onViewAll}
-              className='mt-3 w-full bg-slate-800/30 hover:bg-slate-700/40 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-orange-500/30 px-4 py-3 text-sm font-medium text-slate-300 hover:text-orange-400 transition-all duration-200 flex items-center justify-center gap-2 group'
-            >
-              <span>View All Groups ({totalGroups})</span>
-              <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
-            </button>
-          )}
-        </>
+                  <div className='flex items-center justify-center w-6 h-6 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors'>
+                    <ArrowRight className='w-3 h-3 text-slate-400 group-hover:text-white -rotate-45 group-hover:rotate-0 transition-all duration-300' />
+                  </div>
+                </div>
+
+                <div className='w-full'>
+                  <h3 className='text-sm font-bold text-white mb-1.5 truncate leading-tight group-hover:text-orange-200 transition-colors'>
+                    {group.name}
+                  </h3>
+
+                  <div className='flex flex-wrap gap-2'>
+                    {/* Member Count */}
+                    <div className='flex items-center gap-1 text-[10px] text-slate-400 bg-slate-900/50 px-1.5 py-0.5 rounded-md'>
+                      <Users className='w-3 h-3' />
+                      <span>{group.memberEmails?.length || 0}</span>
+                    </div>
+
+                    {/* Trip Count */}
+                    <div className='flex items-center gap-1 text-[10px] text-slate-400 bg-slate-900/50 px-1.5 py-0.5 rounded-md'>
+                      <CalendarIcon className='w-3 h-3' />
+                      <span>{group.trips?.length || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );

@@ -1,39 +1,38 @@
 "use client";
-import { Trip, Activity, Group } from "@/src/shared/types";
+import { Activity, Group, Trip } from "@/src/shared/types";
 import {
-  ArrowLeft,
+  Calendar,
+  DollarSign,
+  List,
+  MoreVertical,
   Plus,
   Trash2,
-  Calendar,
-  List,
-  DollarSign,
-  MoreVertical,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 // BottomNav import removed
-import TravelSchedule from "./TravelSchedule";
-import TravelCalendar from "./TravelCalendar";
-import ExpensesComponent from "../Expenses";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
-import { getStatusBadge } from "@/lib/helper";
-import ActivityModal from "../../shared/Modal/ActivityModal";
-import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
-import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
-import { useGroup } from "@/src/hooks/useGroups";
-import { useDeleteTrip } from "@/src/hooks/useTrips";
-import { useExpenses } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
-import { useQueryClient } from "@tanstack/react-query";
+import { getStatusBadge } from "@/lib/helper";
 import {
-  exportScheduleToPNG,
   exportScheduleToICS,
+  exportScheduleToPNG,
 } from "@/lib/utils/exportSchedule";
-import { ChevronDown } from "lucide-react";
-import NavigationLoader from "../../shared/NavigationLoader";
-import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
+import { useExpenses } from "@/src/hooks/useExpenses";
+import { useGroup } from "@/src/hooks/useGroups";
+import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import { useDeleteTrip } from "@/src/hooks/useTrips";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
+import ActivityModal from "../../shared/Modal/ActivityModal";
+import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
+import NavigationLoader from "../../shared/NavigationLoader";
+import ExpensesComponent from "../Expenses";
+import TravelCalendar from "./TravelCalendar";
+import TravelSchedule from "./TravelSchedule";
 
 interface ITripComponent {
   tripId: string;
@@ -404,49 +403,6 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         <DashboardLayoutHeader
           showBack={true}
           backUrl={`/group/${groupId}`}
-          centerContent={
-            <div className='flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-md border border-white/5'>
-              <button
-                onClick={() => handleTabChange("schedule")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === "schedule"
-                    ? "bg-slate-700 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <span className='flex items-center gap-2'>
-                  <List className='w-4 h-4' />
-                  <span className='hidden sm:inline'>Timeline</span>
-                </span>
-              </button>
-              <button
-                onClick={() => handleTabChange("calendar")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === "calendar"
-                    ? "bg-slate-700 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <span className='flex items-center gap-2'>
-                  <Calendar className='w-4 h-4' />
-                  <span className='hidden sm:inline'>Calendar</span>
-                </span>
-              </button>
-              <button
-                onClick={() => handleTabChange("expenses")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === "expenses"
-                    ? "bg-slate-700 text-white shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <span className='flex items-center gap-2'>
-                  <DollarSign className='w-4 h-4' />
-                  <span className='hidden sm:inline'>Expenses</span>
-                </span>
-              </button>
-            </div>
-          }
           rightContent={
             <div className='relative'>
               <button
@@ -464,7 +420,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   />
                   <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
                     <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50'>
-                      Export
+                      Options
                     </div>
                     <button
                       onClick={() => {
@@ -640,7 +596,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           )}
         </div>
         {/* Floating Action Buttons */}
-        <div className='fixed bottom-6 right-6 z-50 flex flex-col gap-3'>
+        <div className='fixed bottom-24 right-6 z-50 flex flex-col gap-3'>
           <button
             onClick={() =>
               activeTab === "expenses"
@@ -654,6 +610,45 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             <span className='sr-only'>
               {activeTab === "expenses" ? "Add Expense" : "Add Activity"}
             </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Tab Switcher */}
+      <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50'>
+        <div className='flex bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl shadow-black/50'>
+          <button
+            onClick={() => handleTabChange("schedule")}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              activeTab === "schedule"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <List className='w-4 h-4' />
+            <span>Timeline</span>
+          </button>
+          <button
+            onClick={() => handleTabChange("calendar")}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              activeTab === "calendar"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Calendar className='w-4 h-4' />
+            <span>Calendar</span>
+          </button>
+          <button
+            onClick={() => handleTabChange("expenses")}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              activeTab === "expenses"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <DollarSign className='w-4 h-4' />
+            <span>Expenses</span>
           </button>
         </div>
       </div>
