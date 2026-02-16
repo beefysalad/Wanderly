@@ -98,7 +98,7 @@ export async function seedTestData(userId: string) {
       const existingGroup = await tx.group.findFirst({
         where: {
           createdById: userId,
-          name: "Singapore Adventure 2024 (test)",
+          name: "Singapore Adventure 2024 (sample)",
         },
       });
 
@@ -114,7 +114,7 @@ export async function seedTestData(userId: string) {
       const groupCode = await generateUniqueGroupCode();
       const group = await tx.group.create({
         data: {
-          name: "Singapore Adventure 2024 (test)",
+          name: "Singapore Adventure 2024 (sample)",
           code: groupCode,
           colorScheme: "orange",
           emoji: "🇸🇬",
