@@ -43,13 +43,8 @@ const GroupCodeForm = ({
           id='code'
           type='text'
           {...form.register("code")}
-          placeholder='e.g., ABC123'
-          className={`transition-colors duration-200  bg-slate-800 text-white placeholder:text-slate-500 
-            border ${
-              form.formState.errors.code
-                ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20"
-                : "border-slate-700 focus-visible:border-amber-500 focus-visible:ring-amber-500/20"
-            }`}
+          placeholder='Enter 6-digit code'
+          className={`w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-mono text-center text-lg tracking-widest uppercase`}
         />
         <p className='text-xs text-slate-400'>
           Ask your friends to share their group code
@@ -72,7 +67,7 @@ const GroupCodeForm = ({
         </Button>
         <Button
           type='submit'
-          className='flex-1 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
+          className='flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20'
         >
           Next
         </Button>
