@@ -94,7 +94,8 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     id: prismaExpense.id,
     groupId: prismaExpense.groupId,
     tripId: prismaExpense.tripId,
-    paidBy: prismaExpense.paidBy.email,
+    paidBy:
+      prismaExpense.paidBy?.email || prismaExpense.tempPaidBy || "Unknown",
     createdById: prismaExpense.createdById || undefined,
     createdBy: prismaExpense.creator
       ? {
@@ -108,7 +109,9 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     description: prismaExpense.description,
     date: prismaExpense.date.toISOString(),
     category: prismaExpense.category || undefined,
-    splitWith: prismaExpense.splits.map((split) => split.user.email),
+    splitWith: prismaExpense.splits.map(
+      (split) => split.user?.email || split.tempName || "Unknown",
+    ),
     paymentMethod:
       prismaExpense.paymentMethod === null
         ? undefined

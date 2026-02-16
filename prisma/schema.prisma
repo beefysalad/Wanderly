@@ -132,7 +132,8 @@ model Expense {
   id            String         @id @default(cuid())
   groupId       String
   tripId        String
-  paidById      String
+  paidById      String?
+  tempPaidBy    String?
   createdById   String?
   amount        Decimal
   description   String
@@ -148,9 +149,10 @@ model Expense {
   updatedAt     DateTime       @updatedAt
 
   // Relationships
-  group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  trip          Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  paidBy        User             @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trip  Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  paidBy        User?            @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: SetNull)
   creator       User?            @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
   activity      Activity?        @relation("ActivityExpenses", fields: [activityId], references: [id], onDelete: SetNull)
   splits        ExpenseSplit[]
@@ -162,14 +164,19 @@ model Expense {
 model ExpenseSplit {
   id        String   @id @default(cuid())
   expenseId String
-  userId    String
+  userId    String?
+  tempName  String?
   createdAt DateTime @default(now())
 
   // Relationships
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([expenseId, userId])
+  // Combined unique constraint might need to be relaxed or changed if we want unique names per expense
+  // @@unique([expenseId, userId]) 
+  // For now, we allow multiple identical splits if logic permits, or just rely on app logic.
+  // But to prevent duplicates for registered users:
+  // @@unique([expenseId, userId]) // This fails if userId is null multiple times
 }
 
 enum PaymentStatus {

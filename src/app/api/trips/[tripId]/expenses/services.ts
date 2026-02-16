@@ -312,12 +312,24 @@ export async function createExpenseService(
     }
   }
 
-  // Get paidBy user ID
-  const paidById = await getUserIdFromEmail(data.paidBy);
+  // Helper to resolve user ID or return null
+  const resolveUser = async (identifier: string) => {
+    try {
+      if (identifier.includes("@")) {
+        const userId = await getUserIdFromEmail(identifier);
+        return { userId, name: null };
+      }
+      return { userId: null, name: identifier };
+    } catch {
+      return { userId: null, name: identifier };
+    }
+  };
 
-  // Map splitWith emails to user IDs
-  const splitWithUserIds = await Promise.all(
-    data.splitWith.map((email) => getUserIdFromEmail(email)),
+  const payer = await resolveUser(data.paidBy);
+
+  // Map splitWith emails/names
+  const splitWithResolved = await Promise.all(
+    data.splitWith.map((identifier) => resolveUser(identifier)),
   );
 
   // Map payment method
@@ -331,7 +343,8 @@ export async function createExpenseService(
     data: {
       groupId: trip.groupId,
       tripId,
-      paidById,
+      paidById: payer.userId,
+      tempPaidBy: payer.name,
       createdById: user.id,
       amount: new Decimal(data.amount),
       description: data.description,
@@ -344,8 +357,9 @@ export async function createExpenseService(
       qrImage: data.qrImage || null,
       activityId: data.activityId || null,
       splits: {
-        create: splitWithUserIds.map((userId) => ({
-          userId,
+        create: splitWithResolved.map((resolved) => ({
+          userId: resolved.userId,
+          tempName: resolved.name,
         })),
       },
     },
@@ -449,7 +463,11 @@ export async function createExpenseService(
             email: expense.paidBy.email,
             name: expense.paidBy.name,
           }
-        : null,
+        : {
+            id: "guest",
+            name: expense.tempPaidBy || "Guest",
+            email: "",
+          },
     };
     emitExpenseCreated(tripWithGroup.groupId, expenseForSocket).catch((err) => {
       logger.error("Failed to emit expense created event", { error: err });
@@ -514,9 +532,28 @@ export async function updateExpenseService(
   // Prepare update data
   const updateData: Prisma.ExpenseUpdateInput = {};
 
+  // Helper to resolve user ID or return null
+  const resolveUser = async (identifier: string) => {
+    try {
+      if (identifier.includes("@")) {
+        const userId = await getUserIdFromEmail(identifier);
+        return { userId, name: null };
+      }
+      return { userId: null, name: identifier };
+    } catch {
+      return { userId: null, name: identifier };
+    }
+  };
+
   if (data.paidBy !== undefined) {
-    const paidById = await getUserIdFromEmail(data.paidBy);
-    updateData.paidBy = { connect: { id: paidById } };
+    const payer = await resolveUser(data.paidBy);
+    if (payer.userId) {
+      updateData.paidBy = { connect: { id: payer.userId } };
+      updateData.tempPaidBy = null; // Clear temp if real user
+    } else {
+      updateData.paidBy = { disconnect: true };
+      updateData.tempPaidBy = payer.name;
+    }
   }
 
   if (data.amount !== undefined) {
@@ -567,13 +604,14 @@ export async function updateExpenseService(
 
     // Create new splits
     if (data.splitWith.length > 0) {
-      const splitWithUserIds = await Promise.all(
-        data.splitWith.map((email) => getUserIdFromEmail(email)),
+      const splitWithResolved = await Promise.all(
+        data.splitWith.map((identifier) => resolveUser(identifier)),
       );
 
       updateData.splits = {
-        create: splitWithUserIds.map((userId) => ({
-          userId,
+        create: splitWithResolved.map((resolved) => ({
+          userId: resolved.userId,
+          tempName: resolved.name,
         })),
       };
     }
@@ -622,6 +660,7 @@ export async function updateExpenseService(
             select: {
               id: true,
               email: true,
+              name: true,
             },
           },
         },
@@ -705,7 +744,11 @@ export async function updateExpenseService(
             email: expense.paidBy.email,
             name: expense.paidBy.name,
           }
-        : null,
+        : {
+            id: "guest",
+            name: expense.tempPaidBy || "Guest",
+            email: "",
+          },
     };
     emitExpenseUpdated(tripWithGroup.groupId, expenseForSocket, {
       updatedBy: user.name || user.email || undefined,
@@ -828,7 +871,8 @@ export async function confirmPaymentService(
     status: "confirmed" | "rejected";
   },
 ): Promise<ExpenseWithRelations> {
-  const { user } = await verifyTripAccess(token, tripId);
+  const { user: userAccess } = await verifyTripAccess(token, tripId);
+  const user = await getOrCreateUser(token);
 
   // Get member user ID
   const memberId = await getUserIdFromEmail(data.memberEmail);
@@ -866,7 +910,7 @@ export async function confirmPaymentService(
   }
 
   // Only the person who paid for the expense can confirm payments
-  if (expense.paidById !== user.id) {
+  if (expense.paidById !== userAccess.id) {
     throw new Error("Only the payer can confirm payments");
   }
 
@@ -910,7 +954,7 @@ export async function confirmPaymentService(
           : NotificationType.payment_rejected,
       title:
         data.status === "confirmed" ? "Payment Confirmed" : "Payment Rejected",
-      message: `${expense.paidBy.name || expense.paidBy.email} ${
+      message: `${user.name || user.email} ${
         data.status
       } your payment for '${expense.description}'`,
       relatedGroupId: tripWithGroup.groupId,
