@@ -332,7 +332,7 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
                         <div className="h-2 bg-white/10 rounded-full w-full"></div>
                      </div>
                     <p className="text-slate-400 mb-8 max-w-md mx-auto">
-                      Finally, add <strong>Expenses</strong> directly to any Activity (or the Trip itself). We'll handle the splitting math for you.
+                      Finally, add <strong>Expenses</strong> directly to any Activity (or the Trip itself). We&apos;ll handle the splitting math for you.
                     </p>
                   </motion.div>
                 )}
