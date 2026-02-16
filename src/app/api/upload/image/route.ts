@@ -22,6 +22,7 @@ async function handler(req: NextRequest, context: AuthContext) {
     // Parse form data
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const folder = (formData.get("folder") as string) || "expenses/qr-codes";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -52,7 +53,7 @@ async function handler(req: NextRequest, context: AuthContext) {
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: "expenses/qr-codes",
+          folder: folder,
           resource_type: "image",
           allowed_formats: ["jpg", "jpeg", "png", "webp"],
         },

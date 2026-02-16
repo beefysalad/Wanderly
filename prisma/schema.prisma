@@ -19,6 +19,8 @@ model User {
   lastSeenWhatsNew String?  @default("")
   bio              String?
   travelStyle      String?
+  hasCompletedOnboarding Boolean  @default(false)
+  referralSource String?
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")

@@ -14,6 +14,8 @@ import DashboardStatistics from "./DashboardStatistics";
 import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
 import NotificationBell from "../../shared/NotificationBell";
 import UserMenu from "../../shared/UserMenu";
+import OnboardingWizard from "./OnboardingWizard";
+import { useCurrentUserDB } from "@/src/hooks/useProfile";
 
 import { useGroups, useJoinGroup } from "@/src/hooks/useGroups";
 import { useSocket } from "@/src/hooks/useSocket";
@@ -39,6 +41,7 @@ const DashboardComponent = () => {
   const allGroups = groupsData?.groups || [];
   const { socket } = useSocket();
   const joinGroup = useJoinGroup();
+  const { data: dbUser, isLoading: dbUserLoading } = useCurrentUserDB();
 
   const queryClient = useQueryClient();
 
@@ -214,6 +217,17 @@ const DashboardComponent = () => {
       );
     });
   };
+
+  if (dbUser && dbUser.hasCompletedOnboarding === false) {
+    return (
+      <OnboardingWizard
+        user={dbUser}
+        onComplete={() => {
+          // The query invalidation in wizard will trigger re-render
+        }}
+      />
+    );
+  }
 
   return (
     <main className='min-h-screen bg-slate-950 pb-36 md:pb-28 relative overflow-hidden'>

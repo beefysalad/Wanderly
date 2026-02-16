@@ -53,7 +53,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const expenses = expensesData?.expenses || [];
   const { user: firebaseUser } = useCurrentUser();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("schedule");
+  const [activeTab, setActiveTab] = useState<TabType>("daily");
 
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [showActivityDetailModal, setShowActivityDetailModal] =

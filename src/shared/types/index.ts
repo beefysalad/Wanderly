@@ -36,6 +36,10 @@ export interface User {
   password: string;
   createdAt: string;
   avatar?: string; // Added avatar field to store image URL or base64
+  imageUrl?: string; // Prisma field
+  bio?: string;
+  referralSource?: string;
+  hasCompletedOnboarding?: boolean;
 }
 
 export interface Activity {
