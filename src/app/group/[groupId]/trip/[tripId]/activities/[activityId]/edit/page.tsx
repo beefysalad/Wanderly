@@ -117,15 +117,15 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
         updates: {
           title: values.title,
           date: values.date,
-          startTime: values.startTime || undefined,
-          endTime: values.endTime || undefined,
-          notes: values.notes || undefined,
+          startTime: values.startTime,
+          endTime: values.endTime,
+          notes: values.notes,
           transportationMode: values.transportationMode
             ? (values.transportationMode as (typeof transportationModes)[number])
-            : undefined,
-          pickupTime: values.pickupTime || undefined,
-          pickupLocation: values.pickupLocation || undefined,
-          dropoffLocation: values.dropoffLocation || undefined,
+            : null,
+          pickupTime: values.pickupTime,
+          pickupLocation: values.pickupLocation,
+          dropoffLocation: values.dropoffLocation,
         },
       });
 

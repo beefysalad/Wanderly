@@ -3,7 +3,7 @@ import type { Trip } from "@/src/shared/types/index";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 // CreateGroupModal import removed
-import JoinGroupModal from "../../shared/Modal/JoinGroupModal";
+// JoinGroupModal import removed
 import DashboardCTA from "./DashboardCTA";
 import DashboardCalendar from "./DashboardCalendar";
 import DashboardGroupCards from "./DashboardGroupCards";
@@ -30,7 +30,6 @@ interface WhatsNewFeature {
 
 const DashboardComponent = () => {
   const router = useRouter();
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("");
   const [features, setFeatures] = useState<WhatsNewFeature[]>([]);
@@ -255,7 +254,7 @@ const DashboardComponent = () => {
             {/* Actions & Stats */}
             <div className='space-y-6'>
               <div className='flex justify-end'>
-                <DashboardCTA setShowJoinModal={setShowJoinModal} />
+                <DashboardCTA />
               </div>
               <DashboardStatistics groups={sortedGroups} />
             </div>
@@ -312,9 +311,7 @@ const DashboardComponent = () => {
 
       <DashboardBottomNav />
 
-      {showJoinModal && (
-        <JoinGroupModal onClose={() => setShowJoinModal(false)} />
-      )}
+
 
       {showWhatsNew && (
         <WhatsNewModal onClose={handleCloseWhatsNew} features={features} />

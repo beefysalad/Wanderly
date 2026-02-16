@@ -1,10 +1,7 @@
 import Link from "next/link";
 import React from "react";
 
-interface IDashboardCTAProps {
-  setShowJoinModal: (show: boolean) => void;
-}
-const DashboardCTA = ({ setShowJoinModal }: IDashboardCTAProps) => {
+const DashboardCTA = () => {
   return (
     <div className='flex items-center gap-3'>
       <Link
@@ -14,12 +11,12 @@ const DashboardCTA = ({ setShowJoinModal }: IDashboardCTAProps) => {
         Create Group
       </Link>
 
-      <button
-        onClick={() => setShowJoinModal(true)}
+      <Link
+        href='/group/join'
         className='px-5 py-2.5 bg-transparent hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white text-sm font-semibold rounded-full transition-colors'
       >
         Join Group
-      </button>
+      </Link>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import {
   MoreVertical,
   Plus,
   Trash2,
+  Layout,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,13 +34,14 @@ import NavigationLoader from "../../shared/NavigationLoader";
 import ExpensesComponent from "../Expenses";
 import TravelCalendar from "./TravelCalendar";
 import TravelSchedule from "./TravelSchedule";
+import TravelDayOverview from "./TravelDayOverview"
 
 interface ITripComponent {
   tripId: string;
   groupId: string;
 }
 
-type TabType = "calendar" | "schedule" | "expenses";
+type TabType = "calendar" | "schedule" | "expenses" | "daily";
 
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
@@ -597,6 +599,18 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               tripId={tripId}
               isEmbedded={true}
             />
+          ) : activeTab === "daily" ? (
+            <TravelDayOverview
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+              onAddActivity={addActivity}
+              onUpdateActivity={updateActivity}
+              onDeleteActivity={deleteActivity}
+              onToggleDone={toggleDone}
+              onEditActivity={handleEditActivity}
+              onViewActivity={handleViewActivity}
+            />
           ) : (
             <TravelSchedule
               startDate={startDate}
@@ -634,6 +648,19 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       {/* Floating Tab Switcher */}
       <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50'>
         <div className='flex bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl shadow-black/50'>
+          <button
+            onClick={() => handleTabChange("daily")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "daily"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Layout className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Day Overview
+            </span>
+          </button>
           <button
             onClick={() => handleTabChange("schedule")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
