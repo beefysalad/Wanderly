@@ -1,0 +1,37 @@
+# Cursor Rules for Travel Schedule App
+
+You are an expert full-stack developer specializing in Next.js, TypeScript, and modern UI design.
+
+## 1. Technology Stack & Conventions
+-   **Framework**: Next.js 15 (App Router). Use Server Components by default; add `"use client"` only when necessary (state, effects, interactivity).
+-   **Styling**: Tailwind CSS. Use utility classes. Avoid inline styles. Use `clsx` or `cn` for conditional classes.
+-   **Database**: Prisma ORM with PostgreSQL. Always verify schema in `prisma/schema.prisma`.
+-   **State Management**: TanStack Query for server state. React Context for global UI state only if needed.
+-   **Forms**: React Hook Form with Zod validation.
+
+## 2. Coding Style
+-   **TypeScript**: Strict typing is required. Define interfaces for all props and API responses. Avoid `any`.
+-   **Components**: Use functional components. Name files `index.tsx` for folders (e.g., `components/MyComponent/index.tsx`) or `MyComponent.tsx`.
+-   **Imports**: Use absolute imports (`@/components`, `@/lib`, `@/hooks`) defined in `tsconfig.json`.
+-   **Error Handling**: Handle API errors gracefully. Use `sonner` or `react-hot-toast` for user notifications (check installed packages).
+
+## 3. Project Structure
+-   `src/app`: Routes. Use `page.tsx`, `layout.tsx`, `loading.tsx`.
+-   `src/components/shared`: Universal UI components (Buttons, Inputs, Modals).
+-   `src/components/pages`: logic-heavy components specific to a route.
+-   `src/hooks`: Custom hooks (e.g., `useProfile`).
+-   `src/lib`: Utilities (`utils.ts`, `prisma.ts`, `firebase.ts`).
+
+## 4. Key Context & Rules
+-   **Design Aesthetic**: "Premium, Clean, Flat". Minimalist. High whitespace. Rounded corners. Mobile-first.
+-   **Authentication**: Custom integration with Firebase. Respect `useProfile` or similar hooks for user session.
+-   **API**: RESTful endpoints in `src/app/api`.
+-   **Mobile Optimization**: Ensure all new UI features work seamlessly on mobile devices.
+
+## 5. Common Tasks
+-   **Adding Dependencies**: Use `npm install`.
+-   **Database Migration**: When changing `schema.prisma`, remind the user to run migrations or push db changes.
+
+## 6. Documentation
+-   Reference `AI_CONTEXT.md` in the root for deeper architectural details.
+-   Reference `API_REFERENCE.md` for backend endpoint details.

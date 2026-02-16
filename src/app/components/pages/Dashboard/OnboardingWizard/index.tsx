@@ -159,6 +159,7 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: any = {};
       if (displayName) updates.name = displayName;
       if (imageUrl) updates.imageUrl = imageUrl;
