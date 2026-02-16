@@ -10,6 +10,23 @@ const api = axios.create({
 // Request interceptor to add auth token or guest code
 api.interceptors.request.use(
   async (config) => {
+   
+    const isGatewayEnabled =
+      process.env.NODE_ENV === "production" ||
+      process.env.NEXT_PUBLIC_ENABLE_GATEWAY === "true";
+
+    if (isGatewayEnabled && config.url && !config.url.startsWith("/v1/gateway")) {
+      const originalUrl = config.url.startsWith("/")
+        ? config.url
+        : `/${config.url}`;
+      const apiPath = originalUrl.startsWith("/api")
+        ? originalUrl
+        : `/api${originalUrl}`;
+
+      config.headers["X-Api-Target"] = apiPath;
+      config.url = "/wanderly-api";
+    }
+
     try {
       const token = await getToken();
       if (token) {

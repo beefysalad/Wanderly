@@ -93,6 +93,9 @@ class RateLimiter {
 // Create a singleton instance for reviews (10 requests per hour)
 export const reviewsRateLimiter = new RateLimiter(10, 60 * 60 * 1000);
 
+// Create a singleton instance for the API Gateway (100 requests per minute)
+export const gatewayRateLimiter = new RateLimiter(100, 60 * 1000);
+
 /**
  * Get client IP address from request
  * Handles various proxy headers (X-Forwarded-For, X-Real-IP)
