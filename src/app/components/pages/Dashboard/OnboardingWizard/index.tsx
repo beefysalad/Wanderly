@@ -8,6 +8,14 @@ import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface OnboardingWizardProps {
   user: User;
   onComplete: () => void;
@@ -22,6 +30,7 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
   const [bio, setBio] = useState(user.bio || "");
   const [imageUrl, setImageUrl] = useState(user.imageUrl || user.avatar || "");
   const [referralSource, setReferralSource] = useState(user.referralSource || "");
+  const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
@@ -50,6 +59,15 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // reset error
+    setUploadError("");
+
+    // 5MB Validation
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image size must be less than 5MB");
+      return;
+    }
+
     try {
       setIsUploading(true);
       const formData = new FormData();
@@ -63,6 +81,7 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
       setImageUrl(response.data.url);
     } catch (error) {
       console.error("Failed to upload image", error);
+      setUploadError("Failed to upload image. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -196,6 +215,11 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-2">Tap to upload photo</p>
+                  {uploadError && (
+                    <p className="text-xs text-red-400 mt-1 font-medium bg-red-500/10 px-2 py-1 rounded-lg border border-red-500/20">
+                      {uploadError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -207,7 +231,8 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                      disabled={isUploading || isSubmitting}
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="e.g. Alex Explorer"
                     />
                   </div>
@@ -219,7 +244,8 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={3}
-                      className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all resize-none"
+                      disabled={isUploading || isSubmitting}
+                      className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="e.g. I love hiking and street food!"
                     />
                   </div>
@@ -228,27 +254,29 @@ const OnboardingWizard = ({ user, onComplete }: OnboardingWizardProps) => {
                       How did you hear about us?
                     </label>
                     <div className="relative">
-                      <select
+                      <Select
                         value={referralSource}
-                        onChange={(e) => setReferralSource(e.target.value)}
-                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all appearance-none"
+                        onValueChange={setReferralSource}
+                        disabled={isUploading || isSubmitting}
                       >
-                        <option value="" disabled>Select an option</option>
-                        <option value="friend">Friend / Family (Invited)</option>
-                        <option value="social">Social Media (TikTok, IG, etc.)</option>
-                        <option value="search">Search Engine</option>
-                        <option value="other">Other</option>
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                      </div>
+                        <SelectTrigger className="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-6 text-white focus:ring-2 focus:ring-amber-500 focus:ring-offset-0 focus:border-transparent h-auto">
+                          <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-800 text-white z-[60]">
+                           <SelectItem value="creator" className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">Patrick</SelectItem>
+                           <SelectItem value="friend" className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">Friend / Family (Invited)</SelectItem>
+                           <SelectItem value="social" className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">Social Media (TikTok, IG, etc.)</SelectItem>
+                           <SelectItem value="search" className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">Search Engine</SelectItem>
+                           <SelectItem value="other" className="text-white focus:bg-slate-800 focus:text-white cursor-pointer">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <div className="pt-4 flex justify-end">
                     <button
                       onClick={handleUpdateProfile}
-                      disabled={!name.trim() || isSubmitting}
+                      disabled={!name.trim() || isSubmitting || isUploading}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-full font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       {isSubmitting ? (
