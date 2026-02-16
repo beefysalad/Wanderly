@@ -13,7 +13,7 @@ import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import { Target, Plus } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import BetaModal from "../../shared/Modal/BetaModal";
+
 import React, { useState, useEffect } from "react";
 
 interface IBudgetComponent {
@@ -29,20 +29,6 @@ const BudgetComponent = ({
 }: IBudgetComponent) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [showBetaModal, setShowBetaModal] = useState(false);
-
-  useEffect(() => {
-    // Check if user has seen beta modal for this session
-    const hasSeenBeta = sessionStorage.getItem("hasSeenBudgetBeta");
-    if (!hasSeenBeta && !isEmbedded) {
-      setShowBetaModal(true);
-    }
-  }, [isEmbedded]);
-
-  const handleCloseBetaModal = () => {
-    setShowBetaModal(false);
-    sessionStorage.setItem("hasSeenBudgetBeta", "true");
-  };
 
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
   const { data: budgetsData, isLoading: loadingBudgets } = useBudgets(tripId);
@@ -129,7 +115,6 @@ const BudgetComponent = ({
 
   return (
     <Wrapper className={wrapperClass}>
-      {showBetaModal && <BetaModal onClose={handleCloseBetaModal} />}
       {!isEmbedded && (
         <div className='fixed inset-0 pointer-events-none'>
           <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px]'></div>

@@ -276,18 +276,20 @@ const ProfileComponent = () => {
     <main className='min-h-screen bg-slate-950 pb-24 text-slate-200 relative overflow-x-hidden selection:bg-purple-500/30 font-sans'>
       <PremiumBackground />
 
-      <PremiumPageHeader 
-        title='My Profile' 
+      <PremiumPageHeader
+        title='My Profile'
         onBack={() => router.push("/dashboard")}
-        actions={!isEditMode && (
-          <button
-            onClick={() => setIsEditMode(true)}
-            className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
-            title='Edit Profile'
-          >
-            <Edit className='w-5 h-5' />
-          </button>
-        )}
+        actions={
+          !isEditMode && (
+            <button
+              onClick={() => setIsEditMode(true)}
+              className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
+              title='Edit Profile'
+            >
+              <Edit className='w-5 h-5' />
+            </button>
+          )
+        }
       />
 
       {/* Top Identity Section (Unified & Premium) */}
@@ -312,12 +314,36 @@ const ProfileComponent = () => {
                 )}
               </div>
             </div>
-            
-            <button 
-              onClick={() => setIsEditMode(true)}
-              className='absolute bottom-1 right-1 w-10 h-10 bg-slate-900/80 backdrop-blur-xl hover:bg-white/10 text-slate-400 hover:text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl transition-all active:scale-90 opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+
+            <input
+              type='file'
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              className='hidden'
+              accept='image/*'
+            />
+            <button
+              onClick={() => {
+                if (isEditMode && !uploadingImage) {
+                  fileInputRef.current?.click();
+                } else if (!isEditMode) {
+                  setIsEditMode(true);
+                }
+              }}
+              disabled={uploadingImage}
+              className={`absolute bottom-1 right-1 w-10 h-10 bg-slate-900/80 backdrop-blur-xl hover:bg-white/10 text-slate-400 hover:text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl transition-all active:scale-90 ${
+                isEditMode
+                  ? "opacity-100 animate-pulse"
+                  : "opacity-0 group-hover:opacity-100"
+              } ${uploadingImage ? "cursor-not-allowed opacity-100" : ""}`}
+              type='button'
+              title={isEditMode ? "Change Photo" : "Edit Profile"}
             >
-              <Camera className='w-5 h-5' />
+              {uploadingImage ? (
+                <Loader2 className='w-5 h-5 animate-spin text-purple-500' />
+              ) : (
+                <Camera className='w-5 h-5' />
+              )}
             </button>
           </div>
 
@@ -345,7 +371,7 @@ const ProfileComponent = () => {
                 {userDB.travelStyle}
               </div>
             )}
-            
+
             <p className='text-slate-400 leading-relaxed max-w-xl mx-auto md:mx-0 text-xs font-medium'>
               {userDB?.bio || "No bio yet. Tell us where you're headed next!"}
             </p>
@@ -374,14 +400,32 @@ const ProfileComponent = () => {
 
         {/* Conditional Content: Edit Form vs Dashboard Stats */}
         {isEditMode ? (
-          <div className='bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 sm:p-12 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-12'>
-              <div className='flex items-center justify-between gap-4 pb-6 border-b border-white/5'>
-                <h2 className='text-xl font-black text-white uppercase tracking-[0.2em]'>Edit Explorer Profile</h2>
-                <div className='flex gap-3'>
-                  <Button type='button' onClick={handleCancel} variant='outline' className='bg-slate-800 border-white/10 text-xs font-black uppercase tracking-widest rounded-full px-6'>Cancel</Button>
-                  <Button type='submit' disabled={updateProfileMutation.isPending} className='bg-white text-slate-950 hover:bg-slate-200 text-xs font-black uppercase tracking-widest rounded-full px-6 shadow-xl shadow-white/5'>
-                    {updateProfileMutation.isPending && <Loader2 className='w-3 h-3 animate-spin mr-2' />}
+          <div className='bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 sm:p-12 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className='space-y-8 sm:space-y-12'
+            >
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/5'>
+                <h2 className='text-xl font-black text-white uppercase tracking-[0.2em]'>
+                  Edit Profile
+                </h2>
+                <div className='flex gap-3 w-full sm:w-auto'>
+                  <Button
+                    type='button'
+                    onClick={handleCancel}
+                    variant='outline'
+                    className='flex-1 sm:flex-none bg-slate-800 border-white/10 text-xs font-black uppercase tracking-widest rounded-full px-6'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type='submit'
+                    disabled={updateProfileMutation.isPending}
+                    className='flex-1 sm:flex-none bg-white text-slate-950 hover:bg-slate-200 text-xs font-black uppercase tracking-widest rounded-full px-6 shadow-xl shadow-white/5'
+                  >
+                    {updateProfileMutation.isPending && (
+                      <Loader2 className='w-3 h-3 animate-spin mr-2' />
+                    )}
                     Save Identity
                   </Button>
                 </div>
@@ -390,33 +434,73 @@ const ProfileComponent = () => {
               <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
                 <div className='space-y-8'>
                   <div className='space-y-2'>
-                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Explorer Name</Label>
-                    <Input {...form.register("name")} className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-purple-500/50 text-base font-medium transition-all' />
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
+                      Explorer Name
+                    </Label>
+                    <Input
+                      {...form.register("name")}
+                      className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-purple-500/50 text-base font-medium transition-all'
+                    />
                   </div>
                   <div className='space-y-2'>
-                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Travel Philosophy (Bio)</Label>
-                    <textarea {...form.register("bio")} className='w-full min-h-[160px] bg-white/5 border border-white/5 rounded-2xl p-5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder:text-slate-700 transition-all text-sm font-medium resize-none' placeholder='Describe your journey...' />
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
+                      Travel Philosophy (Bio)
+                    </Label>
+                    <textarea
+                      {...form.register("bio")}
+                      className='w-full min-h-[160px] bg-white/5 border border-white/5 rounded-2xl p-5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder:text-slate-700 transition-all text-sm font-medium resize-none'
+                      placeholder='Describe your journey...'
+                    />
                   </div>
                 </div>
 
                 <div className='space-y-8'>
                   <div className='space-y-2'>
-                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Travel Style</Label>
-                    <Input {...form.register("travelStyle")} placeholder='e.g. Minimalist Explorer' className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-emerald-500/50 text-base font-medium transition-all' />
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
+                      Travel Style
+                    </Label>
+                    <Input
+                      {...form.register("travelStyle")}
+                      placeholder='e.g. Minimalist Explorer'
+                      className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-emerald-500/50 text-base font-medium transition-all'
+                    />
                   </div>
-                  
+
                   <div className='pt-4'>
-                    <button type='button' onClick={() => setShowPasswordSection(!showPasswordSection)} className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setShowPasswordSection(!showPasswordSection)
+                      }
+                      className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'
+                    >
                       <Lock className='w-3 h-3' />
-                      {showPasswordSection ? "Keep current credentials" : "Update security credentials"}
+                      {showPasswordSection
+                        ? "Keep current credentials"
+                        : "Update security credentials"}
                     </button>
 
                     {showPasswordSection && (
                       <div className='mt-6 grid grid-cols-1 gap-4 p-6 bg-black/40 rounded-2xl border border-white/5 animate-in fade-in zoom-in-95 duration-300'>
-                        <Input type='password' {...form.register("currentPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='Current Password' />
+                        <Input
+                          type='password'
+                          {...form.register("currentPassword")}
+                          className='bg-white/5 border-white/5 h-12 rounded-xl'
+                          placeholder='Current Password'
+                        />
                         <div className='grid grid-cols-2 gap-4'>
-                          <Input type='password' {...form.register("newPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='New Password' />
-                          <Input type='password' {...form.register("confirmPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='Confirm New' />
+                          <Input
+                            type='password'
+                            {...form.register("newPassword")}
+                            className='bg-white/5 border-white/5 h-12 rounded-xl'
+                            placeholder='New Password'
+                          />
+                          <Input
+                            type='password'
+                            {...form.register("confirmPassword")}
+                            className='bg-white/5 border-white/5 h-12 rounded-xl'
+                            placeholder='Confirm New'
+                          />
                         </div>
                       </div>
                     )}
@@ -430,16 +514,38 @@ const ProfileComponent = () => {
             {/* Stats Grid (Minimal & Elegant) */}
             <div className='grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12'>
               {[
-                { label: "Voyages", value: totalGroups, icon: Users, color: "from-blue-400 to-cyan-400" },
-                { label: "Destinations", value: uniqueLocations, icon: Globe, color: "from-emerald-400 to-teal-400" },
-                { label: "Milestones", value: totalActivities, icon: Calendar, color: "from-purple-400 to-pink-400" },
-                { label: "Total Trips", value: totalTrips, icon: MapPin, color: "from-orange-400 to-amber-400" },
+                {
+                  label: "Voyages",
+                  value: totalGroups,
+                  icon: Users,
+                  color: "from-blue-400 to-cyan-400",
+                },
+                {
+                  label: "Destinations",
+                  value: uniqueLocations,
+                  icon: Globe,
+                  color: "from-emerald-400 to-teal-400",
+                },
+                {
+                  label: "Milestones",
+                  value: totalActivities,
+                  icon: Calendar,
+                  color: "from-purple-400 to-pink-400",
+                },
+                {
+                  label: "Total Trips",
+                  value: totalTrips,
+                  icon: MapPin,
+                  color: "from-orange-400 to-amber-400",
+                },
               ].map((stat) => (
                 <div key={stat.label} className='group relative'>
                   <div className='absolute -inset-2 bg-white/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity' />
                   <div className='relative'>
                     <div className='flex items-baseline gap-2'>
-                      <span className={`text-4xl sm:text-6xl font-black bg-gradient-to-br ${stat.color} bg-clip-text text-transparent tracking-tighter leading-none`}>
+                      <span
+                        className={`text-4xl sm:text-6xl font-black bg-gradient-to-br ${stat.color} bg-clip-text text-transparent tracking-tighter leading-none`}
+                      >
                         {stat.value}
                       </span>
                     </div>
@@ -455,8 +561,15 @@ const ProfileComponent = () => {
             {groups.length > 0 && (
               <div className='space-y-8 pt-4'>
                 <div className='flex items-center justify-between border-b border-white/5 pb-4'>
-                  <h3 className='text-xs font-black text-white uppercase tracking-[0.3em]'>Recent Journeys</h3>
-                  <button onClick={() => router.push('/groups')} className='text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'>View All</button>
+                  <h3 className='text-xs font-black text-white uppercase tracking-[0.3em]'>
+                    Recent Journeys
+                  </h3>
+                  <button
+                    onClick={() => router.push("/groups")}
+                    className='text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'
+                  >
+                    View All
+                  </button>
                 </div>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                   {groups.slice(0, 4).map((group) => (
@@ -475,13 +588,13 @@ const ProfileComponent = () => {
                             {group.name}
                           </h4>
                           <div className='flex items-center gap-3'>
-                             <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
-                               {group.trips?.length || 0} Missions
-                             </p>
-                             <div className='w-1 h-1 rounded-full bg-slate-800' />
-                             <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
-                               {group.memberEmails?.length || 0} Explorers
-                             </p>
+                            <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                              {group.trips?.length || 0} Missions
+                            </p>
+                            <div className='w-1 h-1 rounded-full bg-slate-800' />
+                            <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                              {group.memberEmails?.length || 0} Explorers
+                            </p>
                           </div>
                         </div>
                         <div className='w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0'>
