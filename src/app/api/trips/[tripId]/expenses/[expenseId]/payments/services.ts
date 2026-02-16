@@ -113,7 +113,7 @@ export async function markExpensePaidService(
 
   // Verify member is in the split list
   const isInSplit = expense.splits.some(
-    (split) => split.user.email === data.memberEmail,
+    (split) => split.user?.email === data.memberEmail,
   );
 
   if (!isInSplit) {
@@ -145,7 +145,7 @@ export async function markExpensePaidService(
     });
 
     // Optionally create payment log
-    if (data.createPaymentLog) {
+    if (data.createPaymentLog && expense.paidById) {
       // Calculate amount per person
       const splitCount = expense.splits.length;
       const amountPerPerson = Number(expense.amount) / splitCount;
@@ -261,7 +261,7 @@ export async function confirmPaymentService(
   }
 
   // Verify that the requester is the payer
-  if (expense.paidBy.email !== user.email) {
+  if (expense.paidBy?.email !== user.email) {
     throw new Error("Only the payer can confirm or reject payments");
   }
 
@@ -280,7 +280,7 @@ export async function confirmPaymentService(
   });
 
   // If confirmed, create payment log
-  if (data.status === "confirmed") {
+  if (data.status === "confirmed" && expense.paidById) {
     const expenseWithSplits = await prisma.expense.findUnique({
       where: { id: expenseId },
       include: {

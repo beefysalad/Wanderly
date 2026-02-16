@@ -21,6 +21,8 @@ import {
   User,
   Hash,
   Link as LinkIcon,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useCreateExpense, useUpdateExpense } from "@/src/hooks/useExpenses";
@@ -62,6 +64,8 @@ const ExpenseForm = ({
   const [showImageModal, setShowImageModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState(0);
+  const [isPaidByGuest, setIsPaidByGuest] = useState(false);
+  const [guestName, setGuestName] = useState("");
 
   const createExpenseMutation = useCreateExpense(tripId, groupId);
   const updateExpenseMutation = useUpdateExpense(
@@ -497,26 +501,49 @@ const ExpenseForm = ({
 
                     {/* Paid By */}
                     <div>
-                      <label className='text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block'>
-                        Paid By
-                      </label>
+                      <div className='flex items-center justify-between mb-2'>
+                        <label className='text-xs font-semibold text-slate-400 uppercase tracking-wider block'>
+                          Paid By
+                        </label>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setIsPaidByGuest(!isPaidByGuest);
+                            form.setValue("paidBy", members[0] || "");
+                          }}
+                          className='text-xs text-orange-400 hover:text-orange-300 transition-colors'
+                        >
+                          {isPaidByGuest ? "Select Member" : "Enter Guest Name"}
+                        </button>
+                      </div>
                       <div className='relative'>
                         <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
                           <User className='w-4 h-4 text-slate-500' />
                         </div>
-                        <select
-                          {...form.register("paidBy")}
-                          className='w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all appearance-none'
-                        >
-                          {members.map((member) => (
-                            <option key={member} value={member}>
-                              {getDisplayName(member)}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
-                          <ChevronRight className='w-4 h-4 text-slate-500 rotate-90' />
-                        </div>
+                        {isPaidByGuest ? (
+                          <input
+                            type='text'
+                            {...form.register("paidBy")}
+                            placeholder='Enter guest name'
+                            className='w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium'
+                          />
+                        ) : (
+                          <>
+                            <select
+                              {...form.register("paidBy")}
+                              className='w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all appearance-none'
+                            >
+                              {members.map((member) => (
+                                <option key={member} value={member}>
+                                  {getDisplayName(member)}
+                                </option>
+                              ))}
+                            </select>
+                            <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
+                              <ChevronRight className='w-4 h-4 text-slate-500 rotate-90' />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -624,6 +651,81 @@ const ExpenseForm = ({
                         );
                       })}
                     </div>
+
+                    {/* Guests Section */}
+                    <div className='space-y-3 pt-2 border-t border-white/5'>
+                      <label className='text-sm font-semibold text-slate-300'>
+                        Add Guests
+                      </label>
+                      <div className='flex gap-2'>
+                        <input
+                          type='text'
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          placeholder='Enter guest name'
+                          className='flex-1 px-3 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all'
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              if (guestName.trim()) {
+                                toggleMember(guestName.trim());
+                                setGuestName("");
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type='button'
+                          onClick={() => {
+                            if (guestName.trim()) {
+                              toggleMember(guestName.trim());
+                              setGuestName("");
+                            }
+                          }}
+                          disabled={!guestName.trim()}
+                          className='p-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+                        >
+                          <Plus className='w-5 h-5' />
+                        </button>
+                      </div>
+
+                      {/* Display Guests */}
+                      <div className='space-y-2'>
+                        {form
+                          .watch("splitWith")
+                          .filter((m) => !members.includes(m))
+                          .map((guest) => (
+                            <motion.div
+                              key={guest}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className='flex items-center justify-between p-3 rounded-xl border border-orange-500/30 bg-orange-500/10'
+                            >
+                              <div className='flex items-center gap-3'>
+                                <div className='w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 font-bold text-xs'>
+                                  {guest.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className='font-medium text-sm text-white'>
+                                    {guest}
+                                  </p>
+                                  <p className='text-[10px] text-orange-400'>
+                                    Guest
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type='button'
+                                onClick={() => toggleMember(guest)}
+                                className='p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors'
+                              >
+                                <Trash2 className='w-4 h-4' />
+                              </button>
+                            </motion.div>
+                          ))}
+                      </div>
+                    </div>
+
                     {form.formState.errors.splitWith && (
                       <p className='text-sm text-red-400 text-center'>
                         {form.formState.errors.splitWith.message}
