@@ -30,7 +30,7 @@ const AboutComponent = () => {
             <h1 className='text-5xl md:text-7xl font-black tracking-tight leading-tight'>
               I build tools for{" "}
               <span className='bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-x'>
-                Real Travelers.
+               Travelers.
               </span>
             </h1>
             <p className='text-xl md:text-2xl text-slate-400 font-light leading-relaxed'>

@@ -5,7 +5,7 @@ import { Calendar, MapPin, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
-import DashboardLayoutHeader from "../components/shared/DashboardLayoutHeader";
+import PremiumPageHeader from "../components/shared/PremiumPageHeader";
 
 const TripsPage = () => {
   const router = useRouter();
@@ -78,9 +78,12 @@ const TripsPage = () => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24'>
-        <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24 relative overflow-hidden'>
+        {/* Ambient background for loading state */}
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-blue-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        
+        <div className='text-center relative z-10'>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-400 font-medium'>Loading trips...</p>
         </div>
       </main>
@@ -88,21 +91,16 @@ const TripsPage = () => {
   }
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-blue-500/30 font-sans'>
+      {/* Immersive background logic */}
+      <div className='fixed inset-0 z-0 pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
       </div>
 
+      <PremiumPageHeader title='My Trips' />
+
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
-        {/* Header */}
-        <DashboardLayoutHeader
-          showBack={true}
-          backUrl='/dashboard'
-          title='Your Trips'
-          description={`${filteredTrips.length} ${filteredTrips.length === 1 ? "trip" : "trips"} ${filter !== "all" ? `• ${filter}` : ""}`}
-        />
 
         {/* Filters */}
         <div className='flex gap-2 mb-6 bg-slate-800/30 backdrop-blur-xl rounded-2xl p-1.5 border border-white/5 w-fit'>

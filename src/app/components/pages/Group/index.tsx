@@ -13,7 +13,6 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import EditGroupModal from "../../shared/Modal/EditGroupModal";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import TripsListComponent from "./TripsList";
 import { useGroup, useLeaveGroup, useDeleteGroup } from "@/src/hooks/useGroups";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
@@ -23,6 +22,7 @@ import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { toast } from "sonner";
 import { getGroupColorClasses, getVibeInfo } from "@/lib/utils/groupColors";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 
 interface IGroupComponent {
   param: string;
@@ -166,8 +166,9 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='text-center relative z-10'>
           <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-400 font-medium'>Loading group...</p>
         </div>
@@ -177,12 +178,13 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   if (!group || error) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md'>
-          <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-red-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='text-center bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md relative z-10'>
+          <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-lg'>
             <span className='text-4xl'>😞</span>
           </div>
-          <h2 className='text-2xl font-bold text-white mb-3'>
+          <h2 className='text-2xl font-bold text-white mb-3 tracking-tight'>
             Group Not Found
           </h2>
           <p className='text-slate-400 mb-8'>
@@ -190,7 +192,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
           </p>
           <button
             onClick={goBack}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
+            className='px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition-all font-bold tracking-tight'
           >
             Go to Groups
           </button>
@@ -203,87 +205,86 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const vibe = getVibeInfo(group.colorScheme);
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div
-          className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-3xl opacity-10'
-          style={{ backgroundColor: colors.bg.replace("bg-", "") }}
-        />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white/5 rounded-full blur-3xl opacity-5' />
+    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-orange-500/30 font-sans'>
+      {/* Immersive Animated Background */}
+      <div className='fixed inset-0 z-0 pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
+        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
       </div>
 
-      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
-        <DashboardLayoutHeader
-          showBack={true}
-          onBack={goBack}
-          rightContent={
-            <div className='relative'>
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className='p-2 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white'
-              >
-                <MoreVertical className='w-5 h-5' />
-              </button>
+      <PremiumPageHeader 
+        title='Group Details' 
+        onBack={goBack}
+        actions={
+          <div className='relative'>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
+            >
+              <MoreVertical className='w-5 h-5' />
+            </button>
 
-              {menuOpen && (
-                <>
-                  <div
-                    className='fixed inset-0 z-40'
-                    onClick={() => setMenuOpen(false)}
-                  />
-                  <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
+            {menuOpen && (
+              <>
+                <div
+                  className='fixed inset-0 z-40'
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className='absolute right-0 top-full mt-3 w-52 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in duration-200'>
+                  <button
+                    onClick={() => {
+                      copyInviteLink();
+                      setMenuOpen(false);
+                    }}
+                    className='w-full px-4 py-3.5 text-left text-sm text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-3 transition-colors'
+                  >
+                    <UserPlus className='w-4 h-4' />
+                    Invite Members
+                  </button>
+                  {isCreator && (
                     <button
                       onClick={() => {
-                        copyInviteLink();
+                        setShowEditModal(true);
                         setMenuOpen(false);
                       }}
-                      className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2'
+                      className='w-full px-4 py-3.5 text-left text-sm text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-3 transition-colors border-t border-white/5'
                     >
-                      <UserPlus className='w-4 h-4' />
-                      Invite Members
+                      <Settings className='w-4 h-4' />
+                      Group Settings
                     </button>
-                    {isCreator && (
-                      <button
-                        onClick={() => {
-                          setShowEditModal(true);
-                          setMenuOpen(false);
-                        }}
-                        className='w-full px-4 py-3 text-left text-sm text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 border-t border-white/5'
-                      >
-                        <Settings className='w-4 h-4' />
-                        Group Settings
-                      </button>
-                    )}
-                    {isCreator ? (
-                      <button
-                        onClick={() => {
-                          setShowDeleteModal(true);
-                          setMenuOpen(false);
-                        }}
-                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
-                      >
-                        <Trash2 className='w-4 h-4' />
-                        Delete Group
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setShowLeaveModal(true);
-                          setMenuOpen(false);
-                        }}
-                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
-                      >
-                        <LogOut className='w-4 h-4' />
-                        Leave Group
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          }
-        />
+                  )}
+                  {isCreator ? (
+                    <button
+                      onClick={() => {
+                        setShowDeleteModal(true);
+                        setMenuOpen(false);
+                      }}
+                      className='w-full px-4 py-3.5 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5'
+                    >
+                      <Trash2 className='w-4 h-4' />
+                      Delete Group
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setShowLeaveModal(true);
+                        setMenuOpen(false);
+                      }}
+                      className='w-full px-4 py-3.5 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5'
+                    >
+                      <LogOut className='w-4 h-4' />
+                      Leave Group
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        }
+      />
+
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         {/* Group Info */}
         <div className='mb-8 text-center'>
           <div

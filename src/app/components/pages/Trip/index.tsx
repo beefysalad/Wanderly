@@ -26,7 +26,7 @@ import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
@@ -34,7 +34,7 @@ import NavigationLoader from "../../shared/NavigationLoader";
 import ExpensesComponent from "../Expenses";
 import TravelCalendar from "./TravelCalendar";
 import TravelSchedule from "./TravelSchedule";
-import TravelDayOverview from "./TravelDayOverview"
+import TravelDayOverview from "./TravelDayOverview";
 
 interface ITripComponent {
   tripId: string;
@@ -368,11 +368,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='text-center relative z-10'>
           <div className='relative w-20 h-20 mx-auto mb-6'>
             <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
-            <div className='absolute inset-0 border-4 border-t-orange-500 rounded-full animate-spin'></div>
+            <div className='absolute inset-0 border-4 border-t-purple-500 rounded-full animate-spin'></div>
           </div>
           <p className='text-slate-400 font-bold tracking-tight'>
             Loading trip...
@@ -384,18 +385,19 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (!trip) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-red-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='text-center bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md relative z-10'>
+          <div className='w-16 h-16 bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-lg'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
+          <h2 className='text-xl font-bold text-white mb-2 tracking-tight'>Trip Not Found</h2>
           <p className='text-slate-400 mb-6'>
             This trip doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={() => router.push(`/group/${groupId}`)}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-md hover:shadow-lg'
+            className='px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition-all font-bold tracking-tight'
           >
             Go Back to Group
           </button>
@@ -409,91 +411,92 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const statusBadge = getStatusBadge(trip.status);
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-purple-500/30 font-sans'>
+      {/* Immersive Animated Background */}
+      <div className='fixed inset-0 z-0 pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
+        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
       </div>
 
-      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
-        {/* Navigation Bar */}
-        <DashboardLayoutHeader
-          showBack={true}
-          backUrl={`/group/${groupId}`}
-          rightContent={
-            <div className='relative'>
-              <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className='p-2 rounded-xl hover:bg-white/5 transition-colors text-slate-400 hover:text-white'
-              >
-                <MoreVertical className='w-5 h-5' />
-              </button>
+      <PremiumPageHeader 
+        title='Trip Details' 
+        onBack={() => router.push(`/group/${groupId}`)}
+        actions={
+          <div className='relative'>
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
+            >
+              <MoreVertical className='w-5 h-5' />
+            </button>
 
-              {showExportMenu && (
-                <>
-                  <div
-                    className='fixed inset-0 z-40'
-                    onClick={() => setShowExportMenu(false)}
-                  />
-                  <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
-                    <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50'>
-                      Options
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleExportSchedule("png");
-                        setShowExportMenu(false);
-                      }}
-                      disabled={isExporting}
-                      className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-2'
-                    >
-                      {isExporting ? (
-                        <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
-                      ) : (
-                        <ChevronDown className='w-4 h-4 -rotate-90' />
-                      )}
-                      Export as PNG
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleExportSchedule("ics");
-                        setShowExportMenu(false);
-                      }}
-                      disabled={isExporting}
-                      className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors border-t border-white/5 flex items-center gap-2'
-                    >
-                      {isExporting ? (
-                        <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
-                      ) : (
-                        <Calendar className='w-4 h-4' />
-                      )}
-                      Export as Calendar
-                    </button>
-
-                    {isTripCreator && (
-                      <>
-                        <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50 border-t border-white/5'>
-                          Danger Zone
-                        </div>
-                        <button
-                          onClick={() => {
-                            setShowDeleteModal(true);
-                            setShowExportMenu(false);
-                          }}
-                          className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors'
-                        >
-                          <Trash2 className='w-4 h-4' />
-                          Delete Trip
-                        </button>
-                      </>
-                    )}
+            {showExportMenu && (
+              <>
+                <div
+                  className='fixed inset-0 z-40'
+                  onClick={() => setShowExportMenu(false)}
+                />
+                <div className='absolute right-0 top-full mt-3 w-52 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in duration-200'>
+                  <div className='px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white/5'>
+                    Options
                   </div>
-                </>
-              )}
-            </div>
-          }
-        />
+                  <button
+                    onClick={() => {
+                      handleExportSchedule("png");
+                      setShowExportMenu(false);
+                    }}
+                    disabled={isExporting}
+                    className='w-full px-4 py-3.5 text-left hover:bg-white/5 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-3'
+                  >
+                    {isExporting ? (
+                      <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
+                    ) : (
+                      <ChevronDown className='w-4 h-4 -rotate-90' />
+                    )}
+                    Export as PNG
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleExportSchedule("ics");
+                      setShowExportMenu(false);
+                    }}
+                    disabled={isExporting}
+                    className='w-full px-4 py-3.5 text-left hover:bg-white/5 text-slate-300 hover:text-white text-sm transition-colors border-t border-white/5 flex items-center gap-3'
+                  >
+                    {isExporting ? (
+                      <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
+                    ) : (
+                      <Calendar className='w-4 h-4' />
+                    )}
+                    Export as Calendar
+                  </button>
+
+                  {isTripCreator && (
+                    <>
+                      <div className='px-4 py-2 text-[10px] font-black text-red-500/50 uppercase tracking-[0.2em] bg-red-500/5 border-t border-white/5'>
+                        Danger Zone
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowDeleteModal(true);
+                          setShowExportMenu(false);
+                        }}
+                        className='w-full px-4 py-3.5 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                        Delete Trip
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        }
+      />
+
+      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
         {/* Trip Header */}
         <div className='mb-8'>
           <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
