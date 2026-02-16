@@ -73,7 +73,7 @@ export async function seedTestData(userId: string) {
         dummyUsersData.map(async (d) => {
           // Check if user already exists
           const existing = await tx.user.findUnique({
-            where: { email: d.email, imageUrl: d.imageUrl },
+            where: { email: d.email },
           });
 
           // Return existing user or create new one
@@ -94,7 +94,23 @@ export async function seedTestData(userId: string) {
       const allMemberUserIds = [userId, ...dummyUsers.map((u) => u.id)];
       allMemberEmails = [user.email, ...dummyUsers.map((u) => u.email)];
 
-      // 2. Create Test Group
+      // 2. Check for existing Test Group to prevent duplicates
+      const existingGroup = await tx.group.findFirst({
+        where: {
+          createdById: userId,
+          name: "Singapore Adventure 2024 (test)",
+        },
+      });
+
+      if (existingGroup) {
+        logger.info("Test group already exists, skipping seed", {
+          userId,
+          groupId: existingGroup.id,
+        });
+        return;
+      }
+
+      // Create Test Group if not exists
       const groupCode = await generateUniqueGroupCode();
       const group = await tx.group.create({
         data: {
