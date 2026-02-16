@@ -1,0 +1,35 @@
+name: Create Pull Request Dev to Prod
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a PR already exists from dev to prod
+          existing_pr=$(gh pr list --base prod --head dev --json number --jq '.[0].number')
+
+          if [ -n "$existing_pr" ]; then
+            echo "PR #$existing_pr already exists from dev to prod. Skipping creation."
+          else
+            echo "No existing PR found. Creating a new one..."
+            gh pr create \
+              --base prod \
+              --head dev \
+              --title "Merge dev into prod" \
+              --body "Automated Pull Request from dev to prod. Created by GitHub Action." \
+              || echo "Failed to create PR (possibly no changes between branches)"
+          fi
