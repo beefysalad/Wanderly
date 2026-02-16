@@ -168,7 +168,7 @@ const TravelDayOverview = ({
       </div>
 
       {/* Main Content Carousel */}
-      <div className="flex-1 flex flex-col min-h-[400px] relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-[400px]">
         <div className="flex items-center justify-between mb-6">
             <div>
                 <h3 className="text-2xl font-black text-white">
@@ -200,8 +200,8 @@ const TravelDayOverview = ({
             </div>
         </div>
 
-        <div className="relative flex-1">
-            <AnimatePresence initial={false} custom={direction}>
+        <div className="relative flex-1 overflow-y-auto">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
                     key={selectedDateKey}
                     custom={direction}
@@ -213,7 +213,7 @@ const TravelDayOverview = ({
                         x: { type: "spring", stiffness: 300, damping: 30 },
                         opacity: { duration: 0.2 }
                     }}
-                    className="absolute inset-0 w-full"
+                    className="w-full"
                 >
                     {dayActivities.length > 0 ? (
                         <div className="space-y-4 pb-8">

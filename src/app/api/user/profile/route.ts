@@ -19,6 +19,11 @@ async function handler(req: NextRequest, auth: AuthContext) {
       where: { firebaseId: auth.uid },
       update: {
         ...(lastSeenWhatsNew !== undefined && { lastSeenWhatsNew }),
+        ...(body.bio !== undefined && { bio: body.bio }),
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.hasCompletedOnboarding !== undefined && { hasCompletedOnboarding: body.hasCompletedOnboarding }),
+        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
+        ...(body.referralSource !== undefined && { referralSource: body.referralSource }),
       },
       create: {
         firebaseId: auth.uid,

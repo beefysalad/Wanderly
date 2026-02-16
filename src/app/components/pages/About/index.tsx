@@ -163,7 +163,7 @@ const AboutComponent = () => {
                   <div className='absolute inset-0 bg-amber-500/30 rounded-full blur-2xl animate-pulse'></div>
                   <div className='relative w-48 h-48 rounded-2xl overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-500 ring-4 ring-amber-500/30'>
                     <Image
-                      src='/avatar.jpeg'
+                      src='/patrick.PNG'
                       alt='Patrick'
                       fill
                       className='object-cover scale-110'
@@ -181,7 +181,7 @@ const AboutComponent = () => {
                     </p>
                   </div>
                   <p className='text-lg text-slate-300 font-light leading-relaxed italic'>
-                    &quot;I built this because I tired of messy spreadsheets and
+                    &quot;I built this because Im tired of messy spreadsheets and
                     forgotten plans. Wanderly isn&apos;t just a side project;
                     it&apos;s the tool I actually use when I finally convince my
                     friends to leave the city.&quot;

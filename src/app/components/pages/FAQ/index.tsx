@@ -48,7 +48,7 @@ const FAQComponent = () => {
       id: "what-is-wanderly",
       question: "What is Wanderly?",
       answer:
-        "Wanderly is an all-in-one platform designed to make group trip planning seamless and stress-free. Instead of juggling multiple apps, confusing spreadsheets, and endless group chats, Wanderly brings everything together in one beautiful, intuitive platform. You can create groups, plan trips with friends, manage schedules with visual calendar and list views, track and split expenses fairly, and export your schedule to your phone's calendar. Wanderly was built specifically for group travel by a software engineer who wanted to solve the common frustrations of trip planning. It's currently in beta and completely free to use.",
+        "Wanderly is an all-in-one platform designed to make group trip planning seamless and stress-free. Instead of juggling multiple apps, confusing spreadsheets, and endless group chats, Wanderly brings everything together in one beautiful, intuitive platform. You can create groups, plan trips with friends, manage schedules with visual calendar and list views, track and split expenses fairly, and export your schedule to your phone's calendar. Wanderly was built specifically for group travel by me who wanted to solve the common frustrations of trip planning. It's currently in beta and completely free to use.",
       icon: <Sparkles className='w-6 h-6 text-amber-400' />,
     },
     {

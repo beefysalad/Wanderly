@@ -119,6 +119,7 @@ const ProfileComponent = () => {
 
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("folder", "users/avatars");
 
       const response = await api.post<{ url: string; publicId: string }>(
         "/upload/image",
