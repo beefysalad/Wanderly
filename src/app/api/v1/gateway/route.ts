@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Extract original request details
     const method = req.method;
-    const body = await req.json().catch(() => null);
+    const body = await req.arrayBuffer();
     const headers = new Headers(req.headers);
 
     // Remove the gateway-specific header before forwarding
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const response = await fetch(internalUrl, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body.byteLength > 0 ? body : undefined,
     });
 
     // Handle the response

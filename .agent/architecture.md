@@ -8,9 +8,9 @@ This document provides a deep dive into the architecture of Wanderly to assist d
 
 The gateway acts as the single entry point for all API requests in production. It provides security through obfuscation.
 
-- **Proxy Logic**: It reads the `X-Api-Target` header and uses an internal `fetch` to proxy the request to the real destination.
+- **Proxy Logic**: It reads the `X-Api-Target` header and uses an internal `fetch` to proxy the request. It is **body-agnostic**, meaning it uses `req.arrayBuffer()` to proxy the raw request data (JSON, multipart/form-data, etc.) without modification.
 - **Security**: It ensures the target path starts with `/api/` to prevent external access to non-API routes.
-- **Resilience**: It filters sensitive headers (like `content-encoding`) to avoid conflicts during response streaming.
+- **Resilient Header Handling**: It filters sensitive headers (like `content-encoding`) to avoid conflicts during response streaming and preserves the original `Content-Type` for raw body integrity.
 
 ### 2. Rate Limiting (`lib/rate-limit.ts`)
 
