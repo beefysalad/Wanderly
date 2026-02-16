@@ -8,6 +8,7 @@ import {
   Plus,
   Trash2,
   Layout,
+  PieChart,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,13 +37,14 @@ import ExpensesComponent from "../Expenses";
 import TravelCalendar from "./TravelCalendar";
 import TravelSchedule from "./TravelSchedule";
 import TravelDayOverview from "./TravelDayOverview";
+import BudgetComponent from "../Budget"; // Added BudgetComponent import
 
 interface ITripComponent {
   tripId: string;
   groupId: string;
 }
 
-type TabType = "calendar" | "schedule" | "expenses" | "daily";
+type TabType = "calendar" | "schedule" | "expenses" | "daily" | "budget"; // Added "budget" to TabType
 
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
@@ -81,7 +83,13 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "expenses" || tab === "calendar" || tab === "schedule") {
+    if (
+      tab === "expenses" ||
+      tab === "calendar" ||
+      tab === "schedule" ||
+      tab === "budget"
+    ) {
+      // Added "budget" to tab check
       setActiveTab(tab as TabType);
     }
   }, [searchParams]);
@@ -392,7 +400,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           <div className='w-16 h-16 bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-lg'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-white mb-2 tracking-tight'>Trip Not Found</h2>
+          <h2 className='text-xl font-bold text-white mb-2 tracking-tight'>
+            Trip Not Found
+          </h2>
           <p className='text-slate-400 mb-6'>
             This trip doesn&apos;t exist or has been removed.
           </p>
@@ -415,8 +425,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-purple-500/30 font-sans'>
       <PremiumBackground />
 
-      <PremiumPageHeader 
-        title='Trip Details' 
+      <PremiumPageHeader
+        title='Trip Details'
         onBack={() => router.push(`/group/${groupId}`)}
         actions={
           <div className='relative'>
@@ -598,6 +608,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
               tripId={tripId}
               isEmbedded={true}
             />
+          ) : activeTab === "budget" ? (
+            <BudgetComponent
+              groupId={groupId}
+              tripId={tripId}
+              isEmbedded={true}
+            />
           ) : activeTab === "daily" ? (
             <TravelDayOverview
               startDate={startDate}
@@ -631,14 +647,28 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             onClick={() =>
               activeTab === "expenses"
                 ? router.push(`/group/${groupId}/expenses/add?tripId=${tripId}`)
-                : router.push(`/group/${groupId}/trip/${tripId}/activities/add`)
+                : activeTab === "budget"
+                  ? router.push(`/group/${groupId}/trip/${tripId}/budget/add`)
+                  : router.push(
+                      `/group/${groupId}/trip/${tripId}/activities/add`,
+                    )
             }
             className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
-            title={activeTab === "expenses" ? "Add Expense" : "Add Activity"}
+            title={
+              activeTab === "expenses"
+                ? "Add Expense"
+                : activeTab === "budget"
+                  ? "Add Budget"
+                  : "Add Activity"
+            }
           >
             <Plus className='w-7 h-7 transition-transform group-hover:rotate-90' />
             <span className='sr-only'>
-              {activeTab === "expenses" ? "Add Expense" : "Add Activity"}
+              {activeTab === "expenses"
+                ? "Add Expense"
+                : activeTab === "budget"
+                  ? "Add Budget"
+                  : "Add Activity"}
             </span>
           </button>
         </div>
@@ -697,6 +727,19 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             <DollarSign className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
             <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
               Expenses
+            </span>
+          </button>
+          <button
+            onClick={() => handleTabChange("budget")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "budget"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <PieChart className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Budget
             </span>
           </button>
         </div>

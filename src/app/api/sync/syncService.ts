@@ -5,7 +5,7 @@ import { DecodedIdToken } from "firebase-admin/auth";
 
 export async function syncUserToDatabaseService(
   token: DecodedIdToken,
-  forceSync: boolean = false
+  forceSync: boolean = false,
 ) {
   if (!userAuth) {
     throw new Error("Firebase admin not initialized");
@@ -22,6 +22,14 @@ export async function syncUserToDatabaseService(
     // User exists, only update if we suspect changes (e.g., after profile updates)
     // For now, we'll do a lightweight check - only fetch from Firebase if needed
     // In most cases, we can just return the existing user
+
+    // CRITICAL: Check if existing user needs seeding (e.g. they signed up before seeding was added)
+    if (!existingUser.hasSeededTestData) {
+      const { seedTestData } = await import("./testDataService");
+      // We await to ensure predictability
+      await seedTestData(existingUser.id);
+    }
+
     return existingUser;
   }
 
@@ -29,7 +37,7 @@ export async function syncUserToDatabaseService(
   logger.info(
     forceSync
       ? "🔄 Force syncing user from Firebase after profile update"
-      : "🔍 User not found, syncing from Firebase"
+      : "🔍 User not found, syncing from Firebase",
   );
   const firebaseUser = await userAuth.getUser(token.uid);
   const firebaseUserData = {
@@ -52,6 +60,14 @@ export async function syncUserToDatabaseService(
       firebaseDisabled: firebaseUser.disabled,
     },
   });
+
+  // If user hasn't had test data seeded yet, seed it now (one-time only)
+  if (!result.hasSeededTestData) {
+    const { seedTestData } = await import("./testDataService");
+    // We await to ensure predictability, especially for FTUX
+    await seedTestData(result.id);
+  }
+
   logger.info("✅ User synced to database");
   return result;
 }

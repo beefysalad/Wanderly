@@ -1,11 +1,12 @@
 "use client";
 import { Expense, Trip, PaymentLog } from "@/src/shared/types";
-import { ArrowLeft, Plus, Receipt, Wallet } from "lucide-react";
+import { Plus, Receipt, Wallet } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
 import ExpensesList from "./ExpenseList";
+import ExpenseCharts from "./ExpenseCharts";
+import React, { useState, useEffect } from "react";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
 import { toast } from "sonner";
@@ -35,9 +36,10 @@ const ExpensesComponent = ({
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const expenses = expensesData?.expenses || [];
   const paymentLogs = paymentLogsData?.paymentLogs || [];
-  const [view, setView] = useState<"all" | "unsettled" | "settled" | "logs">(
-    "all",
-  );
+
+  const [view, setView] = useState<
+    "all" | "unsettled" | "settled" | "logs" | "analysis"
+  >("all");
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const { user } = useCurrentUser();
 
@@ -283,11 +285,19 @@ const ExpensesComponent = ({
           icon: "✅",
           count: settledExpenses.length,
         },
+        {
+          id: "analysis",
+          label: "Analysis",
+          icon: "📈",
+          count: null,
+        },
       ].map((tab) => (
         <button
           key={tab.id}
           onClick={() =>
-            setView(tab.id as "all" | "unsettled" | "settled" | "logs")
+            setView(
+              tab.id as "all" | "unsettled" | "settled" | "logs" | "analysis",
+            )
           }
           className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center justify-center gap-2 ${
             view === tab.id
@@ -297,15 +307,17 @@ const ExpensesComponent = ({
         >
           <span>{tab.icon}</span>
           <span>{tab.label}</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs ${
-              view === tab.id
-                ? "bg-slate-900 text-slate-300"
-                : "bg-slate-800 text-slate-500 group-hover:bg-slate-700"
-            }`}
-          >
-            {tab.count}
-          </span>
+          {tab.count !== null && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs ${
+                view === tab.id
+                  ? "bg-slate-900 text-slate-300"
+                  : "bg-slate-800 text-slate-500 group-hover:bg-slate-700"
+              }`}
+            >
+              {tab.count}
+            </span>
+          )}
         </button>
       ))}
     </div>
@@ -370,30 +382,28 @@ const ExpensesComponent = ({
             ) : (
               // Embedded Header
               <div className='flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-                  <FilterTabs />
-                  <div className='flex items-center gap-2 self-end sm:self-auto'>
-                    <button
-                      onClick={() => setView("logs")}
-                      className={`px-4 py-2.5 rounded-xl transition-all border flex items-center gap-2 active:scale-95 text-sm font-medium ${
-                        view === "logs"
-                          ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
-                          : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
-                      }`}
-                    >
-                      <Receipt className='w-4 h-4' />
-                      <span>History</span>
-                    </button>
-                    {/* Inline Add Expense for desktop context mainly, mobile uses floating FAB */}
-                    <Link
-                      href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
-                      className='hidden sm:flex px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 items-center gap-2 active:scale-95 transition-all text-sm font-bold'
-                    >
-                      <Plus className='w-4 h-4' />
-                      <span>Add Expense</span>
-                    </Link>
-                  </div>
+                <div className='flex items-center justify-end gap-2'>
+                  <button
+                    onClick={() => setView("logs")}
+                    className={`px-4 py-2.5 rounded-xl transition-all border flex items-center gap-2 active:scale-95 text-sm font-medium ${
+                      view === "logs"
+                        ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+                        : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
+                    }`}
+                  >
+                    <Receipt className='w-4 h-4' />
+                    <span>History</span>
+                  </button>
+                  {/* Inline Add Expense for desktop context mainly, mobile uses floating FAB */}
+                  <Link
+                    href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+                    className='hidden sm:flex px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 items-center gap-2 active:scale-95 transition-all text-sm font-bold'
+                  >
+                    <Plus className='w-4 h-4' />
+                    <span>Add Expense</span>
+                  </Link>
                 </div>
+                <FilterTabs />
               </div>
             )}
           </div>
@@ -596,15 +606,24 @@ const ExpensesComponent = ({
                   </div>
                 )}
 
-                <ExpensesList
-                  expenses={filteredExpenses}
-                  members={group.memberEmails || []}
-                  memberNames={group.memberNames}
-                  memberMetadata={group.memberMetadata}
-                  activities={trip.activities || []}
-                  onSelectExpense={handleViewExpense}
-                  currentUser={user?.email ?? ""}
-                />
+                {view === "analysis" && (
+                  <ExpenseCharts
+                    expenses={expenses}
+                    currentUserEmail={user?.email || ""}
+                  />
+                )}
+
+                {view !== "analysis" && (
+                  <ExpensesList
+                    expenses={filteredExpenses}
+                    members={group.memberEmails || []}
+                    memberNames={group.memberNames}
+                    memberMetadata={group.memberMetadata}
+                    activities={trip.activities || []}
+                    onSelectExpense={handleViewExpense}
+                    currentUser={user?.email ?? ""}
+                  />
+                )}
               </div>
             )}
           </div>

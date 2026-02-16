@@ -3,9 +3,10 @@
 import { useGroup } from "@/src/hooks/useGroups";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import ExpenseForm from "@/src/app/components/shared/ExpenseForm";
-import { ArrowLeft } from "lucide-react";
+import ExpenseForm from "@/src/app/components/shared/ExpenseForm/index";
 import React from "react";
+import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 
 export default function AddExpensePage({
   params,
@@ -71,28 +72,16 @@ export default function AddExpensePage({
   const members = group.memberEmails || [];
 
   return (
-    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
-      </div>
+    <main className='h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
+      <PremiumBackground />
 
-      {/* Header */}
-      <div className='p-4 md:p-6 z-20 relative'>
-        <button
-          onClick={() => router.back()}
-          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
-        >
-          <ArrowLeft className='w-5 h-5' />
-        </button>
-      </div>
-
-      <div className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pb-24 relative z-10'>
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-white mb-2'>Add Expense</h1>
-          <p className='text-slate-400'>Add to {trip?.name}</p>
+      <div className='flex-shrink-0 z-20'>
+        <div className='max-w-xl mx-auto px-4 py-4 md:py-6'>
+          <PremiumPageHeader onBack={() => router.back()} title='NEW EXPENSE' />
         </div>
+      </div>
+
+      <div className='flex-1 w-full max-w-xl mx-auto px-4 pb-4 relative z-10 overflow-hidden flex flex-col'>
         <ExpenseForm
           tripId={tripId}
           groupId={groupId}
@@ -100,6 +89,7 @@ export default function AddExpensePage({
           memberNames={group.memberNames}
           activities={trip?.activities || []}
           hideHeader={true}
+          cleanMode={true}
           onSuccess={() => {
             // Navigate back to expenses tab in trip view
             router.push(`/group/${groupId}/trip/${tripId}?tab=expenses`);

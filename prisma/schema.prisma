@@ -8,19 +8,20 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  name             String
-  email            String   @unique
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  imageUrl         String?
-  firebaseId       String   @unique
-  firebaseDisabled Boolean  @default(false)
-  lastSeenWhatsNew String?  @default("")
-  bio              String?
-  travelStyle      String?
+  id                     String   @id @default(cuid())
+  name                   String
+  email                  String   @unique
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  imageUrl               String?
+  firebaseId             String   @unique
+  firebaseDisabled       Boolean  @default(false)
+  lastSeenWhatsNew       String?  @default("")
+  bio                    String?
+  travelStyle            String?
   hasCompletedOnboarding Boolean  @default(false)
-  referralSource String?
+  referralSource         String?
+  hasSeededTestData      Boolean  @default(false)
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")
@@ -92,6 +93,7 @@ model Trip {
   group         Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   activities    Activity[]
   expenses      Expense[]
+  budgets       Budget[]
   paymentLogs   PaymentLog[]
   notifications Notification[] @relation("NotificationTrip")
 }
@@ -115,6 +117,7 @@ model Activity {
   // Relationships
   trip          Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
   expenses      Expense[]      @relation("ActivityExpenses")
+  budgets       Budget[]       @relation("ActivityBudgets")
   notifications Notification[] @relation("NotificationActivity")
 }
 
@@ -265,4 +268,20 @@ model AppConfig {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+model Budget {
+  id          String   @id @default(cuid())
+  tripId      String
+  activityId  String? // Optional: Link to a specific activity
+  category    String? // e.g. "Food", "Transport"
+  amount      Decimal
+  description String?
+  isBooked    Boolean  @default(false) // Whether this is a confirmed price
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activity Activity? @relation("ActivityBudgets", fields: [activityId], references: [id], onDelete: SetNull)
 }

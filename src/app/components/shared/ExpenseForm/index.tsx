@@ -38,6 +38,7 @@ interface IExpenseFormProps {
   onCancel: () => void;
   initialData?: Expense;
   hideHeader?: boolean;
+  cleanMode?: boolean;
 }
 
 const ExpenseForm = ({
@@ -50,6 +51,7 @@ const ExpenseForm = ({
   onCancel,
   initialData,
   hideHeader = false,
+  cleanMode = false,
 }: IExpenseFormProps) => {
   const getDisplayName = (email: string): string => {
     return memberNames?.[email] || email.split("@")[0];
@@ -281,7 +283,13 @@ const ExpenseForm = ({
   ];
 
   return (
-    <div className='flex flex-col h-full bg-slate-900 text-white rounded-3xl overflow-hidden border border-white/5 shadow-2xl'>
+    <div
+      className={
+        cleanMode
+          ? "h-full flex flex-col"
+          : "flex flex-col h-full bg-slate-900 text-white rounded-3xl overflow-hidden border border-white/5 shadow-2xl"
+      }
+    >
       {/* Header */}
       {!hideHeader && (
         <div className='px-6 py-5 border-b border-white/5 flex items-center justify-between bg-slate-900/50 backdrop-blur-xl z-20'>
@@ -304,7 +312,11 @@ const ExpenseForm = ({
       )}
 
       {/* Stepper */}
-      <div className='py-6 bg-slate-900/50 border-b border-white/5'>
+      <div
+        className={
+          cleanMode ? "py-6" : "py-6 bg-slate-900/50 border-b border-white/5"
+        }
+      >
         <div className='flex items-center justify-center relative px-4'>
           {steps.map((step, index) => {
             const StepIcon = step.icon;
@@ -318,12 +330,12 @@ const ExpenseForm = ({
                   {/* Step Circle */}
                   <div className='flex flex-col items-center gap-2 flex-shrink-0 z-10'>
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 z-10 relative ${
                         isCompleted
                           ? "bg-orange-500 border-orange-500 text-white"
                           : isActive
-                            ? "bg-orange-900/30 border-orange-500 text-orange-400"
-                            : "bg-slate-800 border-slate-600 text-slate-400"
+                            ? "bg-slate-950 border-orange-500 text-orange-400"
+                            : "bg-slate-950 border-slate-600 text-slate-400"
                       }`}
                     >
                       {isCompleted ? (
@@ -801,7 +813,13 @@ const ExpenseForm = ({
           </div>
 
           {/* Footer Navigation */}
-          <div className='p-6 border-t border-white/5 bg-slate-900/50 backdrop-blur-xl flex justify-between items-center z-20'>
+          <div
+            className={
+              cleanMode
+                ? "p-6 flex justify-between items-center z-20"
+                : "p-6 border-t border-white/5 bg-slate-900/50 backdrop-blur-xl flex justify-between items-center z-20"
+            }
+          >
             <button
               type='button'
               onClick={handleBack}

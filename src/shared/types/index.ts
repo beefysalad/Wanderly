@@ -137,3 +137,19 @@ export interface Notification {
   relatedActivityId?: string;
   createdAt: string;
 }
+export interface Budget {
+  id: string;
+  tripId: string;
+  activityId?: string;
+  category?: string;
+  amount: number;
+  description?: string;
+  isBooked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  activity?: {
+    id: string;
+    title: string;
+    date: string;
+  };
+}
