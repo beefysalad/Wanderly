@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { useRouter } from "next/navigation";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
+import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
+import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
 
 interface CreateTripPageProps {
   params: {
@@ -67,31 +69,18 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
   const isLoading = createTrip.isPending || isNavigating;
 
   return (
-    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
-      </div>
+    <main className='h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
+      <PremiumBackground />
       {isNavigating && <NavigationLoader message='Creating trip...' />}
 
       {/* Header */}
-      <div className='p-4 md:p-6 z-20 relative'>
-        <button
-          onClick={() => router.back()}
-          className='flex items-center gap-2 px-3 py-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all'
-        >
-          <ArrowLeft className='w-5 h-5' />
-          <span className='font-medium'>Back</span>
-        </button>
+      <div className='flex-shrink-0 z-20'>
+        <div className='max-w-xl mx-auto px-4 py-4 md:py-6'>
+          <PremiumPageHeader onBack={() => router.back()} title='NEW TRIP' />
+        </div>
       </div>
 
-      <div className='flex-1 flex flex-col p-4 pb-24 max-w-lg mx-auto w-full relative z-10'>
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-white mb-2'>New Adventure</h1>
-          <p className='text-slate-400'>Plan your next trip together</p>
-        </div>
-
+      <div className='flex-1 w-full max-w-xl mx-auto px-4 pb-24 relative z-10 overflow-y-auto custom-scrollbar'>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
           {/* Trip Details Section */}
           <div className='bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border border-white/5 space-y-5'>
