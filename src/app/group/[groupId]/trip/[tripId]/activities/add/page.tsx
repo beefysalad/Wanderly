@@ -29,9 +29,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { Trip } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
+import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
@@ -212,20 +213,16 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
   return (
     <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden font-sans selection:bg-orange-500/30'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px]'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[120px]'></div>
-      </div>
+      <PremiumBackground />
 
       {isNavigating && <NavigationLoader message='Adding activity...' />}
 
-      <div className='max-w-4xl mx-auto w-full px-4 relative z-20'>
-        <DashboardLayoutHeader showBack={true} title='Add Activity' />
+      <div className='max-w-xl mx-auto w-full px-4 pt-4 md:pt-6 relative z-20'>
+        <PremiumPageHeader title='NEW ACTIVITY' onBack={() => router.back()} />
       </div>
 
-      <div className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pb-24 relative z-10 pt-4'>
-        <div className='max-w-2xl mx-auto w-full'>
+      <div className='flex-1 flex flex-col max-w-xl mx-auto w-full px-4 pb-24 relative z-10 pt-6'>
+        <div className='w-full'>
           <AnimatePresence mode='wait'>
             {/* Step 1: Type Selection */}
             {currentStep === 1 && (
@@ -249,9 +246,9 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                 <div className='grid grid-cols-2 gap-4'>
                   <button
                     onClick={() => handleTypeSelect("general")}
-                    className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-orange-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                    className='bg-slate-800/30 backdrop-blur-md border border-white/5 hover:border-orange-500/50 hover:bg-slate-800/50 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
                   >
-                    <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors'>
+                    <div className='w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover:text-orange-400 group-hover:bg-orange-500/10 transition-colors border border-white/5'>
                       <Ticket className='w-7 h-7' />
                     </div>
                     <span className='font-semibold text-white'>General</span>
@@ -259,9 +256,9 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
                   <button
                     onClick={() => handleTypeSelect("flight")}
-                    className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                    className='bg-slate-800/30 backdrop-blur-md border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/50 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
                   >
-                    <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors'>
+                    <div className='w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors border border-white/5'>
                       <Plane className='w-7 h-7' />
                     </div>
                     <span className='font-semibold text-white'>Flight</span>
@@ -269,9 +266,9 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
                   <button
                     onClick={() => handleTypeSelect("transport")}
-                    className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-purple-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                    className='bg-slate-800/30 backdrop-blur-md border border-white/5 hover:border-purple-500/50 hover:bg-slate-800/50 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
                   >
-                    <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors'>
+                    <div className='w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 transition-colors border border-white/5'>
                       <Car className='w-7 h-7' />
                     </div>
                     <span className='font-semibold text-white'>Transport</span>
@@ -279,9 +276,9 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
                   <button
                     onClick={() => handleTypeSelect("accommodation")}
-                    className='bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-emerald-500/50 hover:bg-slate-800/60 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
+                    className='bg-slate-800/30 backdrop-blur-md border border-white/5 hover:border-emerald-500/50 hover:bg-slate-800/50 p-6 rounded-2xl flex flex-col items-center gap-4 transition-all group'
                   >
-                    <div className='w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors'>
+                    <div className='w-14 h-14 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition-colors border border-white/5'>
                       <Hotel className='w-7 h-7' />
                     </div>
                     <span className='font-semibold text-white'>
@@ -302,7 +299,8 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                 transition={{ duration: 0.3 }}
                 className='flex-1 flex flex-col'
               >
-                <div className='bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 p-6 shadow-2xl'>
+                {/* REMOVED CARD WRAPPER */}
+                <div className='space-y-6'>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className='space-y-6'
