@@ -44,6 +44,7 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSelectExpense = (expense: any) => {
     router.push(
       `/guest/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`,

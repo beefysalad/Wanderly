@@ -61,6 +61,7 @@ const GuestActivityDetailContainer = ({
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSelectExpense = (expense: any) => {
     // Navigate to guest expense detail
     // Note: ensure this route matches where you mount the guest expense page
