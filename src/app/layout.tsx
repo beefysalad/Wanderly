@@ -38,23 +38,31 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import { MaintenanceMode } from "./components/pages/maintenance-mode";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+
   return (
     <html lang='en' suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <QueryProvider>
-          <SocketProvider>
-            <AuthLayout>{children}</AuthLayout>
-            <Toaster position='bottom-right' richColors closeButton />
-          </SocketProvider>
-        </QueryProvider>
+        {isMaintenanceMode ? (
+          <MaintenanceMode />
+        ) : (
+          <QueryProvider>
+            <SocketProvider>
+              <AuthLayout>{children}</AuthLayout>
+              <Toaster position='bottom-right' richColors closeButton />
+            </SocketProvider>
+          </QueryProvider>
+        )}
         <Analytics />
       </body>
     </html>
