@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Loader2, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { signInSchema, TSignInSchema } from "./authSchema";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 interface ISignInFormProps {
@@ -53,72 +52,87 @@ export default function SignInForm({ onAuthSuccess }: ISignInFormProps) {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
       {error && (
-        <div className='bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2 text-red-200 text-sm'>
-          <AlertCircle className='w-4 h-4 mt-0.5 flex-shrink-0' />
-          <span>{error}</span>
+        <div className='bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3 text-red-200'>
+          <AlertCircle className='w-5 h-5 mt-0.5 flex-shrink-0' />
+          <span className='text-sm'>{error}</span>
         </div>
       )}
 
-      <div className='space-y-2'>
-        <div className='relative'>
-          <Mail className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <Input
+      <div className='space-y-5'>
+        {/* Email Input */}
+        <div className='space-y-2'>
+          <label htmlFor='email' className='block text-sm font-medium text-slate-300 mb-2'>
+            Email address
+          </label>
+          <input
             {...form.register("email")}
+            id='email'
             type='email'
-            placeholder='Email address'
-            className='pl-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
+            placeholder='you@example.com'
+            className='w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 
+                     focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50
+                     transition-all duration-200 hover:bg-white/[0.07]'
           />
+          {form.formState.errors.email && (
+            <p className='text-sm text-red-400 mt-1.5'>
+              {form.formState.errors.email.message}
+            </p>
+          )}
         </div>
-        {form.formState.errors.email && (
-          <p className='text-xs text-red-400 pl-1'>
-            {form.formState.errors.email.message}
-          </p>
-        )}
-      </div>
 
-      <div className='space-y-2'>
-        <div className='relative'>
-          <Lock className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <Input
-            {...form.register("password")}
-            type={showPassword ? "text" : "password"}
-            placeholder='Password'
-            className='pl-10 pr-10 bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500'
-          />
-          <button
-            type='button'
-            onClick={() => setShowPassword(!showPassword)}
-            className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors'
-          >
-            {showPassword ? (
-              <EyeOff className='w-4 h-4' />
-            ) : (
-              <Eye className='w-4 h-4' />
-            )}
-            <span className='sr-only'>
-              {showPassword ? "Hide password" : "Show password"}
-            </span>
-          </button>
+        {/* Password Input */}
+        <div className='space-y-2'>
+          <label htmlFor='password' className='block text-sm font-medium text-slate-300 mb-2'>
+            Password
+          </label>
+          <div className='relative'>
+            <input
+              {...form.register("password")}
+              id='password'
+              type={showPassword ? "text" : "password"}
+              placeholder='Enter your password'
+              className='w-full px-4 py-3.5 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 
+                       focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50
+                       transition-all duration-200 hover:bg-white/[0.07]'
+            />
+            <button
+              type='button'
+              onClick={() => setShowPassword(!showPassword)}
+              className='absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1'
+            >
+              {showPassword ? (
+                <EyeOff className='w-5 h-5' />
+              ) : (
+                <Eye className='w-5 h-5' />
+              )}
+              <span className='sr-only'>
+                {showPassword ? "Hide password" : "Show password"}
+              </span>
+            </button>
+          </div>
+          {form.formState.errors.password && (
+            <p className='text-sm text-red-400 mt-1.5'>
+              {form.formState.errors.password.message}
+            </p>
+          )}
         </div>
-        {form.formState.errors.password && (
-          <p className='text-xs text-red-400 pl-1'>
-            {form.formState.errors.password.message}
-          </p>
-        )}
       </div>
 
       <Button
         type='submit'
         disabled={loading}
-        className='w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium py-2 rounded-lg transition-all shadow-lg shadow-orange-500/20'
+        className='w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 
+                 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 
+                 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02]
+                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
       >
         {loading ? (
-          <>
-            <Loader2 className='w-4 h-4 animate-spin mr-2' />
+          <span className='flex items-center justify-center gap-2'>
+            <Loader2 className='w-5 h-5 animate-spin' />
             Signing in...
-          </>
+          </span>
         ) : (
           "Sign In"
         )}

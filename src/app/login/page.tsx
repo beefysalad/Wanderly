@@ -16,54 +16,74 @@ function LoginForm() {
   };
 
   return (
-    <div className='min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden'>
-      {/* Background Effects - More subtle and premium */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px]'></div>
-        <div className='absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-amber-500/5 rounded-full blur-[120px]'></div>
+    <div className='min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-8 md:px-6 relative overflow-hidden'>
+      {/* Refined Background Gradient */}
+      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+        <div className='absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] animate-pulse'></div>
+        <div className='absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] animate-pulse' style={{ animationDelay: '1s' }}></div>
       </div>
 
+      {/* Grid Pattern Overlay */}
+      <div 
+        className='absolute inset-0 opacity-[0.02] pointer-events-none'
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }}
+      ></div>
+
       <div className='w-full max-w-md z-10 relative'>
-        {/* Back to Home - Integrated nicely */}
+        {/* Back Button - Clean and Minimal */}
         <Link
           href='/'
-          className='absolute -top-16 left-0 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group'
+          className='inline-flex items-center gap-2 text-slate-400 hover:text-white transition-all duration-200 mb-12 group'
         >
-          <div className='p-2 rounded-full bg-white/5 border border-white/5 group-hover:bg-white/10 group-hover:border-white/10 transition-all'>
-            <ArrowLeft className='w-4 h-4' />
-          </div>
+          <ArrowLeft className='w-4 h-4 transition-transform group-hover:-translate-x-1' />
           <span className='text-sm font-medium'>Back</span>
         </Link>
 
-        {/* Content Container */}
-        <div className='bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl ring-1 ring-white/5'>
-          {/* Header Section */}
-          <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-white mb-2 tracking-tight'>
+        {/* Main Content - No Card */}
+        <div className='space-y-8'>
+          {/* Header */}
+          <div className='space-y-3'>
+            <h1 className='text-4xl md:text-5xl font-bold text-white tracking-tight'>
               Welcome back
             </h1>
-            <p className='text-slate-400 text-sm'>
-              Enter your details to access your account
+            <p className='text-slate-400 text-base md:text-lg'>
+              Sign in to continue to your account
             </p>
           </div>
 
+          {/* Subtle Divider */}
+          <div className='h-px bg-gradient-to-r from-transparent via-white/10 to-transparent'></div>
+
+          {/* Form */}
           <SignInForm onAuthSuccess={handleAuthSuccess} />
 
-          <div className='mt-8 pt-6 border-t border-white/5 text-center text-sm text-slate-400'>
-            Don&apos;t have an account?{" "}
-            <Link
-              href={`/register${
-                redirectUrl !== "/dashboard"
-                  ? `?redirect=${encodeURIComponent(redirectUrl)}`
-                  : ""
-              }`}
-              className='text-amber-400 hover:text-amber-300 font-medium transition-colors hover:underline underline-offset-4'
-            >
-              Sign up
-            </Link>
+          {/* Footer */}
+          <div className='pt-8'>
+            <div className='h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8'></div>
+            <p className='text-center text-slate-400 text-sm md:text-base'>
+              Don&apos;t have an account?{" "}
+              <Link
+                href={`/register${
+                  redirectUrl !== "/dashboard"
+                    ? `?redirect=${encodeURIComponent(redirectUrl)}`
+                    : ""
+                }`}
+                className='text-amber-400 hover:text-amber-300 font-semibold transition-colors relative inline-block group'
+              >
+                Sign up
+                <span className='absolute bottom-0 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full'></span>
+              </Link>
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Bottom Accent */}
+      <div className='absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent'></div>
     </div>
   );
 }
