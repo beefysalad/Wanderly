@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
 import PremiumPageHeader from "../components/shared/PremiumPageHeader";
+import PremiumBackground from "../components/shared/PremiumBackground";
 
 const TripsPage = () => {
   const router = useRouter();
@@ -79,11 +80,10 @@ const TripsPage = () => {
   if (isLoading) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24 relative overflow-hidden'>
-        {/* Ambient background for loading state */}
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-blue-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground />
         
         <div className='text-center relative z-10'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-16 h-16 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-400 font-medium'>Loading trips...</p>
         </div>
       </main>
@@ -92,11 +92,7 @@ const TripsPage = () => {
 
   return (
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-blue-500/30 font-sans'>
-      {/* Immersive background logic */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
-      </div>
+      <PremiumBackground />
 
       <PremiumPageHeader title='My Trips' />
 

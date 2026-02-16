@@ -38,6 +38,7 @@ import {
   TEditProfileSchema,
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import PremiumBackground from "../../shared/PremiumBackground";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
@@ -224,14 +225,14 @@ const ProfileComponent = () => {
   if (firebaseLoading || dbLoading) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground />
         <div className='text-center relative z-10'>
           <div className='relative w-20 h-20 mx-auto mb-6'>
             <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
             <div className='absolute inset-0 border-4 border-t-purple-500 rounded-full animate-spin'></div>
           </div>
           <p className='text-slate-400 font-bold tracking-tight'>
-            Loading amazing profile...
+            Loading profile...
           </p>
         </div>
       </main>
@@ -272,13 +273,8 @@ const ProfileComponent = () => {
     : new Date();
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-36 md:pb-28 text-slate-200 relative overflow-x-hidden selection:bg-purple-500/30 font-sans'>
-      {/* Immersive Animated Background */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
-        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
-      </div>
+    <main className='min-h-screen bg-slate-950 pb-24 text-slate-200 relative overflow-x-hidden selection:bg-purple-500/30 font-sans'>
+      <PremiumBackground />
 
       <PremiumPageHeader 
         title='My Profile' 
@@ -294,386 +290,209 @@ const ProfileComponent = () => {
         )}
       />
 
-      {/* Visual Banner (Refined) */}
-      <div className='relative h-32 sm:h-48 bg-slate-900 overflow-hidden'>
-        <div className='absolute inset-0 bg-slate-800/10 backdrop-blur-[2px]' />
-        <div className='absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent' />
-      </div>
-
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 -mt-16 sm:-mt-24 relative z-10'>
-
-        {/* Profile Card */}
-        <div className='bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden mb-8'>
-          <div className='p-6 sm:p-10'>
-            {!isEditMode ? (
-              <div className='flex flex-col md:flex-row items-center md:items-start gap-8'>
-                {/* Avatar */}
-                <div className='relative flex-shrink-0'>
-                  <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-slate-900 shadow-2xl ring-1 ring-white/20 p-1 bg-gradient-to-tr from-orange-500 to-amber-300'>
-                    <div className='relative w-full h-full rounded-full overflow-hidden bg-slate-800'>
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
-                          alt={displayName}
-                          fill
-                          className='object-cover'
-                        />
-                      ) : (
-                        <div className='w-full h-full flex items-center justify-center'>
-                          <User className='w-16 h-16 text-slate-600' />
-                        </div>
-                      )}
-                    </div>
+      {/* Top Identity Section (Unified & Premium) */}
+      <div className='max-w-3xl mx-auto px-6 pt-8 sm:pt-12 pb-8 relative z-10'>
+        <div className='flex flex-col md:flex-row items-center md:items-end gap-8 mb-12'>
+          {/* Avatar with Glow and Gradient Ring */}
+          <div className='relative group'>
+            <div className='absolute -inset-1 bg-gradient-to-tr from-purple-500 via-blue-500 to-emerald-500 rounded-full blur-md opacity-40 group-hover:opacity-60 transition-opacity' />
+            <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-[3px] bg-gradient-to-tr from-purple-500/20 via-blue-500/20 to-emerald-500/20 backdrop-blur-3xl border border-white/10'>
+              <div className='w-full h-full rounded-full overflow-hidden bg-slate-950/80 backdrop-blur-xl'>
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={displayName}
+                    fill
+                    className='object-cover opacity-90 group-hover:opacity-100 transition-opacity'
+                  />
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center text-slate-700'>
+                    <User className='w-16 h-16' />
                   </div>
-                  <div className='absolute bottom-1 right-1 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-lg'>
-                    <MapPin className='w-5 h-5 text-white' />
-                  </div>
+                )}
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setIsEditMode(true)}
+              className='absolute bottom-1 right-1 w-10 h-10 bg-slate-900/80 backdrop-blur-xl hover:bg-white/10 text-slate-400 hover:text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl transition-all active:scale-90 opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+            >
+              <Camera className='w-5 h-5' />
+            </button>
+          </div>
+
+          {/* Identity Info */}
+          <div className='flex-1 text-center md:text-left space-y-3 pb-2'>
+            <div>
+              <h1 className='text-3xl sm:text-5xl font-black text-white tracking-widest uppercase mb-1 drop-shadow-sm'>
+                {displayName}
+              </h1>
+              <div className='flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]'>
+                <div className='flex items-center gap-1.5'>
+                  <Mail className='w-3 h-3 text-purple-400' />
+                  <span>{email}</span>
                 </div>
-
-                {/* Info */}
-                <div className='flex-1 text-center md:text-left'>
-                  <div className='mb-4'>
-                    <h1 className='text-3xl sm:text-4xl font-black text-white tracking-tight mb-1'>
-                      {displayName}
-                    </h1>
-                    <div className='flex items-center justify-center md:justify-start gap-4 text-slate-400'>
-                      <div className='flex items-center gap-1.5 text-sm'>
-                        <Mail className='w-4 h-4' />
-                        <span>{email}</span>
-                      </div>
-                      <div className='hidden sm:flex items-center gap-1.5 text-sm'>
-                        <Calendar className='w-4 h-4' />
-                        <span>Joined {memberSince.getFullYear()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {userDB?.travelStyle && (
-                    <div className='inline-flex items-center gap-2 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-xs font-bold uppercase tracking-wider mb-4'>
-                      <MapPin className='w-3 h-3' />
-                      {userDB.travelStyle}
-                    </div>
-                  )}
-
-                  <p className='text-slate-300 leading-relaxed max-w-xl mx-auto md:mx-0'>
-                    {userDB?.bio ||
-                      "No bio yet. Tell us where you're headed next!"}
-                  </p>
+                <div className='flex items-center gap-1.5'>
+                  <Calendar className='w-3 h-3 text-emerald-400' />
+                  <span>Explorer since {memberSince.getFullYear()}</span>
                 </div>
               </div>
-            ) : (
-              // EDIT MODE
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className='space-y-8'
-              >
-                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/5'>
-                  <h2 className='text-2xl font-black text-white uppercase tracking-tighter'>
-                    Edit Profile
-                  </h2>
-                  <div className='flex gap-3 w-full sm:w-auto'>
-                    <Button
-                      type='button'
-                      onClick={handleCancel}
-                      variant='outline'
-                      className='flex-1 sm:flex-none border-white/10 bg-slate-800 hover:bg-slate-700 text-white rounded-full'
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type='submit'
-                      disabled={updateProfileMutation.isPending}
-                      className='flex-1 sm:flex-none bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 font-bold rounded-full shadow-lg shadow-orange-500/20'
-                    >
-                      {updateProfileMutation.isPending ? (
-                        <Loader2 className='w-4 h-4 animate-spin mr-2' />
-                      ) : (
-                        <Save className='w-4 h-4 mr-2' />
-                      )}
-                      Save Changes
-                    </Button>
-                  </div>
-                </div>
+            </div>
 
-                <div className='grid grid-cols-1 lg:grid-cols-3 gap-10'>
-                  {/* Photo Column */}
-                  <div className='space-y-4 text-center sm:text-left'>
-                    <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                      Profile Image
-                    </Label>
-                    <div className='relative group'>
-                      <div className='relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-2 border-white/20 mx-auto sm:mx-0 p-1 bg-slate-800/50'>
-                        <div className='relative w-full h-full rounded-full overflow-hidden'>
-                          {avatarUrl ? (
-                            <Image
-                              src={avatarUrl}
-                              alt='Profile'
-                              fill
-                              className='object-cover'
-                            />
-                          ) : (
-                            <div className='w-full h-full bg-slate-800 flex items-center justify-center'>
-                              <User className='w-12 h-12 text-slate-600' />
-                            </div>
-                          )}
-                        </div>
-                        {uploadingImage && (
-                          <div className='absolute inset-0 bg-slate-900/80 flex items-center justify-center backdrop-blur-sm rounded-full'>
-                            <Loader2 className='w-6 h-6 text-orange-500 animate-spin' />
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        type='button'
-                        onClick={() => fileInputRef.current?.click()}
-                        className='absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full max-w-[160px] mx-auto sm:mx-0'
-                      >
-                        <Camera className='w-8 h-8 text-white' />
-                      </button>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type='file'
-                      accept='image/*'
-                      onChange={handleImageUpload}
-                      className='hidden'
-                    />
-                    <p className='text-[10px] text-slate-500 font-bold uppercase tracking-wider'>
-                      Click image to change • Max 5MB
-                    </p>
-                    {uploadError && (
-                      <p className='text-xs text-red-400 font-medium'>
-                        {uploadError}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Fields Column */}
-                  <div className='lg:col-span-2 space-y-6'>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-                      <div className='space-y-2'>
-                        <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                          Display Name
-                        </Label>
-                        <Input
-                          {...form.register("name")}
-                          className='bg-slate-800/50 border-white/10 h-12 focus:ring-orange-500/50'
-                        />
-                        {form.formState.errors.name && (
-                          <p className='text-xs text-red-400 font-medium'>
-                            {form.formState.errors.name.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className='space-y-2'>
-                        <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                          Travel Style
-                        </Label>
-                        <Input
-                          {...form.register("travelStyle")}
-                          placeholder='e.g. Backpacker, Luxury, Hybrid'
-                          className='bg-slate-800/50 border-white/10 h-12 focus:ring-orange-500/50'
-                        />
-                        {form.formState.errors.travelStyle && (
-                          <p className='text-xs text-red-400 font-medium'>
-                            {form.formState.errors.travelStyle.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                        About Me / Bio
-                      </Label>
-                      <textarea
-                        {...form.register("bio")}
-                        className='w-full min-h-[120px] bg-slate-800/50 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-slate-600 transition-all'
-                        placeholder='Tell the world about your travel philosophy...'
-                      />
-                      {form.formState.errors.bio && (
-                        <p className='text-xs text-red-400 font-medium'>
-                          {form.formState.errors.bio.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setShowPasswordSection(!showPasswordSection)
-                      }
-                      className='flex items-center gap-2 text-sm text-slate-500 hover:text-white transition-colors'
-                    >
-                      <Lock className='w-4 h-4' />
-                      {showPasswordSection
-                        ? "Cancel security update"
-                        : "Update Password"}
-                    </button>
-
-                    {showPasswordSection && (
-                      <div className='space-y-4 p-6 bg-slate-950/50 rounded-xl border border-white/5'>
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                            Current Password
-                          </Label>
-                          <Input
-                            type='password'
-                            {...form.register("currentPassword")}
-                            className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
-                            placeholder='••••••••'
-                          />
-                          {form.formState.errors.currentPassword && (
-                            <p className='text-xs text-red-400 font-medium'>
-                              {form.formState.errors.currentPassword.message}
-                            </p>
-                          )}
-                        </div>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                          <div className='space-y-2'>
-                            <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                              New Password
-                            </Label>
-                            <Input
-                              type='password'
-                              {...form.register("newPassword")}
-                              className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
-                              placeholder='Min. 8 characters'
-                            />
-                            {form.formState.errors.newPassword && (
-                              <p className='text-xs text-red-400 font-medium'>
-                                {form.formState.errors.newPassword.message}
-                              </p>
-                            )}
-                          </div>
-                          <div className='space-y-2'>
-                            <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-                              Confirm New
-                            </Label>
-                            <Input
-                              type='password'
-                              {...form.register("confirmPassword")}
-                              className='bg-slate-800/50 border-white/10 focus:ring-orange-500/50'
-                              placeholder='Match new password'
-                            />
-                            {form.formState.errors.confirmPassword && (
-                              <p className='text-xs text-red-400 font-medium'>
-                                {form.formState.errors.confirmPassword.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className='p-4 bg-red-500/10 border border-red-500/20 rounded-xl'>
-                        <p className='text-sm text-red-400 font-medium flex items-center gap-2'>
-                          <X className='w-4 h-4' />
-                          {error}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </form>
+            {userDB?.travelStyle && (
+              <div className='inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-400'>
+                <MapPin className='w-3 h-3 text-orange-400' />
+                {userDB.travelStyle}
+              </div>
             )}
+            
+            <p className='text-slate-400 leading-relaxed max-w-xl mx-auto md:mx-0 text-xs font-medium'>
+              {userDB?.bio || "No bio yet. Tell us where you're headed next!"}
+            </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Action Buttons (Integrated) */}
         {!isEditMode && (
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
-            {[
-              {
-                label: "Travel Groups",
-                value: totalGroups,
-                icon: Users,
-                color: "text-blue-400",
-                bg: "bg-blue-500/10",
-              },
-              {
-                label: "Total Trips",
-                value: totalTrips,
-                icon: MapPin,
-                color: "text-orange-400",
-                bg: "bg-orange-500/10",
-              },
-              {
-                label: "Check-ins Done",
-                value: totalActivities,
-                icon: Calendar,
-                color: "text-purple-400",
-                bg: "bg-purple-500/10",
-              },
-              {
-                label: "Destinations",
-                value: uniqueLocations,
-                icon: Globe,
-                color: "text-emerald-400",
-                bg: "bg-emerald-500/10",
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className='bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-white/10 group hover:border-orange-500/30 transition-all'
-              >
-                <div
-                  className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                >
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <div className='text-2xl font-black text-white mb-1'>
-                  {stat.value}
-                </div>
-                <div className='text-[10px] font-black uppercase tracking-widest text-slate-500'>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+          <div className='flex flex-wrap items-center justify-center md:justify-start gap-3 mb-12'>
+            <button
+              onClick={() => setIsEditMode(true)}
+              className='px-6 py-2.5 bg-white text-slate-950 hover:bg-slate-200 font-black text-[10px] uppercase tracking-widest rounded-full transition-all flex items-center gap-2 shadow-lg shadow-white/5'
+            >
+              <Edit className='w-4 h-4' />
+              Edit Profile
+            </button>
+            <button
+              onClick={handleLogout}
+              className='px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white font-black text-[10px] uppercase tracking-widest rounded-full border border-white/10 transition-all flex items-center gap-2'
+            >
+              <LogOut className='w-4 h-4' />
+              Sign Out
+            </button>
           </div>
         )}
 
-        {/* Recent Journey Preview */}
-        {!isEditMode && groups.length > 0 && (
-          <div className='space-y-4'>
-            <h3 className='text-xl font-black text-white uppercase tracking-tighter'>
-              Recent Explorations
-            </h3>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-              {groups.slice(0, 4).map((group) => (
-                <div
-                  key={group.id}
-                  onClick={() => router.push(`/group/${group.id}`)}
-                  className='p-5 bg-slate-900/40 border border-white/5 rounded-2xl flex items-center gap-4 hover:bg-slate-800/50 hover:border-white/20 transition-all cursor-pointer group'
-                >
-                  <div className='w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform'>
-                    {group.emoji || "✈️"}
+        {/* Conditional Content: Edit Form vs Dashboard Stats */}
+        {isEditMode ? (
+          <div className='bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 sm:p-12 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-12'>
+              <div className='flex items-center justify-between gap-4 pb-6 border-b border-white/5'>
+                <h2 className='text-xl font-black text-white uppercase tracking-[0.2em]'>Edit Explorer Profile</h2>
+                <div className='flex gap-3'>
+                  <Button type='button' onClick={handleCancel} variant='outline' className='bg-slate-800 border-white/10 text-xs font-black uppercase tracking-widest rounded-full px-6'>Cancel</Button>
+                  <Button type='submit' disabled={updateProfileMutation.isPending} className='bg-white text-slate-950 hover:bg-slate-200 text-xs font-black uppercase tracking-widest rounded-full px-6 shadow-xl shadow-white/5'>
+                    {updateProfileMutation.isPending && <Loader2 className='w-3 h-3 animate-spin mr-2' />}
+                    Save Identity
+                  </Button>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
+                <div className='space-y-8'>
+                  <div className='space-y-2'>
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Explorer Name</Label>
+                    <Input {...form.register("name")} className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-purple-500/50 text-base font-medium transition-all' />
                   </div>
-                  <div>
-                    <h4 className='font-bold text-white group-hover:text-orange-400 transition-colors uppercase text-sm tracking-tight'>
-                      {group.name}
-                    </h4>
-                    <p className='text-xs text-slate-500'>
-                      {group.trips?.length || 0} trips planned
-                    </p>
+                  <div className='space-y-2'>
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Travel Philosophy (Bio)</Label>
+                    <textarea {...form.register("bio")} className='w-full min-h-[160px] bg-white/5 border border-white/5 rounded-2xl p-5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 placeholder:text-slate-700 transition-all text-sm font-medium resize-none' placeholder='Describe your journey...' />
                   </div>
-                  <ArrowLeft className='w-4 h-4 text-slate-600 ml-auto rotate-180' />
+                </div>
+
+                <div className='space-y-8'>
+                  <div className='space-y-2'>
+                    <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>Travel Style</Label>
+                    <Input {...form.register("travelStyle")} placeholder='e.g. Minimalist Explorer' className='bg-white/5 border-white/5 h-14 rounded-2xl focus:ring-emerald-500/50 text-base font-medium transition-all' />
+                  </div>
+                  
+                  <div className='pt-4'>
+                    <button type='button' onClick={() => setShowPasswordSection(!showPasswordSection)} className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'>
+                      <Lock className='w-3 h-3' />
+                      {showPasswordSection ? "Keep current credentials" : "Update security credentials"}
+                    </button>
+
+                    {showPasswordSection && (
+                      <div className='mt-6 grid grid-cols-1 gap-4 p-6 bg-black/40 rounded-2xl border border-white/5 animate-in fade-in zoom-in-95 duration-300'>
+                        <Input type='password' {...form.register("currentPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='Current Password' />
+                        <div className='grid grid-cols-2 gap-4'>
+                          <Input type='password' {...form.register("newPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='New Password' />
+                          <Input type='password' {...form.register("confirmPassword")} className='bg-white/5 border-white/5 h-12 rounded-xl' placeholder='Confirm New' />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className='space-y-24 animate-in fade-in duration-700'>
+            {/* Stats Grid (Minimal & Elegant) */}
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12'>
+              {[
+                { label: "Voyages", value: totalGroups, icon: Users, color: "from-blue-400 to-cyan-400" },
+                { label: "Destinations", value: uniqueLocations, icon: Globe, color: "from-emerald-400 to-teal-400" },
+                { label: "Milestones", value: totalActivities, icon: Calendar, color: "from-purple-400 to-pink-400" },
+                { label: "Total Trips", value: totalTrips, icon: MapPin, color: "from-orange-400 to-amber-400" },
+              ].map((stat) => (
+                <div key={stat.label} className='group relative'>
+                  <div className='absolute -inset-2 bg-white/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity' />
+                  <div className='relative'>
+                    <div className='flex items-baseline gap-2'>
+                      <span className={`text-4xl sm:text-6xl font-black bg-gradient-to-br ${stat.color} bg-clip-text text-transparent tracking-tighter leading-none`}>
+                        {stat.value}
+                      </span>
+                    </div>
+                    <div className='mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300 transition-colors'>
+                      {stat.label}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-        {/* Logout Button */}
-        {!isEditMode && (
-          <div className='mt-12 text-center pb-8'>
-            <button
-              onClick={handleLogout}
-              className='px-6 py-2.5 text-sm rounded-full border border-red-500/20 text-red-500/60 hover:text-red-400 hover:bg-red-500/5 font-bold transition-all flex items-center gap-2 mx-auto shadow-lg shadow-black/20'
-            >
-              <LogOut className='w-4 h-4' />
-              Sign Out from Wanderly
-            </button>
+
+            {/* Journey Explorations */}
+            {groups.length > 0 && (
+              <div className='space-y-8 pt-4'>
+                <div className='flex items-center justify-between border-b border-white/5 pb-4'>
+                  <h3 className='text-xs font-black text-white uppercase tracking-[0.3em]'>Recent Journeys</h3>
+                  <button onClick={() => router.push('/groups')} className='text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors'>View All</button>
+                </div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                  {groups.slice(0, 4).map((group) => (
+                    <div
+                      key={group.id}
+                      onClick={() => router.push(`/group/${group.id}`)}
+                      className='group relative p-6 bg-slate-900/20 hover:bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-3xl transition-all cursor-pointer overflow-hidden'
+                    >
+                      <div className='absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-12 -mt-12 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity' />
+                      <div className='relative flex items-center gap-5'>
+                        <div className='w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-inner'>
+                          {group.emoji || "✈️"}
+                        </div>
+                        <div className='flex-1'>
+                          <h4 className='font-black text-white group-hover:text-orange-400 transition-colors uppercase text-sm tracking-widest mb-1'>
+                            {group.name}
+                          </h4>
+                          <div className='flex items-center gap-3'>
+                             <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                               {group.trips?.length || 0} Missions
+                             </p>
+                             <div className='w-1 h-1 rounded-full bg-slate-800' />
+                             <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider'>
+                               {group.memberEmails?.length || 0} Explorers
+                             </p>
+                          </div>
+                        </div>
+                        <div className='w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0'>
+                          <ArrowLeft className='w-4 h-4 text-white rotate-180' />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
