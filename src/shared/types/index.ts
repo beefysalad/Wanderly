@@ -39,6 +39,7 @@ export interface User {
   imageUrl?: string; // Prisma field
   bio?: string;
   referralSource?: string;
+  travelStyle?: string;
   hasCompletedOnboarding?: boolean;
 }
 

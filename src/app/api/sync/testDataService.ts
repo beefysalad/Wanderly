@@ -11,23 +11,38 @@ export async function seedTestData(userId: string) {
   try {
     logger.info("🌱 Seeding ultra-enhanced test data for new user", { userId });
 
+    // ATOMIC CHECK: Use updateMany to safely check -and- set the flag in one DB operation.
+    // This prevents race conditions where multiple requests read 'false' and all proceed.
+    // updateMany returns { count: n }. If count is 0, it means either:
+    // 1. User doesn't exist
+    // 2. User already has hasSeededTestData = true
+    const result = await prisma.user.updateMany({
+      where: {
+        id: userId,
+        hasSeededTestData: false, // Only update if currently false
+      },
+      data: {
+        hasSeededTestData: true, // Mark as seeded immediately
+      },
+    });
+
+    if (result.count === 0) {
+      logger.info(
+        "User already seeded (or not found) - blocked by atomic lock",
+        { userId },
+      );
+      return;
+    }
+
+    // Fetch user details for seeding (now that we have the lock)
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      logger.warn("User not found, skipping seed", { userId });
+      logger.warn(
+        "User found during update but not found during fetch (simultaneous delete?)",
+        { userId },
+      );
       return;
     }
-
-    // Check if user has already been seeded to prevent duplicates
-    if (user.hasSeededTestData) {
-      logger.info("User already has seeded data, skipping", { userId });
-      return;
-    }
-
-    // Mark user as seeded immediately to prevent race conditions
-    await prisma.user.update({
-      where: { id: userId },
-      data: { hasSeededTestData: true },
-    });
 
     // Variables to track for logging
     let groupId = "";
