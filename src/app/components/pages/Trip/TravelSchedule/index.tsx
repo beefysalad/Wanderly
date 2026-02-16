@@ -181,46 +181,7 @@ const DraggableActivity = ({
               {activity.title}
             </h3>
 
-            {!readOnly && (onEditActivity || onDeleteActivity) && (
-              <div className='flex items-center gap-1 flex-none ml-2'>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors'
-                    >
-                      <MoreVertical className='w-4 h-4' />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end' className='w-32'>
-                    {onEditActivity && (
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditActivity(activity);
-                        }}
-                        className='gap-2 cursor-pointer'
-                      >
-                        <Pencil className='w-3.5 h-3.5' />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                    )}
-                    {onDeleteActivity && (
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteActivity(activity.id);
-                        }}
-                        className='gap-2 text-red-400 focus:text-red-400 cursor-pointer'
-                      >
-                        <Trash2 className='w-3.5 h-3.5' />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
+
           </div>
 
           {/* Time on Desktop */}

@@ -114,7 +114,7 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
                 id='tripName'
                 type='text'
                 {...form.register("tripName")}
-                placeholder='e.g., Summer Roadtrip 2024'
+                placeholder='e.g. Vietnam 2026'
                 className={`w-full px-4 py-3.5 border rounded-xl bg-slate-800/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
                   form.formState.errors.tripName
                     ? "border-red-500 focus:ring-red-500/20"

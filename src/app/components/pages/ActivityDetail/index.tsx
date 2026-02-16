@@ -178,7 +178,7 @@ const ActivityDetail = ({
         {/* Content Cards */}
         <div className='space-y-6'>
           {/* Notes Card */}
-          {activity.notes && (
+          {activity.notes ? (
             <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
               <div className='flex items-center gap-3 mb-4 text-slate-500'>
                 <FileText className='w-4 h-4' />
@@ -188,6 +188,16 @@ const ActivityDetail = ({
               </div>
               <p className='text-base text-slate-300 leading-relaxed whitespace-pre-wrap font-medium'>
                 {activity.notes}
+              </p>
+            </div>
+          ) : (
+            <div className='bg-slate-900/50 rounded-2xl p-8 border border-slate-800/50 border-dashed text-center'>
+              <div className='w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-500'>
+                <FileText className='w-6 h-6' />
+              </div>
+              <p className='text-slate-400 font-medium'>No notes added yet</p>
+              <p className='text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold'>
+                Edit activity to add helpful details
               </p>
             </div>
           )}
@@ -288,7 +298,7 @@ const ActivityDetail = ({
           )}
 
           {/* Linked Expenses */}
-          {linkedExpenses.length > 0 && (
+          {linkedExpenses.length > 0 ? (
             <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
               <div className='flex items-center justify-between mb-6'>
                 <div className='flex items-center gap-3 text-emerald-500'>
@@ -329,6 +339,16 @@ const ActivityDetail = ({
                   </button>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className='bg-slate-900/50 rounded-2xl p-8 border border-slate-800/50 border-dashed text-center'>
+              <div className='w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4 text-emerald-500/50'>
+                <DollarSign className='w-6 h-6' />
+              </div>
+              <p className='text-slate-400 font-medium'>No expenses linked</p>
+              <p className='text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold'>
+                Easily track costs for this activity
+              </p>
             </div>
           )}
         </div>
