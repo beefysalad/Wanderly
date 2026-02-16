@@ -37,6 +37,7 @@ import {
   editProfileSchema,
   TEditProfileSchema,
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
@@ -222,11 +223,12 @@ const ProfileComponent = () => {
 
   if (firebaseLoading || dbLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='text-center relative z-10'>
           <div className='relative w-20 h-20 mx-auto mb-6'>
             <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
-            <div className='absolute inset-0 border-4 border-t-orange-500 rounded-full animate-spin'></div>
+            <div className='absolute inset-0 border-4 border-t-purple-500 rounded-full animate-spin'></div>
           </div>
           <p className='text-slate-400 font-bold tracking-tight'>
             Loading amazing profile...
@@ -270,32 +272,35 @@ const ProfileComponent = () => {
     : new Date();
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-36 md:pb-28 text-slate-200'>
-      {/* Visual Header / Banner */}
-      <div className='relative h-48 sm:h-64 bg-slate-900 overflow-hidden'>
-        <div className='absolute inset-0 bg-slate-800/20' />
+    <main className='min-h-screen bg-slate-950 pb-36 md:pb-28 text-slate-200 relative overflow-x-hidden selection:bg-purple-500/30 font-sans'>
+      {/* Immersive Animated Background */}
+      <div className='fixed inset-0 z-0 pointer-events-none'>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
+        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
+      </div>
+
+      <PremiumPageHeader 
+        title='My Profile' 
+        onBack={() => router.push("/dashboard")}
+        actions={!isEditMode && (
+          <button
+            onClick={() => setIsEditMode(true)}
+            className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
+            title='Edit Profile'
+          >
+            <Edit className='w-5 h-5' />
+          </button>
+        )}
+      />
+
+      {/* Visual Banner (Refined) */}
+      <div className='relative h-32 sm:h-48 bg-slate-900 overflow-hidden'>
+        <div className='absolute inset-0 bg-slate-800/10 backdrop-blur-[2px]' />
         <div className='absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent' />
       </div>
 
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 -mt-24 relative z-10'>
-        {/* Header Navigation */}
-        <div className='mb-6 flex items-center justify-between'>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className='px-5 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-black/20'
-          >
-            <ArrowLeft className='w-4 h-4' />
-          </button>
-          {!isEditMode && (
-            <button
-              onClick={() => setIsEditMode(true)}
-              className='px-5 py-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white text-sm font-bold transition-all shadow-lg shadow-orange-500/25 flex items-center gap-2 hover:scale-105 active:scale-95'
-            >
-              <Edit className='w-4 h-4' />
-              Edit Profile
-            </button>
-          )}
-        </div>
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 -mt-16 sm:-mt-24 relative z-10'>
 
         {/* Profile Card */}
         <div className='bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden mb-8'>

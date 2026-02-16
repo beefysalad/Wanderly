@@ -17,7 +17,7 @@ import {
 import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 
 interface IActivityDetailProps {
   activity: Activity;
@@ -48,65 +48,63 @@ const ActivityDetail = ({
 
   return (
     <div className='min-h-screen bg-slate-950 pb-32 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
-      {/* Immersive Background */}
+      {/* Immersive Animated Background */}
       <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-white/[0.02] rounded-full blur-[150px] opacity-40'></div>
-        <div className='absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-white/[0.02] rounded-full blur-[150px] opacity-40'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
+        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
       </div>
 
-      <div className='max-w-4xl mx-auto w-full px-4 relative z-20'>
-        <DashboardLayoutHeader
-          showBack={true}
-          rightContent={
-            !readOnly && (
-              <div className='relative'>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className='p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all outline-none'
-                  title='Options'
-                >
-                  <MoreVertical className='w-5 h-5' />
-                </button>
+      <PremiumPageHeader 
+        title='Activity Details' 
+        actions={
+          !readOnly && (
+            <div className='relative'>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
+                title='Options'
+              >
+                <MoreVertical className='w-5 h-5' />
+              </button>
 
-                {showMenu && (
-                  <>
-                    <div
-                      className='fixed inset-0 z-40'
-                      onClick={() => setShowMenu(false)}
-                    />
-                    <div className='absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden z-50'>
-                      <div className='px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-800/50'>
-                        Options
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowMenu(false);
-                          onEdit && onEdit();
-                        }}
-                        className='w-full px-4 py-3 text-left hover:bg-slate-800 text-slate-300 hover:text-white text-sm transition-colors flex items-center gap-2'
-                      >
-                        <Pencil className='w-4 h-4' />
-                        Edit Activity
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowMenu(false);
-                          onDelete && onDelete();
-                        }}
-                        className='w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors border-t border-white/5'
-                      >
-                        <Trash2 className='w-4 h-4' />
-                        Delete Activity
-                      </button>
+              {showMenu && (
+                <>
+                  <div
+                    className='fixed inset-0 z-40'
+                    onClick={() => setShowMenu(false)}
+                  />
+                  <div className='absolute right-0 top-full mt-3 w-52 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in duration-200'>
+                    <div className='px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white/5'>
+                      Options
                     </div>
-                  </>
-                )}
-              </div>
-            )
-          }
-          className='px-0'
-        />
-      </div>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onEdit && onEdit();
+                      }}
+                      className='w-full px-4 py-3.5 text-left text-sm text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-3 transition-colors'
+                    >
+                      <Pencil className='w-4 h-4' />
+                      Edit Activity
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onDelete && onDelete();
+                      }}
+                      className='w-full px-4 py-3.5 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5'
+                    >
+                      <Trash2 className='w-4 h-4' />
+                      Delete Activity
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )
+        }
+      />
 
       <div className='max-w-3xl mx-auto w-full relative z-10 px-4 sm:px-6'>
         {/* Title & Status Section */}
