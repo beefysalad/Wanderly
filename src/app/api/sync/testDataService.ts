@@ -98,7 +98,7 @@ export async function seedTestData(userId: string) {
       const groupCode = await generateUniqueGroupCode();
       const group = await tx.group.create({
         data: {
-          name: "Singapore Adventure 2024",
+          name: "Singapore Adventure 2024 (test)",
           code: groupCode,
           colorScheme: "orange",
           emoji: "🇸🇬",
@@ -122,7 +122,7 @@ export async function seedTestData(userId: string) {
         data: {
           groupId: group.id,
           createdById: userId,
-          name: "Marina Bay & Island Hopping",
+          name: "Marina Bay & Island Hopping (test)",
           startDate,
           endDate,
           location: "Singapore",
