@@ -27,6 +27,7 @@ import { useDeleteTrip } from "@/src/hooks/useTrips";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import PremiumBackground from "../../shared/PremiumBackground";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
@@ -369,7 +370,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   if (loading) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground />
         <div className='text-center relative z-10'>
           <div className='relative w-20 h-20 mx-auto mb-6'>
             <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
@@ -386,7 +387,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   if (!trip) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-red-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground variant='red' />
         <div className='text-center bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md relative z-10'>
           <div className='w-16 h-16 bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-lg'>
             <span className='text-3xl'>😞</span>
@@ -412,12 +413,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   return (
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-purple-500/30 font-sans'>
-      {/* Immersive Animated Background */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
-        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
-      </div>
+      <PremiumBackground />
 
       <PremiumPageHeader 
         title='Trip Details' 

@@ -12,6 +12,7 @@ import { getGroupColorClasses } from "@/lib/utils/groupColors";
 import Link from "next/link";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
 import PremiumPageHeader from "../components/shared/PremiumPageHeader";
+import PremiumBackground from "../components/shared/PremiumBackground";
 
 const GroupsPage = () => {
   const router = useRouter();
@@ -32,8 +33,7 @@ const GroupsPage = () => {
   if (isLoading) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24 relative overflow-hidden'>
-        {/* Ambient background for loading state */}
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground variant='orange' />
         
         <div className='text-center relative z-10'>
           <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
@@ -45,11 +45,7 @@ const GroupsPage = () => {
 
   return (
     <main className='min-h-screen bg-slate-950 pb-28 relative overflow-hidden selection:bg-orange-500/30 font-sans'>
-      {/* Immersive background logic (inline for now as requested design is specific) */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-      </div>
+      <PremiumBackground variant='orange' />
 
       <PremiumPageHeader title='My Groups' />
 

@@ -23,6 +23,7 @@ import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { toast } from "sonner";
 import { getGroupColorClasses, getVibeInfo } from "@/lib/utils/groupColors";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import PremiumBackground from "../../shared/PremiumBackground";
 
 interface IGroupComponent {
   param: string;
@@ -167,7 +168,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   if (isLoading) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground variant='orange' />
         <div className='text-center relative z-10'>
           <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-slate-400 font-medium'>Loading group...</p>
@@ -179,7 +180,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   if (!group || error) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-red-600/5 rounded-full blur-[120px] animate-pulse opacity-50' />
+        <PremiumBackground variant='red' />
         <div className='text-center bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md relative z-10'>
           <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-lg'>
             <span className='text-4xl'>😞</span>
@@ -206,12 +207,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   return (
     <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-orange-500/30 font-sans'>
-      {/* Immersive Animated Background */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-orange-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
-        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
-      </div>
+      <PremiumBackground variant='orange' />
 
       <PremiumPageHeader 
         title='Group Details' 

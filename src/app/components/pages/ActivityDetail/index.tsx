@@ -18,6 +18,7 @@ import React, { useState } from "react";
 import { formatTime12Hour } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import PremiumBackground from "../../shared/PremiumBackground";
 
 interface IActivityDetailProps {
   activity: Activity;
@@ -48,12 +49,7 @@ const ActivityDetail = ({
 
   return (
     <div className='min-h-screen bg-slate-950 pb-32 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
-      {/* Immersive Animated Background */}
-      <div className='fixed inset-0 z-0 pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse opacity-50' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse opacity-50' style={{ animationDelay: '2s' }} />
-        <div className='absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30' />
-      </div>
+      <PremiumBackground />
 
       <PremiumPageHeader 
         title='Activity Details' 
