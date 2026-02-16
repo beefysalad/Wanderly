@@ -1,25 +1,36 @@
-- name: Create PR from dev to prod
-  env:
-    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  run: |
-    echo "Getting latest commit message from dev..."
-    COMMIT_MESSAGE=$(git log -1 --pretty=%s)
+name: Create Pull Request Dev to Prod
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
 
-    echo "Checking for existing PR from dev to prod..."
-    existing_pr=$(gh pr list \
-      --base prod \
-      --head dev \
-      --json number \
-      --jq '.[].number' | head -n 1)
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    if [ -n "$existing_pr" ]; then
-      echo "PR #$existing_pr already exists. Skipping creation."
-    else
-      echo "Creating PR with commit message as title..."
-      gh pr create \
-        --base prod \
-        --head dev \
-        --title "$COMMIT_MESSAGE" \
-        --body "Automated PR from dev to prod.\n\nCommit message:\n$COMMIT_MESSAGE" \
-        || echo "No changes to merge or PR creation failed."
-    fi
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a PR already exists from dev to prod
+          existing_pr=$(gh pr list --base prod --head dev --json number --jq '.[0].number')
+
+          if [ -n "$existing_pr" ]; then
+            echo "PR #$existing_pr already exists from dev to prod. Skipping creation."
+          else
+            echo "No existing PR found. Creating a new one..."
+            PR_TITLE=$(git log -1 --pretty=%s)
+            gh pr create \
+              --base prod \
+              --head dev \
+              --title "$PR_TITLE" \
+              --body "Automated Pull Request from dev to prod. Created by GitHub Action." \
+              || echo "Failed to create PR (possibly no changes between branches)"
+          fi
