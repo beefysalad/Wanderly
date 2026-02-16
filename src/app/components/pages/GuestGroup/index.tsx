@@ -45,7 +45,7 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
   if (!group || error) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md'>
+        <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/10 p-16 max-w-md'>
           <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6'>
             <span className='text-4xl'>😞</span>
           </div>
@@ -57,7 +57,7 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
           </p>
           <button
             onClick={goBack}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
+            className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-full transition-all font-bold shadow-lg shadow-amber-500/20 hover:scale-105'
           >
             Go Home
           </button>
@@ -70,8 +70,8 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
     <main className='min-h-screen bg-slate-950 pb-20 relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px]'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]'></div>
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
@@ -95,8 +95,8 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
           </h1>
 
           <div className='flex items-center gap-3 flex-wrap mb-8'>
-            <div className='px-4 py-2 bg-slate-800/40 border border-white/5 rounded-xl flex items-center gap-3'>
-              <span className='text-xs font-medium text-slate-400 uppercase tracking-wider'>
+            <div className='px-4 py-2 bg-slate-900/50 border border-white/10 rounded-xl flex items-center gap-3'>
+              <span className='text-xs font-bold text-slate-400 uppercase tracking-wider'>
                 Code
               </span>
               <code className='font-mono font-bold text-amber-400 text-lg'>
@@ -115,10 +115,10 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <button
               onClick={() => router.push(`/guest/group/${group.id}/members`)}
-              className='p-6 rounded-2xl bg-slate-800/20 hover:bg-slate-800/40 border border-white/5 backdrop-blur-xl transition-all text-left flex items-center justify-between group'
+              className='p-6 rounded-3xl bg-slate-900/50 hover:bg-slate-800/50 border border-white/10 hover:border-white/20 backdrop-blur-xl transition-all text-left flex items-center justify-between group'
             >
               <div className='flex items-center gap-4'>
-                <div className='w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400'>
+                <div className='w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400'>
                   <span className='text-2xl group-hover:scale-110 transition-transform'>
                     👥
                   </span>

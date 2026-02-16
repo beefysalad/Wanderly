@@ -93,8 +93,8 @@ const GuestExpensesComponent = ({
     <main className='min-h-screen bg-slate-950 pb-6 relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px]'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]'></div>
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10'>
@@ -118,7 +118,7 @@ const GuestExpensesComponent = ({
             </div>
           </div>
 
-          <div className='bg-slate-800/20 backdrop-blur-xl border border-white/5 rounded-2xl p-6 sm:p-8 mb-8'>
+          <div className='bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 mb-8'>
             <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
               <div>
                 <div className='flex items-center gap-2 mb-3'>
@@ -136,10 +136,10 @@ const GuestExpensesComponent = ({
               </div>
 
               {/* Filter Tabs */}
-              <div className='flex items-center gap-2 bg-slate-900/50 p-1 rounded-xl border border-white/5'>
+              <div className='flex items-center gap-1 bg-slate-900/50 p-1 rounded-full border border-white/10'>
                 <button
                   onClick={() => setExpenseSubTab("unsettled")}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
                     expenseSubTab === "unsettled"
                       ? "bg-amber-500 text-white shadow-lg"
                       : "text-slate-400 hover:text-white"
@@ -149,7 +149,7 @@ const GuestExpensesComponent = ({
                 </button>
                 <button
                   onClick={() => setExpenseSubTab("settled")}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
                     expenseSubTab === "settled"
                       ? "bg-amber-500 text-white shadow-lg"
                       : "text-slate-400 hover:text-white"
@@ -162,7 +162,7 @@ const GuestExpensesComponent = ({
           </div>
         </div>
 
-        <div className='bg-slate-800/20 backdrop-blur-xl border border-white/5 rounded-2xl p-4 sm:p-8 min-h-[400px]'>
+        <div className='bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-8 min-h-[400px]'>
           <div className='relative z-10'>
             {loadingExpenses || loadingPaymentLogs ? (
               <div className='text-center py-12'>

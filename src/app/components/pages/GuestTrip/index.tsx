@@ -1,20 +1,24 @@
+"use client";
 import { getStatusBadge } from "@/lib/helper";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { Activity, Trip } from "@/src/shared/types";
-import { ArrowLeft } from "lucide-react";
-
+import { Calendar, DollarSign, Layout, List } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
-import BottomNav from "../Trip/BottomNav";
+import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import TravelCalendar from "../Trip/TravelCalendar";
 import TravelSchedule from "../Trip/TravelSchedule";
+import TravelDayOverview from "../Trip/TravelDayOverview";
+import ExpensesList from "../Expenses/ExpenseList";
+import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 
 interface IGuestTripComponent {
   tripId: string;
   groupId: string;
 }
+
+type TabType = "calendar" | "schedule" | "expenses" | "daily";
 
 const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
   const router = useRouter();
@@ -23,31 +27,28 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
   const group = groupData || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
 
+  // Expenses Data
+  const { data: expensesData } = useExpenses(tripId);
+  const { data: paymentLogsData } = usePaymentLogs(tripId);
+  const expenses = expensesData?.expenses || [];
+  const paymentLogs = paymentLogsData?.paymentLogs || [];
+
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
-  const [activeTab, setActiveTab] = useState<
-    "calendar" | "schedule" | "dashboard" | "profile"
-  >("calendar");
 
-  // Handle tab changes - only allow calendar/schedule for guests
-  const handleTabChange = (
-    tab: "calendar" | "schedule" | "dashboard" | "profile",
-  ) => {
-    if (tab === "calendar" || tab === "schedule") {
-      setActiveTab(tab);
-    }
-    // Ignore dashboard and profile tabs for guests
-  };
-
-  const [showActivityDetailModal, setShowActivityDetailModal] =
-    useState<boolean>(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
-    null,
-  );
+  const [activeTab, setActiveTab] = useState<TabType>("calendar");
 
   const handleViewActivity = (activity: Activity) => {
-    setSelectedActivity(activity);
-    setShowActivityDetailModal(true);
+    router.push(
+      `/guest/group/${groupId}/trip/${tripId}/activities/${activity.id}`,
+    );
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSelectExpense = (expense: any) => {
+    router.push(
+      `/guest/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`,
+    );
   };
 
   if (loading) {
@@ -64,7 +65,7 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
   if (!trip) {
     return (
       <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md'>
+        <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/10 p-16 max-w-md'>
           <div className='w-20 h-20 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6'>
             <span className='text-3xl'>😞</span>
           </div>
@@ -74,7 +75,7 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
           </p>
           <button
             onClick={() => router.push(`/guest/group/${groupId}`)}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl'
+            className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-full transition-all font-bold shadow-lg shadow-amber-500/20 hover:scale-105'
           >
             Go Back to Group
           </button>
@@ -92,156 +93,163 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
     <main className='min-h-screen bg-slate-950 pb-32 md:pb-24 relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-3xl'></div>
+        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px]'></div>
+        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]'></div>
       </div>
 
       <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
-        {/* Header Navigation */}
-        <div className='flex items-center justify-between mb-8'>
-          <button
-            onClick={() => router.push(`/guest/group/${groupId}`)}
-            className='p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors inline-flex items-center gap-2 text-slate-400 hover:text-white group'
-          >
-            <ArrowLeft className='w-5 h-5 transition-transform group-hover:-translate-x-1' />
-            <span className='font-medium'>Back</span>
-          </button>
+        {/* Navigation Bar */}
+        <DashboardLayoutHeader
+          showBack={true}
+          backUrl={`/guest/group/${groupId}`}
+          rightContent={
+            <div className='flex items-center gap-2'>
+              <span className='px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter'>
+                GUEST VIEW
+              </span>
+            </div>
+          }
+        />
 
-          <div className='flex items-center gap-2'>
-            <span className='px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter'>
-              GUEST VIEW
-            </span>
-          </div>
-        </div>
-
-        {/* Trip Header Info */}
-        <div className='mb-8 px-1'>
-          <div className='flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4'>
-            <div>
-              <h1 className='text-4xl font-bold text-white mb-3 leading-tight'>
+        {/* Trip Header */}
+        <div className='mb-8'>
+          <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
+            <div className='text-center md:text-left'>
+              <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
                 {trip.name}
               </h1>
-              <div className='flex flex-wrap items-center gap-3 text-slate-400'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-lg'>📅</span>
-                  <span className='text-sm font-medium'>
-                    {startDate.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    -{" "}
-                    {endDate.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
+              <div className='flex items-center gap-3 mb-2 justify-center md:justify-start'>
+                <span
+                  className={`${statusBadge.bg} ${statusBadge.text} text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border ${statusBadge.border}`}
+                >
+                  {statusBadge.label}
+                </span>
+
                 {trip.createdBy && (
-                  <>
-                    <span className='w-1 h-1 rounded-full bg-slate-700'></span>
-                    <span className='text-xs'>By {trip.createdBy}</span>
-                  </>
+                  <span className='text-xs text-slate-500'>
+                    by {trip.createdBy}
+                  </span>
                 )}
               </div>
-            </div>
 
-            <div>
-              <span
-                className={`${statusBadge.bg} ${statusBadge.text} text-xs font-bold px-4 py-2 rounded-full border ${statusBadge.border} shadow-sm inline-flex items-center uppercase tracking-wider`}
-              >
-                {statusBadge.label}
-              </span>
+              <div className='flex items-center gap-2 text-slate-400 justify-center md:justify-start'>
+                <Calendar className='w-4 h-4' />
+                <span>
+                  {startDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {" - "}
+                  {endDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
             </div>
-          </div>
-
-          {/* Action Row */}
-          <div className='flex flex-wrap gap-3 mt-6'>
-            <button
-              onClick={() =>
-                router.push(`/guest/group/${groupId}/trip/${tripId}/expenses`)
-              }
-              className='px-5 py-2.5 rounded-xl bg-slate-800/40 hover:bg-slate-700/60 text-white border border-white/5 transition-all text-sm font-semibold flex items-center gap-2 active:scale-95 group'
-            >
-              <span className='text-lg group-hover:scale-110 transition-transform'>
-                💰
-              </span>
-              <span>View Expenses</span>
-            </button>
-            <div className='flex-1'></div>
-            <button
-              disabled
-              className='px-5 py-2.5 rounded-xl bg-slate-800/20 text-slate-600 border border-white/5 transition-all text-sm font-semibold flex items-center gap-2 cursor-not-allowed opacity-50'
-            >
-              <span className='text-lg'>🔒</span>
-              <span>Edit Trip</span>
-            </button>
           </div>
         </div>
 
-        {/* View Selection (Calendar/Schedule) */}
-        <div className='mt-8'>
-          <div className='flex items-center justify-between mb-6 px-1'>
-            <div className='flex items-center gap-1 bg-slate-800/30 p-1 rounded-xl border border-white/5'>
-              <button
-                onClick={() => handleTabChange("calendar")}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  activeTab === "calendar"
-                    ? "bg-amber-500 text-white shadow-lg"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Calendar
-              </button>
-              <button
-                onClick={() => handleTabChange("schedule")}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  activeTab === "schedule"
-                    ? "bg-amber-500 text-white shadow-lg"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Schedule
-              </button>
-            </div>
-            <div className='h-px flex-1 bg-white/5 ml-6'></div>
-          </div>
-
-          <div id='schedule-export-container' className='relative'>
-            {activeTab === "calendar" ? (
-              <TravelCalendar
-                startDate={startDate}
-                endDate={endDate}
-                activities={activities}
-                readOnly={true}
-                onViewActivity={handleViewActivity}
-              />
-            ) : (
-              <TravelSchedule
-                startDate={startDate}
-                endDate={endDate}
-                activities={activities}
-                tripName={trip.name}
-                readOnly={true}
-                onViewActivity={handleViewActivity}
-              />
-            )}
-          </div>
+        {/* Content Area */}
+        <div className='bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/10 p-4 sm:p-6 min-h-[400px]'>
+          {activeTab === "calendar" ? (
+            <TravelCalendar
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+              readOnly={true}
+              onViewActivity={handleViewActivity}
+            />
+          ) : activeTab === "expenses" ? (
+            <ExpensesList
+              expenses={expenses}
+              members={group?.memberEmails || []}
+              memberNames={group?.memberNames}
+              memberMetadata={group?.memberMetadata}
+              activities={activities}
+              paymentLogs={paymentLogs}
+              readOnly={true}
+              onSelectExpense={handleSelectExpense}
+            />
+          ) : activeTab === "daily" ? (
+            <TravelDayOverview
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+            
+              onViewActivity={handleViewActivity}
+            />
+          ) : (
+            <TravelSchedule
+              startDate={startDate}
+              endDate={endDate}
+              activities={activities}
+              tripName={trip.name}
+              readOnly={true}
+              onViewActivity={handleViewActivity}
+            />
+          )}
         </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {showActivityDetailModal && selectedActivity && (
-        <ActivityDetailModal
-          activity={selectedActivity}
-          onClose={() => {
-            setShowActivityDetailModal(false);
-            setSelectedActivity(null);
-          }}
-          readOnly={true}
-        />
-      )}
+      {/* Floating Tab Switcher */}
+      <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50'>
+        <div className='flex bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl shadow-black/50'>
+          <button
+            onClick={() => setActiveTab("daily")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "daily"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Layout className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Day Overview
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab("schedule")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "schedule"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <List className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Timeline
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "calendar"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Calendar className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Calendar
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab("expenses")}
+            className={`group relative p-3 rounded-full transition-all duration-300 ${
+              activeTab === "expenses"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <DollarSign className='w-5 h-5 transition-transform duration-300 group-hover:scale-110' />
+            <span className='absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-lg mb-2'>
+              Expenses
+            </span>
+          </button>
+        </div>
+      </div>
     </main>
   );
 };

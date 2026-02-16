@@ -12,10 +12,10 @@ const QuickJoinModal = ({ onClose }: IQuickJoinModalProps) => {
   const [groupCode, setGroupCode] = useState<string>("");
 
   return (
-    <div className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-      <div className='bg-slate-900 border border-emerald-500/20 rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in duration-200'>
+    <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+      <div className='bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200'>
         {/* Header */}
-        <div className='p-6 border-b border-slate-800 flex items-center justify-between'>
+        <div className='p-6 border-b border-white/5 flex items-center justify-between'>
           <div>
             <h2 className='text-2xl font-bold text-white'>Quick Join</h2>
             <p className='text-sm text-slate-400 mt-1'>
