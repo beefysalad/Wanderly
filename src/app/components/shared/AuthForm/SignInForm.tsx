@@ -63,7 +63,10 @@ export default function SignInForm({ onAuthSuccess }: ISignInFormProps) {
       <div className='space-y-5'>
         {/* Email Input */}
         <div className='space-y-2'>
-          <label htmlFor='email' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='email'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Email address
           </label>
           <input
@@ -84,7 +87,10 @@ export default function SignInForm({ onAuthSuccess }: ISignInFormProps) {
 
         {/* Password Input */}
         <div className='space-y-2'>
-          <label htmlFor='password' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='password'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Password
           </label>
           <div className='relative'>
@@ -124,7 +130,7 @@ export default function SignInForm({ onAuthSuccess }: ISignInFormProps) {
         type='submit'
         disabled={loading}
         className='w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 
-                 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 
+                 text-white font-bold text-lg h-auto py-4 md:py-5 rounded-xl transition-all duration-200 
                  shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02]
                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
       >
