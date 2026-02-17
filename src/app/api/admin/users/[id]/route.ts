@@ -27,19 +27,44 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // 2. Delete from Firebase first (to prevent orphaned auth records if DB fails, though transaction better?
-    // Actually, usually better to delete DB first or do it in parallel.
-    // If DB delete fails, we don't want to delete auth.
-    // If Auth delete fails, we might still want to delete DB or keep it consistent.
-    // Let's try Firebase delete first, if it fails because user not found that's fine.)
+    // 2. Database Deletion (Transaction)
+    // Reordered: Delete groups first, then the user.
+    // This ensures we don't leave orphaned data if cascades fail or if we want explicit control.
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Delete all groups created by this user
+        // Note: Prisma schema has onDelete: Cascade for trips, memberships, etc.
+        await tx.group.deleteMany({
+          where: { createdById: id },
+        });
 
+        // Delete the user record
+        await tx.user.delete({
+          where: { id },
+        });
+      });
+
+      logger.info(`Admin: Deleted user ${id} and their created groups from DB`);
+    } catch (dbError) {
+      logger.error(`Admin: Failed to delete user ${id} from DB`, dbError);
+      return NextResponse.json(
+        { error: "Failed to delete user from database" },
+        { status: 500 },
+      );
+    }
+
+    // 3. Delete from Firebase ONLY after successful DB deletion
     if (userAuth && user.firebaseId) {
       try {
         await userAuth.deleteUser(user.firebaseId);
         logger.info(`Admin: Deleted Firebase user ${user.firebaseId}`);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (fbError: any) {
-        if (fbError.code === "auth/user-not-found") {
+      } catch (fbError: unknown) {
+        if (
+          fbError &&
+          typeof fbError === "object" &&
+          "code" in fbError &&
+          fbError.code === "auth/user-not-found"
+        ) {
           logger.warn(
             `Admin: Firebase user ${user.firebaseId} not found, skipping.`,
           );
@@ -48,24 +73,19 @@ export async function DELETE(
             `Admin: Failed to delete Firebase user ${user.firebaseId}`,
             fbError,
           );
-          return NextResponse.json(
-            { error: "Failed to delete from Firebase provider" },
-            { status: 500 },
-          );
+          // Note: We've already deleted from DB, so we return success but include a warning
+          // because the user is effectively "gone" from the app's perspective.
+          return NextResponse.json({ 
+            success: true, 
+            warning: "User deleted from DB but failed to remove from Firebase provider" 
+          });
         }
       }
     }
 
-    // 3. Delete from Prisma
-    await prisma.user.delete({
-      where: { id },
-    });
-
-    logger.info(`Admin: Deleted user ${id}`);
-
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Admin: Failed to delete user", error);
+    logger.error("Admin: Deletion process error", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
