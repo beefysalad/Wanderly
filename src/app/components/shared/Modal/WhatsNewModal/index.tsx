@@ -54,7 +54,6 @@ const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
   return (
     <div className='fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300'>
       <div className='bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]'>
-        {/* Background Effects */}
         <div className='absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none'></div>
         <div className='absolute bottom-0 left-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none'></div>
 
@@ -66,7 +65,6 @@ const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
         </button>
 
         <div className='flex flex-col overflow-y-auto custom-scrollbar h-full'>
-          {/* Header */}
           <div className='p-5 md:p-8 pt-8 md:pt-10 pb-2 relative text-center'>
             <h2 className='text-3xl font-bold text-white mb-2 tracking-tight'>
               What&apos;s New
@@ -77,7 +75,6 @@ const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
             </p>
           </div>
 
-          {/* Content */}
           <div className='p-5 md:p-8 space-y-4'>
             {features.map((feature, index) => {
               const Icon = ICON_MAP[feature.icon] || Sparkles;
