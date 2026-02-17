@@ -153,7 +153,7 @@ export async function seedTestData(userId: string) {
         data: {
           groupId: group.id,
           createdById: userId,
-          name: "Marina Bay & Island Hopping (test)",
+          name: "Marina Bay & Island Hopping (sample)",
           startDate,
           endDate,
           location: "Singapore",

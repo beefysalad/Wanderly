@@ -3,7 +3,13 @@
 import { motion } from "framer-motion";
 import { Hammer, Clock, AlertTriangle } from "lucide-react";
 
-export function MaintenanceMode() {
+interface MaintenanceModeProps {
+  estimate?: string;
+}
+
+export function MaintenanceMode({
+  estimate = "30-60 Minutes",
+}: MaintenanceModeProps) {
   return (
     <div className='min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden'>
       {/* Background Decorative Elements */}
@@ -33,9 +39,10 @@ export function MaintenanceMode() {
         <h1 className='text-4xl font-bold text-white tracking-tight mb-4'>
           Wanderly is Under <span className='text-blue-400'>Maintenance</span>
         </h1>
-        
+
         <p className='text-slate-400 text-lg mb-8 leading-relaxed'>
-            I&apos;m polishing things up to make your group trip planning experience even better. Wanderly will be back shortly!
+          I&apos;m polishing things up to make your group trip planning
+          experience even better. Wanderly will be back shortly!
         </p>
 
         <div className='grid grid-cols-1 gap-4 mb-8'>
@@ -44,20 +51,25 @@ export function MaintenanceMode() {
               <Clock className='w-5 h-5 text-blue-400' />
             </div>
             <div>
-              <div className='text-sm text-slate-500 font-medium'>Estimated Time</div>
-              <div className='text-white font-semibold'>~ 30-60 Minutes</div>
+              <div className='text-sm text-slate-500 font-medium'>
+                Estimated Time
+              </div>
+              <div className='text-white font-semibold'>~ {estimate}</div>
             </div>
           </div>
         </div>
 
         <div className='pt-8 border-t border-slate-800/50'>
           <p className='text-slate-500 text-sm'>
-            Need urgent help? Contact me via email <a href='mailto:mandal.johnpatrickryan@gmail.com'>mandal.johnpatrickryan@gmail.com</a>.
+            Need urgent help? Contact me via email{" "}
+            <a href='mailto:mandal.johnpatrickryan@gmail.com'>
+              mandal.johnpatrickryan@gmail.com
+            </a>
+            .
           </p>
         </div>
       </motion.div>
 
-    
       <div className='absolute bottom-8 left-1/2 -translate-x-1/2'>
         <motion.div
           animate={{ y: [0, 5, 0] }}

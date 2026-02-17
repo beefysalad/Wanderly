@@ -37,6 +37,17 @@ This application is a group travel planner designed to help users organize trips
 - **PaymentLog**: Record of settlements between users.
 - **Notification**: System for alerting users of updates.
 
+## Admin Module
+
+- **User Management**: Admin panel allows listing and deleting users (removes from DB + Firebase).
+- **System Config**:
+  - Toggle **Maintenance Mode** with custom estimated durations.
+  - Controls global settings via `AppConfig` table (e.g., `whats-new` announcements).
+- **Database Hub**:
+  - Real-time counts of all core database models.
+  - **Resource Monitoring**: Total Database size (PostgreSQL) and Cloudinary (Storage/Bandwidth) usage.
+  - **Maintenance**: Safe "Clean Test Data" action that removes sample data without deleting users.
+
 ## Design System & UX
 
 - **Aesthetic**: "Clean, flat, and modern". Avoids heavy shadows or gradients in favor of solid colors and subtle borders.
