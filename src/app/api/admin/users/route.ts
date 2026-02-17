@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
     ]);
 
     // 2. Fetch Firebase user records to get lastSignInTime
-    let firebaseUsersMap: Record<string, any> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const firebaseUsersMap: Record<string, any> = {};
     if (userAuth && users.length > 0) {
       try {
         const firebaseIds = users

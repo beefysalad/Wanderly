@@ -35,6 +35,7 @@ export async function DELETE(
       try {
         await userAuth.deleteUser(user.firebaseId);
         logger.info(`Admin: Deleted Firebase user ${user.firebaseId}`);
+        // es
       } catch (fbError: any) {
         if (fbError.code === "auth/user-not-found") {
           logger.warn(
