@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useCreateGroup } from "@/src/hooks/useGroups";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowLeft,
   Loader2,
   Compass,
   Users as UsersIcon,
@@ -23,8 +22,8 @@ import {
   getVibeInfo,
   getGroupColorClasses,
 } from "@/lib/utils/groupColors";
-
-// Vibes are imported from groupColors
+import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 
 export default function CreateGroupPage() {
   const router = useRouter();
@@ -77,58 +76,46 @@ export default function CreateGroupPage() {
   const currentColors = getGroupColorClasses(selectedColorScheme);
 
   return (
-    <div className='min-h-screen bg-slate-950 flex flex-col items-center p-4 sm:p-8 pt-12 relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div
-          className='absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full blur-3xl opacity-20'
-          style={{ backgroundColor: currentColors.bg.replace("bg-", "") }}
-        />
-        <div className='absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-white/5 rounded-full blur-3xl opacity-10' />
-      </div>
+    <main className='min-h-screen bg-slate-950 pb-24 text-slate-200 relative overflow-x-hidden selection:bg-purple-500/30 font-sans'>
+      <PremiumBackground />
+      
+      <PremiumPageHeader 
+        title="Create Group" 
+        onBack={() => router.back()}
+      />
 
-      <div className='w-full max-w-5xl z-10'>
-        <div className='mb-8'>
-          <button
-            onClick={() => router.back()}
-            className='flex items-center gap-2 text-slate-500 hover:text-white transition-colors group'
-          >
-            <ArrowLeft className='w-4 h-4 group-hover:-translate-x-1 transition-transform' />
-            Cancel
-          </button>
-        </div>
-
-        <div className='grid grid-cols-1 lg:grid-cols-5 gap-8'>
+      <div className='w-full max-w-5xl mx-auto px-6 pt-12 relative z-10'>
+        <div className='grid grid-cols-1 lg:grid-cols-5 gap-12'>
           {/* Left Column: Form */}
-          <div className='lg:col-span-3 space-y-8'>
+          <div className='lg:col-span-3 space-y-12'>
             <div>
-              <h1 className='text-4xl font-black text-white mb-2 tracking-tight'>
+              <h1 className='text-4xl font-black text-white mb-2 tracking-tight uppercase'>
                 Start Your <span className='text-orange-500'>Adventure</span>
               </h1>
-              <p className='text-slate-400 text-lg'>
+              <p className='text-slate-400 text-lg font-medium'>
                 Create a space for your group to plan and share memories.
               </p>
             </div>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-10'>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-12'>
               {/* Group Name */}
               <div className='space-y-4'>
-                <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+                <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
                   What should we call this group?
                 </Label>
                 <div className='relative'>
                   <Input
                     {...form.register("groupName")}
                     placeholder='e.g., Paraluman'
-                    className='h-16 px-6 text-xl bg-slate-900 text-white border-white/5 focus:border-orange-500/50 rounded-2xl transition-all'
+                    className='h-16 px-6 text-xl bg-white/5 border-white/5 focus:border-orange-500/50 rounded-2xl transition-all font-medium'
                   />
                   {form.formState.errors.groupName && (
-                    <p className='text-red-400 text-sm mt-2 font-medium'>
+                    <p className='text-red-400 text-sm mt-2 font-medium ml-1'>
                       {form.formState.errors.groupName.message}
                     </p>
                   )}
                   {error && (
-                    <div className='p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm mt-2'>
+                    <div className='p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm mt-4'>
                       {error}
                     </div>
                   )}
@@ -137,7 +124,7 @@ export default function CreateGroupPage() {
 
               {/* Vibe Selection */}
               <div className='space-y-4'>
-                <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+                <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
                   Choose the Vibe
                 </Label>
                 <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
@@ -157,21 +144,21 @@ export default function CreateGroupPage() {
                         }
                         className={`group relative flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 ${
                           isSelected
-                            ? "bg-slate-900 border-orange-500/50 shadow-xl shadow-orange-500/10"
-                            : "bg-slate-900/40 border-white/5 hover:border-white/10 hover:bg-slate-900/60"
+                            ? "bg-white/10 border-orange-500/50 shadow-xl shadow-orange-500/10"
+                            : "bg-white/5 border-white/5 hover:border-white/10"
                         }`}
                       >
                         <div
-                          className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center text-xl ${isSelected ? vibeColors.bg : "bg-slate-800"}`}
+                          className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center text-xl transition-all ${isSelected ? vibeColors.bg : "bg-white/5"}`}
                         >
                           {vibe.emoji}
                         </div>
                         <h4
-                          className={`font-bold text-sm ${isSelected ? "text-white" : "text-slate-400"}`}
+                          className={`font-black text-[10px] uppercase tracking-widest ${isSelected ? "text-white" : "text-slate-400"}`}
                         >
                           {vibe.name}
                         </h4>
-                        <p className='text-[10px] text-slate-500 leading-tight mt-1'>
+                        <p className='text-[10px] text-slate-500 font-medium leading-tight mt-1'>
                           {vibe.description}
                         </p>
                       </button>
@@ -185,7 +172,7 @@ export default function CreateGroupPage() {
                 <Button
                   type='submit'
                   disabled={createGroup.isPending}
-                  className='flex-1 py-8 bg-orange-500 hover:bg-orange-600 text-white font-black text-lg h-16 rounded-2xl shadow-xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50'
+                  className='flex-1 py-8 bg-orange-500 hover:bg-orange-600 text-white font-black text-lg h-16 rounded-2xl shadow-xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50 border-0 uppercase tracking-widest'
                 >
                   {createGroup.isPending ? (
                     <Loader2 className='w-6 h-6 animate-spin' />
@@ -199,28 +186,28 @@ export default function CreateGroupPage() {
 
           {/* Right Column: Live Preview */}
           <div className='lg:col-span-2 relative'>
-            <div className='sticky top-8'>
+            <div className='sticky top-32'>
               <div className='mb-6'>
-                <Label className='text-xs font-black uppercase text-slate-500 tracking-widest'>
+                <Label className='text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1'>
                   Live Preview
                 </Label>
               </div>
 
-              <div className='p-8 rounded-3xl bg-slate-900/50 border border-white/5 backdrop-blur-xl'>
-                <p className='text-slate-500 text-xs mb-6 text-center italic'>
-                  This is how your group will look on the dashboard
+              <div className='p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-2xl'>
+                <p className='text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 text-center opacity-60'>
+                  Your dashboard appearance
                 </p>
 
                 {/* Preview Group Card */}
                 <div className='max-w-[240px] mx-auto'>
-                  <div className='group relative flex flex-col items-start p-4 h-full bg-slate-800/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl'>
+                  <div className='group relative flex flex-col items-start p-6 h-full bg-slate-800/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl'>
                     <div
                       className={`absolute inset-0 opacity-10 bg-gradient-to-tr ${currentColors.bg.replace("bg-", "from-")} to-transparent rounded-2xl`}
                     />
 
-                    <div className='flex items-start justify-between w-full mb-4'>
+                    <div className='flex items-start justify-between w-full mb-6'>
                       <div
-                        className={`w-12 h-12 ${currentColors.bg} rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/10`}
+                        className={`w-14 h-14 ${currentColors.bg} rounded-xl flex items-center justify-center text-3xl shadow-inner border border-white/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}
                       >
                         {selectedEmoji || <Compass className='w-6 h-6' />}
                       </div>
@@ -230,17 +217,17 @@ export default function CreateGroupPage() {
                     </div>
 
                     <div className='w-full'>
-                      <h3 className='text-base font-bold text-white mb-2 truncate'>
+                      <h3 className='text-sm font-black text-white mb-2 truncate uppercase tracking-widest'>
                         {groupName || "New Adventure"}
                       </h3>
 
                       <div className='flex flex-wrap gap-2'>
-                        <div className='flex items-center gap-1.5 text-[10px] text-slate-400 bg-slate-900 px-2 py-1 rounded-md'>
-                          <UsersIcon className='w-3 h-3' />
+                        <div className='flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md'>
+                          <UsersIcon className='w-3 h-3 text-orange-400' />
                           <span>1 Member</span>
                         </div>
-                        <div className='flex items-center gap-1.5 text-[10px] text-slate-400 bg-slate-900 px-2 py-1 rounded-md'>
-                          <CalendarIcon className='w-3 h-3' />
+                        <div className='flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-2 py-1 rounded-md'>
+                          <CalendarIcon className='w-3 h-3 text-emerald-400' />
                           <span>0 Trips</span>
                         </div>
                       </div>
@@ -248,18 +235,18 @@ export default function CreateGroupPage() {
                   </div>
                 </div>
 
-                <div className='mt-10 space-y-4'>
-                  <div className='flex items-center gap-3 text-slate-400 text-sm'>
-                    <div className='w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center'>
-                      <ShieldCheck className='w-3 h-3 text-orange-500' />
+                <div className='mt-12 space-y-6'>
+                  <div className='flex items-center gap-4 text-slate-400'>
+                    <div className='w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0'>
+                      <ShieldCheck className='w-4 h-4 text-orange-500' />
                     </div>
-                    <span>You&apos;ll be the group creator</span>
+                    <span className='text-[10px] font-black uppercase tracking-widest'>Group Creator Role</span>
                   </div>
-                  <div className='flex items-center gap-3 text-slate-400 text-sm'>
-                    <div className='w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center'>
-                      <Compass className='w-3 h-3 text-orange-500' />
+                  <div className='flex items-center gap-4 text-slate-400'>
+                    <div className='w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0'>
+                      <Compass className='w-4 h-4 text-emerald-400' />
                     </div>
-                    <span>Instant invite code generation</span>
+                    <span className='text-[10px] font-black uppercase tracking-widest'>Invite Code Generation</span>
                   </div>
                 </div>
               </div>
@@ -267,6 +254,6 @@ export default function CreateGroupPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
