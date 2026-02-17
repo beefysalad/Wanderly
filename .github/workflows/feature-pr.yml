@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - "feature/*"
+      - "feat/*"
+      - "bug/*"
+      - "fix/*"
 
 jobs:
   create-pr:
@@ -19,9 +22,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-          # Extract issue number (assuming format feature/89-description)
-          # We use sed to extract the numeric part immediately following 'feature/'
-          ISSUE_NUM=$(echo "$BRANCH_NAME" | sed -E 's|feature/([0-9]+).*|\1|')
+          # Extract issue number (supports feature/89, feat/89, bug/89, fix/89)
+          ISSUE_NUM=$(echo "$BRANCH_NAME" | sed -E 's|^(feature\|feat\|bug\|fix)/([0-9]+).*|\2|')
 
           # Validate that we actually found a number
           if [[ ! "$ISSUE_NUM" =~ ^[0-9]+$ ]]; then
