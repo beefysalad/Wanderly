@@ -1,27 +1,24 @@
 "use client";
-import { Expense, Activity } from "@/src/shared/types";
+import { Activity, Expense } from "@/src/shared/types";
 import {
+  Calendar,
   CheckCircle2,
+  Clock,
   Copy,
   Download,
-  Pencil,
-  Trash2,
-  X,
   Link2,
-  Calendar,
-  Clock,
-  ArrowLeft,
   MoreVertical,
-  Receipt,
-  AlertCircle,
+  Pencil,
   Share2,
+  Trash2,
+  X
 } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
-import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { useRouter } from "next/navigation";
-import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import { useState } from "react";
+import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import PremiumBackground from "../../shared/PremiumBackground";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 
 interface IExpenseDetailProps {
   expense: Expense;

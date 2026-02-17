@@ -1,19 +1,16 @@
 "use client";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useCreateBudget, useUpdateBudget } from "@/src/hooks/useBudgets";
+import { Activity, Budget } from "@/src/shared/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Budget, Activity } from "@/src/shared/types";
-import { budgetSchema, TBudgetSchema } from "./budgetSchema";
 import {
-  Target,
   AlignLeft,
-  Calendar,
-  Tag,
   CheckCircle2,
   Circle,
+  Target
 } from "lucide-react";
-import { useCreateBudget, useUpdateBudget } from "@/src/hooks/useBudgets";
-import { formatTime12Hour } from "@/lib/utils";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { budgetSchema, TBudgetSchema } from "./budgetSchema";
 
 interface BudgetFormProps {
   tripId: string;

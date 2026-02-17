@@ -35,6 +35,7 @@ export async function DELETE(
       try {
         await userAuth.deleteUser(user.firebaseId);
         logger.info(`Admin: Deleted Firebase user ${user.firebaseId}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (fbError: any) {
         if (fbError.code === "auth/user-not-found") {
           logger.warn(

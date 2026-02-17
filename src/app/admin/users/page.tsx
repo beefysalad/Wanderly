@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import axios from "axios";
+import { format } from "date-fns";
 import {
+  Activity,
   ArrowLeft,
   Search,
   Trash2,
-  Users,
-  Calendar,
-  Activity,
-  LogOut,
-  AlertTriangle,
+  Users
 } from "lucide-react";
-import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 
 interface User {
   id: string;

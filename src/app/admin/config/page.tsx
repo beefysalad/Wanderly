@@ -1,24 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
-import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Settings,
-  Save,
-  RefreshCcw,
-  AlertTriangle,
-  Layout,
-  Bell,
-  Activity,
-  Shield,
-} from "lucide-react";
 import { format } from "date-fns";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bell,
+  Layout,
+  RefreshCcw,
+  Save,
+  Settings,
+  Shield
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface ConfigItem {
   key: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
   updatedAt: string;
 }
@@ -31,7 +31,7 @@ export default function ConfigPage() {
 
   useEffect(() => {
     fetchConfigs();
-  }, []);
+  }, [configs]);
 
   const fetchConfigs = async () => {
     try {
@@ -54,7 +54,8 @@ export default function ConfigPage() {
       setLoading(false);
     }
   };
-
+  
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateConfig = async (key: string, value: any) => {
     setSavingKey(key);
     try {
@@ -156,6 +157,7 @@ export default function ConfigPage() {
                           ?.value === "object"
                           ? (
                               configs.find((c) => c.key === "maintenance-mode")
+                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 ?.value as any
                             ).estimate
                           : "30-60 Minutes"
@@ -169,6 +171,7 @@ export default function ConfigPage() {
                       );
                       const isEnabled =
                         typeof config?.value === "object"
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           ? (config.value as any).enabled
                           : config?.value === true;
 

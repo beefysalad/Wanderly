@@ -1,20 +1,18 @@
 "use client";
-import { Budget, Activity, Trip } from "@/src/shared/types";
-import { useBudgets, useDeleteBudget } from "@/src/hooks/useBudgets";
+import api from "@/lib/axios";
+import { useBudgets } from "@/src/hooks/useBudgets";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { useGroup } from "@/src/hooks/useGroups";
+import { Budget, Trip } from "@/src/shared/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus, Target } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
-import BudgetTracker from "./BudgetTracker";
-import BudgetList from "./BudgetList";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
-import { Target, Plus } from "lucide-react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import BudgetList from "./BudgetList";
+import BudgetTracker from "./BudgetTracker";
 
-import React, { useState, useEffect } from "react";
 
 interface IBudgetComponent {
   groupId: string;

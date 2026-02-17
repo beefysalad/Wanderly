@@ -1,13 +1,12 @@
-import React from "react";
-import { Budget, Activity } from "@/src/shared/types";
+import { Budget } from "@/src/shared/types";
 import {
-  Plus,
-  Edit2,
-  Trash2,
   Calendar,
-  Tag,
   CheckCircle2,
   Circle,
+  Edit2,
+  Plus,
+  Tag,
+  Trash2,
 } from "lucide-react";
 
 interface BudgetListProps {

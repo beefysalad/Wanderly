@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
     // Get Database Size (PostgreSQL)
     let dbSize = 0;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: any =
         await prisma.$queryRaw`SELECT pg_database_size(current_database()) as size`;
       dbSize = Number(result[0]?.size || 0);

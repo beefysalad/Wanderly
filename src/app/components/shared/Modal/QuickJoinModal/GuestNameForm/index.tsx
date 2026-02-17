@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import api from "@/lib/axios";
+import { setGuestSession } from "@/lib/guest-session";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { guestNameSchema, TGuestSchema } from "../quickJoinZod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import api from "@/lib/axios";
-import { setGuestSession } from "@/lib/guest-session";
-import { useRouter } from "next/navigation";
 
 interface IGuestNameForm {
   setStep: React.Dispatch<React.SetStateAction<"code" | "name">>;

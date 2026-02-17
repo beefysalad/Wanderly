@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
-import { toast } from "sonner";
 import {
-  ArrowLeft,
-  Database,
-  Trash2,
-  RefreshCcw,
-  AlertTriangle,
-  Users,
-  Briefcase,
-  Map,
-  CreditCard,
-  Target,
-  Bell,
-  MessageSquare,
-  Layers,
   Activity,
+  AlertTriangle,
+  ArrowLeft,
+  Bell,
+  Briefcase,
+  CreditCard,
+  Database,
+  Layers,
+  Map,
+  MessageSquare,
+  RefreshCcw,
+  Target,
+  Trash2,
+  Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface DBStats {
   users: number;
@@ -125,6 +125,7 @@ export default function DatabasePage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const StatCard = ({ icon: Icon, label, value, color }: any) => (
     <div className='bg-slate-900/50 border border-white/10 rounded-2xl p-6'>
       <div className='flex items-center gap-4 mb-2'>
@@ -141,6 +142,7 @@ export default function DatabasePage() {
     </div>
   );
 
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const UsageBar = ({ label, used, limit, percent, format }: any) => (
     <div className='space-y-2'>
       <div className='flex justify-between text-xs font-bold tracking-wider'>

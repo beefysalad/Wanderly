@@ -1,19 +1,19 @@
 "use client";
-import React, { useState } from "react";
-import { ArrowLeft, MapPin, Calendar, Layout, Info } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   createTripSchema,
   TCreateTripSchema,
 } from "@/src/app/components/shared/Modal/CreateTripModal/createTripZod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useCreateTrip } from "@/src/hooks/useTrips";
-import { useRouter } from "next/navigation";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
+import { useCreateTrip } from "@/src/hooks/useTrips";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Calendar, Info, Layout, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface CreateTripPageProps {
   params: {

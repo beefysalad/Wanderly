@@ -24,10 +24,8 @@ import {
   LogOut,
   Mail,
   MapPin,
-  Save,
   User,
-  Users,
-  X,
+  Users
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -37,8 +35,8 @@ import {
   editProfileSchema,
   TEditProfileSchema,
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
-import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import PremiumBackground from "../../shared/PremiumBackground";
+import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
 
 const ProfileComponent = () => {
