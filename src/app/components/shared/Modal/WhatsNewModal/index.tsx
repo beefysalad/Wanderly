@@ -5,6 +5,16 @@ import {
   Beaker,
   Layout,
   MessageSquare,
+  Globe,
+  Calendar,
+  Zap,
+  Map,
+  Heart,
+  Target,
+  Award,
+  Coffee,
+  Rocket,
+  Gift,
   LucideIcon,
 } from "lucide-react";
 import React from "react";
@@ -15,6 +25,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Beaker,
   Layout,
   MessageSquare,
+  Globe,
+  Calendar,
+  Zap,
+  Map,
+  Heart,
+  Target,
+  Award,
+  Coffee,
+  Rocket,
+  Gift,
 };
 
 export interface WhatsNewFeature {
@@ -52,8 +72,8 @@ const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
               What&apos;s New
             </h2>
             <p className='text-slate-400 max-w-sm mx-auto'>
-              I&apos;ve been hard at work making things better. Here&apos;s what
-              has changed in the latest update.
+              I&apos;ve been working hard on making things better. Here&apos;s
+              what has changed in the latest update.
             </p>
           </div>
 
