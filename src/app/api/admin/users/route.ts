@@ -2,13 +2,14 @@ import { userAuth } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAdminPassword } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
     const adminPassword = req.headers.get("x-admin-password");
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    if (!(await verifyAdminPassword(adminPassword))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -47,11 +48,6 @@ export async function GET(req: NextRequest) {
           .map((u) => u.firebaseId)
           .filter((id) => id && id.length > 0);
 
-        // Firebase listUsers API might be better if we want ALL,
-        // but getUsers is better for specific IDs.
-        // Since we have the IDs from Prisma, we'll use getUsers which accepts up to 100 at a time.
-        // For now, let's just do it in chunks of 100.
-
         const chunks = [];
         for (let i = 0; i < firebaseIds.length; i += 100) {
           chunks.push(firebaseIds.slice(i, i + 100));
@@ -70,7 +66,6 @@ export async function GET(req: NextRequest) {
         }
       } catch (fbError) {
         logger.error("Failed to fetch Firebase users", fbError);
-        // Continue without firebase data if it fails
       }
     }
 

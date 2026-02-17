@@ -31,7 +31,7 @@ export default function ConfigPage() {
 
   useEffect(() => {
     fetchConfigs();
-  }, [configs]);
+  }, []);
 
   const fetchConfigs = async () => {
     try {

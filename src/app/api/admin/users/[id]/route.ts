@@ -3,13 +3,15 @@ import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+import { verifyAdminPassword } from "@/lib/admin-auth";
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const adminPassword = req.headers.get("x-admin-password");
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    if (!(await verifyAdminPassword(adminPassword))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
