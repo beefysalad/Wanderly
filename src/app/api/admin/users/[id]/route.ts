@@ -58,8 +58,13 @@ export async function DELETE(
       try {
         await userAuth.deleteUser(user.firebaseId);
         logger.info(`Admin: Deleted Firebase user ${user.firebaseId}`);
-      } catch (fbError: any) {
-        if (fbError.code === "auth/user-not-found") {
+      } catch (fbError: unknown) {
+        if (
+          fbError &&
+          typeof fbError === "object" &&
+          "code" in fbError &&
+          fbError.code === "auth/user-not-found"
+        ) {
           logger.warn(
             `Admin: Firebase user ${user.firebaseId} not found, skipping.`,
           );
