@@ -1,0 +1,48 @@
+name: Auto Create PR from Feature Branch
+on:
+  push:
+    branches:
+      - "feature/*"
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          # Extract issue number (assuming format feature/89-description)
+          # We use sed to extract the numeric part immediately following 'feature/'
+          ISSUE_NUM=$(echo "$BRANCH_NAME" | sed -E 's|feature/([0-9]+).*|\1|')
+
+          # Validate that we actually found a number
+          if [[ ! "$ISSUE_NUM" =~ ^[0-9]+$ ]]; then
+            echo "No issue number found in branch name '$BRANCH_NAME'. Skipping automated PR creation."
+            exit 0
+          fi
+
+          # Check if a PR already exists from this feature branch to dev
+          existing_pr=$(gh pr list --base dev --head "$BRANCH_NAME" --json number --jq '.[0].number')
+
+          if [ -n "$existing_pr" ]; then
+            echo "PR #$existing_pr already exists for branch $BRANCH_NAME. Skipping creation."
+          else
+            echo "No existing PR found. Creating a new one for issue #$ISSUE_NUM..."
+            PR_TITLE=$(git log -1 --pretty=%s)
+            
+            # Create the PR linking to the issue
+            gh pr create \
+              --base dev \
+              --head "$BRANCH_NAME" \
+              --title "Feat: $PR_TITLE (#$ISSUE_NUM)" \
+              --body "Automated Pull Request. Closes #$ISSUE_NUM." \
+              || echo "Note: PR creation skipped (likely no changes to push yet or PR already exists in a different state)"
+          fi
