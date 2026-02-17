@@ -1,0 +1,46 @@
+name: Issue Automation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  automate-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Acknowledge and Label Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || "";
+            let label = "triage";
+
+            // Determine label based on title or body content (matching templates)
+            if (issue.title.includes("[BUG]") || body.includes("Describe the bug")) {
+              label = "bug";
+            } else if (issue.title.includes("[FEATURE]") || body.includes("Suggest an idea")) {
+              label = "enhancement";
+            }
+
+            // Add the label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: [label]
+            });
+
+            // Add a friendly comment
+            const user = issue.user.login;
+            const message = `Hi @${user}! 👋 Thanks for opening this issue. We've automatically labeled it as \`${label}\` and our team will take a look soon!`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: message
+            });
