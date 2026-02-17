@@ -2,17 +2,16 @@
 import { useGroups } from "@/src/hooks/useGroups";
 import {
   CalendarIcon,
+  ChevronRight,
   Code2,
   Compass,
   Users,
-  ChevronRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getGroupColorClasses } from "@/lib/utils/groupColors";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
-import PremiumPageHeader from "../components/shared/PremiumPageHeader";
 import PremiumBackground from "../components/shared/PremiumBackground";
+import PremiumPageHeader from "../components/shared/PremiumPageHeader";
 
 const GroupsPage = () => {
   const router = useRouter();

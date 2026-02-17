@@ -1,46 +1,37 @@
 import { Button } from "@/components/ui/button";
-import { Activity } from "@/src/shared/types";
-import {
-  Trash2,
-  Pencil,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  MapPin,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  GripVertical,
-  MoreVertical,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import React, { useState } from "react";
-import { createPortal } from "react-dom";
 import { formatTime12Hour } from "@/lib/utils";
+import { Activity } from "@/src/shared/types";
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  rectIntersection,
   TouchSensor,
+  useDroppable,
   useSensor,
   useSensors,
-  useDroppable,
-  rectIntersection,
 } from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+import {
+  Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  GripVertical,
+  MapPin
+} from "lucide-react";
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ITravelScheduleProps {
   startDate: Date;
