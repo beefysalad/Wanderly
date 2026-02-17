@@ -10,6 +10,10 @@ This document provides a comprehensive reference for the application's API endpo
 - **Response Format**: JSON
 - **Error Format**: `{ "error": "Error message" }`
 
+### Admin API
+
+- **Header**: `x-admin-password: <env.ADMIN_PASSWORD>`
+
 ### API Gateway (Obfuscation)
 
 In production, all API calls should route through the gateway to hide the internal directory structure.
@@ -375,3 +379,55 @@ In production, all API calls should route through the gateway to hide the intern
 - **Method**: `POST`
 - **Path**: `/api/reviews` (Rate Limited)
 - **Body**: `{ "rating", "comment", "name", "email" }`
+
+---
+
+## 8. Admin API
+
+### List Users
+
+- **Method**: `GET`
+- **Path**: `/api/admin/users`
+- **Headers**: `x-admin-password: ...`
+- **Response**: `{ "users": [...], "stats": { "total": number, "newToday": number } }`
+
+### Delete User
+
+- **Method**: `DELETE`
+- **Path**: `/api/admin/users/[id]`
+- **Headers**: `x-admin-password: ...`
+- **Response**: `{ "success": true }`
+
+---
+
+### System Configuration
+
+- **Method**: `GET`
+- **Path**: `/api/admin/config`
+- **Headers**: `x-admin-password: ...`
+- **Response**: `{ "configs": [{ "key", "value", "updatedAt" }] }`
+
+- **Method**: `POST`
+- **Path**: `/api/admin/config`
+- **Headers**: `x-admin-password: ...`
+- **Body**: `{ "key", "value" }`
+- **Response**: `{ "success": true, "config": { ... } }`
+
+---
+
+### Database Statistics
+
+- **Method**: `GET`
+- **Path**: `/api/admin/db/stats`
+- **Headers**: `x-admin-password: ...`
+- **Response**: `{ "stats": { "users", "groups", "trips", ... } }`
+
+---
+
+### Database Maintenance
+
+- **Method**: `POST`
+- **Path**: `/api/admin/db/maintenance`
+- **Headers**: `x-admin-password: ...`
+- **Body**: `{ "action": "clean-test-data" }`
+- **Response**: `{ "success": true, "count": number }`

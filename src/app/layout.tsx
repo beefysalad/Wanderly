@@ -38,14 +38,37 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-import { MaintenanceMode } from "./components/pages/maintenance-mode";
+import { MaintenanceProvider } from "./components/shared/maintenance-provider";
+import prisma from "@/lib/prisma";
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  // Fetch maintenance mode from DB
+  const maintenanceConfig = await prisma.appConfig.findUnique({
+    where: { key: "maintenance-mode" },
+  });
+
+  let isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  let maintenanceEstimate = "30-60 Minutes";
+
+  if (maintenanceConfig) {
+    if (typeof maintenanceConfig.value === "boolean") {
+      isMaintenanceMode = maintenanceConfig.value;
+    } else if (
+      typeof maintenanceConfig.value === "object" &&
+      maintenanceConfig.value !== null
+    ) {
+      const val = maintenanceConfig.value as any;
+      isMaintenanceMode = val.enabled ?? isMaintenanceMode;
+      maintenanceEstimate = val.estimate || maintenanceEstimate;
+    }
+  }
 
   return (
     <html lang='en' suppressHydrationWarning>
@@ -53,16 +76,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {isMaintenanceMode ? (
-          <MaintenanceMode />
-        ) : (
+        <MaintenanceProvider
+          isEnabled={isMaintenanceMode}
+          estimate={maintenanceEstimate}
+        >
           <QueryProvider>
             <SocketProvider>
               <AuthLayout>{children}</AuthLayout>
               <Toaster position='bottom-right' richColors closeButton />
             </SocketProvider>
           </QueryProvider>
-        )}
+        </MaintenanceProvider>
         <Analytics />
       </body>
     </html>

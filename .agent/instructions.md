@@ -42,6 +42,11 @@ The gateway is protected by a rate limiter.
 - Use the singleton Prisma client in `lib/prisma.ts`.
 - Models are defined in `prisma/schema.prisma`.
 
+### 6. Admin Panel
+
+- **Access**: Strictly controlled via `x-admin-password` header.
+- **Data Safety**: Deletion of users is destructive and cascades to both Database and Firebase Auth.
+
 ### 5. Git & PR Workflow
 
 - **Branching**: Work is primarily done in `dev` and merged to `prod`.

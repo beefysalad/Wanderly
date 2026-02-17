@@ -12,6 +12,11 @@ The gateway acts as the single entry point for all API requests in production. I
 - **Security**: It ensures the target path starts with `/api/` to prevent external access to non-API routes.
 - **Resilient Header Handling**: It filters sensitive headers (like `content-encoding`) to avoid conflicts during response streaming and preserves the original `Content-Type` for raw body integrity.
 
+### 4. Admin Module (`src/app/api/admin`)
+
+- **Security**: Protected by `x-admin-password` header check against `ADMIN_PASSWORD` env var.
+- **Capabilities**: Full access to User management (Prisma + Firebase) and System Config.
+
 ### 2. Rate Limiting (`lib/rate-limit.ts`)
 
 A custom in-memory rate limiter is used to prevent abuse.

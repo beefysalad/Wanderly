@@ -31,8 +31,8 @@ const AdminDashboard = () => {
       icon: Users,
       color: "text-blue-400",
       bg: "bg-blue-500/10",
-      href: "#",
-      disabled: true,
+      href: "/admin/users",
+      disabled: false,
     },
     {
       title: "System Config",
@@ -40,8 +40,8 @@ const AdminDashboard = () => {
       icon: Settings,
       color: "text-purple-400",
       bg: "bg-purple-500/10",
-      href: "#",
-      disabled: true,
+      href: "/admin/config",
+      disabled: false,
     },
     {
       title: "Database Hub",
@@ -49,8 +49,8 @@ const AdminDashboard = () => {
       icon: Database,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
-      href: "#",
-      disabled: true,
+      href: "/admin/database",
+      disabled: false,
     },
   ];
 
