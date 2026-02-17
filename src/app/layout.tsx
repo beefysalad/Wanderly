@@ -64,6 +64,7 @@ export default async function RootLayout({
       typeof maintenanceConfig.value === "object" &&
       maintenanceConfig.value !== null
     ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const val = maintenanceConfig.value as any;
       isMaintenanceMode = val.enabled ?? isMaintenanceMode;
       maintenanceEstimate = val.estimate || maintenanceEstimate;
