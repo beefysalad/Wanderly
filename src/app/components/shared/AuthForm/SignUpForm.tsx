@@ -5,12 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import {
-  Loader2,
-  AlertCircle,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { signUpSchema, TSignUpSchema } from "./authSchema";
 import { Button } from "@/components/ui/button";
 
@@ -82,7 +77,10 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
       <div className='space-y-5'>
         {/* Name Input */}
         <div className='space-y-2'>
-          <label htmlFor='name' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='name'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Full name
           </label>
           <input
@@ -103,7 +101,10 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
 
         {/* Email Input */}
         <div className='space-y-2'>
-          <label htmlFor='email' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='email'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Email address
           </label>
           <input
@@ -124,7 +125,10 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
 
         {/* Password Input */}
         <div className='space-y-2'>
-          <label htmlFor='password' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='password'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Password
           </label>
           <div className='relative'>
@@ -161,7 +165,10 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
 
         {/* Confirm Password Input */}
         <div className='space-y-2'>
-          <label htmlFor='confirmPassword' className='block text-sm font-medium text-slate-300 mb-2'>
+          <label
+            htmlFor='confirmPassword'
+            className='block text-sm font-medium text-slate-300 mb-2'
+          >
             Confirm password
           </label>
           <div className='relative'>
@@ -201,7 +208,7 @@ export default function SignUpForm({ onAuthSuccess }: ISignUpFormProps) {
         type='submit'
         disabled={loading}
         className='w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 
-                 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 
+                 text-white font-bold text-lg h-auto py-4 md:py-5 rounded-xl transition-all duration-200 
                  shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02]
                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
       >
