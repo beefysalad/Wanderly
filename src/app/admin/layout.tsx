@@ -14,27 +14,54 @@ export default function AdminLayout({
   const [error] = useState("");
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("admin_authenticated");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      const auth = sessionStorage.getItem("admin_authenticated");
+      const savedPassword = sessionStorage.getItem("admin_password");
+      
+      if (auth === "true" && savedPassword) {
+        try {
+          // Verify with server on mount/refresh
+          const res = await fetch("/api/admin/verify-password", {
+            headers: { "x-admin-password": savedPassword }
+          });
+          if (res.ok) {
+            setIsAuthenticated(true);
+          } else {
+            sessionStorage.removeItem("admin_authenticated");
+            sessionStorage.removeItem("admin_password");
+          }
+        } catch (e) {
+          console.error("Auth verification failed", e);
+        }
+      }
+      setLoading(false);
+    };
+    
+    checkAuth();
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In this "secret" simple setup, we check against the ENV-provided password.
-    // We'll perform a quick check by trying to fetch the config (which requires the password anyway).
-    // But for a better UX, we'll just check it here if possible or use a dummy check
-    // since the actual security is at the API level.
+    if (!password) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/verify-password", {
+        headers: { "x-admin-password": password }
+      });
 
-    // For now, let's just use the simple session storage approach after a "mock" check.
-    // The user will enter the password, and we'll save it to session storage.
-    // Every API call from here on will use this password from session storage.
-    if (password) {
-      sessionStorage.setItem("admin_password", password);
-      sessionStorage.setItem("admin_authenticated", "true");
-      setIsAuthenticated(true);
+      if (res.ok) {
+        sessionStorage.setItem("admin_password", password);
+        sessionStorage.setItem("admin_authenticated", "true");
+        setIsAuthenticated(true);
+      } else {
+        alert("Invalid Password");
+      }
+    } catch (e) {
+      console.error("Login failed", e);
+      alert("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
