@@ -11,6 +11,16 @@ import {
   ArrowLeft,
   Layout,
   MessageSquare,
+  Globe,
+  Calendar,
+  Zap,
+  Map,
+  Heart,
+  Target,
+  Award,
+  Coffee,
+  Rocket,
+  Gift,
   LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -30,6 +40,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Beaker,
   Layout,
   MessageSquare,
+  Globe,
+  Calendar,
+  Zap,
+  Map,
+  Heart,
+  Target,
+  Award,
+  Coffee,
+  Rocket,
+  Gift,
 };
 
 const COLOR_PRESETS = [
@@ -68,6 +88,48 @@ const COLOR_PRESETS = [
     color: "text-sky-400",
     bg: "bg-sky-500/10",
     border: "border-sky-500/20",
+  },
+  {
+    name: "Indigo",
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/20",
+  },
+  {
+    name: "Teal",
+    color: "text-teal-400",
+    bg: "bg-teal-500/10",
+    border: "border-teal-500/20",
+  },
+  {
+    name: "Orange",
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+  },
+  {
+    name: "Pink",
+    color: "text-pink-400",
+    bg: "bg-pink-500/10",
+    border: "border-pink-500/20",
+  },
+  {
+    name: "Lime",
+    color: "text-lime-400",
+    bg: "bg-lime-500/10",
+    border: "border-lime-500/20",
+  },
+  {
+    name: "Cyan",
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/20",
+  },
+  {
+    name: "Fuchsia",
+    color: "text-fuchsia-400",
+    bg: "bg-fuchsia-500/10",
+    border: "border-fuchsia-500/20",
   },
 ];
 
