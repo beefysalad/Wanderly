@@ -84,12 +84,14 @@ const TripsView = ({ groups }: ITripsViewProps) => {
 
   if (allTrips.length === 0) {
     return (
-      <div className='bg-white rounded-xl border border-slate-200 p-12 text-center'>
-        <div className='w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-          <Calendar className='w-8 h-8 text-slate-400' />
+      <div className='bg-white dark:glass-card rounded-xl border border-slate-200 dark:border-white/10 p-12 text-center'>
+        <div className='w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4'>
+          <Calendar className='w-8 h-8 text-slate-400 dark:text-slate-300' />
         </div>
-        <p className='text-slate-600 font-medium mb-2'>No trips yet</p>
-        <p className='text-slate-500 text-sm'>
+        <p className='text-slate-600 dark:text-slate-200 font-medium mb-2'>
+          No trips yet
+        </p>
+        <p className='text-slate-500 dark:text-slate-400 text-sm'>
           Create or join a group to start planning trips.
         </p>
       </div>
@@ -112,14 +114,14 @@ const TripsView = ({ groups }: ITripsViewProps) => {
                   router.push(`/group/${trip.groupId}/trip/${trip.id}`);
                 });
               }}
-              className='w-full bg-white rounded-xl border border-slate-200 p-5 hover:border-orange-300 hover:shadow-lg transition-all duration-200 text-left active:scale-[0.98]'
+              className='w-full bg-white dark:glass-card rounded-xl border border-slate-200 dark:border-white/10 p-5 hover:border-orange-300 dark:hover:border-orange-500/50 hover:shadow-lg transition-all duration-200 text-left active:scale-[0.98]'
             >
               <div className='flex items-start justify-between gap-3 mb-3'>
                 <div className='flex-1 min-w-0'>
-                  <h3 className='text-lg font-semibold text-slate-900 mb-1 truncate'>
+                  <h3 className='text-lg font-semibold text-slate-900 dark:text-white mb-1 truncate'>
                     {trip.name}
                   </h3>
-                  <div className='flex items-center gap-2 text-sm text-slate-600 mb-2'>
+                  <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-2'>
                     <Users className='w-4 h-4 flex-shrink-0' />
                     <span className='truncate'>{trip.groupName}</span>
                   </div>
@@ -136,14 +138,14 @@ const TripsView = ({ groups }: ITripsViewProps) => {
               </div>
 
               <div className='space-y-2'>
-                <div className='flex items-center gap-2 text-sm text-slate-600'>
+                <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
                   <Calendar className='w-4 h-4 text-orange-500 flex-shrink-0' />
                   <span>
                     {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
                   </span>
                 </div>
                 {trip.location && (
-                  <div className='flex items-center gap-2 text-sm text-slate-600'>
+                  <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
                     <MapPin className='w-4 h-4 text-orange-500 flex-shrink-0' />
                     <span className='truncate'>{trip.location}</span>
                   </div>

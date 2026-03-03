@@ -69,13 +69,13 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
           isNavigating ? "pointer-events-none" : ""
         }`}
       >
-        <div className='bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-sm w-full p-6 relative'>
+        <div className='bg-white dark:glass-card rounded-2xl shadow-xl max-w-sm w-full p-6 relative border dark:border-white/10'>
           {/* Loading Overlay */}
           {isLoading && !isNavigating && (
-            <div className='absolute inset-0 bg-white/90 dark:bg-slate-800/90 rounded-lg flex items-center justify-center z-10'>
+            <div className='absolute inset-0 bg-white/90 dark:bg-slate-900/50 dark:backdrop-blur-sm rounded-2xl flex items-center justify-center z-10'>
               <div className='text-center'>
                 <div className='w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3'></div>
-                <p className='text-slate-700 dark:text-slate-300 font-medium'>
+                <p className='text-slate-700 dark:text-slate-200 font-medium'>
                   {createTrip.isPending ? "Creating trip..." : "Redirecting..."}
                 </p>
               </div>
@@ -114,10 +114,10 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                 type='text'
                 {...form.register("tripName")}
                 placeholder='e.g., Paris Adventure'
-                className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
                   form.formState.errors.tripName
                     ? "border-red-500 focus:ring-red-500/20"
-                    : "border-slate-300 dark:border-slate-600 focus:ring-orange-500"
+                    : "border-slate-300 dark:border-white/10 focus:ring-orange-500"
                 }`}
               />
             </div>
@@ -135,7 +135,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                 type='text'
                 {...form.register("location")}
                 placeholder='e.g., Paris, France'
-                className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500'
+                className='w-full px-4 py-2 border border-slate-300 dark:border-white/10 rounded-lg bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500'
               />
             </div>
             <div className='space-y-2'>
@@ -144,7 +144,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
               </label>
               <select
                 {...form.register("status")}
-                className='w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500'
+                className='w-full px-4 py-2 border border-slate-300 dark:border-white/10 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500'
               >
                 <option value='planning'>Planning</option>
                 <option value='finalized'>Finalized</option>
@@ -170,10 +170,10 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                   id='startDate'
                   type='date'
                   {...form.register("startDate")}
-                  className={`w-full min-w-0 h-10 px-2 py-2 border rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 transition-colors [-webkit-appearance:none] [appearance:none] ${
+                  className={`w-full min-w-0 h-10 px-2 py-2 border rounded-lg bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 transition-colors [-webkit-appearance:none] [appearance:none] ${
                     form.formState.errors.startDate
                       ? "border-red-500 focus:ring-red-500/20"
-                      : "border-slate-300 dark:border-slate-600 focus:ring-orange-500"
+                      : "border-slate-300 dark:border-white/10 focus:ring-orange-500"
                   }`}
                   style={{ WebkitAppearance: "none", appearance: "none" }}
                 />
@@ -195,10 +195,10 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                   id='endDate'
                   type='date'
                   {...form.register("endDate")}
-                  className={`w-full min-w-0 h-10 px-2 py-2 border rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 transition-colors [-webkit-appearance:none] [appearance:none] ${
+                  className={`w-full min-w-0 h-10 px-2 py-2 border rounded-lg bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 transition-colors [-webkit-appearance:none] [appearance:none] ${
                     form.formState.errors.endDate
                       ? "border-red-500 focus:ring-red-500/20"
-                      : "border-slate-300 dark:border-slate-600 focus:ring-orange-500"
+                      : "border-slate-300 dark:border-white/10 focus:ring-orange-500"
                   }`}
                   style={{ WebkitAppearance: "none", appearance: "none" }}
                 />
@@ -217,7 +217,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                 type='button'
                 onClick={onClose}
                 disabled={isLoading}
-                className='flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                className='flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border dark:border-white/5'
               >
                 Cancel
               </button>
