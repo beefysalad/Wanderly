@@ -3,15 +3,10 @@
 import { Calendar, DollarSign, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import Footer from "../../shared/Footer";
 import Header from "../../shared/Header";
-// AuthModal import removed
-import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 const AboutComponent = () => {
-  const [showQuickJoinModal, setShowQuickJoinModal] = useState<boolean>(false);
-
   return (
     <main className='min-h-screen bg-slate-950 text-white relative flex flex-col overflow-hidden'>
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
@@ -30,7 +25,7 @@ const AboutComponent = () => {
             <h1 className='text-5xl md:text-7xl font-black tracking-tight leading-tight'>
               I build tools for{" "}
               <span className='bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-x'>
-               Travelers.
+                Travelers.
               </span>
             </h1>
             <p className='text-xl md:text-2xl text-slate-400 font-light leading-relaxed'>
@@ -181,10 +176,10 @@ const AboutComponent = () => {
                     </p>
                   </div>
                   <p className='text-lg text-slate-300 font-light leading-relaxed italic'>
-                    &quot;I built this because Im tired of messy spreadsheets and
-                    forgotten plans. Wanderly isn&apos;t just a side project;
-                    it&apos;s the tool I actually use when I finally convince my
-                    friends to leave the city.&quot;
+                    &quot;I built this because Im tired of messy spreadsheets
+                    and forgotten plans. Wanderly isn&apos;t just a side
+                    project; it&apos;s the tool I actually use when I finally
+                    convince my friends to leave the city.&quot;
                   </p>
                 </div>
               </div>
@@ -221,17 +216,6 @@ const AboutComponent = () => {
 
         <Footer />
       </div>
-
-      {/* AuthModal rendering removed */}
-      {showQuickJoinModal && (
-        <QuickJoinModal
-          onClose={() => setShowQuickJoinModal(false)}
-          onJoin={(code: string, guestName: string) => {
-            // Handle quick join if needed
-            console.log("Quick join:", code, guestName);
-          }}
-        />
-      )}
     </main>
   );
 };

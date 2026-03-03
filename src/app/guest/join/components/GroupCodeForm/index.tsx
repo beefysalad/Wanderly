@@ -11,11 +11,7 @@ interface IGroupCodeForm {
   setStep: React.Dispatch<React.SetStateAction<"code" | "name">>;
   setGroupCode: React.Dispatch<React.SetStateAction<string>>;
 }
-const GroupCodeForm = ({
-  onClose,
-  setStep,
-  setGroupCode,
-}: IGroupCodeForm) => {
+const GroupCodeForm = ({ onClose, setStep, setGroupCode }: IGroupCodeForm) => {
   const form = useForm<TCodeSchema>({
     resolver: zodResolver(codeSchema),
     defaultValues: {
@@ -50,12 +46,6 @@ const GroupCodeForm = ({
           Ask your friends to share their group code
         </p>
       </div>
-
-      {/* {form.formState.errors.code && (
-        <div className='p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm'>
-          {form.formState.errors.code.message}
-        </div>
-      )} */}
 
       <div className='flex gap-3 pt-4'>
         <Button
