@@ -17,8 +17,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Header from "../../shared/Header";
 import Footer from "../../shared/Footer";
-// AuthModal import removed
-import QuickJoinModal from "../../shared/Modal/QuickJoinModal";
 
 interface FAQItem {
   id: string;
@@ -438,16 +436,6 @@ const FAQComponent = () => {
 
         <Footer />
       </div>
-
-      {/* AuthModal rendering removed */}
-      {showQuickJoinModal && (
-        <QuickJoinModal
-          onClose={() => setShowQuickJoinModal(false)}
-          onJoin={(code: string, guestName: string) => {
-            console.log("Quick join:", code, guestName);
-          }}
-        />
-      )}
     </main>
   );
 };
