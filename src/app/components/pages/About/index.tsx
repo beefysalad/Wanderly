@@ -1,219 +1,170 @@
 "use client";
 
 import { Calendar, DollarSign, Users } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import Footer from "../../shared/Footer";
 import Header from "../../shared/Header";
 
 const AboutComponent = () => {
   return (
-    <main className='min-h-screen bg-slate-950 text-white relative flex flex-col overflow-hidden'>
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
+    <main className='relative flex min-h-screen flex-col overflow-hidden bg-slate-950 text-white'>
+      <div className='pointer-events-none absolute inset-0 overflow-hidden'>
+        <div className='absolute -left-20 top-10 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl' />
+        <div className='absolute right-0 top-1/3 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl' />
+        <div className='absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-orange-500/10 blur-3xl' />
       </div>
 
       <div className='relative z-10'>
         <Header />
-        <div className='max-w-6xl mx-auto px-6 py-12 md:py-24 space-y-24'>
-          {/* Hero Section - Bold & Human */}
-          <div className='relative text-center space-y-6 max-w-3xl mx-auto'>
-            <div className='inline-block px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-widest uppercase mb-4 animate-fade-in'>
-              My Story
+        <div className='mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 py-12 md:py-20'>
+          <section className='grid gap-8 md:grid-cols-[1.2fr_0.8fr] md:items-end'>
+            <div className='space-y-6'>
+              <p className='inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300'>
+                About Wanderly
+              </p>
+              <h1 className='text-4xl font-black leading-tight md:text-6xl'>
+                Built to make group trips actually enjoyable.
+              </h1>
+              <p className='max-w-2xl text-lg leading-relaxed text-slate-300'>
+                Wanderly replaces scattered chats, stale spreadsheets, and
+                payment confusion with one clear place to plan, decide, and
+                travel together.
+              </p>
             </div>
-            <h1 className='text-5xl md:text-7xl font-black tracking-tight leading-tight'>
-              I build tools for{" "}
-              <span className='bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-x'>
-                Travelers.
-              </span>
-            </h1>
-            <p className='text-xl md:text-2xl text-slate-400 font-light leading-relaxed'>
-              No confusing spreadsheets. Just a better way to see the world with
-              your favorite people.
-            </p>
-          </div>
-
-          {/* Manifesto Section - Staggered & Dynamic */}
-          <div className='items-center'>
-            <div className='space-y-8'>
-              <div className='space-y-4'>
-                <h2 className='text-3xl md:text-4xl font-bold text-white text-center'>
-                  The Friction <br />
-                  <span className='text-slate-500'>of Group Travel.</span>
-                </h2>
-              </div>
-              <div className='space-y-6 text-lg text-slate-300 font-light leading-relaxed'>
-                <p>
-                  Planning group trips shouldn&apos;t be a full-time job. Yet,
-                  most of you have been there. Juggling 14 open tabs, 3
-                  different messaging apps, and that one &quot;master&quot;
-                  spreadsheet that no one actually updates.
+            <div className='grid grid-cols-3 gap-3'>
+              <div className='rounded-2xl border border-white/10 bg-white/5 p-4 text-center'>
+                <p className='text-2xl font-bold text-amber-300'>1</p>
+                <p className='text-xs uppercase tracking-wider text-slate-400'>
+                  shared plan
                 </p>
-
-                <div className='p-6 bg-white/5 rounded-2xl border-l-4 border-amber-500/50 italic text-slate-200'>
-                  &quot;Information gets lost, people miss updates, and someone
-                  always ends up paying more than their fair share.&quot;
-                </div>
-
-                <p>
-                  I built Wanderly to fix this. Not by adding more complexity,
-                  but by stripping away the noise. One place for your schedule,
-                  your shared wallet, and your group&apos;s peace of mind.
+              </div>
+              <div className='rounded-2xl border border-white/10 bg-white/5 p-4 text-center'>
+                <p className='text-2xl font-bold text-amber-300'>0</p>
+                <p className='text-xs uppercase tracking-wider text-slate-400'>
+                  chaos tabs
+                </p>
+              </div>
+              <div className='rounded-2xl border border-white/10 bg-white/5 p-4 text-center'>
+                <p className='text-2xl font-bold text-amber-300'>100%</p>
+                <p className='text-xs uppercase tracking-wider text-slate-400'>
+                  team visibility
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Feature Bento Grid */}
-          <div className='space-y-12'>
-            <div className='text-center space-y-4'>
-              <h2 className='text-3xl md:text-5xl font-bold'>
-                Built for the{" "}
-                <span className='font-bold text-amber-500'>Journey.</span>
+          <section className='grid gap-4 md:grid-cols-3'>
+            <div className='rounded-3xl border border-white/10 bg-slate-900/50 p-6'>
+              <p className='mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400'>
+                The problem
+              </p>
+              <p className='text-slate-200'>
+                Group trip planning gets fragmented fast. Info disappears, tasks
+                are duplicated, and money tracking turns into guesswork.
+              </p>
+            </div>
+            <div className='rounded-3xl border border-white/10 bg-slate-900/50 p-6'>
+              <p className='mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400'>
+                The approach
+              </p>
+              <p className='text-slate-200'>
+                Keep it simple: one itinerary, one expense ledger, and one space
+                where every member can contribute without friction.
+              </p>
+            </div>
+            <div className='rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 to-orange-500/10 p-6'>
+              <p className='mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300'>
+                The goal
+              </p>
+              <p className='text-amber-100'>
+                Spend less time coordinating and more time traveling. That is
+                the product standard behind every feature here.
+              </p>
+            </div>
+          </section>
+
+          <section className='space-y-8'>
+            <div className='space-y-3 text-center'>
+              <h2 className='text-3xl font-bold md:text-4xl'>
+                What Wanderly helps you do
               </h2>
               <p className='text-slate-400'>
-                Everything you need, exactly where it belongs.
+                Practical tools for real group travel workflows.
               </p>
             </div>
-
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[250px]'>
-              {/* Feature 1: Large */}
-              <div className='md:col-span-2 row-span-2 bg-gradient-to-br from-purple-900/20 to-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 flex flex-col justify-between hover:border-amber-500/30 transition-all group'>
-                <div className='space-y-4'>
-                  <div className='w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform'>
-                    <Calendar className='w-7 h-7 text-amber-400' />
-                  </div>
-                  <h3 className='text-3xl font-bold'>Smart Scheduling</h3>
-                  <p className='text-slate-400 text-lg leading-relaxed max-w-md'>
-                    Visual calendar and reactive schedules that sync with
-                    everyone in real-time. Export directly to your phone so
-                    you&apos;re never out of the loop.
-                  </p>
+            <div className='grid gap-5 md:grid-cols-3'>
+              <article className='group rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-amber-500/40 hover:bg-white/[0.06]'>
+                <div className='mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20'>
+                  <Calendar className='h-6 w-6 text-amber-300' />
                 </div>
-                <div className='flex items-center gap-4 text-sm text-amber-400 font-medium'>
-                  <span>Supports Apple, Google, & Outlook</span>
-                  <div className='flex-1 h-px bg-amber-500/20'></div>
+                <h3 className='mb-2 text-xl font-semibold'>Scheduling</h3>
+                <p className='leading-relaxed text-slate-300'>
+                  Organize plans in one timeline so everyone sees changes and
+                  can stay aligned before and during the trip.
+                </p>
+              </article>
+              <article className='group rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-amber-500/40 hover:bg-white/[0.06]'>
+                <div className='mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20'>
+                  <DollarSign className='h-6 w-6 text-amber-300' />
                 </div>
-              </div>
-
-              {/* Feature 2: Small */}
-              <div className='bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 hover:border-amber-500/30 transition-all group'>
-                <div className='space-y-4'>
-                  <div className='w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform'>
-                    <DollarSign className='w-6 h-6 text-amber-400' />
-                  </div>
-                  <div>
-                    <h3 className='text-xl font-bold mb-2'>Fair Splits</h3>
-                    <p className='text-slate-400 text-sm'>
-                      No more &quot;who owes who&quot;. Track expenses and
-                      settle up with one tap.
-                    </p>
-                  </div>
+                <h3 className='mb-2 text-xl font-semibold'>Expense Clarity</h3>
+                <p className='leading-relaxed text-slate-300'>
+                  Track who paid, who owes, and what is settled without chasing
+                  screenshots or patchy notes in chat threads.
+                </p>
+              </article>
+              <article className='group rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-amber-500/40 hover:bg-white/[0.06]'>
+                <div className='mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20'>
+                  <Users className='h-6 w-6 text-amber-300' />
                 </div>
-              </div>
-
-              {/* Feature 3: Small */}
-              <div className='bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 hover:border-amber-500/30 transition-all group'>
-                <div className='space-y-4'>
-                  <div className='w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center group-hover:-rotate-12 transition-transform'>
-                    <Users className='w-6 h-6 text-amber-400' />
-                  </div>
-                  <div>
-                    <h3 className='text-xl font-bold mb-2'>True Collab</h3>
-                    <p className='text-slate-400 text-sm'>
-                      Shared groups where everyone can contribute, propose, and
-                      vote.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 4: Medium/Wide */}
-              <div className='md:col-span-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 backdrop-blur-xl border border-amber-500/20 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 hover:border-amber-500/40 transition-all'>
-                <div className='flex-1 space-y-4'>
-                  <h3 className='text-2xl font-bold'>Built for Travelers</h3>
-                  <p className='text-slate-300'>
-                    I don&apos;t do &quot;generic project management&quot;.
-                    Wanderly is tailored for the chaos and joy of seeing the
-                    world together.
-                  </p>
-                </div>
-
-                <div className='flex-shrink-0'>
-                  <div className='px-6 py-3 bg-amber-500/20 border border-amber-500/30 rounded-full text-amber-300 text-sm font-bold'>
-                    Travel-Focused UX
-                  </div>
-                </div>
-              </div>
+                <h3 className='mb-2 text-xl font-semibold'>Group Ownership</h3>
+                <p className='leading-relaxed text-slate-300'>
+                  Everyone can contribute updates, keep context, and move
+                  decisions forward without relying on one organizer.
+                </p>
+              </article>
             </div>
-          </div>
+          </section>
 
-          {/* Persona Section - Reduced "Corporate" Feel */}
-          <div className='relative'>
-            <div className='absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent z-10'></div>
-            <div className='relative bg-slate-900/20 border border-white/5 rounded-[3rem] p-8 md:p-16 overflow-hidden'>
-              <div className='relative z-20 flex flex-col md:flex-row gap-12 items-center'>
-                <div className='relative flex-shrink-0'>
-                  <div className='absolute inset-0 bg-amber-500/30 rounded-full blur-2xl animate-pulse'></div>
-                  <div className='relative w-48 h-48 rounded-2xl overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-500 ring-4 ring-amber-500/30'>
-                    <Image
-                      src='/patrick.PNG'
-                      alt='Patrick'
-                      fill
-                      className='object-cover scale-110'
-                    />
-                  </div>
-                </div>
-                <div className='flex-1 space-y-6 text-center md:text-left'>
-                  <div className='space-y-2'>
-                    <h2 className='text-4xl font-black'>
-                      I&apos;m <span className='text-amber-500'>Patrick.</span>
-                    </h2>
-
-                    <p className='text-slate-400 font-medium uppercase tracking-widest text-sm'>
-                      Software Engineer
-                    </p>
-                  </div>
-                  <p className='text-lg text-slate-300 font-light leading-relaxed italic'>
-                    &quot;I built this because Im tired of messy spreadsheets
-                    and forgotten plans. Wanderly isn&apos;t just a side
-                    project; it&apos;s the tool I actually use when I finally
-                    convince my friends to leave the city.&quot;
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Final CTA */}
-          <div className='text-center space-y-12 pb-24'>
-            <div className='space-y-4'>
-              <h2 className='text-4xl md:text-6xl font-bold'>
-                Stop Planning. <br />{" "}
-                <span className='text-slate-500 font-light italic'>
-                  Start Traveling.
-                </span>
+          <section className='rounded-[2rem] border border-white/10 bg-slate-900/40 p-8 md:p-12'>
+            <div className='mx-auto max-w-3xl space-y-5 text-center'>
+              <p className='text-xs font-semibold uppercase tracking-[0.2em] text-amber-300'>
+                Builder note
+              </p>
+              <h2 className='text-3xl font-bold md:text-4xl'>
+                Built with a strict no-bloat rule.
               </h2>
-              <p className='text-slate-400 text-lg'>
-                Wanderly is free while I&apos;m in Beta. Join me on the journey.
+              <p className='text-lg leading-relaxed text-slate-300'>
+                Wanderly exists because trip planning tools usually feel
+                overloaded or generic. The product direction is simple: solve
+                planning and money coordination cleanly, then get out of your
+                way.
               </p>
             </div>
-            <div className='flex flex-col sm:flex-row items-center justify-center gap-6'>
+          </section>
+
+          <section className='pb-12 text-center md:pb-20'>
+            <h2 className='text-4xl font-black md:text-5xl'>
+              Plan less. Travel more.
+            </h2>
+            <p className='mx-auto mt-4 max-w-2xl text-slate-400'>
+              Wanderly is in beta and free to use while features are being
+              shaped with early users.
+            </p>
+            <div className='mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row'>
               <Link href={"/register"}>
-                <button className='px-10 py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 transition-all font-bold shadow-2xl shadow-amber-500/20'>
-                  Get Started for Free
+                <button className='rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 font-semibold text-slate-950 transition hover:scale-[1.02]'>
+                  Get Started Free
                 </button>
               </Link>
               <Link href={"/faq"}>
-                <button className='px-10 py-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-medium'>
-                  Check the FAQ
+                <button className='rounded-2xl border border-white/15 bg-white/5 px-8 py-4 font-medium transition hover:bg-white/10'>
+                  Read FAQ
                 </button>
               </Link>
             </div>
-          </div>
+          </section>
         </div>
-
         <Footer />
       </div>
     </main>
