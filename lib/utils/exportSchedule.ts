@@ -6,6 +6,13 @@ interface ExportScheduleOptions {
   activities: Activity[];
 }
 
+const PNG_WIDTH = 1080;
+const PNG_PADDING = 56;
+const PNG_HEADER_HEIGHT = 176;
+const PNG_FOOTER_HEIGHT = 64;
+const MAX_TITLE_LINES = 3;
+const MAX_NOTES_LINES = 3;
+
 /**
  * Exports schedule as PNG image with Wanderly branding
  */
@@ -13,387 +20,423 @@ export async function exportScheduleToPNG({
   trip,
   activities,
 }: ExportScheduleOptions): Promise<void> {
-  // Canvas dimensions (optimized for mobile viewing)
-  const width = 800;
-  const padding = 40;
-  const headerHeight = 180;
-  const footerHeight = 60;
+  const activitiesByDate = groupActivitiesByDate(activities);
+  const height = calculateCanvasHeight(trip, activitiesByDate);
+  const dpr =
+    typeof window !== "undefined"
+      ? Math.min(window.devicePixelRatio || 1, 2)
+      : 1;
 
-  // Calculate content height dynamically
-  // We'll start with a base height and adjust as we draw
-  const baseHeight = headerHeight + 100 + footerHeight + padding * 2;
-  const height = Math.max(1200, baseHeight + activities.length * 80);
-
-  // Create canvas
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = Math.floor(PNG_WIDTH * dpr);
+  canvas.height = Math.floor(height * dpr);
+  canvas.style.width = `${PNG_WIDTH}px`;
+  canvas.style.height = `${height}px`;
+
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
     throw new Error("Failed to create canvas context");
   }
 
-  // Background
+  ctx.scale(dpr, dpr);
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, PNG_WIDTH, height);
 
-  let currentY = padding;
+  let currentY = PNG_PADDING;
+  currentY = drawHeader(ctx, currentY);
+  currentY = drawTripInfo(ctx, currentY, trip);
+  currentY = drawActivitiesList(ctx, currentY, activitiesByDate);
 
-  // Group activities by date
-  const activitiesByDate = groupActivitiesByDate(activities);
+  const footerY = Math.max(currentY + 24, height - PNG_FOOTER_HEIGHT);
+  drawFooter(ctx, footerY, trip, activities.length);
 
-  // Header with Wanderly branding
-  currentY = drawHeader(ctx, width, currentY);
-
-  // Trip info
-  currentY = drawTripInfo(ctx, width, currentY, padding, trip);
-
-  // Activities list
-  currentY = drawActivitiesList(
-    ctx,
-    width,
-    currentY,
-    padding,
-    activitiesByDate
-  );
-
-  // Footer (positioned at the end of content, but within canvas bounds)
-  const footerY = Math.min(currentY + 20, height - footerHeight);
-  drawFooter(ctx, width, footerY);
-
-  // Convert to blob and download
-  canvas.toBlob(
-    (blob) => {
-      if (!blob) {
-        throw new Error("Failed to create image blob");
-      }
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${trip.name.replace(/[^a-z0-9]/gi, "_")}_schedule_${
-        new Date().toISOString().split("T")[0]
-      }.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    "image/png",
-    1.0
-  );
+  const blob = await canvasToBlob(canvas);
+  const fileDate = toLocalDateKey(new Date());
+  const safeTripName = trip.name.replace(/[^a-z0-9]/gi, "_");
+  downloadBlob(blob, `${safeTripName}_itinerary_${fileDate}.png`);
 }
 
-/**
- * Draw Wanderly branding header
- */
-function drawHeader(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  y: number
+function calculateCanvasHeight(
+  trip: Trip,
+  activitiesByDate: Record<string, Activity[]>
 ): number {
-  const headerHeight = 140;
-  const gradient = ctx.createLinearGradient(0, y, 0, y + headerHeight);
-  gradient.addColorStop(0, "#fbbf24"); // amber-400
-  gradient.addColorStop(1, "#f97316"); // orange-500
-
-  // Header background
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, y, width, headerHeight);
-
-  // Compass icon (simplified as text/emoji or geometric shape)
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 48px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("🧭", width / 2, y + 50);
-
-  // Wanderly text
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 36px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("Wanderly", width / 2, y + 95);
-
-  // Tagline
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.font = "16px Arial";
-  ctx.fillText("Plan your trip", width / 2, y + 120);
-
-  return y + headerHeight + 20;
-}
-
-/**
- * Draw trip information
- */
-function drawTripInfo(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  y: number,
-  padding: number,
-  trip: Trip
-): number {
-  const startDate = new Date(trip.startDate);
-  const endDate = new Date(trip.endDate);
-
-  // Trip name
-  ctx.fillStyle = "#1e293b"; // slate-800
-  ctx.font = "bold 28px Arial";
-  ctx.textAlign = "left";
-  ctx.fillText(trip.name, padding, y);
-
-  // Date range
-  ctx.fillStyle = "#64748b"; // slate-500
-  ctx.font = "18px Arial";
-  const dateText = `${formatDate(startDate)} - ${formatDate(endDate)}`;
-  ctx.fillText(dateText, padding, y + 35);
-
-  // Location (if available)
-  if (trip.location) {
-    ctx.fillStyle = "#64748b";
-    ctx.font = "16px Arial";
-    ctx.fillText(`📍 ${trip.location}`, padding, y + 60);
-    return y + 90;
+  const canvas = document.createElement("canvas");
+  canvas.width = PNG_WIDTH;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return 1400;
   }
 
-  return y + 60;
+  let y = PNG_PADDING;
+  y += PNG_HEADER_HEIGHT + 20;
+  y += getTripInfoHeight(ctx, trip);
+  y += 18;
+  y += getActivitiesListHeight(ctx, activitiesByDate);
+  y += 24 + PNG_FOOTER_HEIGHT + PNG_PADDING;
+
+  return Math.max(1280, Math.ceil(y));
 }
 
-/**
- * Draw activities list grouped by date
- */
+function drawHeader(ctx: CanvasRenderingContext2D, y: number): number {
+  const gradient = ctx.createLinearGradient(0, y, 0, y + PNG_HEADER_HEIGHT);
+  gradient.addColorStop(0, "#f59e0b");
+  gradient.addColorStop(1, "#ea580c");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, y, PNG_WIDTH, PNG_HEADER_HEIGHT);
+
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.beginPath();
+  ctx.arc(PNG_WIDTH - 120, y + 44, 86, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fff7ed";
+  ctx.font = "700 24px Arial";
+  ctx.textAlign = "left";
+  ctx.fillText("Wanderly", PNG_PADDING, y + 56);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "800 44px Arial";
+  ctx.fillText("Travel Itinerary", PNG_PADDING, y + 114);
+
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.font = "500 20px Arial";
+  ctx.fillText("Plan together. Travel lighter.", PNG_PADDING, y + 146);
+
+  return y + PNG_HEADER_HEIGHT + 20;
+}
+
+function drawTripInfo(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  trip: Trip
+): number {
+  const startDate = parseDateInput(trip.startDate);
+  const endDate = parseDateInput(trip.endDate);
+
+  const cardX = PNG_PADDING;
+  const cardWidth = PNG_WIDTH - PNG_PADDING * 2;
+  const innerX = cardX + 20;
+  const maxTextWidth = cardWidth - 40;
+
+  const nameHeight = getWrappedTextHeight(
+    ctx,
+    trip.name,
+    "800 38px Arial",
+    maxTextWidth,
+    44,
+    2
+  );
+  const detailsHeight = trip.location ? 58 : 30;
+  const cardHeight = nameHeight + detailsHeight + 34;
+
+  ctx.fillStyle = "#f8fafc";
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  ctx.fillRect(cardX, y, cardWidth, cardHeight);
+  ctx.strokeRect(cardX, y, cardWidth, cardHeight);
+
+  ctx.fillStyle = "#0f172a";
+  drawWrappedText(ctx, trip.name, innerX, y + 50, {
+    font: "800 38px Arial",
+    maxWidth: maxTextWidth,
+    lineHeight: 44,
+    maxLines: 2,
+  });
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "600 19px Arial";
+  ctx.textAlign = "left";
+  ctx.fillText(
+    `${formatDate(startDate)} - ${formatDate(endDate)}`,
+    innerX,
+    y + nameHeight + 14
+  );
+
+  if (trip.location) {
+    drawWrappedText(ctx, `Location: ${trip.location}`, innerX, y + nameHeight + 44, {
+      font: "500 18px Arial",
+      maxWidth: maxTextWidth,
+      lineHeight: 22,
+      maxLines: 2,
+      color: "#64748b",
+    });
+  }
+
+  return y + cardHeight;
+}
+
 function drawActivitiesList(
   ctx: CanvasRenderingContext2D,
-  width: number,
   y: number,
-  padding: number,
   activitiesByDate: Record<string, Activity[]>
 ): number {
   let currentY = y;
-
-  const sortedDates = Object.keys(activitiesByDate).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
-  );
+  const sortedDates = Object.keys(activitiesByDate).sort();
 
   if (sortedDates.length === 0) {
-    ctx.fillStyle = "#94a3b8"; // slate-400
-    ctx.font = "18px Arial";
+    ctx.fillStyle = "#64748b";
+    ctx.font = "600 22px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("No activities planned", width / 2, currentY + 30);
-    return currentY + 60;
+    ctx.fillText("No activities planned yet", PNG_WIDTH / 2, currentY + 48);
+    return currentY + 76;
   }
 
   for (const dateStr of sortedDates) {
-    const date = new Date(dateStr);
+    const date = parseDateKey(dateStr);
     const dayActivities = activitiesByDate[dateStr];
+    const dateHeaderX = PNG_PADDING;
+    const dateHeaderWidth = PNG_WIDTH - PNG_PADDING * 2;
 
-    // Date header
-    ctx.fillStyle = "#f1f5f9"; // slate-100
-    ctx.fillRect(padding, currentY, width - padding * 2, 40);
+    ctx.fillStyle = "#eef2ff";
+    ctx.fillRect(dateHeaderX, currentY, dateHeaderWidth, 42);
 
-    ctx.fillStyle = "#1e293b"; // slate-800
-    ctx.font = "bold 20px Arial";
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "700 21px Arial";
     ctx.textAlign = "left";
-    const dateText = formatDateFull(date);
-    ctx.fillText(dateText, padding + 10, currentY + 28);
+    ctx.fillText(formatDateFull(date), dateHeaderX + 12, currentY + 28);
 
-    currentY += 50;
+    currentY += 52;
 
-    // Activities for this date
     for (const activity of dayActivities) {
-      const titleX = padding + 35;
-      const maxTitleWidth = width - padding * 2 - 50;
+      const cardX = PNG_PADDING;
+      const cardWidth = PNG_WIDTH - PNG_PADDING * 2;
+      const textX = cardX + 42;
+      const maxTextWidth = cardWidth - 62;
+      const activityHeight = getActivityCardHeight(ctx, activity, maxTextWidth);
 
-      // First, calculate the height needed for all content
-      let contentHeight = 20; // Top padding
-
-      // Title height
-      ctx.font = activity.done ? "italic 18px Arial" : "bold 18px Arial";
-      const titleLines = wrapText(ctx, activity.title, maxTitleWidth);
-      contentHeight += Math.min(titleLines.length, 2) * 22;
-      if (titleLines.length > 2) {
-        contentHeight += 22; // For "..."
-      }
-
-      // Time height
-      if (activity.startTime) {
-        contentHeight += 20;
-      }
-
-      // Transportation height
-      if (activity.transportationMode || activity.pickupTime) {
-        contentHeight += 18;
-      }
-
-      // Notes height
-      if (activity.notes) {
-        ctx.font = "14px Arial";
-        const notesLines = wrapText(ctx, activity.notes, maxTitleWidth);
-        contentHeight += Math.min(notesLines.length, 2) * 18;
-        if (notesLines.length > 2) {
-          contentHeight += 18; // For "..."
-        }
-      }
-
-      contentHeight += 10; // Bottom padding
-      const activityHeight = Math.max(60, contentHeight);
-
-      // Draw activity background with calculated height
       ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#e2e8f0"; // slate-200
+      ctx.strokeStyle = "#e2e8f0";
       ctx.lineWidth = 1;
-      ctx.fillRect(padding, currentY, width - padding * 2, activityHeight);
-      ctx.strokeRect(padding, currentY, width - padding * 2, activityHeight);
+      ctx.fillRect(cardX, currentY, cardWidth, activityHeight);
+      ctx.strokeRect(cardX, currentY, cardWidth, activityHeight);
 
-      // Done indicator
-      const checkX = padding + 15;
+      const checkX = cardX + 19;
       const checkY = currentY + 20;
       if (activity.done) {
-        ctx.fillStyle = "#10b981"; // emerald-500
+        ctx.fillStyle = "#10b981";
         ctx.beginPath();
         ctx.arc(checkX, checkY, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px Arial";
+        ctx.font = "700 12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("✓", checkX, checkY + 4);
+        ctx.fillText("✓", checkX, checkY + 4.3);
       } else {
-        ctx.strokeStyle = "#cbd5e1"; // slate-300
+        ctx.strokeStyle = "#cbd5e1";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(checkX, checkY, 8, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Activity title (with wrapping)
-      ctx.fillStyle = activity.done ? "#94a3b8" : "#1e293b";
-      ctx.font = activity.done ? "italic 18px Arial" : "bold 18px Arial";
-      ctx.textAlign = "left";
-      let textY = currentY + 20;
-      for (let i = 0; i < Math.min(titleLines.length, 2); i++) {
-        ctx.fillText(titleLines[i], titleX, textY);
-        textY += 22;
-      }
-      if (titleLines.length > 2) {
-        ctx.fillText("...", titleX, textY);
-        textY += 22;
-      }
+      const titleFont = activity.done ? "italic 700 24px Arial" : "700 24px Arial";
+      const titleBottomY = drawWrappedText(
+        ctx,
+        activity.title || "Untitled activity",
+        textX,
+        currentY + 30,
+        {
+          font: titleFont,
+          maxWidth: maxTextWidth,
+          lineHeight: 30,
+          maxLines: MAX_TITLE_LINES,
+          color: activity.done ? "#94a3b8" : "#0f172a",
+        }
+      );
 
-      // Time and notes
-      let detailY = textY;
-      ctx.fillStyle = "#64748b";
-      ctx.font = "14px Arial";
-
+      let detailY = titleBottomY + 8;
       if (activity.startTime) {
         const timeText = activity.endTime
           ? `${formatTime12Hour(activity.startTime)} - ${formatTime12Hour(
               activity.endTime
             )}`
           : formatTime12Hour(activity.startTime);
-        ctx.fillText(`⏰ ${timeText}`, titleX, detailY);
-        detailY += 20;
+        ctx.fillStyle = "#475569";
+        ctx.font = "600 16px Arial";
+        ctx.fillText(`Time: ${timeText}`, textX, detailY);
+        detailY += 22;
       }
 
-      // Transportation info
       if (activity.transportationMode || activity.pickupTime) {
-        let transportText = "";
-        if (activity.transportationMode) {
-          const modeIcons: Record<string, string> = {
-            car: "🚗",
-            bus: "🚌",
-            plane: "✈️",
-            train: "🚊",
-            taxi: "🚕",
-            walking: "🚶",
-            commute: "🚌",
-          };
-          const icon = modeIcons[activity.transportationMode] || "🚗";
-          transportText += `${icon} ${
-            activity.transportationMode.charAt(0).toUpperCase() +
-            activity.transportationMode.slice(1)
-          }`;
-        }
-        if (activity.pickupTime) {
-          if (transportText) transportText += " • ";
-          const label =
-            activity.transportationMode === "plane" ? "Departure" : "Pickup";
-          transportText += `${label}: ${formatTime12Hour(activity.pickupTime)}`;
-        }
-        ctx.fillText(transportText, titleX, detailY);
-        detailY += 18;
+        const mode = activity.transportationMode
+          ? capitalize(activity.transportationMode)
+          : "Transport";
+        const pickupSuffix = activity.pickupTime
+          ? ` at ${formatTime12Hour(activity.pickupTime)}`
+          : "";
+        const transportText = `${mode}${pickupSuffix}`;
+        ctx.fillStyle = "#64748b";
+        ctx.font = "500 15px Arial";
+        const nextY = drawWrappedText(ctx, transportText, textX, detailY, {
+          font: "500 15px Arial",
+          maxWidth: maxTextWidth,
+          lineHeight: 19,
+          maxLines: 2,
+          color: "#64748b",
+        });
+        detailY = nextY + 4;
       }
 
       if (activity.notes) {
-        ctx.font = "14px Arial";
-        const notesLines = wrapText(ctx, activity.notes, maxTitleWidth);
-        for (let i = 0; i < Math.min(notesLines.length, 2); i++) {
-          ctx.fillText(notesLines[i], titleX, detailY);
-          detailY += 18;
-        }
-        if (notesLines.length > 2) {
-          ctx.fillText("...", titleX, detailY);
-          detailY += 18;
-        }
+        const notesY = drawWrappedText(ctx, activity.notes, textX, detailY, {
+          font: "400 15px Arial",
+          maxWidth: maxTextWidth,
+          lineHeight: 20,
+          maxLines: MAX_NOTES_LINES,
+          color: "#64748b",
+        });
+        detailY = notesY + 2;
       }
 
-      currentY += activityHeight;
+      if (activity.done) {
+        ctx.fillStyle = "#059669";
+        ctx.font = "700 13px Arial";
+        ctx.fillText("COMPLETED", cardX + cardWidth - 116, currentY + 23);
+      }
+
+      currentY += activityHeight + 8;
     }
 
-    currentY += 10; // Spacing between dates
+    currentY += 12;
   }
 
   return currentY;
 }
 
-/**
- * Draw footer with branding
- */
-function drawFooter(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): void {
-  const footerY = height - 40;
-  ctx.fillStyle = "#f8fafc"; // slate-50
-  ctx.fillRect(0, footerY, width, 40);
-
-  ctx.fillStyle = "#94a3b8"; // slate-400
-  ctx.font = "14px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("Generated by Wanderly", width / 2, footerY + 25);
+function getTripInfoHeight(ctx: CanvasRenderingContext2D, trip: Trip): number {
+  const cardWidth = PNG_WIDTH - PNG_PADDING * 2;
+  const maxTextWidth = cardWidth - 40;
+  const nameHeight = getWrappedTextHeight(
+    ctx,
+    trip.name,
+    "800 38px Arial",
+    maxTextWidth,
+    44,
+    2
+  );
+  return nameHeight + (trip.location ? 92 : 64);
 }
 
-/**
- * Group activities by date
- */
+function getActivitiesListHeight(
+  ctx: CanvasRenderingContext2D,
+  activitiesByDate: Record<string, Activity[]>
+): number {
+  const sortedDates = Object.keys(activitiesByDate).sort();
+  if (sortedDates.length === 0) {
+    return 76;
+  }
+
+  let total = 0;
+  const cardWidth = PNG_WIDTH - PNG_PADDING * 2;
+  const maxTextWidth = cardWidth - 62;
+
+  for (const dateKey of sortedDates) {
+    total += 52;
+    for (const activity of activitiesByDate[dateKey]) {
+      total += getActivityCardHeight(ctx, activity, maxTextWidth) + 8;
+    }
+    total += 12;
+  }
+  return total;
+}
+
+function getActivityCardHeight(
+  ctx: CanvasRenderingContext2D,
+  activity: Activity,
+  maxTextWidth: number
+): number {
+  const titleHeight = getWrappedTextHeight(
+    ctx,
+    activity.title || "Untitled activity",
+    activity.done ? "italic 700 24px Arial" : "700 24px Arial",
+    maxTextWidth,
+    30,
+    MAX_TITLE_LINES
+  );
+  let detailHeight = 16;
+  if (activity.startTime) detailHeight += 22;
+  if (activity.transportationMode || activity.pickupTime) {
+    detailHeight += getWrappedTextHeight(
+      ctx,
+      `${activity.transportationMode || "Transport"} ${activity.pickupTime || ""}`,
+      "500 15px Arial",
+      maxTextWidth,
+      19,
+      2
+    );
+    detailHeight += 4;
+  }
+  if (activity.notes) {
+    detailHeight += getWrappedTextHeight(
+      ctx,
+      activity.notes,
+      "400 15px Arial",
+      maxTextWidth,
+      20,
+      MAX_NOTES_LINES
+    );
+    detailHeight += 2;
+  }
+
+  const total = 30 + titleHeight + 8 + detailHeight + 18;
+  return Math.max(86, Math.ceil(total));
+}
+
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  trip: Trip,
+  activityCount: number
+): void {
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(0, y, PNG_WIDTH, PNG_FOOTER_HEIGHT);
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(PNG_WIDTH, y);
+  ctx.stroke();
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "500 15px Arial";
+  ctx.textAlign = "left";
+  ctx.fillText(`Trip: ${trip.name}`, PNG_PADDING, y + 25);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "500 14px Arial";
+  ctx.fillText(`Activities: ${activityCount}`, PNG_PADDING, y + 46);
+
+  ctx.textAlign = "right";
+  ctx.fillText("Generated by Wanderly", PNG_WIDTH - PNG_PADDING, y + 35);
+}
+
 function groupActivitiesByDate(
   activities: Activity[]
 ): Record<string, Activity[]> {
   const grouped: Record<string, Activity[]> = {};
 
   for (const activity of activities) {
-    const date = new Date(activity.date);
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = toLocalDateKey(activity.date);
     if (!grouped[dateKey]) {
       grouped[dateKey] = [];
     }
     grouped[dateKey].push(activity);
   }
 
-  // Sort activities within each date by start time
   for (const dateKey in grouped) {
     grouped[dateKey].sort((a, b) => {
-      const timeA = a.startTime || "";
-      const timeB = b.startTime || "";
-      return timeA.localeCompare(timeB);
+      const timeA = timeToMinutes(a.startTime);
+      const timeB = timeToMinutes(b.startTime);
+      if (timeA !== timeB) return timeA - timeB;
+      return (a.title || "").localeCompare(b.title || "");
     });
   }
 
   return grouped;
 }
 
-/**
- * Format date as "Mon, Jan 15, 2025"
- */
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -402,9 +445,6 @@ function formatDate(date: Date): string {
   });
 }
 
-/**
- * Format date as "Monday, January 15, 2025"
- */
 function formatDateFull(date: Date): string {
   return date.toLocaleDateString("en-US", {
     weekday: "long",
@@ -414,30 +454,75 @@ function formatDateFull(date: Date): string {
   });
 }
 
-/**
- * Wrap text to fit within max width and return lines array
- */
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  startY: number,
+  options: {
+    font: string;
+    maxWidth: number;
+    lineHeight: number;
+    maxLines?: number;
+    color?: string;
+  }
+): number {
+  ctx.font = options.font;
+  ctx.textAlign = "left";
+  ctx.fillStyle = options.color || "#0f172a";
+  const lines = wrapText(ctx, text, options.maxWidth, options.maxLines);
+  let y = startY;
+  for (const line of lines) {
+    ctx.fillText(line, x, y);
+    y += options.lineHeight;
+  }
+  return y;
+}
+
+function getWrappedTextHeight(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines?: number
+): number {
+  ctx.font = font;
+  const lines = wrapText(ctx, text, maxWidth, maxLines);
+  return Math.max(lineHeight, lines.length * lineHeight);
+}
+
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
-  maxWidth: number
+  maxWidth: number,
+  maxLines?: number
 ): string[] {
-  if (!text) return [];
+  if (!text?.trim()) {
+    return [""];
+  }
 
-  const words = text.split(" ");
+  const words = text.trim().split(/\s+/);
   const lines: string[] = [];
   let currentLine = "";
 
-  for (let i = 0; i < words.length; i++) {
-    const testLine = currentLine + (currentLine ? " " : "") + words[i];
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-
-    if (testWidth > maxWidth && currentLine) {
-      lines.push(currentLine);
-      currentLine = words[i];
-    } else {
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
       currentLine = testLine;
+      continue;
+    }
+
+    if (currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      lines.push(truncateToWidth(ctx, word, maxWidth));
+      currentLine = "";
+    }
+
+    if (maxLines && lines.length >= maxLines) {
+      return addEllipsis(lines, maxLines, ctx, maxWidth);
     }
   }
 
@@ -445,7 +530,97 @@ function wrapText(
     lines.push(currentLine);
   }
 
-  return lines.length > 0 ? lines : [text];
+  if (maxLines && lines.length > maxLines) {
+    return addEllipsis(lines, maxLines, ctx, maxWidth);
+  }
+
+  return lines;
+}
+
+function addEllipsis(
+  lines: string[],
+  maxLines: number,
+  ctx: CanvasRenderingContext2D,
+  maxWidth: number
+): string[] {
+  const clipped = lines.slice(0, maxLines);
+  const last = clipped[maxLines - 1] || "";
+  clipped[maxLines - 1] = truncateToWidth(ctx, `${last}...`, maxWidth);
+  return clipped;
+}
+
+function truncateToWidth(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number
+): string {
+  if (ctx.measureText(text).width <= maxWidth) {
+    return text;
+  }
+
+  let out = text;
+  while (out.length > 1 && ctx.measureText(`${out}...`).width > maxWidth) {
+    out = out.slice(0, -1);
+  }
+  return `${out}...`;
+}
+
+function parseDateInput(dateInput: string | Date): Date {
+  const date = new Date(dateInput);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function toLocalDateKey(dateInput: string | Date): string {
+  const date = parseDateInput(dateInput);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateKey(dateKey: string): Date {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+}
+
+function timeToMinutes(time?: string): number {
+  if (!time) return Number.MAX_SAFE_INTEGER;
+  const [hours, minutes] = time.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  return hours * 60 + minutes;
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Failed to create image blob"));
+          return;
+        }
+        resolve(blob);
+      },
+      "image/png",
+      1
+    );
+  });
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**

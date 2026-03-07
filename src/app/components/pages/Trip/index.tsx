@@ -3,6 +3,7 @@ import { Activity, Group, Trip } from "@/src/shared/types";
 import {
   Calendar,
   DollarSign,
+  ImageIcon,
   List,
   MoreVertical,
   Plus,
@@ -26,7 +27,6 @@ import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import PremiumBackground from "../../shared/PremiumBackground";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
@@ -447,6 +447,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   <div className='px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white/5'>
                     Options
                   </div>
+                  <div className='px-4 py-2 text-[10px] text-amber-300/90 bg-amber-500/10 border-b border-white/5'>
+                    Export features are currently in beta.
+                  </div>
                   <button
                     onClick={() => {
                       handleExportSchedule("png");
@@ -458,9 +461,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                     {isExporting ? (
                       <span className='w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin' />
                     ) : (
-                      <ChevronDown className='w-4 h-4 -rotate-90' />
+                      <ImageIcon className='w-4 h-4' />
                     )}
-                    Export as PNG
+                    Export Itinerary (PNG) Beta
                   </button>
                   <button
                     onClick={() => {
@@ -475,7 +478,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                     ) : (
                       <Calendar className='w-4 h-4' />
                     )}
-                    Export as Calendar
+                    Export Calendar (.ics) Beta
                   </button>
 
                   {isTripCreator && (
