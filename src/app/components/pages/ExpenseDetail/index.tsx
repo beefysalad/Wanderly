@@ -423,7 +423,14 @@ const ExpenseDetail = ({
 
           {/* Linked Activity Footer */}
           {linkedActivity && (
-             <div className='px-6 py-4 flex items-center justify-between text-slate-500 group cursor-pointer hover:bg-white/5 rounded-2xl transition-all' onClick={() => router.push(`/group/${expense.groupId}/trip/${expense.tripId}?tab=daily`)}>
+             <div
+               className='px-6 py-4 flex items-center justify-between text-slate-500 group cursor-pointer hover:bg-white/5 rounded-2xl transition-all'
+               onClick={() =>
+                 router.push(
+                   `/group/${expense.groupId}/trip/${expense.tripId}/activities/${linkedActivity.id}`,
+                 )
+               }
+             >
                <div className='flex items-center gap-3'>
                  <div className='w-1 h-8 bg-blue-500/30 rounded-full' />
                  <div>
