@@ -208,6 +208,10 @@ const ExpensesComponent = ({
     router.push(`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`);
   };
 
+  const handleViewActivity = (activityId: string) => {
+    router.push(`/group/${groupId}/trip/${tripId}/activities/${activityId}`);
+  };
+
   if (loadingGroup) {
     if (isEmbedded) {
       return (
@@ -621,6 +625,7 @@ const ExpensesComponent = ({
                     memberMetadata={group.memberMetadata}
                     activities={trip.activities || []}
                     onSelectExpense={handleViewExpense}
+                    onSelectActivity={(activity) => handleViewActivity(activity.id)}
                     currentUser={user?.email ?? ""}
                   />
                 )}

@@ -5,6 +5,7 @@ import {
   DollarSign,
   ImageIcon,
   List,
+  Loader2,
   MoreVertical,
   Plus,
   Trash2,
@@ -28,7 +29,6 @@ import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import { useQueryClient } from "@tanstack/react-query";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
-import PremiumBackground from "../../shared/PremiumBackground";
 import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
@@ -377,16 +377,10 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden'>
-        <PremiumBackground />
-        <div className='text-center relative z-10'>
-          <div className='relative w-20 h-20 mx-auto mb-6'>
-            <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
-            <div className='absolute inset-0 border-4 border-t-purple-500 rounded-full animate-spin'></div>
-          </div>
-          <p className='text-slate-400 font-bold tracking-tight'>
-            Loading trip...
-          </p>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
+        <div className='text-center'>
+          <Loader2 className='w-8 h-8 animate-spin text-slate-400 mx-auto mb-3' />
+          <p className='text-slate-400 text-sm'>Loading trip...</p>
         </div>
       </main>
     );
@@ -394,13 +388,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (!trip) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden'>
-        <PremiumBackground variant='red' />
-        <div className='text-center bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 p-16 max-w-md relative z-10'>
-          <div className='w-16 h-16 bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-lg'>
+      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
+        <div className='text-center bg-slate-900/60 rounded-2xl border border-white/10 p-10 max-w-md'>
+          <div className='w-14 h-14 bg-red-900/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-red-500/20'>
             <span className='text-3xl'>😞</span>
           </div>
-          <h2 className='text-xl font-bold text-white mb-2 tracking-tight'>
+          <h2 className='text-xl font-semibold text-white mb-2'>
             Trip Not Found
           </h2>
           <p className='text-slate-400 mb-6'>
@@ -408,7 +401,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
           </p>
           <button
             onClick={() => router.push(`/group/${groupId}`)}
-            className='px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 transition-all font-bold tracking-tight'
+            className='px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-white/10 transition-colors text-sm'
           >
             Go Back to Group
           </button>
@@ -422,8 +415,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const statusBadge = getStatusBadge(trip.status);
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden selection:bg-purple-500/30 font-sans'>
-      <PremiumBackground />
+    <main className='min-h-screen bg-slate-950 pb-24 font-sans'>
 
       <PremiumPageHeader
         title='Trip Details'
@@ -443,8 +435,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   className='fixed inset-0 z-40'
                   onClick={() => setShowExportMenu(false)}
                 />
-                <div className='absolute right-0 top-full mt-3 w-52 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in duration-200'>
-                  <div className='px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white/5'>
+                <div className='absolute right-0 top-full mt-3 w-56 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50'>
+                  <div className='px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-[0.1em] bg-white/5'>
                     Options
                   </div>
                   <div className='px-4 py-2 text-[10px] text-amber-300/90 bg-amber-500/10 border-b border-white/5'>
@@ -505,19 +497,19 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         }
       />
 
-      <div className='max-w-4xl mx-auto px-4 py-6 relative z-10'>
+      <div className='max-w-5xl mx-auto px-4 py-6'>
         {/* Trip Header */}
-        <div className='mb-8'>
+        <div className='mb-6 rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-6'>
           <div className='flex flex-col md:flex-row md:items-end justify-between gap-4'>
             <div className='text-center md:text-left'>
-              <h1 className='text-4xl md:text-5xl font-bold text-white mb-2 leading-tight'>
+              <h1 className='text-3xl md:text-4xl font-semibold text-white mb-2 leading-tight'>
                 {trip.name}
               </h1>
               <div className='flex items-center gap-3 mb-2 justify-center md:justify-start'>
                 {!isEditingStatus ? (
                   <button
                     onClick={() => setIsEditingStatus(true)}
-                    className='text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all'
+                    className='text-[11px] uppercase tracking-wide font-medium px-2.5 py-1 rounded-md bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-colors'
                   >
                     {statusBadge.label}
                   </button>
@@ -535,7 +527,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                     }
                     onBlur={() => setIsEditingStatus(false)}
                     autoFocus
-                    className='text-xs md:text-[10px] uppercase font-bold px-3 py-2 md:py-1.5 rounded-md border border-slate-600 bg-slate-800/80 backdrop-blur-xl text-slate-300 focus:outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 cursor-pointer transition-all hover:bg-slate-800'
+                    className='text-xs uppercase font-medium px-3 py-1.5 rounded-md border border-white/10 bg-slate-800 text-slate-200 focus:outline-none focus:border-slate-500 cursor-pointer'
                   >
                     <option
                       value='planning'
@@ -561,13 +553,13 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                   </select>
                 )}
                 {trip.createdBy && (
-                  <span className='text-xs text-slate-500'>
+                  <span className='text-xs text-slate-400'>
                     by {trip.createdBy}
                   </span>
                 )}
               </div>
 
-              <div className='flex items-center gap-2 text-slate-400 justify-center md:justify-start'>
+              <div className='flex items-center gap-2 text-slate-400 justify-center md:justify-start text-sm'>
                 <Calendar className='w-4 h-4' />
                 <span>
                   {startDate.toLocaleDateString("en-US", {
@@ -585,64 +577,63 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             </div>
           </div>
         </div>
-        {/* Content Area */}
-        <div className='bg-slate-800/20 backdrop-blur-xl rounded-3xl border border-white/5 p-4 sm:p-6 min-h-[400px]'>
-          {activeTab === "calendar" ? (
-            <TravelCalendar
-              startDate={startDate}
-              endDate={endDate}
-              activities={activities}
-              onAddActivity={addActivity}
-              onUpdateActivity={updateActivity}
-              onDeleteActivity={deleteActivity}
-              onToggleDone={toggleDone}
-              onEditActivity={handleEditActivity}
-              onViewActivity={handleViewActivity}
-              onOpenAddModal={(date) => {
-                const dateStr = date ? date.toISOString().split("T")[0] : "";
-                router.push(
-                  `/group/${groupId}/trip/${tripId}/activities/add${dateStr ? `?date=${dateStr}` : ""}`,
-                );
-              }}
-            />
-          ) : activeTab === "expenses" ? (
-            <ExpensesComponent
-              groupId={groupId}
-              tripId={tripId}
-              isEmbedded={true}
-            />
-          ) : activeTab === "budget" ? (
-            <BudgetComponent
-              groupId={groupId}
-              tripId={tripId}
-              isEmbedded={true}
-            />
-          ) : activeTab === "daily" ? (
-            <TravelDayOverview
-              startDate={startDate}
-              endDate={endDate}
-              activities={activities}
-              onAddActivity={addActivity}
-              onUpdateActivity={updateActivity}
-              onDeleteActivity={deleteActivity}
-              onToggleDone={toggleDone}
-              onEditActivity={handleEditActivity}
-              onViewActivity={handleViewActivity}
-            />
-          ) : (
-            <TravelSchedule
-              startDate={startDate}
-              endDate={endDate}
-              activities={activities}
-              onAddActivity={addActivity}
-              onUpdateActivity={updateActivity}
-              onDeleteActivity={deleteActivity}
-              onToggleDone={toggleDone}
-              onEditActivity={handleEditActivity}
-              onViewActivity={handleViewActivity}
-              tripName={trip.name}
-            />
-          )}
+        <div className='bg-slate-900/60 rounded-2xl border border-white/10 p-4 sm:p-6 min-h-[400px]'>
+            {activeTab === "calendar" ? (
+              <TravelCalendar
+                startDate={startDate}
+                endDate={endDate}
+                activities={activities}
+                onAddActivity={addActivity}
+                onUpdateActivity={updateActivity}
+                onDeleteActivity={deleteActivity}
+                onToggleDone={toggleDone}
+                onEditActivity={handleEditActivity}
+                onViewActivity={handleViewActivity}
+                onOpenAddModal={(date) => {
+                  const dateStr = date ? date.toISOString().split("T")[0] : "";
+                  router.push(
+                    `/group/${groupId}/trip/${tripId}/activities/add${dateStr ? `?date=${dateStr}` : ""}`,
+                  );
+                }}
+              />
+            ) : activeTab === "expenses" ? (
+              <ExpensesComponent
+                groupId={groupId}
+                tripId={tripId}
+                isEmbedded={true}
+              />
+            ) : activeTab === "budget" ? (
+              <BudgetComponent
+                groupId={groupId}
+                tripId={tripId}
+                isEmbedded={true}
+              />
+            ) : activeTab === "daily" ? (
+              <TravelDayOverview
+                startDate={startDate}
+                endDate={endDate}
+                activities={activities}
+                onAddActivity={addActivity}
+                onUpdateActivity={updateActivity}
+                onDeleteActivity={deleteActivity}
+                onToggleDone={toggleDone}
+                onEditActivity={handleEditActivity}
+                onViewActivity={handleViewActivity}
+              />
+            ) : (
+              <TravelSchedule
+                startDate={startDate}
+                endDate={endDate}
+                activities={activities}
+                onAddActivity={addActivity}
+                onUpdateActivity={updateActivity}
+                onDeleteActivity={deleteActivity}
+                onToggleDone={toggleDone}
+                onEditActivity={handleEditActivity}
+                onViewActivity={handleViewActivity}
+                tripName={trip.name}
+              />
+            )}
         </div>
         {/* Floating Action Buttons */}
         <div className='fixed bottom-24 right-6 z-50 flex flex-col gap-3'>
@@ -656,7 +647,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
                       `/group/${groupId}/trip/${tripId}/activities/add`,
                     )
             }
-            className='group flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-full shadow-lg shadow-orange-500/30 transition-all hover:scale-110 active:scale-95'
+            className='group flex items-center justify-center w-14 h-14 bg-orange-500 hover:bg-orange-400 text-white rounded-full shadow-lg transition-all hover:scale-105 active:scale-95'
             title={
               activeTab === "expenses"
                 ? "Add Expense"
@@ -679,12 +670,12 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
       {/* Floating Tab Switcher */}
       <div className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50'>
-        <div className='flex bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl shadow-black/50'>
+        <div className='flex bg-slate-900 p-1.5 rounded-full border border-white/10 shadow-xl'>
           <button
             onClick={() => handleTabChange("daily")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "daily"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                ? "bg-white text-slate-900"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -697,7 +688,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             onClick={() => handleTabChange("schedule")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "schedule"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                ? "bg-white text-slate-900"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -710,7 +701,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             onClick={() => handleTabChange("calendar")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "calendar"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                ? "bg-white text-slate-900"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -723,7 +714,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             onClick={() => handleTabChange("expenses")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "expenses"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                ? "bg-white text-slate-900"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -736,7 +727,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             onClick={() => handleTabChange("budget")}
             className={`group relative p-3 rounded-full transition-all duration-300 ${
               activeTab === "budget"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25"
+                ? "bg-white text-slate-900"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >

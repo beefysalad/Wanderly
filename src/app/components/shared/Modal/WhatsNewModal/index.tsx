@@ -127,62 +127,86 @@ interface IWhatsNewModalProps {
 }
 
 const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
+  const releasedOn = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
+
   return (
-    <div className='fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300'>
-      <div className='bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]'>
-        <div className='absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none'></div>
-        <div className='absolute bottom-0 left-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none'></div>
+    <div className='fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-300'>
+      <div className='relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl'>
+        <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(16,185,129,0.12),transparent_35%),radial-gradient(circle_at_90%_80%,rgba(56,189,248,0.12),transparent_35%)]' />
 
         <button
           onClick={onClose}
-          className='absolute top-4 right-4 p-2 rounded-full hover:bg-white/5 text-slate-400 hover:text-white transition-colors z-50'
+          className='absolute right-5 top-5 z-50 rounded-full border border-white/10 bg-slate-900/90 p-2 text-slate-400 transition-colors hover:text-white'
         >
           <X className='w-5 h-5' />
         </button>
 
-        <div className='flex flex-col overflow-y-auto custom-scrollbar h-full'>
-          <div className='p-5 md:p-8 pt-8 md:pt-10 pb-2 relative text-center'>
-            <h2 className='text-3xl font-bold text-white mb-2 tracking-tight'>
-              What&apos;s New
-            </h2>
-            <p className='text-slate-400 max-w-sm mx-auto'>
-              I&apos;ve been working hard on making things better. Here&apos;s
-              what has changed in the latest update.
-            </p>
+        <div className='relative border-b border-white/10 bg-slate-900/70 px-6 pb-5 pt-8 md:px-8'>
+          <div className='mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300'>
+            <Sparkles className='h-3.5 w-3.5' />
+            Release Notes
           </div>
+          <h2 className='text-3xl font-semibold text-white md:text-4xl'>
+            What&apos;s New
+          </h2>
+          <p className='mt-2 max-w-xl text-sm leading-relaxed text-slate-300 md:text-base'>
+            Fresh improvements are live. Here are the latest upgrades designed
+            to make your planning flow faster and cleaner.
+          </p>
+          <p className='mt-3 text-xs uppercase tracking-wide text-slate-500'>
+            Updated {releasedOn}
+          </p>
+        </div>
 
-          <div className='p-5 md:p-8 space-y-4'>
+        <div className='relative flex-1 overflow-y-auto px-6 py-6 md:px-8'>
+          <div className='space-y-3'>
             {features.map((feature, index) => {
               const Icon = ICON_MAP[feature.icon] || Sparkles;
               return (
-                <div
+                <article
                   key={index}
-                  className='flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group'
+                  className='group rounded-2xl border border-white/10 bg-slate-900/60 p-4 transition-colors hover:bg-slate-900'
                 >
-                  <div
-                    className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <Icon className={`w-6 h-6 ${feature.color}`} />
+                  <div className='flex items-start gap-4'>
+                    <div
+                      className={`mt-0.5 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${feature.bg} ring-1 ring-white/10`}
+                    >
+                      <Icon className={`h-6 w-6 ${feature.color}`} />
+                    </div>
+                    <div className='min-w-0 flex-1'>
+                      <div className='mb-1 flex items-start justify-between gap-3'>
+                        <h3 className='text-base font-semibold text-white md:text-lg'>
+                          {feature.title}
+                        </h3>
+                        <span className='rounded-md border border-white/10 bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400'>
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                      </div>
+                      <p className='text-sm leading-relaxed text-slate-300'>
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className='font-semibold text-white mb-1'>
-                      {feature.title}
-                    </h3>
-                    <p className='text-sm text-slate-400 leading-relaxed'>
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
+                </article>
               );
             })}
-
-            <button
-              onClick={onClose}
-              className='w-full py-3.5 px-4 mt-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0'
-            >
-              Awesome, let&apos;s go!
-            </button>
           </div>
+        </div>
+
+        <div className='relative border-t border-white/10 bg-slate-900/80 px-6 py-4 md:px-8'>
+          <button
+            onClick={onClose}
+            className='w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-200 md:text-base'
+          >
+            Continue
+          </button>
+          <p className='mt-2 text-center text-xs text-slate-500'>
+            Thanks for building with Wanderly.
+          </p>
         </div>
       </div>
     </div>
