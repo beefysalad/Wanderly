@@ -14,6 +14,7 @@ interface IExpensesListProps {
   >; // email -> metadata with imageUrl
   activities?: Activity[]; // activities from the trip
   onSelectExpense?: (expense: Expense) => void;
+  onSelectActivity?: (activity: Activity) => void;
   currentUser?: string;
   readOnly?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +37,7 @@ const ExpensesList = ({
   memberMetadata,
   activities = [],
   onSelectExpense,
+  onSelectActivity,
   currentUser,
   readOnly = false,
   paymentLogs = [],
@@ -240,6 +242,29 @@ const ExpensesList = ({
                               {expense.activityId &&
                                 getActivityById(expense.activityId) && (
                                   <span
+                                    role='button'
+                                    tabIndex={0}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const activity = getActivityById(
+                                        expense.activityId,
+                                      );
+                                      if (activity) {
+                                        onSelectActivity?.(activity);
+                                      }
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const activity = getActivityById(
+                                          expense.activityId,
+                                        );
+                                        if (activity) {
+                                          onSelectActivity?.(activity);
+                                        }
+                                      }
+                                    }}
                                     className='text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1 max-w-full'
                                     title={
                                       getActivityById(expense.activityId)?.title
