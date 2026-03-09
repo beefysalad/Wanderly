@@ -1,4 +1,5 @@
 "use client";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -6,11 +7,10 @@ import {
   TCreateTripSchema,
 } from "@/src/app/components/shared/Modal/CreateTripModal/createTripZod";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
 import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Info, Layout, MapPin } from "lucide-react";
+import { Calendar, Check, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,17 @@ interface CreateTripPageProps {
     groupId: string;
   };
 }
+
+const STATUS_OPTIONS: Array<{
+  value: TCreateTripSchema["status"];
+  label: string;
+  helper: string;
+}> = [
+  { value: "planning", label: "Planning", helper: "Collect ideas and build itinerary" },
+  { value: "finalized", label: "Finalized", helper: "Major details are confirmed" },
+  { value: "ongoing", label: "Ongoing", helper: "Trip is happening right now" },
+  { value: "cancelled", label: "Cancelled", helper: "Trip is no longer happening" },
+];
 
 const CreateTripPage = ({ params }: CreateTripPageProps) => {
   const { groupId } = params;
@@ -31,13 +42,19 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
   const form = useForm<TCreateTripSchema>({
     resolver: zodResolver(createTripSchema),
     defaultValues: {
-      endDate: "",
+      tripName: "",
       location: "",
       startDate: "",
-      tripName: "",
+      endDate: "",
       status: "planning",
     },
   });
+
+  const selectedStatus = form.watch("status");
+  const tripName = form.watch("tripName");
+  const location = form.watch("location");
+  const startDate = form.watch("startDate");
+  const endDate = form.watch("endDate");
 
   const onSubmit = async (values: TCreateTripSchema) => {
     try {
@@ -50,17 +67,16 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
         status: values.status,
       });
 
-      // Navigate to the new trip
       if (result.trip) {
         setIsNavigating(true);
-        // Wait a moment for cache to update and show feedback
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 250));
         router.push(`/group/${groupId}/trip/${result.trip.id}`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message =
-        err?.response?.data?.error || err?.message || "Failed to create trip";
+        err && typeof err === "object" && "message" in err
+          ? String(err.message)
+          : "Failed to create trip";
       setError(message);
       setIsNavigating(false);
     }
@@ -69,184 +85,210 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
   const isLoading = createTrip.isPending || isNavigating;
 
   return (
-    <main className='h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
-      <PremiumBackground />
+    <main className='min-h-screen bg-slate-950 pb-20'>
       {isNavigating && <NavigationLoader message='Creating trip...' />}
 
-      {/* Header */}
-      <div className='flex-shrink-0 z-20'>
-        <div className='max-w-xl mx-auto px-4 py-4 md:py-6'>
-          <PremiumPageHeader onBack={() => router.back()} title='NEW TRIP' />
-        </div>
-      </div>
+      <div className='mx-auto w-full max-w-5xl px-3 pt-4 sm:px-4 sm:pt-6'>
+        <PremiumPageHeader onBack={() => router.back()} title='Create Trip' />
 
-      <div className='flex-1 w-full max-w-xl mx-auto px-4 pb-24 relative z-10 overflow-y-auto custom-scrollbar'>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-          {/* Trip Details Section */}
-          <div className='bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border border-white/5 space-y-5'>
-            <h2 className='text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2'>
-              <Info className='w-4 h-4' /> Trip Details
-            </h2>
-
-            <div className='space-y-2'>
-              <Label
-                htmlFor='tripName'
-                className={`${
-                  form.formState.errors.tripName
-                    ? "text-red-400"
-                    : "text-slate-300"
-                } transition-colors`}
-              >
-                Trip Name
-              </Label>
-              <Input
-                id='tripName'
-                type='text'
-                {...form.register("tripName")}
-                placeholder='e.g. Vietnam 2026'
-                className={`w-full px-4 py-3.5 border rounded-xl bg-slate-800/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
-                  form.formState.errors.tripName
-                    ? "border-red-500 focus:ring-red-500/20"
-                    : "border-white/10 focus:ring-orange-500 focus:border-orange-500"
-                }`}
-              />
-              {form.formState.errors.tripName && (
-                <p className='text-xs text-red-400 mt-1'>
-                  {form.formState.errors.tripName.message}
-                </p>
-              )}
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='location' className='text-slate-300'>
-                Location{" "}
-                <span className='text-slate-500 text-xs ml-1'>(Optional)</span>
-              </Label>
-              <div className='relative'>
-                <MapPin className='absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500' />
-                <Input
-                  id='location'
-                  type='text'
-                  {...form.register("location")}
-                  placeholder='Where are you going?'
-                  className='w-full pl-10 pr-4 py-3.5 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Dates Section */}
-          <div className='bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border border-white/5 space-y-5'>
-            <h2 className='text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2'>
-              <Calendar className='w-4 h-4' /> Schedule
-            </h2>
-
-            <div className='grid grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label
-                  htmlFor='startDate'
-                  className={`${
-                    form.formState.errors.startDate
-                      ? "text-red-400"
-                      : "text-slate-300"
-                  } transition-colors`}
-                >
-                  Start Date
-                </Label>
-                <Input
-                  id='startDate'
-                  type='date'
-                  {...form.register("startDate")}
-                  className={`w-full px-4 py-3.5 border rounded-xl bg-slate-800/50 text-white text-sm focus:outline-none focus:ring-2 transition-all [-webkit-appearance:none] [appearance:none] min-h-[50px] ${
-                    form.formState.errors.startDate
-                      ? "border-red-500 focus:ring-red-500/20"
-                      : "border-white/10 focus:ring-orange-500 focus:border-orange-500"
-                  }`}
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label
-                  htmlFor='endDate'
-                  className={`${
-                    form.formState.errors.endDate
-                      ? "text-red-400"
-                      : "text-slate-300"
-                  } transition-colors`}
-                >
-                  End Date
-                </Label>
-                <Input
-                  id='endDate'
-                  type='date'
-                  {...form.register("endDate")}
-                  className={`w-full px-4 py-3.5 border rounded-xl bg-slate-800/50 text-white text-sm focus:outline-none focus:ring-2 transition-all [-webkit-appearance:none] [appearance:none] min-h-[50px] ${
-                    form.formState.errors.endDate
-                      ? "border-red-500 focus:ring-red-500/20"
-                      : "border-white/10 focus:ring-orange-500 focus:border-orange-500"
-                  }`}
-                />
-              </div>
-            </div>
-            {(form.formState.errors.startDate ||
-              form.formState.errors.endDate) && (
-              <p className='text-xs text-red-400'>
-                Please select valid start and end dates.
+        <div className='mt-5 grid gap-6 lg:grid-cols-[1fr_280px]'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            <section className='border border-slate-800 rounded-xl p-4 sm:p-5'>
+              <h2 className='text-base font-semibold text-white'>Trip details</h2>
+              <p className='mt-1 text-sm text-slate-400'>
+                Start with a name, destination, and dates.
               </p>
-            )}
-          </div>
 
-          {/* Status Section */}
-          <div className='bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border border-white/5 space-y-5'>
-            <h2 className='text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2'>
-              <Layout className='w-4 h-4' /> Status
-            </h2>
-
-            <div className='grid grid-cols-2 gap-3'>
-              {["planning", "finalized", "ongoing", "cancelled"].map(
-                (statusOption) => (
-                  <label
-                    key={statusOption}
-                    className={`relative flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
-                      form.watch("status") === statusOption
-                        ? "bg-orange-500/10 border-orange-500 text-orange-400 font-bold"
-                        : "bg-slate-800/30 border-white/5 text-slate-400 hover:bg-slate-800/50"
-                    }`}
+              <div className='mt-5 space-y-4'>
+                <div className='space-y-2'>
+                  <Label
+                    htmlFor='tripName'
+                    className={
+                      form.formState.errors.tripName ? "text-red-400" : "text-slate-200"
+                    }
                   >
-                    <input
-                      type='radio'
-                      value={statusOption}
-                      {...form.register("status")}
-                      className='sr-only'
+                    Trip name
+                  </Label>
+                  <Input
+                    id='tripName'
+                    type='text'
+                    {...form.register("tripName")}
+                    placeholder='e.g. Tokyo Spring 2026'
+                    className={`h-11 border rounded-lg bg-slate-900 text-white placeholder:text-slate-500 focus-visible:ring-1 ${
+                      form.formState.errors.tripName
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : "border-slate-700 focus-visible:ring-slate-500"
+                    }`}
+                  />
+                  {form.formState.errors.tripName && (
+                    <p className='text-xs text-red-400'>
+                      {form.formState.errors.tripName.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='location' className='text-slate-200'>
+                    Location <span className='text-slate-500'>(optional)</span>
+                  </Label>
+                  <div className='relative'>
+                    <MapPin className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500' />
+                    <Input
+                      id='location'
+                      type='text'
+                      {...form.register("location")}
+                      placeholder='e.g. Tokyo, Japan'
+                      className='h-11 border border-slate-700 rounded-lg bg-slate-900 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-slate-500'
                     />
-                    <span className='capitalize'>{statusOption}</span>
-                  </label>
-                ),
-              )}
-            </div>
-          </div>
+                  </div>
+                </div>
 
-          {/* General Error Message */}
-          {error && (
-            <div className='p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/20 flex items-start gap-2'>
-              <div className='mt-0.5 min-w-[16px]'>⚠️</div>
-              <p>{error}</p>
-            </div>
-          )}
+                <div className='grid gap-4 sm:grid-cols-2'>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='startDate'
+                      className={
+                        form.formState.errors.startDate
+                          ? "text-red-400"
+                          : "text-slate-200"
+                      }
+                    >
+                      Start date
+                    </Label>
+                    <Input
+                      id='startDate'
+                      type='date'
+                      {...form.register("startDate")}
+                      className={`h-11 border rounded-lg bg-slate-900 text-white focus-visible:ring-1 ${
+                        form.formState.errors.startDate
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : "border-slate-700 focus-visible:ring-slate-500"
+                      }`}
+                    />
+                  </div>
 
-          <div className='pt-4 pb-8'>
-            <button
-              type='submit'
-              disabled={isLoading}
-              className='w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl font-bold text-lg transition-all shadow-lg hover:shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0'
-            >
-              {isLoading
-                ? createTrip.isPending
-                  ? "Creating Trip..."
-                  : "Redirecting..."
-                : "Create Trip"}
-            </button>
-          </div>
-        </form>
+                  <div className='space-y-2'>
+                    <Label
+                      htmlFor='endDate'
+                      className={
+                        form.formState.errors.endDate ? "text-red-400" : "text-slate-200"
+                      }
+                    >
+                      End date
+                    </Label>
+                    <Input
+                      id='endDate'
+                      type='date'
+                      {...form.register("endDate")}
+                      className={`h-11 border rounded-lg bg-slate-900 text-white focus-visible:ring-1 ${
+                        form.formState.errors.endDate
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : "border-slate-700 focus-visible:ring-slate-500"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {(form.formState.errors.startDate || form.formState.errors.endDate) && (
+                  <p className='text-xs text-red-400'>
+                    Please select a valid date range.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className='border border-slate-800 rounded-xl p-4 sm:p-5'>
+              <h2 className='text-base font-semibold text-white'>Trip status</h2>
+              <p className='mt-1 text-sm text-slate-400'>
+                Set current progress. You can change this later.
+              </p>
+
+              <div className='mt-4 grid gap-2'>
+                {STATUS_OPTIONS.map((option) => {
+                  const active = selectedStatus === option.value;
+
+                  return (
+                    <label
+                      key={option.value}
+                      className={`cursor-pointer rounded-lg border px-3 py-3 transition-colors ${
+                        active
+                          ? "border-slate-500 bg-slate-900"
+                          : "border-slate-800 hover:bg-slate-900"
+                      }`}
+                    >
+                      <input
+                        type='radio'
+                        value={option.value}
+                        {...form.register("status")}
+                        className='sr-only'
+                      />
+                      <div className='flex items-start justify-between gap-3'>
+                        <div>
+                          <p className='text-sm font-medium text-white'>{option.label}</p>
+                          <p className='text-xs text-slate-400 mt-0.5'>{option.helper}</p>
+                        </div>
+                        {active && <Check className='h-4 w-4 text-slate-300 mt-0.5' />}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
+            {error && (
+              <div className='rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300'>
+                {error}
+              </div>
+            )}
+
+            <div className='sticky bottom-3 z-10 rounded-xl border border-slate-800 bg-slate-950/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-slate-950/80'>
+              <button
+                type='submit'
+                disabled={isLoading}
+                className='w-full rounded-lg bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                {isLoading
+                  ? createTrip.isPending
+                    ? "Creating trip..."
+                    : "Redirecting..."
+                  : "Create Trip"}
+              </button>
+            </div>
+          </form>
+
+          <aside className='h-fit rounded-xl border border-slate-800 p-4 lg:sticky lg:top-6'>
+            <h3 className='text-sm font-semibold text-white'>Preview</h3>
+
+            <div className='mt-4 space-y-3 text-sm'>
+              <div>
+                <p className='text-xs uppercase tracking-[0.12em] text-slate-500'>Name</p>
+                <p className='mt-1 text-slate-200'>{tripName || "Untitled trip"}</p>
+              </div>
+
+              <div>
+                <p className='text-xs uppercase tracking-[0.12em] text-slate-500'>Location</p>
+                <p className='mt-1 text-slate-300'>{location || "Not set"}</p>
+              </div>
+
+              <div>
+                <p className='text-xs uppercase tracking-[0.12em] text-slate-500'>Dates</p>
+                <div className='mt-1 flex items-center gap-2 text-slate-300'>
+                  <Calendar className='h-3.5 w-3.5 text-slate-500' />
+                  <span>
+                    {startDate || "Start"} to {endDate || "End"}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <p className='text-xs uppercase tracking-[0.12em] text-slate-500'>Status</p>
+                <p className='mt-1 text-slate-200'>
+                  {STATUS_OPTIONS.find((option) => option.value === selectedStatus)?.label}
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );
