@@ -1,5 +1,5 @@
 import { getAppVersion } from "@/lib/helper";
-import { Compass } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const Footer = () => {
@@ -11,11 +11,13 @@ const Footer = () => {
           {/* Brand Section */}
           <div className='md:col-span-5 space-y-6 flex flex-col items-center md:items-start'>
             <div className='flex items-center gap-3'>
-              <div className='relative'>
-                <div className='absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl blur-lg opacity-40'></div>
-                <div className='relative w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center'>
-                  <Compass className='w-7 h-7 text-purple-950' />
-                </div>
+              <div className='relative w-12 h-12'>
+                <Image
+                  src='/wanderly.png'
+                  alt='Wanderly logo'
+                  fill
+                  className='object-contain'
+                />
               </div>
               <div>
                 <h3 className='text-2xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>

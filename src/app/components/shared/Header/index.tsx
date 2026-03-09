@@ -9,7 +9,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { getAppVersion } from "@/lib/helper";
-import { Compass, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Fragment } from "react";
 
@@ -18,11 +19,14 @@ const Header = () => {
     <Fragment>
       <header className='hidden md:flex items-center px-8 py-3 bg-white/5 backdrop-blur-xl border-b border-white/10 animate-fade-in-down relative'>
         <div className='flex items-center gap-3'>
-          <div className='relative'>
-            <div className='absolute inset-0 bg-linear-to-br from-amber-400 to-orange-500 rounded-xl blur-md opacity-50 animate-pulse-glow'></div>
-            <div className='relative w-10 h-10 bg-linear-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center animate-bounce-slow shadow-lg'>
-              <Compass className='w-6 h-6 text-purple-950' />
-            </div>
+          <div className='relative w-10 h-10'>
+            <Image
+              src='/wanderly.png'
+              alt='Wanderly logo'
+              fill
+              className='object-contain'
+              priority
+            />
           </div>
           <div>
             <h1 className='text-2xl font-bold bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
@@ -143,11 +147,14 @@ const Header = () => {
       </header>
       <header className='md:hidden flex items-center justify-center px-4 py-4 bg-white/5 backdrop-blur-xl border-b border-amber-500/20 animate-fade-in-down relative'>
         <div className='flex items-center gap-2'>
-          <div className='relative'>
-            <div className='absolute inset-0 bg-linear-to-br from-amber-400 to-orange-500 rounded-xl blur-md opacity-50 animate-pulse-glow'></div>
-            <div className='relative w-9 h-9 bg-linear-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center animate-bounce-slow shadow-lg'>
-              <Compass className='w-5 h-5 text-purple-950' />
-            </div>
+          <div className='relative w-9 h-9'>
+            <Image
+              src='/wanderly.png'
+              alt='Wanderly logo'
+              fill
+              className='object-contain'
+              priority
+            />
           </div>
           <div>
             <h1 className='text-xl font-bold bg-linear-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent'>
