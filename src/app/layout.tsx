@@ -72,9 +72,14 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html
+      lang='en'
+      suppressHydrationWarning
+      style={{ backgroundColor: "#020617" }}
+    >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-slate-200 min-h-screen`}
+        style={{ backgroundColor: "#020617" }}
         suppressHydrationWarning
       >
         <MaintenanceProvider

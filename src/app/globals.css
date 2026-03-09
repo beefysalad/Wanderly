@@ -395,13 +395,14 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-950 text-slate-200;
   }
 }
 
 html,
 body {
-  /* background: #1e0938; */
+  background-color: #020617;
+  color: #e2e8f0;
   overscroll-behavior-y: none;
 }
 
