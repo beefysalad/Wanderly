@@ -17,14 +17,14 @@ function LoginForm() {
 
   return (
     <div className='min-h-screen w-full lg:grid lg:grid-cols-2 bg-slate-950'>
-      {/* Left Column: Image Hero */}
+      {/* Left Column: Vector Hero */}
       <div className='hidden lg:block relative w-full h-full overflow-hidden bg-slate-900'>
-        <div className='absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent z-10'></div>
+        <div className='absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/15 to-transparent z-10'></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src='/images/login-hero.png'
-          alt='Glowing map on a premium desk'
-          className='object-cover w-full h-full scale-105 animate-float-slow'
+          src='/lander.png'
+          alt='Travel vector illustration'
+          className='object-contain w-full h-full p-8 bg-slate-100'
         />
         <div className='absolute bottom-12 left-12 right-12 z-20'>
           <div className='bg-slate-950/40 backdrop-blur-md border border-white/10 shadow-2xl p-6 rounded-2xl'>
