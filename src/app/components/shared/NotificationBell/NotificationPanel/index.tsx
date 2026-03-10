@@ -16,6 +16,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LoadingState from "../../LoadingState";
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -111,11 +112,8 @@ const NotificationPanel = () => {
 
   if (isLoading) {
     return (
-      <div className='flex h-full items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8'>
-        <div className='text-center'>
-          <Loader2 className='mx-auto mb-3 h-8 w-8 animate-spin text-slate-400' />
-          <p className='text-sm text-slate-400'>Loading notifications...</p>
-        </div>
+      <div className='rounded-2xl border border-slate-800 bg-slate-900 p-8'>
+        <LoadingState />
       </div>
     );
   }

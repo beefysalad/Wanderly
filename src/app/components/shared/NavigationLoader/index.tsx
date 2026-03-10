@@ -1,25 +1,16 @@
 "use client";
 import React from "react";
+import LoadingState from "../LoadingState";
 
 interface INavigationLoaderProps {
   message?: string;
 }
 
-const NavigationLoader = ({
-  message = "Loading...",
-}: INavigationLoaderProps) => {
+const NavigationLoader = ({}: INavigationLoaderProps) => {
   return (
     <div className='fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in'>
-      <div className='rounded-3xl shadow-2xl p-8 flex flex-col items-center gap-6 animate-fade-in-up max-w-[280px] w-full bg-slate-900/90 border border-white/10'>
-        <div className='relative'>
-          <div className='w-16 h-16 border-4 border-slate-800 border-t-orange-500 rounded-full animate-spin'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse'></div>
-          </div>
-        </div>
-        <p className='text-slate-300 font-bold tracking-tight text-center'>
-          {message}
-        </p>
+      <div className='rounded-2xl border border-slate-800 bg-slate-900/90 px-8 py-6 shadow-2xl animate-fade-in-up'>
+        <LoadingState />
       </div>
     </div>
   );

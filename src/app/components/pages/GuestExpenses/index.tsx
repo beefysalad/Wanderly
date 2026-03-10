@@ -9,6 +9,7 @@ import ExpensesList from "../Expenses/ExpenseList";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import ExpenseDetailModal from "../../shared/Modal/ExpenseDetailModal";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import LoadingState from "../../shared/LoadingState";
 
 interface IGuestExpensesComponent {
   groupId: string;
@@ -58,11 +59,8 @@ const GuestExpensesComponent = ({
 
   if (loadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading expenses...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }
@@ -165,12 +163,7 @@ const GuestExpensesComponent = ({
         <div className='bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-8 min-h-[400px]'>
           <div className='relative z-10'>
             {loadingExpenses || loadingPaymentLogs ? (
-              <div className='text-center py-12'>
-                <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                <p className='text-slate-400 font-medium'>
-                  Loading expenses...
-                </p>
-              </div>
+              <LoadingState className='py-12' />
             ) : (
               <ExpensesList
                 expenses={

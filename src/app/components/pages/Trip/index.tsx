@@ -5,7 +5,6 @@ import {
   DollarSign,
   ImageIcon,
   List,
-  Loader2,
   MoreVertical,
   Plus,
   Trash2,
@@ -33,6 +32,7 @@ import ActivityDetailModal from "../../shared/Modal/ActivityDetailModal";
 import ActivityModal from "../../shared/Modal/ActivityModal";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import NavigationLoader from "../../shared/NavigationLoader";
+import LoadingState from "../../shared/LoadingState";
 import ExpensesComponent from "../Expenses";
 import TravelCalendar from "./TravelCalendar";
 import TravelSchedule from "./TravelSchedule";
@@ -377,11 +377,8 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
-          <Loader2 className='w-8 h-8 animate-spin text-slate-400 mx-auto mb-3' />
-          <p className='text-slate-400 text-sm'>Loading trip...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </main>
     );
   }
@@ -812,7 +809,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
         />
       )}
 
-      {isNavigating && <NavigationLoader message='Redirecting...' />}
+      {isNavigating && <NavigationLoader message='Loading' />}
     </main>
   );
 };
