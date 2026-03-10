@@ -6,6 +6,7 @@ import TripsListComponent from "../Group/TripsList";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useGuest } from "@/src/hooks/useGuest";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import LoadingState from "../../shared/LoadingState";
 
 interface IGuestGroupComponent {
   groupId: string;
@@ -33,11 +34,8 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading group...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

@@ -1,7 +1,6 @@
 "use client";
 import {
   ArrowLeft,
-  Loader2,
   Plus,
   Share2,
   UserPlus,
@@ -26,6 +25,7 @@ import { toast } from "sonner";
 import { getGroupColorClasses, getVibeInfo } from "@/lib/utils/groupColors";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import RecentActivityFeed from "../../shared/RecentActivityFeed";
+import LoadingState from "../../shared/LoadingState";
 
 interface IGroupComponent {
   param: string;
@@ -170,11 +170,8 @@ const GroupComponent = ({ param }: IGroupComponent) => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <Loader2 className='mx-auto mb-3 h-8 w-8 animate-spin text-slate-400' />
-          <p className='text-sm text-slate-400'>Loading group...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }
@@ -397,7 +394,7 @@ const GroupComponent = ({ param }: IGroupComponent) => {
         />
       )}
 
-      {isNavigating && <NavigationLoader message='Redirecting...' />}
+      {isNavigating && <NavigationLoader message='Loading' />}
     </main>
   );
 };

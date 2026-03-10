@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
 import PremiumBackground from "../components/shared/PremiumBackground";
 import PremiumPageHeader from "../components/shared/PremiumPageHeader";
+import LoadingState from "../components/shared/LoadingState";
 
 const GroupsPage = () => {
   const router = useRouter();
@@ -31,12 +32,10 @@ const GroupsPage = () => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24 relative overflow-hidden'>
+      <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
         <PremiumBackground variant='orange' />
-        
-        <div className='text-center relative z-10'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading groups...</p>
+        <div className='relative z-10'>
+          <LoadingState fullScreen />
         </div>
       </main>
     );

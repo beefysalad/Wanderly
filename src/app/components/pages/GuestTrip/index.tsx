@@ -7,6 +7,7 @@ import { Calendar, DollarSign, Layout, List } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import LoadingState from "../../shared/LoadingState";
 import TravelCalendar from "../Trip/TravelCalendar";
 import TravelSchedule from "../Trip/TravelSchedule";
 import TravelDayOverview from "../Trip/TravelDayOverview";
@@ -53,11 +54,8 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading trip...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }
