@@ -271,7 +271,7 @@ const LandingPage = () => {
               </div>
               <div className='flex justify-between text-xs text-slate-500 mt-2 font-mono'>
                 <span>
-                  Current: {userCount} / {GOAL} 🌱
+                  Current: {userCount} / {GOAL}
                 </span>
                 <span>Target: Mobile App</span>
               </div>

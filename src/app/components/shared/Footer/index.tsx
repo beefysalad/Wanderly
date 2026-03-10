@@ -78,13 +78,7 @@ const Footer = () => {
             <h4 className='text-sm font-bold text-white uppercase tracking-wider'>
               Status
             </h4>
-            <div className='space-y-3 flex flex-col items-center md:items-start'>
-              <div className='inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full'>
-                <div className='w-2 h-2 bg-amber-400 rounded-full animate-pulse'></div>
-                <span className='text-xs font-bold text-amber-300 uppercase tracking-wider'>
-                  Beta
-                </span>
-              </div>
+            <div className='space-y-2 flex flex-col items-center md:items-start'>
               <p className='text-xs text-slate-500'>
                 Version {getAppVersion()}
               </p>
@@ -97,10 +91,7 @@ const Footer = () => {
           <p className='text-slate-500 text-xs'>
             © 2025 Wanderly. All rights reserved.
           </p>
-          <p className='text-slate-600 text-xs'>
-            Made with care by{" "}
-            <span className='text-slate-400 font-medium'>Patrick</span>
-          </p>
+          <p className='text-slate-600 text-xs'>Made with care.</p>
         </div>
       </div>
     </footer>
