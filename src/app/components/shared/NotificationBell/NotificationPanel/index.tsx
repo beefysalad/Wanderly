@@ -1,44 +1,47 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  BellOff,
+  Calendar,
   CheckCheck,
   DollarSign,
-  UserPlus,
-  UserMinus,
-  Calendar,
-  Receipt,
-  MapPin,
-  Loader2,
-  BellOff,
-  Trash2,
   Edit,
+  Loader2,
+  MapPin,
+  Receipt,
+  Trash2,
+  UserMinus,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  useNotifications,
-  useMarkNotificationRead,
   useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
 } from "@/src/hooks/useNotifications";
 import { useSocketNotifications } from "@/src/hooks/useSocketNotifications";
 import type { Notification } from "@/src/shared/types";
 
 const NotificationPanel = () => {
-  // Enable real-time notifications via Socket.IO
   useSocketNotifications();
 
   const { data, isLoading } = useNotifications({ limit: 50 });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const router = useRouter();
-  const [markingReadId, setMarkingReadId] = React.useState<string | null>(null);
 
-  const notifications = data?.notifications || [];
-  const hasUnread = notifications.some((n) => !n.read);
+  const [markingReadId, setMarkingReadId] = useState<string | null>(null);
+
+  const notifications = useMemo(
+    () => data?.notifications || [],
+    [data?.notifications],
+  );
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const hasUnread = unreadCount > 0;
 
   const groupedNotifications = useMemo(() => {
-    const notifications = data?.notifications || [];
     const groups: Record<string, Notification[]> = {};
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -47,29 +50,26 @@ const NotificationPanel = () => {
 
     notifications.forEach((notification) => {
       const date = new Date(notification.createdAt);
-      let groupKey: string;
+      let key: string;
 
       if (date >= today) {
-        groupKey = "Today";
+        key = "Today";
       } else if (date >= yesterday) {
-        groupKey = "Yesterday";
+        key = "Yesterday";
       } else {
-        groupKey = date.toLocaleDateString("en-US", {
+        key = date.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
-          year:
-            date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+          year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
         });
       }
 
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(notification);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(notification);
     });
 
     return groups;
-  }, [data?.notifications]);
+  }, [notifications]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
@@ -81,49 +81,21 @@ const NotificationPanel = () => {
       }
     }
 
-    // Navigate to related page
     if (notification.relatedTripId && notification.relatedGroupId) {
       router.push(
         `/group/${notification.relatedGroupId}/trip/${notification.relatedTripId}`,
       );
-    } else if (notification.relatedGroupId) {
+      return;
+    }
+
+    if (notification.relatedGroupId) {
       router.push(`/group/${notification.relatedGroupId}`);
     }
   };
 
   const handleMarkAllRead = async () => {
-    if (hasUnread) {
-      await markAllRead.mutateAsync();
-    }
-  };
-
-  const getNotificationStyles = (type: Notification["type"]) => {
-    switch (type) {
-      case "payment":
-        return { icon: <DollarSign className='h-5 w-5' />, color: "emerald" };
-      case "group_join":
-        return { icon: <UserPlus className='h-5 w-5' />, color: "blue" };
-      case "group_leave":
-        return { icon: <UserMinus className='h-5 w-5' />, color: "red" };
-      case "activity_added":
-        return { icon: <Calendar className='h-5 w-5' />, color: "purple" };
-      case "activity_edited":
-        return { icon: <Edit className='h-5 w-5' />, color: "indigo" };
-      case "activity_deleted":
-        return { icon: <Trash2 className='h-5 w-5' />, color: "red" };
-      case "expense_added":
-        return { icon: <Receipt className='h-5 w-5' />, color: "orange" };
-      case "expense_edited":
-        return { icon: <Edit className='h-5 w-5' />, color: "amber" };
-      case "expense_deleted":
-        return { icon: <Trash2 className='h-5 w-5' />, color: "red" };
-      case "trip_created":
-        return { icon: <MapPin className='h-5 w-5' />, color: "amber" };
-      case "trip_deleted":
-        return { icon: <Trash2 className='h-5 w-5' />, color: "red" };
-      default:
-        return { icon: <BellOff className='h-5 w-5' />, color: "slate" };
-    }
+    if (!hasUnread) return;
+    await markAllRead.mutateAsync();
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -132,28 +104,17 @@ const NotificationPanel = () => {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes}m ago`;
-    }
-    if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours}h ago`;
-    }
-    const days = Math.floor(diffInSeconds / 86400);
-    return `${days}d ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
   if (isLoading) {
     return (
-      <div className='flex flex-col h-full bg-slate-950/50'>
-        <div className='flex-1 flex items-center justify-center p-8'>
-          <div className='text-center'>
-            <Loader2 className='h-10 w-10 animate-spin text-orange-500 mx-auto mb-4' />
-            <p className='text-slate-400 font-medium animate-pulse'>
-              Syncing notifications...
-            </p>
-          </div>
+      <div className='flex h-full items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8'>
+        <div className='text-center'>
+          <Loader2 className='mx-auto mb-3 h-8 w-8 animate-spin text-slate-400' />
+          <p className='text-sm text-slate-400'>Loading notifications...</p>
         </div>
       </div>
     );
@@ -161,75 +122,70 @@ const NotificationPanel = () => {
 
   if (notifications.length === 0) {
     return (
-      <div className='flex flex-col h-full bg-slate-950/50'>
-        <div className='flex-1 flex flex-col items-center justify-center p-8 text-center'>
-          <div className='w-24 h-24 bg-slate-900/50 rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-2xl'>
-            <BellOff className='h-10 w-10 text-slate-600' />
-          </div>
-          <p className='text-white text-xl font-black mb-2'>Quiet for now</p>
-          <p className='text-sm text-slate-500 max-w-[200px]'>
-            When something happens in your groups, we&apos;ll let you know.
-          </p>
+      <div className='flex h-full flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center'>
+        <div className='mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-700 bg-slate-950'>
+          <BellOff className='h-6 w-6 text-slate-500' />
         </div>
+        <p className='mb-1 text-base font-semibold text-white'>No notifications yet</p>
+        <p className='text-sm text-slate-400'>We&apos;ll show updates from your groups here.</p>
       </div>
     );
   }
 
   return (
-    <div className='flex flex-col h-full bg-slate-950/50'>
-      {/* Action Bar */}
-      <div className='p-4 flex items-center justify-between border-b border-white/5'>
-        <h2 className='text-xs font-black uppercase text-slate-500 tracking-widest'>
-          All Updates
-        </h2>
-        {hasUnread && (
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={handleMarkAllRead}
-            disabled={markAllRead.isPending}
-            className='h-8 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 hover:bg-orange-500/5 rounded-lg px-3 transition-colors'
-          >
-            {markAllRead.isPending ? (
-              <Loader2 className='h-3 w-3 animate-spin mr-2' />
-            ) : (
-              <CheckCheck className='h-3 w-3 mr-2' />
-            )}
-            Mark all read
-          </Button>
-        )}
+    <div className='flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-900'>
+      <div className='flex items-center justify-between border-b border-slate-800 px-4 py-3'>
+        <div className='flex items-center gap-2'>
+          <h2 className='text-sm font-semibold text-white'>Notifications</h2>
+          <span className='rounded-md border border-slate-700 px-1.5 py-0.5 text-[11px] text-slate-400'>
+            {notifications.length}
+          </span>
+          {hasUnread && (
+            <span className='rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[11px] text-amber-300'>
+              {unreadCount} unread
+            </span>
+          )}
+        </div>
+
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={handleMarkAllRead}
+          disabled={!hasUnread || markAllRead.isPending}
+          className='h-8 rounded-lg px-3 text-xs text-amber-300 hover:bg-amber-500/10 hover:text-amber-200 disabled:text-slate-500'
+        >
+          {markAllRead.isPending ? (
+            <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+          ) : (
+            <CheckCheck className='mr-1.5 h-3.5 w-3.5' />
+          )}
+          Mark all read
+        </Button>
       </div>
 
-      {/* Notifications List */}
-      <div className='flex-1 overflow-y-auto px-4 py-6 space-y-8 pb-32'>
-        {Object.entries(groupedNotifications).map(
-          ([dateGroup, groupNotifications]) => (
-            <div key={dateGroup} className='space-y-4'>
-              <div className='flex items-center gap-4'>
-                <p className='text-[10px] font-black uppercase text-slate-600 tracking-widest whitespace-nowrap'>
-                  {dateGroup}
-                </p>
-                <div className='h-px w-full bg-white/5' />
+      <div className='flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5'>
+        <div className='space-y-6'>
+          {Object.entries(groupedNotifications).map(([dateGroup, groupItems]) => (
+            <section key={dateGroup} className='space-y-2'>
+              <p className='text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500'>
+                {dateGroup}
+              </p>
+
+              <div className='space-y-2'>
+                {groupItems.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    onClick={() => handleNotificationClick(notification)}
+                    timeAgo={formatTimeAgo(notification.createdAt)}
+                    icon={iconForType(notification.type)}
+                    isMarkingRead={markingReadId === notification.id}
+                  />
+                ))}
               </div>
-              <div className='space-y-3'>
-                {groupNotifications.map((notification) => {
-                  const styles = getNotificationStyles(notification.type);
-                  return (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onClick={() => handleNotificationClick(notification)}
-                      icon={styles.icon}
-                      themeColor={styles.color}
-                      timeAgo={formatTimeAgo(notification.createdAt)}
-                      isMarkingRead={markingReadId === notification.id}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ),
-        )}
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -239,94 +195,84 @@ interface NotificationItemProps {
   notification: Notification;
   onClick: () => void;
   icon: React.ReactNode;
-  themeColor: string;
   timeAgo: string;
   isMarkingRead: boolean;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({
+const NotificationItem = ({
   notification,
   onClick,
   icon,
-  themeColor,
   timeAgo,
   isMarkingRead,
-}) => {
-  const colorMap: Record<string, string> = {
-    emerald: "bg-emerald-500 text-emerald-500",
-    blue: "bg-blue-500 text-blue-500",
-    red: "bg-red-500 text-red-500",
-    purple: "bg-purple-500 text-purple-500",
-    indigo: "bg-indigo-500 text-indigo-500",
-    orange: "bg-orange-500 text-orange-500",
-    amber: "bg-amber-500 text-amber-500",
-    slate: "bg-slate-500 text-slate-500",
-  };
-
-  const colorClass = colorMap[themeColor] || colorMap.slate;
-  const [bgClass, textClass] = colorClass.split(" ");
-
+}: NotificationItemProps) => {
   return (
     <button
       onClick={onClick}
       disabled={isMarkingRead}
-      className={`
-        w-full group relative flex flex-col p-4 rounded-2xl transition-all duration-300
-        ${
-          notification.read
-            ? "bg-slate-900/20 border border-white/5 hover:bg-slate-900/40"
-            : "bg-slate-900/60 border border-orange-500/20 shadow-xl shadow-orange-500/5 hover:bg-slate-900/80"
-        }
-        ${isMarkingRead ? "opacity-50 cursor-wait" : "cursor-pointer active:scale-[0.98]"}
-      `}
+      className={`w-full rounded-xl border px-3 py-3 text-left transition-colors ${
+        notification.read
+          ? "border-slate-800 bg-slate-950 hover:bg-slate-900"
+          : "border-amber-500/30 bg-slate-950 hover:bg-slate-900"
+      } ${isMarkingRead ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
     >
-      <div className='flex items-start gap-4'>
-        {/* Icon Container */}
+      <div className='flex items-start gap-3'>
         <div
-          className={`
-          relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all
-          ${bgClass}/10 ${textClass} border border-white/5 group-hover:scale-110
-        `}
+          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+            notification.read
+              ? "border-slate-700 text-slate-400"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+          }`}
         >
-          <div
-            className={`absolute inset-0 ${bgClass} opacity-10 blur-md rounded-full`}
-          />
-          <div className='relative z-10'>{icon}</div>
+          {icon}
         </div>
 
-        {/* Content */}
-        <div className='flex-1 min-w-0'>
-          <div className='flex items-start justify-between gap-4 mb-1'>
-            <h3
-              className={`text-sm font-bold leading-tight truncate ${notification.read ? "text-slate-400" : "text-white"}`}
-            >
+        <div className='min-w-0 flex-1'>
+          <div className='flex items-start justify-between gap-2'>
+            <p className={`truncate text-sm font-medium ${notification.read ? "text-slate-300" : "text-white"}`}>
               {notification.title}
-            </h3>
-            <span className='text-[10px] font-black text-slate-500 whitespace-nowrap mt-0.5'>
-              {timeAgo}
-            </span>
+            </p>
+            <span className='shrink-0 text-[11px] text-slate-500'>{timeAgo}</span>
           </div>
-          <p
-            className={`text-xs line-clamp-2 leading-relaxed ${notification.read ? "text-slate-500" : "text-slate-300"}`}
-          >
+
+          <p className={`mt-0.5 line-clamp-2 text-xs ${notification.read ? "text-slate-500" : "text-slate-400"}`}>
             {notification.message}
           </p>
         </div>
 
-        {/* Unread Indicator */}
-        {!notification.read && (
-          <div className='flex-shrink-0 self-center pl-2'>
-            <div className='w-2 h-2 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50 animate-pulse' />
-          </div>
-        )}
+        {!notification.read && <div className='mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-400' />}
       </div>
-
-      {/* Decorative Border for Unread */}
-      {!notification.read && (
-        <div className='absolute left-[-1px] top-4 bottom-4 w-[3px] bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]' />
-      )}
     </button>
   );
+};
+
+const iconForType = (type: Notification["type"]) => {
+  switch (type) {
+    case "payment":
+      return <DollarSign className='h-4 w-4' />;
+    case "group_join":
+      return <UserPlus className='h-4 w-4' />;
+    case "group_leave":
+      return <UserMinus className='h-4 w-4' />;
+    case "activity_added":
+      return <Calendar className='h-4 w-4' />;
+    case "activity_edited":
+      return <Edit className='h-4 w-4' />;
+    case "activity_deleted":
+      return <Trash2 className='h-4 w-4' />;
+    case "expense_added":
+      return <Receipt className='h-4 w-4' />;
+    case "expense_edited":
+      return <Edit className='h-4 w-4' />;
+    case "expense_deleted":
+      return <Trash2 className='h-4 w-4' />;
+    case "trip_created":
+      return <MapPin className='h-4 w-4' />;
+    case "trip_deleted":
+      return <Trash2 className='h-4 w-4' />;
+    default:
+      return <BellOff className='h-4 w-4' />;
+  }
 };
 
 export default NotificationPanel;
