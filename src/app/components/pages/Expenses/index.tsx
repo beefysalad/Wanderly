@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
+import LoadingState from "../../shared/LoadingState";
 
 interface IExpensesComponent {
   groupId: string;
@@ -215,18 +216,12 @@ const ExpensesComponent = ({
   if (loadingGroup) {
     if (isEmbedded) {
       return (
-        <div className='flex items-center justify-center py-20'>
-          <div className='w-8 h-8 border-2 border-slate-700 border-t-orange-500 rounded-full animate-spin mr-3'></div>
-          <p className='text-slate-400 font-medium'>Loading expenses...</p>
-        </div>
+        <LoadingState className='py-20' />
       );
     }
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading expenses...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }
@@ -419,7 +414,7 @@ const ExpensesComponent = ({
                 <div className='text-center py-20'>
                   <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
                   <p className='text-slate-400 font-medium'>
-                    Loading payment history...
+                    Loading
                   </p>
                 </div>
               ) : (
@@ -554,12 +549,7 @@ const ExpensesComponent = ({
                 </div>
               )
             ) : loadingExpenses ? (
-              <div className='text-center py-20'>
-                <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                <p className='text-slate-400 font-medium'>
-                  Loading expenses...
-                </p>
-              </div>
+              <LoadingState className='py-20' />
             ) : (
               <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
                 {/* Summary Statistics for Unsettled Tab */}

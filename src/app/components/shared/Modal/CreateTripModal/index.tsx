@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { useRouter } from "next/navigation";
 import NavigationLoader from "../../NavigationLoader";
+import LoadingState from "../../LoadingState";
 
 interface ICreateTripModal {
   groupId: string;
@@ -63,7 +64,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
   const isLoading = createTrip.isPending || isNavigating;
   return (
     <>
-      {isNavigating && <NavigationLoader message='Creating trip...' />}
+      {isNavigating && <NavigationLoader message='Loading' />}
       <div
         className={`fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 ${
           isNavigating ? "pointer-events-none" : ""
@@ -73,12 +74,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
           {/* Loading Overlay */}
           {isLoading && !isNavigating && (
             <div className='absolute inset-0 bg-white/90 dark:bg-slate-900/50 dark:backdrop-blur-sm rounded-2xl flex items-center justify-center z-10'>
-              <div className='text-center'>
-                <div className='w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-3'></div>
-                <p className='text-slate-700 dark:text-slate-200 font-medium'>
-                  {createTrip.isPending ? "Creating trip..." : "Redirecting..."}
-                </p>
-              </div>
+              <LoadingState />
             </div>
           )}
 
@@ -226,11 +222,7 @@ const CreateTripModal = ({ groupId, onClose }: ICreateTripModal) => {
                 disabled={isLoading}
                 className='flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                {isLoading
-                  ? createTrip.isPending
-                    ? "Creating..."
-                    : "Redirecting..."
-                  : "Create"}
+                {isLoading ? "Loading" : "Create"}
               </button>
             </div>
           </form>

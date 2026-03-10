@@ -3,9 +3,10 @@
 import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import ExpenseForm from "@/src/app/components/shared/ExpenseForm";
 import React from "react";
+import LoadingState from "@/src/app/components/shared/LoadingState";
 
 export default function EditExpensePage({
   params,
@@ -27,11 +28,8 @@ export default function EditExpensePage({
 
   if (loadingGroup || loadingExpenses) {
     return (
-      <main className='min-h-screen flex items-center justify-center bg-slate-950'>
-        <div className='text-center'>
-          <Loader2 className='w-8 h-8 animate-spin mx-auto mb-2 text-orange-500' />
-          <p className='text-slate-400'>Loading expense data...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

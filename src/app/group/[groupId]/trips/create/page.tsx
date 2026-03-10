@@ -247,11 +247,7 @@ const CreateTripPage = ({ params }: CreateTripPageProps) => {
                 disabled={isLoading}
                 className='w-full rounded-lg bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                {isLoading
-                  ? createTrip.isPending
-                    ? "Creating trip..."
-                    : "Redirecting..."
-                  : "Create Trip"}
+                {isLoading ? "Loading" : "Create Trip"}
               </button>
             </div>
           </form>

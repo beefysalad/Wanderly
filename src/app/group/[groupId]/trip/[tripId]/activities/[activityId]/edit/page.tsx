@@ -10,7 +10,6 @@ import {
   Calendar,
   Clock,
   Navigation,
-  ArrowLeft,
   Loader2,
   Save,
   MapPin,
@@ -32,6 +31,7 @@ import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import LoadingState from "@/src/app/components/shared/LoadingState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
@@ -172,11 +172,8 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
 
   if (isLoadingGroup || initialLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='flex flex-col items-center gap-4'>
-          <Loader2 className='w-12 h-12 text-orange-500 animate-spin' />
-          <p className='text-slate-400'>Loading activity details...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

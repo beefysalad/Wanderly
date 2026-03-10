@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import Spinner from "@/components/ui/spinner";
+import LoadingState from "../shared/LoadingState";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 
 interface AuthGuardProps {
@@ -34,8 +34,8 @@ export function AuthGuard({
   // Show loading while checking auth state
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        {/* <Spinner label='Loading...' /> */}
+      <div className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </div>
     );
   }
@@ -43,8 +43,8 @@ export function AuthGuard({
   // Show loading while redirecting
   if ((requireAuth && !user) || (guestOnly && user)) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <Spinner label='Redirecting...' />
+      <div className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </div>
     );
   }

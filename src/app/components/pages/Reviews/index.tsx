@@ -146,19 +146,19 @@ const ReviewsComponent = () => {
                     <div className='text-5xl font-bold text-amber-400 mb-2'>
                       <div className='w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto'></div>
                     </div>
-                    <p className='text-sm text-slate-400 mt-4'>Loading...</p>
+                <p className='text-sm text-slate-400 mt-4'>Loading</p>
                   </div>
                   <div className='bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6 text-center'>
                     <div className='text-5xl font-bold text-purple-400 mb-2'>
                       <div className='w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto'></div>
                     </div>
-                    <p className='text-sm text-slate-400 mt-4'>Loading...</p>
+                <p className='text-sm text-slate-400 mt-4'>Loading</p>
                   </div>
                   <div className='bg-gradient-to-br from-emerald-500/10 to-teal-500/10 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-6 text-center'>
                     <div className='text-5xl font-bold text-emerald-400 mb-2'>
                       <div className='w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto'></div>
                     </div>
-                    <p className='text-sm text-slate-400 mt-4'>Loading...</p>
+                <p className='text-sm text-slate-400 mt-4'>Loading</p>
                   </div>
                 </>
               ) : (
@@ -407,7 +407,7 @@ const ReviewsComponent = () => {
                 <div className='w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full flex items-center justify-center'>
                   <div className='w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin'></div>
                 </div>
-                <p className='text-slate-300 text-xl'>Loading reviews...</p>
+                <p className='text-slate-300 text-xl'>Loading</p>
               </div>
             ) : isError ? (
               <div className='text-center py-24 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10'>

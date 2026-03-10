@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Loader2, Mail, Plus, Trash2, User, Users } from "lucide-react";
+import { Crown, Mail, Plus, Trash2, User, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useMemo, useState } from "react";
@@ -12,6 +12,7 @@ import {
   useMemberTasks,
   useUpdateMemberTask,
 } from "@/src/hooks/useMemberTasks";
+import LoadingState from "../../shared/LoadingState";
 
 interface IMembersComponent {
   groupId: string;
@@ -96,11 +97,8 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
 
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
-          <Loader2 className='h-8 w-8 animate-spin text-slate-400 mx-auto mb-3' />
-          <p className='text-sm text-slate-400'>Loading members...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </main>
     );
   }
@@ -277,7 +275,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
           <h2 className='px-1 pb-3 text-sm font-semibold text-white'>All Tasks</h2>
 
           {tasksLoading ? (
-            <div className='p-6 text-sm text-slate-400'>Loading tasks...</div>
+            <div className='p-6 text-sm text-slate-400'>Loading</div>
           ) : tasks.length === 0 ? (
             <div className='rounded-xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-400'>
               No tasks yet. Assign one above.

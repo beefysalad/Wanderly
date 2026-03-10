@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import BudgetList from "./BudgetList";
 import BudgetTracker from "./BudgetTracker";
+import LoadingState from "../../shared/LoadingState";
 
 
 interface IBudgetComponent {
@@ -48,7 +49,7 @@ const BudgetComponent = ({
         await api.delete(`/trips/${tripId}/budgets/${budgetId}`);
         toast.success("Budget item deleted");
         queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete budget item");
       }
     }
@@ -61,18 +62,12 @@ const BudgetComponent = ({
   if (loadingGroup || loadingBudgets || loadingExpenses) {
     if (isEmbedded) {
       return (
-        <div className='flex items-center justify-center py-20'>
-          <div className='w-8 h-8 border-2 border-slate-700 border-t-orange-500 rounded-full animate-spin mr-3'></div>
-          <p className='text-slate-400 font-medium'>Loading budget...</p>
-        </div>
+        <LoadingState className='py-20' />
       );
     }
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading budget...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

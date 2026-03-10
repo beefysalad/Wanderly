@@ -2,11 +2,11 @@
 
 import { useGroup } from "@/src/hooks/useGroups";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import ExpenseForm from "@/src/app/components/shared/ExpenseForm/index";
 import React from "react";
 import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
 import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
+import LoadingState from "@/src/app/components/shared/LoadingState";
 
 export default function AddExpensePage({
   params,
@@ -23,11 +23,8 @@ export default function AddExpensePage({
 
   if (isLoading) {
     return (
-      <main className='min-h-screen flex items-center justify-center bg-slate-950'>
-        <div className='text-center'>
-          <Loader2 className='w-8 h-8 animate-spin mx-auto mb-2 text-orange-500' />
-          <p className='text-slate-400'>Loading group data...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

@@ -36,6 +36,7 @@ import {
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
 import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
+import LoadingState from "../../shared/LoadingState";
 
 const ProfileComponent = () => {
   const router = useRouter();
@@ -220,11 +221,8 @@ const ProfileComponent = () => {
 
   if (firebaseLoading || dbLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
-          <Loader2 className='w-8 h-8 animate-spin text-slate-400 mx-auto mb-3' />
-          <p className='text-slate-400 text-sm'>Loading profile...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </main>
     );
   }

@@ -33,6 +33,7 @@ import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import LoadingState from "@/src/app/components/shared/LoadingState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const transportationModes = [
@@ -186,11 +187,8 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
   if (isLoadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='flex flex-col items-center gap-4'>
-          <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin'></div>
-          <p className='text-slate-400'>Loading trip details...</p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-4'>
+        <LoadingState fullScreen />
       </main>
     );
   }

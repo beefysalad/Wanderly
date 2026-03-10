@@ -9,6 +9,7 @@ import { useExpenses } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
+import LoadingState from "../../shared/LoadingState";
 
 interface IActivityDetailContainer {
   groupId: string;
@@ -36,16 +37,8 @@ const ActivityDetailContainer = ({
 
   if (loadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-6'>
-        <div className='text-center'>
-          <div className='relative w-20 h-20 mx-auto mb-6'>
-            <div className='absolute inset-0 border-4 border-slate-800 rounded-full'></div>
-            <div className='absolute inset-0 border-4 border-t-orange-500 rounded-full animate-spin'></div>
-          </div>
-          <p className='text-slate-400 font-bold tracking-tight'>
-            Loading activity...
-          </p>
-        </div>
+      <main className='min-h-screen bg-slate-950 p-6'>
+        <LoadingState fullScreen />
       </main>
     );
   }

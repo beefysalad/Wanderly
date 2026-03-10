@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import DashboardBottomNav from "../components/pages/Dashboard/DashboardBottomNav";
 import PremiumPageHeader from "../components/shared/PremiumPageHeader";
 import PremiumBackground from "../components/shared/PremiumBackground";
+import LoadingState from "../components/shared/LoadingState";
 
 const TripsPage = () => {
   const router = useRouter();
@@ -79,12 +80,10 @@ const TripsPage = () => {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center pb-24 relative overflow-hidden'>
+      <main className='min-h-screen bg-slate-950 pb-24 relative overflow-hidden'>
         <PremiumBackground />
-        
-        <div className='text-center relative z-10'>
-          <div className='w-16 h-16 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-slate-400 font-medium'>Loading trips...</p>
+        <div className='relative z-10'>
+          <LoadingState fullScreen />
         </div>
       </main>
     );

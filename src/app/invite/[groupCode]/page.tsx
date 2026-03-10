@@ -7,6 +7,7 @@ import { use, useEffect, useState } from "react";
 import Footer from "@/src/app/components/shared/Footer";
 import Header from "@/src/app/components/shared/Header";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
+import LoadingState from "@/src/app/components/shared/LoadingState";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { LogIn, Users } from "lucide-react";
 
@@ -71,7 +72,7 @@ export default function InvitePage({
             }
             // If groups not loaded yet, show friendly message
             setError(
-              "You're already a member of this group. Redirecting to dashboard...",
+              "You're already a member of this group. Loading.",
             );
             setTimeout(() => {
               router.push("/dashboard");
@@ -136,7 +137,7 @@ export default function InvitePage({
               }
             }
             setError(
-              "You're already a member of this group. Redirecting to dashboard...",
+              "You're already a member of this group. Loading.",
             );
             setTimeout(() => {
               router.push("/dashboard");
@@ -184,15 +185,8 @@ export default function InvitePage({
         <div className='relative z-10 flex-1 flex flex-col'>
           <Header />
           <div className='flex-1 flex items-center justify-center p-4'>
-            <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 p-8 max-w-md'>
-              <div className='w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4'></div>
-              <p className='text-slate-300 font-medium'>
-                {userLoading
-                  ? "Loading..."
-                  : isJoining
-                    ? "Joining group..."
-                    : "Redirecting..."}
-              </p>
+            <div className='bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/5 p-8 max-w-md'>
+              <LoadingState />
             </div>
           </div>
           <Footer />
@@ -300,7 +294,7 @@ export default function InvitePage({
         <Footer />
       </div>
 
-      {isNavigating && <NavigationLoader message='Redirecting...' />}
+      {isNavigating && <NavigationLoader message='Loading' />}
     </main>
   );
 }
