@@ -1,0 +1,43 @@
+name: Checks
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - prod
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+      DATABASE_URL_UNPOOLED: "postgresql://ci:ci@localhost:5432/ci"
+      FIREBASE_PROJECT_ID: "ci-project"
+      FIREBASE_CLIENT_EMAIL: "ci@ci-project.iam.gserviceaccount.com"
+      FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nci\n-----END PRIVATE KEY-----\n"
+      NEXT_PUBLIC_FIREBASE_API_KEY: "ci-key"
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "ci.firebaseapp.com"
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: "ci-project"
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "ci.appspot.com"
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "000000000000"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:000000000000:web:ci"
+      CLOUDINARY_API_KEY: "ci"
+      CLOUDINARY_API_SECRET: "ci"
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "ci"
+      ADMIN_PASSWORD: "ci-placeholder"
+      NEXT_PUBLIC_SOCKET_URL: "http://localhost:8080"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run test
+
+      - run: npm run build:ci
