@@ -33,8 +33,8 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 
 | Feature | API routes | Services today | Largest files | Pass | Status |
 |---|---|---|---|---|---|
-| Profile | 2 | 0 | page.tsx 601 lines | 1 | Not started |
-| Reviews | 1 | 1 | page.tsx 546 lines | 1 | Not started |
+| Profile | 2 | 0 | page.tsx 601 lines | 1 | Done[^profile-branch] |
+| Reviews | 1 | 1 | page.tsx 546 lines | 1 | Done |
 | Groups | 10 | 4 | ~2074 lines across services | 1 | Not started |
 | Trips (core) | subset of 11 | subset of 5 | — | 1 | Not started |
 | Trips → Activities | subset | subset | activities/services.ts 373 | 1 | Not started |
@@ -49,6 +49,8 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Guest* page components | — | — | 5 files, ~700 lines total | 2 | Deferred |
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
+
+[^profile-branch]: Profile's implementation and full review cycle are complete, but its PR was merged into `refactor/foundation-infra` rather than `dev` directly (a timing mixup — Foundation's own PR had already merged into `dev` by the time Profile's PR merged). Profile's commits are therefore not yet actually in `dev` and need a follow-up PR (`refactor/foundation-infra` → `dev`) to land. Not yet done — flagging for whoever picks this up next.
 
 Pass 1 order (confirmed): **Profile → Reviews → Groups → Trips-core → Activities → Budget → Expenses/Payments.**
 
