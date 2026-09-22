@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { AppError } from "./errors";
 import { logger } from "./logger";
 
 export function handleApiError(error: unknown): NextResponse {
   if (error instanceof ZodError) {
     return NextResponse.json(
-      { error: "Invalid request", issues: error.flatten() },
+      { error: "Invalid request", issues: z.flattenError(error) },
       { status: 400 },
     );
   }

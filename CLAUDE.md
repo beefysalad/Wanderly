@@ -87,7 +87,7 @@ These exist in the codebase today — don't use them as the template for new cod
 - API routes with no Zod validation.
 - `services.ts` files calling Prisma directly instead of going through a repository (see **Service / Repository Layering** above).
 - New functionality gated behind the shared admin password instead of proper role-based auth.
-- One-off debug/repro scripts committed at the repo root (e.g. `repro_delete.ts`) — put throwaway scripts in `scripts/` or don't commit them.
+- One-off debug/repro scripts committed at the repo root — put throwaway scripts in `scripts/` or don't commit them.
 - Growing an existing 500+ line page component further instead of splitting it.
 
 ## Git Conventions

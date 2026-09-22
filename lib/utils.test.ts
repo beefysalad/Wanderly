@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime12Hour } from "./utils";
+import { formatTime12Hour } from "@/lib/utils";
 
 describe("formatTime12Hour", () => {
   it("converts a morning time", () => {

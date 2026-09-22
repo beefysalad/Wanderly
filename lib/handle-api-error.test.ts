@@ -33,5 +33,8 @@ describe("handleApiError", () => {
     const body = await response.json();
     expect(body.error).toBe("Internal server error");
     expect(JSON.stringify(body)).not.toContain("leaked");
+
+    const { logger } = await import("./logger");
+    expect(logger.error).toHaveBeenCalled();
   });
 });
