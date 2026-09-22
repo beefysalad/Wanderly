@@ -45,6 +45,7 @@ const ProfileComponent = () => {
     uploadedPhotoURL,
     uploadingImage,
     uploadError,
+    setUploadError,
     handleImageUpload,
     resetUpload,
   } = useProfileImageUpload();
@@ -85,6 +86,7 @@ const ProfileComponent = () => {
   const onSubmit = async (values: TEditProfileSchema) => {
     try {
       setError(null);
+      setUploadError(null);
 
       const profileUpdates: {
         name?: string;

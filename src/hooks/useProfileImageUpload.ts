@@ -70,6 +70,7 @@ export function useProfileImageUpload() {
     uploadedPhotoURL,
     uploadingImage,
     uploadError,
+    setUploadError,
     handleImageUpload,
     resetUpload,
   };
