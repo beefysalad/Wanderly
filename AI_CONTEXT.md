@@ -1,3 +1,5 @@
+> Structure/conventions below may be out of date — CLAUDE.md at the repo root is authoritative.
+
 # Travel Schedule App - AI Context & Documentation
 
 ## Project Overview
