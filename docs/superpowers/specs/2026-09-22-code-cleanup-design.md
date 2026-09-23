@@ -33,10 +33,12 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 
 | Feature | API routes | Services today | Largest files | Pass | Status |
 |---|---|---|---|---|---|
-| Profile | 2 | 0 | page.tsx 601 lines | 1 | Not started |
-| Reviews | 1 | 1 | page.tsx 546 lines | 1 | Not started |
-| Groups | 10 | 4 | ~2074 lines across services | 1 | Not started |
-| Trips (core) | subset of 11 | subset of 5 | — | 1 | Not started |
+| Profile | 2 | 0 | page.tsx 601 lines | 1 | Done[^profile-branch] |
+| Reviews | 1 | 1 | page.tsx 546 lines | 1 | Done |
+| Groups → core | 6 | 1 (services.ts 697 lines, 8 functions, heavy duplicated Prisma `include` blocks — real DRY payoff from a repository layer) | services.ts 697 lines | 1 | In progress |
+| Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Not started |
+| Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Not started |
+| Trips (core, top-level `/api/trips`) | subset of 11 | subset of 5 | — | 1 | Not started |
 | Trips → Activities | subset | subset | activities/services.ts 373 | 1 | Not started |
 | Trips → Budget | subset | subset | — | 1 | Not started |
 | Trips → Expenses/Payments | subset | subset | expenses/services.ts 1028, ExpenseForm 1002, Expenses page 1275 | 1 | Not started |
@@ -50,7 +52,11 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
 
-Pass 1 order (confirmed): **Profile → Reviews → Groups → Trips-core → Activities → Budget → Expenses/Payments.**
+[^profile-branch]: Profile's PR (#121) was merged into the `refactor/foundation-infra` branch instead of `dev` — a timing mixup, since Foundation's own PR (#119) had already merged into `dev` by the time #121 was merged. Profile's 3 commits are fully implemented and reviewed but are not yet actually in `dev`. A follow-up PR (`refactor/foundation-infra` → `dev`) is open to land them: https://github.com/beefysalad/Wanderly/pull/124 — merge that before starting any work that assumes Profile's `src/app/api/profile/*` layout is on `dev`.
+
+**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. Groups → core is being migrated now; the other two Groups sub-units are queued right after it, before moving on to top-level Trips.
+
+Pass 1 order (confirmed): **Profile → Reviews → Groups (core → Member Tasks → nested Trips) → Trips-core → Activities → Budget → Expenses/Payments.**
 
 Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consolidation) is not feature-scoped — it's a standalone quick task done once, not per-pass.
 
