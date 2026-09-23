@@ -1,81 +1,43 @@
 import { logger } from "@/lib/logger";
-import prisma from "@/lib/prisma";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import type { DecodedIdToken } from "firebase-admin/auth";
+import { NotificationType } from "@prisma/client";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
-import type { DecodedIdToken } from "firebase-admin/auth";
 import { createNotificationService } from "../notifications/services";
-import { NotificationType } from "@prisma/client";
+import {
+  addGroupMember,
+  createGroupRow,
+  deleteGroupRow,
+  findGroupByCode,
+  findGroupById,
+  findGroupCodeLookup,
+  findGroupMembership,
+  findGroupOwnership,
+  findGroupWithMembership,
+  listGroupMembersForNotify,
+  listGroupMembershipsForUser,
+  removeGroupMember,
+  updateGroupRow,
+} from "./repository";
+import type { CreateGroupBody, UpdateGroupBody } from "./schemas";
 
-/**
- * Gets or creates a user in the database from Firebase token
- */
 async function getOrCreateUser(token: DecodedIdToken) {
-  return await syncUserToDatabaseService(token);
+  return syncUserToDatabaseService(token);
 }
 
-/**
- * Creates a new group and adds the creator as a member
- */
-export async function createGroupService(
-  token: DecodedIdToken,
-  name: string,
-  colorScheme: string = "orange",
-  emoji: string | null = null
-) {
+export async function createGroupService(token: DecodedIdToken, input: CreateGroupBody) {
   const user = await getOrCreateUser(token);
-
   const code = await generateUniqueGroupCode();
 
-  const group = await prisma.group.create({
-    data: {
-      name,
-      code,
-      colorScheme,
-      emoji,
-      createdById: user.id,
-      members: {
-        create: {
-          userId: user.id,
-          role: "admin",
-        },
-      },
-    },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
+  const group = await createGroupRow({
+    name: input.name,
+    code,
+    colorScheme: input.colorScheme,
+    emoji: input.emoji,
+    createdById: user.id,
   });
 
-  // Emit Socket.IO event for real-time updates
   const { emitGroupUpdated } = await import("@/lib/socket-events");
   emitGroupUpdated(group.id, group).catch((err) => {
     logger.error("Failed to emit group created event", { error: err });
@@ -85,98 +47,24 @@ export async function createGroupService(
   return group;
 }
 
-/**
- * Joins a group by code
- */
-export async function joinGroupService(
-  token: DecodedIdToken,
-  groupCode: string
-) {
+export async function joinGroupService(token: DecodedIdToken, groupCode: string) {
   const user = await getOrCreateUser(token);
 
-  // Find group by code
-  const group = await prisma.group.findUnique({
-    where: { code: groupCode },
-  });
-
+  const group = await findGroupByCode(groupCode);
   if (!group) {
-    throw new Error("Group not found");
+    throw new NotFoundError("Group not found");
   }
 
-  // Check if user is already a member
-  const existingMember = await prisma.groupMember.findUnique({
-    where: {
-      groupId_userId: {
-        groupId: group.id,
-        userId: user.id,
-      },
-    },
-  });
-
-  if (existingMember) {
-    throw new Error("User is already a member of this group");
+  const existingMembership = await findGroupMembership(group.id, user.id);
+  if (existingMembership) {
+    throw new ValidationError("User is already a member of this group");
   }
 
-  // Add user as member
-  await prisma.groupMember.create({
-    data: {
-      groupId: group.id,
-      userId: user.id,
-      role: "member",
-    },
-  });
+  await addGroupMember(group.id, user.id, "member");
 
-  // Fetch the updated group with all relations
-  const updatedGroup = await prisma.group.findUnique({
-    where: { id: group.id },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const updatedGroup = await findGroupById(group.id);
 
-  // Notify all group members (except the person who just joined)
-  const allMembers = await prisma.groupMember.findMany({
-    where: { groupId: group.id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-    },
-  });
-
+  const allMembers = await listGroupMembersForNotify(group.id);
   const notificationPromises = allMembers
     .filter((member) => member.userId !== user.id)
     .map((member) =>
@@ -186,16 +74,11 @@ export async function joinGroupService(
         message: `${user.name || user.email} joined ${group.name}`,
         relatedGroupId: group.id,
       }).catch((err) => {
-        logger.error("Failed to create notification", {
-          userId: member.userId,
-          error: err,
-        });
-      })
+        logger.error("Failed to create notification", { userId: member.userId, error: err });
+      }),
     );
-
   await Promise.all(notificationPromises);
 
-  // Emit Socket.IO event for real-time updates
   if (updatedGroup) {
     const { emitGroupUpdated } = await import("@/lib/socket-events");
     emitGroupUpdated(group.id, updatedGroup).catch((err) => {
@@ -203,270 +86,68 @@ export async function joinGroupService(
     });
   }
 
-  logger.info("User joined group", {
-    userId: user.id,
-    groupId: group.id,
-    code: groupCode,
-  });
+  logger.info("User joined group", { userId: user.id, groupId: group.id, code: groupCode });
 
   return updatedGroup!;
 }
 
-/**
- * Lists all groups the user is a member of
- */
 export async function listGroupsService(token: DecodedIdToken) {
   const user = await getOrCreateUser(token);
-
-  const groupMemberships = await prisma.groupMember.findMany({
-    where: {
-      userId: user.id,
-    },
-    include: {
-      group: {
-        include: {
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          members: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          },
-          trips: {
-            include: {
-              activities: true,
-              creator: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      group: {
-        createdAt: "desc",
-      },
-    },
-  });
-
-  return groupMemberships.map((gm) => gm.group);
+  const memberships = await listGroupMembershipsForUser(user.id);
+  return memberships.map((m) => m.group);
 }
 
-/**
- * Gets a single group by ID with all relations
- */
-export async function getGroupByIdService(
-  token: DecodedIdToken,
-  groupId: string
-) {
+export async function getGroupByIdService(token: DecodedIdToken, groupId: string) {
   const user = await getOrCreateUser(token);
 
-  // Check if user is a member
-  const membership = await prisma.groupMember.findUnique({
-    where: {
-      groupId_userId: {
-        groupId,
-        userId: user.id,
-      },
-    },
-  });
-
+  const membership = await findGroupMembership(groupId, user.id);
   if (!membership) {
-    throw new Error("User is not a member of this group");
+    throw new ForbiddenError("User is not a member of this group");
   }
 
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
-  });
-
+  const group = await findGroupById(groupId);
   if (!group) {
-    throw new Error("Group not found");
+    throw new NotFoundError("Group not found");
   }
 
   return group;
 }
 
-/**
- * Removes a user from a group (leaves the group)
- */
-export async function leaveGroupService(
-  token: DecodedIdToken,
-  groupId: string
-) {
+export async function leaveGroupService(token: DecodedIdToken, groupId: string) {
   const user = await getOrCreateUser(token);
 
-  // Verify user is a member of the group
-  const membership = await prisma.groupMember.findUnique({
-    where: {
-      groupId_userId: {
-        groupId,
-        userId: user.id,
-      },
-    },
-  });
-
+  const membership = await findGroupMembership(groupId, user.id);
   if (!membership) {
-    throw new Error("User is not a member of this group");
+    throw new ForbiddenError("User is not a member of this group");
   }
 
-  // Check if user is the creator
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { createdById: true },
-  });
-
-  if (!group) {
-    throw new Error("Group not found");
+  const ownership = await findGroupOwnership(groupId);
+  if (!ownership) {
+    throw new NotFoundError("Group not found");
+  }
+  if (ownership.createdById === user.id) {
+    throw new ValidationError("Group creator cannot leave the group");
   }
 
-  if (group.createdById === user.id) {
-    throw new Error("Group creator cannot leave the group");
-  }
+  const allMembers = await listGroupMembersForNotify(groupId);
 
-  // Get group name for notifications
-  const groupWithName = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { name: true },
-  });
+  await removeGroupMember(groupId, user.id);
 
-  // Get all remaining members before deletion (excluding the user leaving)
-  const allMembers = await prisma.groupMember.findMany({
-    where: { groupId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-    },
-  });
+  const notificationPromises = allMembers
+    .filter((member) => member.userId !== user.id)
+    .map((member) =>
+      createNotificationService(member.userId, {
+        type: NotificationType.group_leave,
+        title: "Member Left Group",
+        message: `${user.name || user.email} left ${ownership.name}`,
+        relatedGroupId: groupId,
+      }).catch((err) => {
+        logger.error("Failed to create notification", { userId: member.userId, error: err });
+      }),
+    );
+  await Promise.all(notificationPromises);
 
-  // Remove the membership
-  await prisma.groupMember.delete({
-    where: {
-      groupId_userId: {
-        groupId,
-        userId: user.id,
-      },
-    },
-  });
-
-  // Notify all remaining group members
-  if (groupWithName) {
-    const notificationPromises = allMembers
-      .filter((member) => member.userId !== user.id)
-      .map((member) =>
-        createNotificationService(member.userId, {
-          type: NotificationType.group_leave,
-          title: "Member Left Group",
-          message: `${user.name || user.email} left ${groupWithName.name}`,
-          relatedGroupId: groupId,
-        }).catch((err) => {
-          logger.error("Failed to create notification", {
-            userId: member.userId,
-            error: err,
-          });
-        })
-      );
-
-    await Promise.all(notificationPromises);
-  }
-
-  // Get updated group to emit event
-  const updatedGroup = await prisma.group.findUnique({
-    where: { id: groupId },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
-  });
-
-  // Emit Socket.IO event for real-time updates
+  const updatedGroup = await findGroupById(groupId);
   if (updatedGroup) {
     const { emitGroupUpdated } = await import("@/lib/socket-events");
     emitGroupUpdated(groupId, updatedGroup).catch((err) => {
@@ -477,35 +158,19 @@ export async function leaveGroupService(
   logger.info("User left group", { userId: user.id, groupId });
 }
 
-/**
- * Deletes a group (only creator can delete)
- */
-export async function deleteGroupService(
-  token: DecodedIdToken,
-  groupId: string
-) {
+export async function deleteGroupService(token: DecodedIdToken, groupId: string) {
   const user = await getOrCreateUser(token);
 
-  // Verify group exists and user is the creator
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { createdById: true },
-  });
-
-  if (!group) {
-    throw new Error("Group not found");
+  const ownership = await findGroupOwnership(groupId);
+  if (!ownership) {
+    throw new NotFoundError("Group not found");
+  }
+  if (ownership.createdById !== user.id) {
+    throw new ForbiddenError("Only the group creator can delete the group");
   }
 
-  if (group.createdById !== user.id) {
-    throw new Error("Only the group creator can delete the group");
-  }
+  await deleteGroupRow(groupId);
 
-  // Delete the group (cascade will handle members, trips, expenses, etc.)
-  await prisma.group.delete({
-    where: { id: groupId },
-  });
-
-  // Emit Socket.IO event for real-time updates
   const { emitGroupDeleted } = await import("@/lib/socket-events");
   emitGroupDeleted(groupId).catch((err) => {
     logger.error("Failed to emit group deleted event", { error: err });
@@ -514,117 +179,31 @@ export async function deleteGroupService(
   logger.info("Group deleted", { groupId, deletedBy: user.id });
 }
 
-/**
- * Updates a group (only creator/admin can update)
- */
 export async function updateGroupService(
   token: DecodedIdToken,
   groupId: string,
-  updates: {
-    name?: string;
-    colorScheme?: string;
-    emoji?: string | null;
-  }
+  updates: UpdateGroupBody,
 ) {
   const user = await getOrCreateUser(token);
 
-  // Verify group exists and user is the creator or admin
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    include: {
-      members: {
-        where: { userId: user.id },
-      },
-    },
-  });
-
+  const group = await findGroupWithMembership(groupId, user.id);
   if (!group) {
-    throw new Error("Group not found");
+    throw new NotFoundError("Group not found");
   }
 
   const membership = group.members[0];
   if (!membership) {
-    throw new Error("User is not a member of this group");
+    throw new ForbiddenError("User is not a member of this group");
   }
 
-  // Only creator or admin can update
   const isCreator = group.createdById === user.id;
   const isAdmin = membership.role === "admin";
   if (!isCreator && !isAdmin) {
-    throw new Error("Only group creator or admin can update the group");
+    throw new ForbiddenError("Only group creator or admin can update the group");
   }
 
-  // Validate name if provided
-  if (updates.name !== undefined) {
-    if (
-      !updates.name ||
-      typeof updates.name !== "string" ||
-      updates.name.trim().length < 5
-    ) {
-      throw new Error("Group name must be at least 5 characters");
-    }
-  }
+  const updatedGroup = await updateGroupRow(groupId, updates);
 
-  // Build update data
-  const updateData: {
-    name?: string;
-    colorScheme?: string;
-    emoji?: string | null;
-  } = {};
-
-  if (updates.name !== undefined) {
-    updateData.name = updates.name.trim();
-  }
-  if (updates.colorScheme !== undefined) {
-    updateData.colorScheme = updates.colorScheme;
-  }
-  if (updates.emoji !== undefined) {
-    updateData.emoji = updates.emoji;
-  }
-
-  // Update the group
-  const updatedGroup = await prisma.group.update({
-    where: { id: groupId },
-    data: updateData,
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
-  });
-
-  // Emit Socket.IO event for real-time updates
   const { emitGroupUpdated } = await import("@/lib/socket-events");
   emitGroupUpdated(groupId, updatedGroup).catch((err) => {
     logger.error("Failed to emit group updated event", { error: err });
@@ -634,64 +213,25 @@ export async function updateGroupService(
   return updatedGroup;
 }
 
-/**
- * Gets a group by ID for guest access (validates group code)
- */
-export async function getGroupByIdForGuestService(
-  groupCode: string,
-  groupId: string
-) {
-  // Find group by ID
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-      trips: {
-        include: {
-          activities: true,
-          creator: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
-  });
-
+export async function getGroupByIdForGuestService(groupCode: string, groupId: string) {
+  const group = await findGroupById(groupId);
   if (!group) {
-    throw new Error("Group not found");
+    throw new NotFoundError("Group not found");
   }
-
-  // Validate group code matches
   if (group.code !== groupCode) {
-    throw new Error("Invalid group code");
+    throw new ForbiddenError("Invalid group code");
   }
 
   logger.info("Guest accessed group", { groupId: group.id, code: groupCode });
+  return group;
+}
 
+export async function validateGroupCodeService(code: string) {
+  const group = await findGroupCodeLookup(code);
+  if (!group) {
+    throw new NotFoundError("Group not found");
+  }
+
+  logger.info("Group code validated", { groupId: group.id, code: group.code });
   return group;
 }
