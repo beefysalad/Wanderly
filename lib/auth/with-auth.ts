@@ -12,15 +12,30 @@ export interface AuthContext {
   user?: User;
 }
 
+export interface RouteContext<
+  Params extends Record<string, string> = Record<string, string>,
+> {
+  params: Promise<Params>;
+}
+
 /**
  * Higher-order function that wraps API route handlers with Firebase auth validation
  * @param handler - The API route handler function
  * @param options - Optional configuration for admin/role checks
  */
-export function withAuth(
-  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
+export function withAuth<
+  Params extends Record<string, string> = Record<string, string>,
+>(
+  handler: (
+    req: NextRequest,
+    context: AuthContext,
+    routeContext: RouteContext<Params>,
+  ) => Promise<NextResponse>,
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (
+    req: NextRequest,
+    routeContext?: RouteContext<Params>,
+  ): Promise<NextResponse> => {
     try {
       // 1. Get the Authorization header
       const authHeader = req.headers.get("Authorization");
@@ -61,7 +76,7 @@ export function withAuth(
       });
 
       // 7. Call the original handler with auth context
-      return await handler(req, authContext);
+      return await handler(req, authContext, routeContext as RouteContext<Params>);
     } catch (error) {
       logger.error("Auth validation failed", error);
 
@@ -108,13 +123,19 @@ export interface OptionalAuthContext extends AuthContext {
  * Allows both authenticated users and guests (with group code)
  * @param handler - The API route handler function
  */
-export function withOptionalAuth(
+export function withOptionalAuth<
+  Params extends Record<string, string> = Record<string, string>,
+>(
   handler: (
     req: NextRequest,
     context: OptionalAuthContext,
+    routeContext: RouteContext<Params>,
   ) => Promise<NextResponse>,
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (
+    req: NextRequest,
+    routeContext?: RouteContext<Params>,
+  ): Promise<NextResponse> => {
     try {
       // Try to authenticate as a regular user first
       const authHeader = req.headers.get("Authorization");
@@ -130,7 +151,7 @@ export function withOptionalAuth(
               decodedToken,
               isGuest: false,
             };
-            return await handler(req, authContext);
+            return await handler(req, authContext, routeContext as RouteContext<Params>);
           } catch (_error) {
             // Token invalid, fall through to guest check
             logger.warn("Token validation failed, checking for guest access", {
@@ -149,7 +170,7 @@ export function withOptionalAuth(
           groupCode,
           decodedToken: {} as DecodedIdToken,
         };
-        return await handler(req, guestContext);
+        return await handler(req, guestContext, routeContext as RouteContext<Params>);
       }
 
       // Neither authenticated nor guest
