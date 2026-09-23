@@ -1,63 +1,31 @@
-import { AuthContext, withAuth } from "@/lib/auth/with-auth";
-import { logger } from "@/lib/logger";
-import type { MemberTaskStatus } from "@prisma/client";
+import { withAuth, type AuthContext, type RouteContext } from "@/lib/auth/with-auth";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  createMemberTaskService,
-  listMemberTasksService,
-} from "./services";
+import { createMemberTaskSchema } from "./schemas";
+import { createMemberTaskService, listMemberTasksService } from "./services";
 
-async function handler(req: NextRequest, auth: AuthContext) {
+type Params = RouteContext<{ groupId: string }>;
+
+async function getHandler(_req: NextRequest, auth: AuthContext, { params }: Params) {
   try {
-    const pathParts = req.nextUrl.pathname.split("/");
-    const groupId = pathParts[pathParts.length - 2];
-
-    if (!groupId) {
-      return NextResponse.json({ error: "Group ID is required" }, { status: 400 });
-    }
-
-    if (req.method === "GET") {
-      const tasks = await listMemberTasksService(auth.decodedToken, groupId);
-      return NextResponse.json({ tasks }, { status: 200 });
-    }
-
-    if (req.method === "POST") {
-      const { assignedToId, title, notes, dueDate, status } = await req.json();
-
-      if (!assignedToId || !title) {
-        return NextResponse.json(
-          { error: "assignedToId and title are required" },
-          { status: 400 },
-        );
-      }
-
-      const task = await createMemberTaskService(auth.decodedToken, groupId, {
-        assignedToId,
-        title,
-        notes,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        status: status as MemberTaskStatus | undefined,
-      });
-
-      return NextResponse.json({ task }, { status: 201 });
-    }
-
-    return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+    const { groupId } = await params;
+    const tasks = await listMemberTasksService(auth.decodedToken, groupId);
+    return NextResponse.json({ tasks }, { status: 200 });
   } catch (error) {
-    logger.error("Member tasks API error", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-
-    if (
-      message.includes("not a member") ||
-      message.includes("not found") ||
-      message.includes("Assignee")
-    ) {
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
-export const GET = withAuth(handler);
-export const POST = withAuth(handler);
+async function postHandler(req: NextRequest, auth: AuthContext, { params }: Params) {
+  try {
+    const { groupId } = await params;
+    const body = createMemberTaskSchema.parse(await req.json());
+    const task = await createMemberTaskService(auth.decodedToken, groupId, body);
+    return NextResponse.json({ task }, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
