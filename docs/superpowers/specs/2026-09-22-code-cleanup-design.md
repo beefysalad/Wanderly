@@ -36,7 +36,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Profile | 2 | 0 | page.tsx 601 lines | 1 | Done |
 | Reviews | 1 | 1 | page.tsx 546 lines | 1 | Done |
 | Groups → core | 6 | 1 (services.ts 697 lines, 8 functions, heavy duplicated Prisma `include` blocks — real DRY payoff from a repository layer) | services.ts 697 lines | 1 | Done |
-| Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Not started |
+| Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Done |
 | Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Not started |
 | Trips (core, top-level `/api/trips`) | subset of 11 | subset of 5 | — | 1 | Not started |
 | Trips → Activities | subset | subset | activities/services.ts 373 | 1 | Not started |
@@ -52,7 +52,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
 
-**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. Groups → core is done; the other two Groups sub-units are queued next, before moving on to top-level Trips.
+**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. Groups → core and Groups → Member Tasks are both done; Groups → nested Trips is queued next, before moving on to top-level Trips.
 
 Pass 1 order (confirmed): **Profile → Reviews → Groups (core → Member Tasks → nested Trips) → Trips-core → Activities → Budget → Expenses/Payments.**
 
