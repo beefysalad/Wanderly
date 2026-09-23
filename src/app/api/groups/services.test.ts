@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 
 const mockFindGroupById = vi.fn();
-const mockFindGroupByCode = vi.fn();
 const mockFindGroupCodeLookup = vi.fn();
 const mockFindGroupOwnership = vi.fn();
 const mockFindGroupMembership = vi.fn();
@@ -18,7 +17,6 @@ const mockDeleteGroupRow = vi.fn();
 
 vi.mock("./repository", () => ({
   findGroupById: (...a: unknown[]) => mockFindGroupById(...a),
-  findGroupByCode: (...a: unknown[]) => mockFindGroupByCode(...a),
   findGroupCodeLookup: (...a: unknown[]) => mockFindGroupCodeLookup(...a),
   findGroupOwnership: (...a: unknown[]) => mockFindGroupOwnership(...a),
   findGroupMembership: (...a: unknown[]) => mockFindGroupMembership(...a),
@@ -97,13 +95,13 @@ describe("createGroupService", () => {
 
 describe("joinGroupService", () => {
   it("throws NotFoundError when the code doesn't match a group", async () => {
-    mockFindGroupByCode.mockResolvedValue(null);
+    mockFindGroupCodeLookup.mockResolvedValue(null);
 
     await expect(joinGroupService(token, "NOPE")).rejects.toThrow(NotFoundError);
   });
 
   it("throws ValidationError when the user is already a member", async () => {
-    mockFindGroupByCode.mockResolvedValue({ id: "group-1", name: "Trip Squad" });
+    mockFindGroupCodeLookup.mockResolvedValue({ id: "group-1", name: "Trip Squad", code: "ABC123" });
     mockFindGroupMembership.mockResolvedValue({ groupId: "group-1", userId: "user-1" });
 
     await expect(joinGroupService(token, "ABC123")).rejects.toThrow(ValidationError);
@@ -111,7 +109,7 @@ describe("joinGroupService", () => {
   });
 
   it("adds the member and notifies existing members, excluding the joiner", async () => {
-    mockFindGroupByCode.mockResolvedValue({ id: "group-1", name: "Trip Squad" });
+    mockFindGroupCodeLookup.mockResolvedValue({ id: "group-1", name: "Trip Squad", code: "ABC123" });
     mockFindGroupMembership.mockResolvedValue(null);
     mockFindGroupById.mockResolvedValue({ id: "group-1", name: "Trip Squad" });
     mockListGroupMembersForNotify.mockResolvedValue([

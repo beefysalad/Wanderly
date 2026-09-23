@@ -9,7 +9,6 @@ import {
   addGroupMember,
   createGroupRow,
   deleteGroupRow,
-  findGroupByCode,
   findGroupById,
   findGroupCodeLookup,
   findGroupMembership,
@@ -50,7 +49,7 @@ export async function createGroupService(token: DecodedIdToken, input: CreateGro
 export async function joinGroupService(token: DecodedIdToken, groupCode: string) {
   const user = await getOrCreateUser(token);
 
-  const group = await findGroupByCode(groupCode);
+  const group = await findGroupCodeLookup(groupCode);
   if (!group) {
     throw new NotFoundError("Group not found");
   }

@@ -28,13 +28,6 @@ export function findGroupById(groupId: string) {
   });
 }
 
-export function findGroupByCode(code: string) {
-  return prisma.group.findUnique({
-    where: { code },
-    include: GROUP_DETAIL_INCLUDE,
-  });
-}
-
 export function findGroupCodeLookup(code: string) {
   return prisma.group.findUnique({
     where: { code },
