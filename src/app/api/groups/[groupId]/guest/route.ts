@@ -1,63 +1,37 @@
+import {
+  withOptionalAuth,
+  type OptionalAuthContext,
+  type RouteContext,
+} from "@/lib/auth/with-auth";
+import { handleApiError } from "@/lib/handle-api-error";
+import { ForbiddenError } from "@/lib/errors";
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { withOptionalAuth, type OptionalAuthContext } from "@/lib/auth/with-auth";
 import { getGroupByIdForGuestService } from "../../services";
 import { transformGroup } from "../../transformers";
+
+type Params = RouteContext<{ groupId: string }>;
 
 /**
  * GET /api/groups/[groupId]/guest
  * Returns group data for guest access (requires X-Guest-Code header)
  */
 async function handler(
-  req: NextRequest,
-  context: OptionalAuthContext
-): Promise<NextResponse> {
+  _req: NextRequest,
+  context: OptionalAuthContext,
+  { params }: Params,
+) {
   try {
-    // Extract groupId from URL
-    const pathParts = req.nextUrl.pathname.split("/");
-    const groupId = pathParts[pathParts.indexOf("groups") + 1];
-
-    if (!groupId) {
-      return NextResponse.json({ error: "Group ID is required" }, { status: 400 });
-    }
-
-    // Verify guest access
     if (!context.isGuest || !context.groupCode) {
-      return NextResponse.json(
-        { error: "Guest access required" },
-        { status: 403 }
-      );
+      throw new ForbiddenError("Guest access required");
     }
 
-    // Get group data
-    const prismaGroup = await getGroupByIdForGuestService(
-      context.groupCode,
-      groupId
-    );
+    const { groupId } = await params;
+    const group = await getGroupByIdForGuestService(context.groupCode, groupId);
 
-    // Transform to frontend format
-    const group = transformGroup(prismaGroup);
-
-    return NextResponse.json(group);
+    return NextResponse.json(transformGroup(group));
   } catch (error) {
-    logger.error("Error fetching group for guest", error);
-
-    if (error instanceof Error) {
-      if (error.message === "Group not found") {
-        return NextResponse.json({ error: error.message }, { status: 404 });
-      }
-      if (error.message === "Invalid group code") {
-        return NextResponse.json({ error: error.message }, { status: 403 });
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch group" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
-// Wrap with optional auth
 export const GET = withOptionalAuth(handler);
-
