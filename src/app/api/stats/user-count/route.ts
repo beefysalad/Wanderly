@@ -1,17 +1,13 @@
-import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextResponse } from "next/server";
+import { getUserCountService } from "./services";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const count = await prisma.user.count();
-    return NextResponse.json({ count });
+    return NextResponse.json(await getUserCountService());
   } catch (error) {
-    console.error("Failed to fetch user count:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch user count" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }
