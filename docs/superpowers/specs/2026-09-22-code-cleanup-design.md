@@ -44,7 +44,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Trips → Payment-logs | subset | 1 | payment-logs/services.ts 278 | 1 | Done |
 | Trips → ICS export | 1 | 0 | export/ics/route.ts 324 | 1 | Done |
 | Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | API Done; ExpenseForm + Expenses page component splits still outstanding |
-| Trips → Expense Payments | subset | 1 | payments/services.ts 358 (investigate duplicate `confirm-payment` vs `payments/confirm` routes) | 1 | Not started |
+| Trips → Expense Payments | subset | 1 | payments/services.ts 358 (both `confirm-payment` and `payments/confirm` are live: different clients use each) | 1 | Done |
 | Dashboard | — | 0 | 1853 across 10 files (already reasonably decomposed — verify only) | 2 | Deferred |
 | Admin | 6 | 0 | 484 lines | 2 | Deferred |
 | Notifications | 4 | 1 | 393 lines | 2 | Deferred |
@@ -79,6 +79,7 @@ Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consol
 **Open follow-ups (not blocking, not yet done):**
 - (Fixed in PR #133, once merged: a non-JSON request body now returns 400 instead of 500 for every migrated route, handled once in `lib/handle-api-error.ts`.)
 - Any group member can PATCH/DELETE any Member Task (no creator/assignee restriction) — preserved as-is from the old code; decide whether that is intended.
+- Expense payments: `expenses/[expenseId]/confirm-payment` (detail page) and `.../payments/confirm` (list hook) are two live, *different* flows — the first upserts the status and notifies the member; the second only updates an existing record and writes a payment log. Marking paid (default) also writes a payment log, and confirming writes another, so a confirmed payment can have two logs. Any member can also un-mark another member's payment. All preserved as-is; decide whether each is intended.
 - Security pass (admin password, gateway proxy, guest-code trust boundary) is still untouched by design.
 
 ## Target Architecture (applies to every migrated feature)
