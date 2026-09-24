@@ -4,10 +4,10 @@ import { NotificationType, type PaymentMethod } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { createNotificationService } from "../../../notifications/services";
 import { verifyGuestTripAccess, verifyTripAccess } from "../../access";
+import { findUserIdByEmail } from "../../repository";
 import {
   createPaymentLogRow,
   findExpenseForPayment,
-  findUserIdByEmail,
   listPaymentLogsByTrip,
 } from "./repository";
 import type { CreatePaymentLogBody } from "./schemas";

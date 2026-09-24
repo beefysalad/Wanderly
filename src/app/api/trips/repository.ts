@@ -13,3 +13,7 @@ export function findTripWithGroupCode(tripId: string) {
     select: { id: true, groupId: true, group: { select: { code: true } } },
   });
 }
+
+export function findUserIdByEmail(email: string) {
+  return prisma.user.findUnique({ where: { email }, select: { id: true } });
+}

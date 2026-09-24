@@ -16,10 +16,6 @@ export function listPaymentLogsByTrip(tripId: string) {
   });
 }
 
-export function findUserIdByEmail(email: string) {
-  return prisma.user.findUnique({ where: { email }, select: { id: true } });
-}
-
 export function findExpenseForPayment(expenseId: string) {
   return prisma.expense.findUnique({
     where: { id: expenseId },
