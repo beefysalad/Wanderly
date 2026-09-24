@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 
 const mockFindTripAccessInfo = vi.fn();
+const mockFindTripWithGroupCode = vi.fn();
 vi.mock("./repository", () => ({
   findTripAccessInfo: (...a: unknown[]) => mockFindTripAccessInfo(...a),
+  findTripWithGroupCode: (...a: unknown[]) => mockFindTripWithGroupCode(...a),
 }));
 
 const mockFindGroupMembership = vi.fn();
@@ -17,7 +19,7 @@ vi.mock("../sync/syncService", () => ({
   syncUserToDatabaseService: (...a: unknown[]) => mockSyncUserToDatabaseService(...a),
 }));
 
-const { verifyTripAccess } = await import("./access");
+const { verifyGuestTripAccess, verifyTripAccess } = await import("./access");
 
 const token = { uid: "firebase-1" } as DecodedIdToken;
 const user = { id: "user-1", name: "Alice", email: "alice@example.com" };
@@ -50,5 +52,35 @@ describe("verifyTripAccess", () => {
     const result = await verifyTripAccess(token, "trip-1");
 
     expect(result).toEqual({ trip: { id: "trip-1", groupId: "group-1" }, user });
+  });
+});
+
+describe("verifyGuestTripAccess", () => {
+  it("throws NotFoundError when the trip doesn't exist", async () => {
+    mockFindTripWithGroupCode.mockResolvedValue(null);
+
+    await expect(verifyGuestTripAccess("ABC123", "trip-1")).rejects.toThrow(NotFoundError);
+  });
+
+  it("throws ForbiddenError when the code doesn't match the trip's group", async () => {
+    mockFindTripWithGroupCode.mockResolvedValue({
+      id: "trip-1",
+      groupId: "group-1",
+      group: { code: "ZZZ999" },
+    });
+
+    await expect(verifyGuestTripAccess("ABC123", "trip-1")).rejects.toThrow(ForbiddenError);
+  });
+
+  it("accepts a matching code case-insensitively", async () => {
+    mockFindTripWithGroupCode.mockResolvedValue({
+      id: "trip-1",
+      groupId: "group-1",
+      group: { code: "ABC123" },
+    });
+
+    const result = await verifyGuestTripAccess("abc123", "trip-1");
+
+    expect(result).toEqual({ trip: { id: "trip-1", groupId: "group-1" } });
   });
 });
