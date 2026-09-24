@@ -39,7 +39,9 @@ async function verifyTripInGroup(groupId: string, tripId: string) {
     throw new NotFoundError("Trip not found");
   }
   if (trip.groupId !== groupId) {
-    throw new NotFoundError("Trip does not belong to this group");
+    // Same message as the missing-trip case so callers can't probe whether an
+    // ID exists in some other group.
+    throw new NotFoundError("Trip not found");
   }
   return trip;
 }
