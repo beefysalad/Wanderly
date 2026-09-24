@@ -37,4 +37,29 @@ describe("handleApiError", () => {
     const { logger } = await import("./logger");
     expect(logger.error).toHaveBeenCalled();
   });
+
+  it("maps a malformed-JSON body error to 400 instead of a 500, without logging it as unhandled", async () => {
+    let jsonError: unknown;
+    try {
+      JSON.parse("{not valid json");
+    } catch (error) {
+      jsonError = error;
+    }
+
+    const { logger } = await import("./logger");
+    vi.mocked(logger.error).mockClear();
+
+    const response = handleApiError(jsonError);
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("Invalid JSON body");
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("does not treat an unrelated SyntaxError as a client error", async () => {
+    const response = handleApiError(new SyntaxError("Invalid regular expression: /(/"));
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.error).toBe("Internal server error");
+  });
 });
