@@ -2,7 +2,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { findGroupMembership } from "../groups/repository";
 import { syncUserToDatabaseService } from "../sync/syncService";
-import { findTripAccessInfo } from "./repository";
+import { findTripAccessInfo, findTripWithGroupCode } from "./repository";
 
 export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
   const user = await syncUserToDatabaseService(token);
@@ -18,4 +18,16 @@ export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
   }
 
   return { trip, user };
+}
+
+// Re-verifies the guest's group code against the group that actually owns the trip.
+export async function verifyGuestTripAccess(groupCode: string, tripId: string) {
+  const trip = await findTripWithGroupCode(tripId);
+  if (!trip) {
+    throw new NotFoundError("Trip not found");
+  }
+  if (trip.group.code !== groupCode.toUpperCase()) {
+    throw new ForbiddenError("Invalid group code");
+  }
+  return { trip: { id: trip.id, groupId: trip.groupId } };
 }
