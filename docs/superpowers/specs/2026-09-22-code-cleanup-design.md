@@ -48,8 +48,8 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Dashboard | — | 0 | 1853 across 10 files (already reasonably decomposed — verify only) | 2 | Deferred |
 | Admin | 6 | 0 | 484 lines | 2 | Deferred |
 | Notifications | 4 | 1 | 393 lines | 2 | Deferred |
-| Upload | 1 | 0 | 98 lines | 2 | Deferred |
-| Config / Stats / User | 3 | 0 | small | 2 | Deferred |
+| Upload | 1 | 0 | 98 lines | 2 | Done (folder restricted to the two folders the app uses) |
+| Config / Stats / User | 3 | 0 | small | 2 | Done (admin-password gate on whats-new POST left for the security pass) |
 | Sync (test-data seeding) | 1 | — | testDataService.ts 1266 — internal tool | 2 | Deferred, low priority |
 | Guest* page components | — | — | 5 files, ~700 lines total | 2 | Deferred |
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |

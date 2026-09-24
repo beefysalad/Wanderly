@@ -1,53 +1,20 @@
-import { AuthContext, withAuth } from "@/lib/auth/with-auth";
-import { logger } from "@/lib/logger";
-import prisma from "@/lib/prisma";
+import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
+import { updateUserProfileSchema } from "./schemas";
+import { updateUserProfileService } from "./services";
 
-async function handler(req: NextRequest, auth: AuthContext) {
+async function patchHandler(req: NextRequest, auth: AuthContext) {
   try {
-    if (req.method !== "PATCH") {
-      return NextResponse.json(
-        { error: "Method not allowed" },
-        { status: 405 },
-      );
-    }
-
-    const body = await req.json();
-    const { lastSeenWhatsNew } = body;
-
-    const updatedUser = await prisma.user.upsert({
-      where: { firebaseId: auth.uid },
-      update: {
-        ...(lastSeenWhatsNew !== undefined && { lastSeenWhatsNew }),
-        ...(body.bio !== undefined && { bio: body.bio }),
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.hasCompletedOnboarding !== undefined && { hasCompletedOnboarding: body.hasCompletedOnboarding }),
-        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
-        ...(body.referralSource !== undefined && { referralSource: body.referralSource }),
-      },
-      create: {
-        firebaseId: auth.uid,
-        email: auth.email || "",
-        name: auth.decodedToken.name || auth.email?.split("@")[0] || "User",
-        lastSeenWhatsNew: lastSeenWhatsNew || "",
-      },
-    });
-
-    logger.info("User profile updated", {
-      userId: auth.uid,
-      fields: Object.keys(body),
-    });
-
-    return NextResponse.json({ user: updatedUser }, { status: 200 });
-  } catch (error) {
-    logger.error("User profile update error", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+    const body = updateUserProfileSchema.parse(await req.json());
+    const user = await updateUserProfileService(
+      { uid: auth.uid, email: auth.email, tokenName: auth.decodedToken.name },
+      body,
     );
+    return NextResponse.json({ user });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
-export const PATCH = withAuth(handler);
+export const PATCH = withAuth(patchHandler);
