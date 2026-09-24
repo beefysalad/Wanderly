@@ -38,10 +38,13 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Groups → core | 6 | 1 (services.ts 697 lines, 8 functions, heavy duplicated Prisma `include` blocks — real DRY payoff from a repository layer) | services.ts 697 lines | 1 | Done |
 | Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Done |
 | Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Done (two services.ts consolidated into one) |
-| Trips (core, top-level `/api/trips`) | subset of 11 | subset of 5 | — | 1 | Not started |
-| Trips → Activities | subset | subset | activities/services.ts 373 | 1 | Not started |
-| Trips → Budget | subset | subset | — | 1 | Not started |
-| Trips → Expenses/Payments | subset | subset | expenses/services.ts 1028, ExpenseForm 1002, Expenses page 1275 | 1 | Not started |
+| Trips → shared `verifyTripAccess` (`src/app/api/trips/access.ts`) | — | 7 private copies across 6 services | — | 1 | Done (Budgets adopts it; each remaining unit swaps its copy on migration) |
+| Trips → Budgets | 2 | 1 | budgets/services.ts 200 | 1 | Done |
+| Trips → Activities | subset | 1 | activities/services.ts 373 | 1 | Not started |
+| Trips → Payment-logs | subset | 1 | payment-logs/services.ts 278 | 1 | Not started |
+| Trips → ICS export | 1 | 0 | export/ics/route.ts 324 | 1 | Not started |
+| Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | Not started |
+| Trips → Expense Payments | subset | 1 | payments/services.ts 358 (investigate duplicate `confirm-payment` vs `payments/confirm` routes) | 1 | Not started |
 | Dashboard | — | 0 | 1853 across 10 files (already reasonably decomposed — verify only) | 2 | Deferred |
 | Admin | 6 | 0 | 484 lines | 2 | Deferred |
 | Notifications | 4 | 1 | 393 lines | 2 | Deferred |
@@ -52,7 +55,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
 
-**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. All three Groups sub-units (core, Member Tasks, nested Trips) are done; top-level Trips (core → Activities → Budget → Expenses/Payments) is next.
+**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. All three Groups sub-units (core, Member Tasks, nested Trips) are done; top-level `/api/trips` has no standalone "core" unit (it was a phantom row); the real remaining units are the trip-scoped features under `/api/trips/[tripId]/` listed above.
 
 Pass 1 order (confirmed): **Profile → Reviews → Groups (core → Member Tasks → nested Trips) → Trips-core → Activities → Budget → Expenses/Payments.**
 
