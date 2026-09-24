@@ -3,6 +3,6 @@ import prisma from "@/lib/prisma";
 export function findTripAccessInfo(tripId: string) {
   return prisma.trip.findUnique({
     where: { id: tripId },
-    select: { id: true, groupId: true },
+    select: { id: true, groupId: true, name: true },
   });
 }
