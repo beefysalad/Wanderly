@@ -10,14 +10,17 @@ vi.mock("../../access", () => ({
 }));
 
 const mockList = vi.fn();
-const mockFindUserId = vi.fn();
 const mockFindExpense = vi.fn();
 const mockCreateRow = vi.fn();
 vi.mock("./repository", () => ({
   listPaymentLogsByTrip: (...a: unknown[]) => mockList(...a),
-  findUserIdByEmail: (...a: unknown[]) => mockFindUserId(...a),
   findExpenseForPayment: (...a: unknown[]) => mockFindExpense(...a),
   createPaymentLogRow: (...a: unknown[]) => mockCreateRow(...a),
+}));
+
+const mockFindUserId = vi.fn();
+vi.mock("../../repository", () => ({
+  findUserIdByEmail: (...a: unknown[]) => mockFindUserId(...a),
 }));
 
 const mockNotify = vi.fn();

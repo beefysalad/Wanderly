@@ -7,8 +7,7 @@ import {
 } from "@/lib/socket-events";
 import { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { listGroupMembersForNotify } from "../../../groups/repository";
-import { createNotificationService } from "../../../notifications/services";
+import { notifyGroupMembers } from "../../../notifications/notifyMembers";
 import { verifyTripAccess } from "../../access";
 import {
   createActivityRow,
@@ -18,34 +17,12 @@ import {
 } from "./repository";
 import type { CreateActivityBody, UpdateActivityBody } from "./schemas";
 
-type Actor = { id: string; name: string | null; email: string };
-
 async function findActivityInTrip(activityId: string, tripId: string) {
   const activity = await findActivityById(activityId);
   if (!activity || activity.tripId !== tripId) {
     throw new NotFoundError("Activity not found or does not belong to this trip");
   }
   return activity;
-}
-
-async function notifyOtherMembers(
-  groupId: string,
-  actor: Actor,
-  notification: Omit<Parameters<typeof createNotificationService>[1], "relatedGroupId">,
-) {
-  const members = await listGroupMembersForNotify(groupId);
-  await Promise.all(
-    members
-      .filter((member) => member.userId !== actor.id)
-      .map((member) =>
-        createNotificationService(member.userId, {
-          ...notification,
-          relatedGroupId: groupId,
-        }).catch((err) => {
-          logger.error("Failed to create notification", { userId: member.userId, error: err });
-        }),
-      ),
-  );
 }
 
 export async function createActivityService(
@@ -68,7 +45,7 @@ export async function createActivityService(
     dropoffLocation: data.dropoffLocation || null,
   });
 
-  await notifyOtherMembers(trip.groupId, user, {
+  await notifyGroupMembers(trip.groupId, user.id, {
     type: NotificationType.activity_added,
     title: "New Activity Added",
     message: `${user.name || user.email} added activity '${data.title}' to ${trip.name}`,
@@ -112,7 +89,7 @@ export async function updateActivityService(
 
   // Only title/date changes are considered significant enough to notify or broadcast.
   if (data.title !== undefined || data.date !== undefined) {
-    await notifyOtherMembers(trip.groupId, user, {
+    await notifyGroupMembers(trip.groupId, user.id, {
       type: NotificationType.activity_edited,
       title: "Activity Updated",
       message: `${user.name || user.email} updated activity '${existing.title}' in ${trip.name}`,
@@ -140,7 +117,7 @@ export async function deleteActivityService(
   const existing = await findActivityInTrip(activityId, tripId);
 
   // Notify BEFORE deleting; no relatedActivityId since the row is about to go.
-  await notifyOtherMembers(trip.groupId, user, {
+  await notifyGroupMembers(trip.groupId, user.id, {
     type: NotificationType.activity_deleted,
     title: "Activity Deleted",
     message: `${user.name || user.email} deleted activity '${existing.title}' from ${trip.name}`,
