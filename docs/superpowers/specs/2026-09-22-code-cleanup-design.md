@@ -43,7 +43,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Trips → Activities | subset | 1 | activities/services.ts 373 | 1 | Done |
 | Trips → Payment-logs | subset | 1 | payment-logs/services.ts 278 | 1 | Done |
 | Trips → ICS export | 1 | 0 | export/ics/route.ts 324 | 1 | Done |
-| Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | API Done; ExpenseForm + Expenses page component splits still outstanding |
+| Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | API Done; ExpenseForm split Done (1002 → 175-line index + steps/hooks/components); Expenses page (1275 lines) split still outstanding |
 | Trips → Expense Payments | subset | 1 | payments/services.ts 358 (both `confirm-payment` and `payments/confirm` are live: different clients use each) | 1 | Done |
 | Dashboard | — | 0 | 1853 across 10 files (already reasonably decomposed — verify only) | 2 | Deferred |
 | Admin | 6 | 0 | 484 lines | 2 | Deferred |
