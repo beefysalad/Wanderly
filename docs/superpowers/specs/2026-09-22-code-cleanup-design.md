@@ -37,7 +37,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Reviews | 1 | 1 | page.tsx 546 lines | 1 | Done |
 | Groups → core | 6 | 1 (services.ts 697 lines, 8 functions, heavy duplicated Prisma `include` blocks — real DRY payoff from a repository layer) | services.ts 697 lines | 1 | Done |
 | Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Done |
-| Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Not started |
+| Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Done (two services.ts consolidated into one) |
 | Trips (core, top-level `/api/trips`) | subset of 11 | subset of 5 | — | 1 | Not started |
 | Trips → Activities | subset | subset | activities/services.ts 373 | 1 | Not started |
 | Trips → Budget | subset | subset | — | 1 | Not started |
@@ -52,11 +52,31 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
 
-**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. Groups → core and Groups → Member Tasks are both done; Groups → nested Trips is queued next, before moving on to top-level Trips.
+**Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. All three Groups sub-units (core, Member Tasks, nested Trips) are done; top-level Trips (core → Activities → Budget → Expenses/Payments) is next.
 
 Pass 1 order (confirmed): **Profile → Reviews → Groups (core → Member Tasks → nested Trips) → Trips-core → Activities → Budget → Expenses/Payments.**
 
 Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consolidation) is not feature-scoped — it's a standalone quick task done once, not per-pass.
+
+## Handoff Notes (lessons and open follow-ups from Pass 1 so far)
+
+**How each feature was shipped:** one plan doc in `docs/superpowers/plans/`, executed task-by-task (implementer → independent task review → final whole-branch review), one PR per feature/sub-unit. Plans for Foundation, Profile, Reviews, Groups core, Groups Member Tasks, and Groups nested Trips are in that folder and are the best templates for the next ones.
+
+**Patterns worth reusing:**
+- `src/app/api/groups/repository.ts` already exports `findGroupMembership`, `findGroupOwnership`, `listGroupMembersForNotify`. Any feature under `/api/groups/**` or `/api/trips/**` that checks membership or fans out notifications should import these rather than re-querying Prisma (Member Tasks and nested Trips both do).
+- `withAuth`/`withOptionalAuth` forward Next's route params: declare a third handler argument typed `RouteContext<{ groupId: string; ... }>` and `await params`. Existing 2-argument handlers keep working.
+- When a feature has two `services.ts` files for the same resource (nested Trips did), consolidate into one repository/services/schemas at the parent folder rather than migrating both in place.
+
+**Recurring gotchas caught in review:**
+- `z.coerce.date()` turns `null` into 1970-01-01. Guard date fields (`z.union([z.string().min(1), z.number()]).pipe(z.coerce.date())`, or put `z.null()` first in a union) — this slipped into nested Trips and Member Tasks needed the same care.
+- Component splits are where regressions hide (a dropped `setUploadError(null)` slipped through in Profile). Diff every `useState`/handler against the original, not just the JSX.
+- Plan prose miscounts tests more than once ("12 vs 13", "5 vs 6") — trust the code block, not the sentence.
+- No reachable database/Firebase in the agent sandbox, so no live browser QA has happened for any migrated feature. Every PR says so; a human pass on `/profile`, `/reviews`, group create/join/leave, the Members page, and trip create/status-change/delete is still owed.
+
+**Open follow-ups (not blocking, not yet done):**
+- A non-JSON request body still returns 500 instead of 400 in every migrated route, because `handleApiError` treats the `SyntaxError` from `req.json()` as unexpected. Fix once in `lib/handle-api-error.ts`.
+- Any group member can PATCH/DELETE any Member Task (no creator/assignee restriction) — preserved as-is from the old code; decide whether that is intended.
+- Security pass (admin password, gateway proxy, guest-code trust boundary) is still untouched by design.
 
 ## Target Architecture (applies to every migrated feature)
 
