@@ -47,7 +47,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Trips → Expense Payments | subset | 1 | payments/services.ts 358 (both `confirm-payment` and `payments/confirm` are live: different clients use each) | 1 | Done |
 | Dashboard | — | 0 | 1853 across 10 files (already reasonably decomposed — verify only) | 2 | Deferred |
 | Admin | 6 | 0 | 484 lines | 2 | Deferred |
-| Notifications | 4 | 1 | 393 lines | 2 | Deferred |
+| Notifications | 4 | 1 | 393 lines | 2 | Done (the unused POST /api/notifications, which let any user create a notification for any user, was removed) |
 | Upload | 1 | 0 | 98 lines | 2 | Deferred |
 | Config / Stats / User | 3 | 0 | small | 2 | Deferred |
 | Sync (test-data seeding) | 1 | — | testDataService.ts 1266 — internal tool | 2 | Deferred, low priority |
