@@ -40,7 +40,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Done (two services.ts consolidated into one) |
 | Trips → shared `verifyTripAccess` (`src/app/api/trips/access.ts`) | — | 7 private copies across 6 services | — | 1 | Done (Budgets adopts it; each remaining unit swaps its copy on migration) |
 | Trips → Budgets | 2 | 1 | budgets/services.ts 200 | 1 | Done |
-| Trips → Activities | subset | 1 | activities/services.ts 373 | 1 | Not started |
+| Trips → Activities | subset | 1 | activities/services.ts 373 | 1 | Done |
 | Trips → Payment-logs | subset | 1 | payment-logs/services.ts 278 | 1 | Not started |
 | Trips → ICS export | 1 | 0 | export/ics/route.ts 324 | 1 | Not started |
 | Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | Not started |
