@@ -74,7 +74,7 @@ Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consol
 - No reachable database/Firebase in the agent sandbox, so no live browser QA has happened for any migrated feature. Every PR says so; a human pass on `/profile`, `/reviews`, group create/join/leave, the Members page, and trip create/status-change/delete is still owed.
 
 **Open follow-ups (not blocking, not yet done):**
-- A non-JSON request body still returns 500 instead of 400 in every migrated route, because `handleApiError` treats the `SyntaxError` from `req.json()` as unexpected. Fix once in `lib/handle-api-error.ts`.
+- (Fixed in PR #133, once merged: a non-JSON request body now returns 400 instead of 500 for every migrated route, handled once in `lib/handle-api-error.ts`.)
 - Any group member can PATCH/DELETE any Member Task (no creator/assignee restriction) — preserved as-is from the old code; decide whether that is intended.
 - Security pass (admin password, gateway proxy, guest-code trust boundary) is still untouched by design.
 
