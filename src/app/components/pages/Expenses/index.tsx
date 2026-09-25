@@ -1,19 +1,25 @@
 "use client";
-import { Expense, Trip, PaymentLog } from "@/src/shared/types";
-import { Plus, Receipt, Wallet } from "lucide-react";
-import Image from "next/image";
+import { Expense, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import ExpensesList from "./ExpenseList";
 import ExpenseCharts from "./ExpenseCharts";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
-import { toast } from "sonner";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
 import LoadingState from "../../shared/LoadingState";
+import { ExpensesHeader } from "./components/ExpensesHeader";
+import { PaymentHistory } from "./components/PaymentHistory";
+import { SettledSummary, UnsettledSummary } from "./components/SummaryCards";
+import { TripNotFound } from "./components/TripNotFound";
+import {
+  calculateSettledStats,
+  calculateUnsettledStats,
+  filterExpensesForView,
+  partitionExpenses,
+  type ExpensesView,
+} from "./expenseStats";
 
 interface IExpensesComponent {
   groupId: string;
@@ -38,10 +44,7 @@ const ExpensesComponent = ({
   const expenses = expensesData?.expenses || [];
   const paymentLogs = paymentLogsData?.paymentLogs || [];
 
-  const [view, setView] = useState<
-    "all" | "unsettled" | "settled" | "logs" | "analysis"
-  >("all");
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [view, setView] = useState<ExpensesView>("all");
   const { user } = useCurrentUser();
 
   // Enable real-time updates for this group via Socket.IO
@@ -49,161 +52,16 @@ const ExpensesComponent = ({
 
   const currentUserEmail = user?.email || "";
 
-  // Helper functions for payment logs
-  const getMemberAvatarFromLog = (log: PaymentLog, type: "payer" | "payee") => {
-    // First try to use imageUrl from the log itself
-    if (type === "payer" && log.payerImageUrl) {
-      return log.payerImageUrl;
-    }
-    if (type === "payee" && log.payeeImageUrl) {
-      return log.payeeImageUrl;
-    }
+  const partitions = partitionExpenses(expenses, currentUserEmail);
+  const unsettledStats = calculateUnsettledStats(partitions.unsettled, currentUserEmail);
+  const settledStats = calculateSettledStats(partitions.settled);
+  const filteredExpenses = filterExpensesForView(view, expenses, partitions);
 
-    // Fallback to memberMetadata lookup using email
-    const email = type === "payer" ? log.payerEmail : log.payeeEmail;
-    if (email && group?.memberMetadata?.[email]) {
-      return group.memberMetadata[email].imageUrl;
-    }
-
-    // Try to find by name or email string
-    const nameOrEmail = type === "payer" ? log.payer : log.payee;
-    const memberEmail = group?.memberEmails?.find(
-      (e) => e === nameOrEmail || e.split("@")[0] === nameOrEmail,
-    );
-    if (memberEmail && group?.memberMetadata?.[memberEmail]) {
-      return group.memberMetadata[memberEmail].imageUrl;
-    }
-
-    // Try to find by name
-    const foundEmail = Object.entries(group?.memberNames || {}).find(
-      ([, name]) => name === nameOrEmail,
-    )?.[0];
-    if (foundEmail && group?.memberMetadata?.[foundEmail]) {
-      return group.memberMetadata[foundEmail].imageUrl;
-    }
-
-    return undefined;
+  const counts = {
+    all: expenses.length,
+    unsettled: partitions.unsettled.length,
+    settled: partitions.settled.length,
   };
-
-  const getMemberInitialsFromLog = (
-    log: PaymentLog,
-    type: "payer" | "payee",
-  ): string => {
-    const nameOrEmail = type === "payer" ? log.payer : log.payee;
-    // If it looks like an email, use first 2 chars
-    if (nameOrEmail.includes("@")) {
-      return nameOrEmail.substring(0, 2).toUpperCase();
-    }
-    // Otherwise use first letter of each word or first 2 chars
-    const parts = nameOrEmail.split(" ");
-    if (parts.length > 1) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return nameOrEmail.substring(0, 2).toUpperCase();
-  };
-
-  // Sync selectedExpense with updated expenses data when expenses refetch
-  useEffect(() => {
-    if (selectedExpense && expenses.length > 0) {
-      const updatedExpense = expenses.find((e) => e.id === selectedExpense.id);
-      if (updatedExpense) {
-        // Only update if payment-related data changed
-        const paymentDataChanged =
-          JSON.stringify(selectedExpense.paymentStatusMap || {}) !==
-            JSON.stringify(updatedExpense.paymentStatusMap || {}) ||
-          JSON.stringify(selectedExpense.paidMembers || []) !==
-            JSON.stringify(updatedExpense.paidMembers || []);
-
-        if (paymentDataChanged) {
-          setSelectedExpense(updatedExpense);
-          toast.success("Expense updated successfully!");
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expenses]);
-
-  // Filter expenses by settled status
-  const isExpenseSettled = (expense: Expense) => {
-    const splitWith = expense.splitWith || [];
-    const paidMembers = expense.paidMembers || [];
-    // An expense is settled if all members who should split have paid (or are the payer)
-    return splitWith.every(
-      (member) => member === expense.paidBy || paidMembers.includes(member),
-    );
-  };
-
-  // Check if user is involved in expense
-  const isUserInvolved = (expense: Expense) => {
-    return expense.splitWith?.includes(currentUserEmail) || false;
-  };
-
-  // Get all unsettled and settled expenses
-  const allUnsettledExpenses = expenses.filter((exp) => !isExpenseSettled(exp));
-  const allSettledExpenses = expenses.filter((exp) => isExpenseSettled(exp));
-
-  // Filter by user involvement for settled/unsettled tabs
-  const unsettledExpenses = allUnsettledExpenses.filter((exp) =>
-    isUserInvolved(exp),
-  );
-  const settledExpenses = allSettledExpenses.filter((exp) =>
-    isUserInvolved(exp),
-  );
-
-  // Calculate summary statistics
-  const calculateUnsettledStats = () => {
-    let youOwe = 0;
-    let youAreOwed = 0;
-
-    unsettledExpenses.forEach((expense) => {
-      const splitWith = expense.splitWith || [];
-      const splitCount = splitWith.length || 1;
-      const shareAmount = expense.amount / splitCount;
-      const paidMembers = expense.paidMembers || [];
-
-      if (expense.paidBy === currentUserEmail) {
-        // User paid, calculate what others owe
-        const unpaidCount = splitWith.filter(
-          (member) =>
-            member !== currentUserEmail && !paidMembers.includes(member),
-        ).length;
-        youAreOwed += shareAmount * unpaidCount;
-      } else if (splitWith.includes(currentUserEmail)) {
-        // User is in split but didn't pay, check if they've paid
-        if (!paidMembers.includes(currentUserEmail)) {
-          youOwe += shareAmount;
-        }
-      }
-    });
-
-    return { youOwe, youAreOwed };
-  };
-
-  const calculateSettledStats = () => {
-    let totalSettled = 0;
-
-    settledExpenses.forEach((expense) => {
-      const splitWith = expense.splitWith || [];
-      const splitCount = splitWith.length || 1;
-      const shareAmount = expense.amount / splitCount;
-      totalSettled += shareAmount;
-    });
-
-    return { totalSettled };
-  };
-
-  const unsettledStats = calculateUnsettledStats();
-  const settledStats = calculateSettledStats();
-
-  // Get filtered expenses based on current view
-  const getFilteredExpenses = () => {
-    if (view === "unsettled") return unsettledExpenses;
-    if (view === "settled") return settledExpenses;
-    if (view === "logs") return [];
-    return expenses; // "all" - show all expenses
-  };
-
-  const filteredExpenses = getFilteredExpenses();
 
   const handleViewExpense = (expense: Expense) => {
     router.push(`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`);
@@ -215,9 +73,7 @@ const ExpensesComponent = ({
 
   if (loadingGroup) {
     if (isEmbedded) {
-      return (
-        <LoadingState className='py-20' />
-      );
+      return <LoadingState className='py-20' />;
     }
     return (
       <main className='min-h-screen bg-slate-950 p-4'>
@@ -227,100 +83,13 @@ const ExpensesComponent = ({
   }
 
   if (!group || !trip) {
-    if (isEmbedded) {
-      return (
-        <div className='text-center py-10'>
-          <p className='text-slate-400'>Trip not found.</p>
-        </div>
-      );
-    }
-    return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-xl border border-white/5 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <span className='text-3xl'>😞</span>
-          </div>
-          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
-          <p className='text-slate-400 mb-6'>
-            This trip doesn&apos;t exist or has been removed.
-          </p>
-          <button
-            onClick={() => router.push(`/group/${groupId}/trip/${tripId}`)}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-orange-500/20'
-          >
-            Go Back to Trip
-          </button>
-        </div>
-      </main>
-    );
+    return <TripNotFound isEmbedded={isEmbedded} groupId={groupId} tripId={tripId} />;
   }
 
   const Wrapper = isEmbedded ? "div" : "main";
   const wrapperClass = isEmbedded
     ? ""
     : "min-h-screen bg-slate-950 pb-6 relative overflow-hidden";
-
-  // Shared Tabs Component
-  const FilterTabs = () => (
-    <div
-      className={`flex items-center p-1.5 ${isEmbedded ? "bg-slate-800/40" : "bg-slate-950/50"} rounded-2xl border border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar`}
-    >
-      {[
-        {
-          id: "all",
-          label: "All Expenses",
-          icon: "📊",
-          count: expenses.length,
-        },
-        {
-          id: "unsettled",
-          label: "Unsettled",
-          icon: "⏳",
-          count: unsettledExpenses.length,
-        },
-        {
-          id: "settled",
-          label: "Settled",
-          icon: "✅",
-          count: settledExpenses.length,
-        },
-        {
-          id: "analysis",
-          label: "Analysis",
-          icon: "📈",
-          count: null,
-        },
-      ].map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() =>
-            setView(
-              tab.id as "all" | "unsettled" | "settled" | "logs" | "analysis",
-            )
-          }
-          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center justify-center gap-2 ${
-            view === tab.id
-              ? "bg-slate-700 text-white shadow-lg border border-white/10 scale-[1.02]"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-          }`}
-        >
-          <span>{tab.icon}</span>
-          <span>{tab.label}</span>
-          {tab.count !== null && (
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs ${
-                view === tab.id
-                  ? "bg-slate-900 text-slate-300"
-                  : "bg-slate-800 text-slate-500 group-hover:bg-slate-700"
-              }`}
-            >
-              {tab.count}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <>
@@ -332,272 +101,42 @@ const ExpensesComponent = ({
             <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[100px]'></div>
           </div>
         )}
-
         <div
           className={`max-w-4xl mx-auto ${!isEmbedded ? "px-4 py-4 md:py-6" : ""} relative z-10`}
         >
           <div className='mb-8'>
-            {/* Header Rendering */}
-            {!isEmbedded ? (
-              <>
-                <DashboardLayoutHeader
-                  showBack={true}
-                  title='Trip Expenses'
-                  description={
-                    <span className='flex items-center gap-2'>
-                      <span className='p-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 inline-flex'>
-                        <Wallet className='w-3 h-3 text-orange-400' />
-                      </span>
-                      <span>{trip.name}</span>
-                    </span>
-                  }
-                  rightContent={
-                    <div className='flex items-center gap-2'>
-                      <button
-                        onClick={() => setView("logs")}
-                        className={`p-3 rounded-2xl transition-all border flex items-center justify-center active:scale-95 ${
-                          view === "logs"
-                            ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
-                            : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
-                        }`}
-                        title='Payment History'
-                      >
-                        <Receipt className='w-6 h-6' />
-                      </button>
-                      <Link
-                        href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
-                        className='p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 flex items-center justify-center active:scale-95 transition-all w-12 h-12'
-                        title='Add Expense'
-                      >
-                        <Plus className='w-6 h-6' />
-                      </Link>
-                    </div>
-                  }
-                />
-                <div className='mb-6'>
-                  <FilterTabs />
-                </div>
-              </>
-            ) : (
-              // Embedded Header
-              <div className='flex flex-col gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
-                <div className='flex items-center justify-end gap-2'>
-                  <button
-                    onClick={() => setView("logs")}
-                    className={`px-4 py-2.5 rounded-xl transition-all border flex items-center gap-2 active:scale-95 text-sm font-medium ${
-                      view === "logs"
-                        ? "bg-slate-800 border-orange-500/30 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.15)]"
-                        : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-700 hover:text-white"
-                    }`}
-                  >
-                    <Receipt className='w-4 h-4' />
-                    <span>History</span>
-                  </button>
-                  {/* Inline Add Expense for desktop context mainly, mobile uses floating FAB */}
-                  <Link
-                    href={`/group/${groupId}/expenses/add?tripId=${tripId}`}
-                    className='hidden sm:flex px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 items-center gap-2 active:scale-95 transition-all text-sm font-bold'
-                  >
-                    <Plus className='w-4 h-4' />
-                    <span>Add Expense</span>
-                  </Link>
-                </div>
-                <FilterTabs />
-              </div>
-            )}
+            <ExpensesHeader
+              isEmbedded={isEmbedded}
+              groupId={groupId}
+              tripId={tripId}
+              tripName={trip.name}
+              view={view}
+              setView={setView}
+              counts={counts}
+            />
           </div>
 
           {/* Content Area */}
           <div className='space-y-6'>
             {view === "logs" ? (
-              loadingLogs ? (
-                <div className='text-center py-20'>
-                  <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-                  <p className='text-slate-400 font-medium'>
-                    Loading
-                  </p>
-                </div>
-              ) : (
-                <div className='space-y-4 animate-in fade-in zoom-in-95 duration-300'>
-                  <h3 className='text-xl font-bold text-white px-1 flex items-center gap-2'>
-                    <Receipt className='w-5 h-5 text-orange-400' />
-                    Payment History
-                  </h3>
-
-                  {paymentLogs.length === 0 ? (
-                    <div className='bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl p-12 text-center'>
-                      <div className='w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4'>
-                        <Receipt className='w-8 h-8 text-slate-600' />
-                      </div>
-                      <p className='text-slate-400 font-medium mb-1'>
-                        No payment logs yet
-                      </p>
-                      <p className='text-sm text-slate-600'>
-                        Payments and settlements will appear here
-                      </p>
-                    </div>
-                  ) : (
-                    <div className='grid gap-3'>
-                      {paymentLogs
-                        .sort(
-                          (a, b) =>
-                            new Date(b.timestamp).getTime() -
-                            new Date(a.timestamp).getTime(),
-                        )
-                        .map((log) => (
-                          <div
-                            key={log.id}
-                            className='bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'
-                          >
-                            <div className='flex items-start justify-between gap-4'>
-                              <div className='flex items-start gap-4 flex-1 min-w-0'>
-                                <span className='text-2xl mt-1'>
-                                  {log.paymentMethod === "cash" && "💵"}
-                                  {log.paymentMethod === "bank" && "🏦"}
-                                  {log.paymentMethod === "maya" && "💳"}
-                                  {log.paymentMethod === "gcash" && "💰"}
-                                  {!log.paymentMethod && "💵"}
-                                </span>
-                                <div className='flex-1 min-w-0'>
-                                  <p className='font-bold text-white truncate mb-1 text-lg'>
-                                    {log.expenseDescription}
-                                  </p>
-
-                                  <div className='flex items-center gap-3 text-sm flex-wrap relative z-10'>
-                                    <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
-                                      {getMemberAvatarFromLog(log, "payer") ? (
-                                        <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
-                                          <Image
-                                            src={
-                                              getMemberAvatarFromLog(
-                                                log,
-                                                "payer",
-                                              )!
-                                            }
-                                            alt={log.payer.split("@")[0]}
-                                            fill
-                                            className='object-cover'
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
-                                          {getMemberInitialsFromLog(
-                                            log,
-                                            "payer",
-                                          )}
-                                        </div>
-                                      )}
-                                      <span className='font-medium text-slate-300 truncate max-w-[100px]'>
-                                        {log.payer.split("@")[0]}
-                                      </span>
-                                    </div>
-
-                                    <span className='text-slate-500'>→</span>
-
-                                    <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
-                                      {getMemberAvatarFromLog(log, "payee") ? (
-                                        <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
-                                          <Image
-                                            src={
-                                              getMemberAvatarFromLog(
-                                                log,
-                                                "payee",
-                                              )!
-                                            }
-                                            alt={log.payee.split("@")[0]}
-                                            fill
-                                            className='object-cover'
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
-                                          {getMemberInitialsFromLog(
-                                            log,
-                                            "payee",
-                                          )}
-                                        </div>
-                                      )}
-                                      <span className='font-medium text-slate-300 truncate max-w-[100px]'>
-                                        {log.payee.split("@")[0]}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className='text-right flex-shrink-0'>
-                                <p className='text-xl font-bold text-emerald-400 tracking-tight'>
-                                  ₱{log.amount.toFixed(2)}
-                                </p>
-                                <p className='text-xs text-slate-500 mt-1'>
-                                  {new Date(log.timestamp).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    },
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              )
+              <PaymentHistory
+                group={group}
+                paymentLogs={paymentLogs}
+                isLoading={loadingLogs}
+              />
             ) : loadingExpenses ? (
               <LoadingState className='py-20' />
             ) : (
               <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
-                {/* Summary Statistics for Unsettled Tab */}
                 {view === "unsettled" && (
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                    <div className='bg-gradient-to-br from-red-500/10 to-red-900/20 border border-red-500/20 rounded-3xl p-6 relative overflow-hidden group'>
-                      <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
-                        <span className='text-6xl'>📤</span>
-                      </div>
-                      <p className='text-sm font-bold text-red-400 uppercase tracking-widest mb-1'>
-                        You Owe
-                      </p>
-
-                      <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
-                        ₱{unsettledStats.youOwe.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div className='bg-gradient-to-br from-emerald-500/10 to-emerald-900/20 border border-emerald-500/20 rounded-3xl p-6 relative overflow-hidden group'>
-                      <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
-                        <span className='text-6xl'>📥</span>
-                      </div>
-                      <p className='text-sm font-bold text-emerald-400 uppercase tracking-widest mb-1'>
-                        You&apos;re Owed
-                      </p>
-
-                      <p className='text-3xl sm:text-4xl font-bold text-white tracking-tight'>
-                        ₱{unsettledStats.youAreOwed.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
+                  <UnsettledSummary
+                    youOwe={unsettledStats.youOwe}
+                    youAreOwed={unsettledStats.youAreOwed}
+                  />
                 )}
 
-                {/* Summary Statistics for Settled Tab */}
                 {view === "settled" && (
-                  <div className='bg-slate-800/40 border border-white/5 rounded-3xl p-6 flex items-center justify-between'>
-                    <div>
-                      <p className='text-sm font-medium text-slate-400 mb-1'>
-                        Total Settled Amount
-                      </p>
-                      <p className='text-3xl font-bold text-white tracking-tight'>
-                        ₱{settledStats.totalSettled.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className='w-14 h-14 bg-slate-700/50 rounded-2xl flex items-center justify-center'>
-                      <span className='text-2xl'>✓</span>
-                    </div>
-                  </div>
+                  <SettledSummary totalSettled={settledStats.totalSettled} />
                 )}
 
                 {view === "analysis" && (

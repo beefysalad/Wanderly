@@ -1,308 +1,125 @@
+import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-import prisma from "@/lib/prisma";
-import { syncUserToDatabaseService } from "../../../../../sync/syncService";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { Decimal } from "@prisma/client/runtime/library";
-import { ExpenseWithRelations } from "../../transformers";
+import { verifyTripAccess } from "../../../../access";
+import { findUserIdByEmail } from "../../../../repository";
+import { createPaymentLogRow } from "../../../payment-logs/repository";
+import type { ConfirmPaymentBody } from "../../schemas";
+import { findExpenseById } from "../../repository";
+import {
+  deletePaymentsForMember,
+  findExpenseForPayments,
+  updatePaymentStatus,
+  upsertPendingPayment,
+} from "./repository";
+import type { MarkPaidBody } from "./schemas";
 
-/**
- * Gets or creates a user in the database from Firebase token
- */
-async function getOrCreateUser(token: DecodedIdToken) {
-  return await syncUserToDatabaseService(token);
+type ExpenseForPayments = NonNullable<Awaited<ReturnType<typeof findExpenseForPayments>>>;
+
+async function findExpenseInTrip(expenseId: string, tripId: string) {
+  const expense = await findExpenseForPayments(expenseId);
+  if (!expense || expense.tripId !== tripId) {
+    throw new NotFoundError("Expense not found or does not belong to this trip");
+  }
+  return expense;
 }
 
-/**
- * Verifies user has access to a trip (is member of the group)
- */
-async function verifyTripAccess(
-  token: DecodedIdToken,
-  tripId: string,
-): Promise<{ trip: { groupId: string }; user: { id: string; email: string } }> {
-  const user = await getOrCreateUser(token);
-
-  // Get trip with group
-  const trip = await prisma.trip.findUnique({
-    where: { id: tripId },
-    select: { id: true, groupId: true },
-  });
-
-  if (!trip) {
-    throw new Error("Trip not found");
-  }
-
-  // Verify user is a member of the group
-  const membership = await prisma.groupMember.findUnique({
-    where: {
-      groupId_userId: {
-        groupId: trip.groupId,
-        userId: user.id,
-      },
-    },
-  });
-
-  if (!membership) {
-    throw new Error("User does not have access to this trip");
-  }
-
-  return { trip, user };
-}
-
-/**
- * Gets user ID from email, throws if not found
- */
-async function getUserIdFromEmail(email: string): Promise<string> {
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: { id: true },
-  });
-
+async function requireMemberUserId(email: string) {
+  const user = await findUserIdByEmail(email);
   if (!user) {
-    throw new Error(`User with email ${email} not found`);
+    throw new NotFoundError("Member not found");
   }
-
   return user.id;
 }
 
+// The payment log records the member's equal share of the expense.
+async function logPaymentShare(
+  tripId: string,
+  expense: ExpenseForPayments,
+  payerId: string,
+  payeeId: string,
+) {
+  const splitCount = expense.splits.length;
+  if (splitCount === 0) return;
+
+  await createPaymentLogRow({
+    tripId,
+    expenseId: expense.id,
+    payerId,
+    payeeId,
+    amount: Number(expense.amount) / splitCount,
+    paymentMethod: expense.paymentMethod,
+  });
+}
+
+async function reloadExpense(expenseId: string) {
+  const expense = await findExpenseById(expenseId);
+  if (!expense) {
+    throw new NotFoundError("Expense not found");
+  }
+  return expense;
+}
+
 /**
- * Marks a member as paid or unpaid for an expense
- * Creates or deletes ExpensePayment record
- * Optionally creates a PaymentLog when marking as paid
+ * Marks a member as paid (a pending payment awaiting the payer's confirmation) or unpaid.
+ * Marking paid is self-service only; optionally records a payment log.
  */
 export async function markExpensePaidService(
   token: DecodedIdToken,
   tripId: string,
   expenseId: string,
-  data: {
-    memberEmail: string; // email of member marking as paid
-    isPaid: boolean; // true to mark as paid, false to unmark
-    createPaymentLog?: boolean; // whether to create a payment log
-  },
-): Promise<ExpenseWithRelations> {
+  data: MarkPaidBody,
+) {
   const { user } = await verifyTripAccess(token, tripId);
+  const expense = await findExpenseInTrip(expenseId, tripId);
+  const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  // Verify expense exists and belongs to trip
-  const expense = await prisma.expense.findUnique({
-    where: { id: expenseId },
-    include: {
-      paidBy: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-      splits: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!expense || expense.tripId !== tripId) {
-    throw new Error("Expense not found or does not belong to this trip");
-  }
-
-  // Get member user ID
-  const memberUserId = await getUserIdFromEmail(data.memberEmail);
-
-  // Verify member is in the split list
-  const isInSplit = expense.splits.some(
-    (split) => split.user?.email === data.memberEmail,
-  );
-
+  const isInSplit = expense.splits.some((split) => split.user?.email === data.memberEmail);
   if (!isInSplit) {
-    throw new Error("Member is not part of this expense split");
+    throw new NotFoundError("Member is not part of this expense split");
   }
 
-  // Verify that the member is marking themselves as paid (self-marking only)
   if (data.isPaid && user.email !== data.memberEmail) {
-    throw new Error("You can only mark yourself as paid");
+    throw new ForbiddenError("You can only mark yourself as paid");
   }
 
   if (data.isPaid) {
-    // Mark as paid - create ExpensePayment with pending status
-    await prisma.expensePayment.upsert({
-      where: {
-        expenseId_userId: {
-          expenseId,
-          userId: memberUserId,
-        },
-      },
-      create: {
-        expenseId,
-        userId: memberUserId,
-        status: "pending", // Default to pending, requires payer confirmation
-      },
-      update: {
-        status: "pending", // Reset to pending if re-marking
-      },
-    });
+    await upsertPendingPayment(expenseId, memberUserId);
 
-    // Optionally create payment log
-    if (data.createPaymentLog && expense.paidById) {
-      // Calculate amount per person
-      const splitCount = expense.splits.length;
-      const amountPerPerson = Number(expense.amount) / splitCount;
-
-      await prisma.paymentLog.create({
-        data: {
-          tripId,
-          expenseId,
-          payerId: memberUserId,
-          payeeId: expense.paidById, // Person who originally paid
-          amount: new Decimal(amountPerPerson),
-          paymentMethod: expense.paymentMethod,
-        },
-      });
+    if ((data.createPaymentLog ?? true) && expense.paidById) {
+      await logPaymentShare(tripId, expense, memberUserId, expense.paidById);
     }
 
-    logger.info("Expense marked as paid", {
-      expenseId,
-      memberEmail: data.memberEmail,
-      tripId,
-    });
+    logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   } else {
-    // Unmark as paid - delete ExpensePayment
-    await prisma.expensePayment.deleteMany({
-      where: {
-        expenseId,
-        userId: memberUserId,
-      },
-    });
+    await deletePaymentsForMember(expenseId, memberUserId);
 
-    logger.info("Expense unmarked as paid", {
-      expenseId,
-      memberEmail: data.memberEmail,
-      tripId,
-    });
+    logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   }
 
-  // Return updated expense
-  const updatedExpense = await prisma.expense.findUnique({
-    where: { id: expenseId },
-    include: {
-      paidBy: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-        },
-      },
-      creator: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          imageUrl: true,
-        },
-      },
-      splits: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-            },
-          },
-        },
-      },
-      payments: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return updatedExpense!;
+  return reloadExpense(expenseId);
 }
 
-/**
- * Confirms or rejects a pending payment
- * Only the payer of the expense can confirm/reject payments
- */
+/** Confirms or rejects a member's payment. Only the expense's payer may do this. */
 export async function confirmPaymentService(
   token: DecodedIdToken,
   tripId: string,
   expenseId: string,
-  data: {
-    memberEmail: string; // email of member whose payment is being confirmed/rejected
-    status: "confirmed" | "rejected"; // new status
-  },
-): Promise<ExpenseWithRelations> {
+  data: ConfirmPaymentBody,
+) {
   const { user } = await verifyTripAccess(token, tripId);
+  const expense = await findExpenseInTrip(expenseId, tripId);
 
-  // Verify expense exists and belongs to trip
-  const expense = await prisma.expense.findUnique({
-    where: { id: expenseId },
-    include: {
-      paidBy: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  if (!expense || expense.tripId !== tripId) {
-    throw new Error("Expense not found or does not belong to this trip");
-  }
-
-  // Verify that the requester is the payer
   if (expense.paidBy?.email !== user.email) {
-    throw new Error("Only the payer can confirm or reject payments");
+    throw new ForbiddenError("Only the payer can confirm or reject payments");
   }
 
-  // Get member user ID
-  const memberUserId = await getUserIdFromEmail(data.memberEmail);
+  const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  // Update the payment status
-  await prisma.expensePayment.updateMany({
-    where: {
-      expenseId,
-      userId: memberUserId,
-    },
-    data: {
-      status: data.status,
-    },
-  });
+  await updatePaymentStatus(expenseId, memberUserId, data.status);
 
-  // If confirmed, create payment log
   if (data.status === "confirmed" && expense.paidById) {
-    const expenseWithSplits = await prisma.expense.findUnique({
-      where: { id: expenseId },
-      include: {
-        splits: true,
-      },
-    });
-
-    if (expenseWithSplits) {
-      const splitCount = expenseWithSplits.splits.length;
-      const amountPerPerson = Number(expenseWithSplits.amount) / splitCount;
-
-      await prisma.paymentLog.create({
-        data: {
-          tripId,
-          expenseId,
-          payerId: memberUserId,
-          payeeId: expense.paidById,
-          amount: new Decimal(amountPerPerson),
-          paymentMethod: expense.paymentMethod,
-        },
-      });
-    }
+    await logPaymentShare(tripId, expense, memberUserId, expense.paidById);
   }
 
   logger.info("Payment status updated", {
@@ -312,47 +129,5 @@ export async function confirmPaymentService(
     tripId,
   });
 
-  // Return updated expense
-  const updatedExpense = await prisma.expense.findUnique({
-    where: { id: expenseId },
-    include: {
-      paidBy: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-        },
-      },
-      creator: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          imageUrl: true,
-        },
-      },
-      splits: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-            },
-          },
-        },
-      },
-      payments: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return updatedExpense!;
+  return reloadExpense(expenseId);
 }

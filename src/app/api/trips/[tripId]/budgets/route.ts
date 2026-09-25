@@ -1,74 +1,42 @@
 import {
   withOptionalAuth,
   type OptionalAuthContext,
+  type RouteContext,
 } from "@/lib/auth/with-auth";
-import { logger } from "@/lib/logger";
+import { ForbiddenError } from "@/lib/errors";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
-import { listBudgetsService, createBudgetService } from "./services";
+import { createBudgetSchema } from "./schemas";
+import { createBudgetService, listBudgetsService } from "./services";
 
-async function handler(req: NextRequest, context: OptionalAuthContext) {
+type Params = RouteContext<{ tripId: string }>;
+
+async function getHandler(_req: NextRequest, context: OptionalAuthContext, { params }: Params) {
   try {
-    const pathParts = req.nextUrl.pathname.split("/");
-    // URL: /api/trips/[tripId]/budgets
-    const tripId = pathParts[pathParts.length - 2];
-
-    if (!tripId) {
-      return NextResponse.json(
-        { error: "Trip ID is required" },
-        { status: 400 },
-      );
+    if (context.isGuest) {
+      throw new ForbiddenError("Guest access not yet implemented for budgets");
     }
-
-    if (req.method === "GET") {
-      if (context.isGuest) {
-        return NextResponse.json(
-          { error: "Guest access not yet implemented for budgets" },
-          { status: 403 },
-        );
-      }
-
-      const budgets = await listBudgetsService(context.decodedToken, tripId);
-      return NextResponse.json({ budgets });
-    } else if (req.method === "POST") {
-      if (context.isGuest) {
-        return NextResponse.json(
-          { error: "Guest access not allowed for creating budgets" },
-          { status: 403 },
-        );
-      }
-
-      const body = await req.json();
-      const { amount, description, category, activityId, isBooked } = body;
-
-      if (amount === undefined) {
-        return NextResponse.json(
-          { error: "Amount is required" },
-          { status: 400 },
-        );
-      }
-
-      const budget = await createBudgetService(context.decodedToken, tripId, {
-        amount: Number(amount),
-        description,
-        category,
-        activityId,
-        isBooked,
-      });
-
-      return NextResponse.json({ budget }, { status: 201 });
-    } else {
-      return NextResponse.json(
-        { error: "Method not allowed" },
-        { status: 405 },
-      );
-    }
+    const { tripId } = await params;
+    const budgets = await listBudgetsService(context.decodedToken, tripId);
+    return NextResponse.json({ budgets });
   } catch (error) {
-    logger.error("Budget API error", error);
-    const message =
-      error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
-export const GET = withOptionalAuth(handler);
-export const POST = withOptionalAuth(handler);
+async function postHandler(req: NextRequest, context: OptionalAuthContext, { params }: Params) {
+  try {
+    if (context.isGuest) {
+      throw new ForbiddenError("Guest access not allowed for creating budgets");
+    }
+    const { tripId } = await params;
+    const body = createBudgetSchema.parse(await req.json());
+    const budget = await createBudgetService(context.decodedToken, tripId, body);
+    return NextResponse.json({ budget }, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export const GET = withOptionalAuth(getHandler);
+export const POST = withOptionalAuth(postHandler);

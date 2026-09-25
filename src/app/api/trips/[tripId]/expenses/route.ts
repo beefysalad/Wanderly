@@ -1,119 +1,47 @@
 import {
   withOptionalAuth,
   type OptionalAuthContext,
+  type RouteContext,
 } from "@/lib/auth/with-auth";
-import { logger } from "@/lib/logger";
+import { ForbiddenError } from "@/lib/errors";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
+import { createExpenseSchema } from "./schemas";
 import {
-  listExpensesService,
-  listExpensesForGuestService,
   createExpenseService,
+  listExpensesForGuestService,
+  listExpensesService,
 } from "./services";
 import { transformExpense } from "./transformers";
 
-async function handler(req: NextRequest, context: OptionalAuthContext) {
+type Params = RouteContext<{ tripId: string }>;
+
+async function getHandler(_req: NextRequest, context: OptionalAuthContext, { params }: Params) {
   try {
-    // Extract tripId from URL path: /api/trips/[tripId]/expenses
-    const pathParts = req.nextUrl.pathname.split("/");
-    const tripId = pathParts[pathParts.length - 2]; // tripId is before /expenses
-
-    if (!tripId) {
-      return NextResponse.json(
-        { error: "Trip ID is required" },
-        { status: 400 },
-      );
-    }
-
-    if (req.method === "GET") {
-      let expenses;
-      if (context.isGuest && context.groupCode) {
-        expenses = await listExpensesForGuestService(context.groupCode, tripId);
-      } else {
-        expenses = await listExpensesService(context.decodedToken, tripId);
-      }
-      const transformedExpenses = expenses.map(transformExpense);
-
-      return NextResponse.json({ expenses: transformedExpenses });
-    } else if (req.method === "POST") {
-      // POST requires authentication
-      if (context.isGuest) {
-        return NextResponse.json(
-          { error: "Guest access not allowed for creating expenses" },
-          { status: 403 },
-        );
-      }
-      const body = await req.json();
-      const {
-        paidBy,
-        amount,
-        description,
-        date,
-        category,
-        paymentMethod,
-        accountNumber,
-        bankName,
-        accountName,
-        qrImage,
-        splitWith,
-        activityId,
-      } = body;
-
-      if (!paidBy || !amount || !description || !date || !splitWith) {
-        return NextResponse.json(
-          { error: "Missing required expense fields" },
-          { status: 400 },
-        );
-      }
-
-      const expense = await createExpenseService(context.decodedToken, tripId, {
-        paidBy,
-        amount: Number(amount),
-        description,
-        date: new Date(date),
-        category,
-        paymentMethod:
-          paymentMethod && paymentMethod !== "cash"
-            ? (paymentMethod as "bank" | "maya" | "gcash")
-            : undefined,
-        accountNumber,
-        bankName,
-        accountName,
-        qrImage,
-        splitWith: Array.isArray(splitWith) ? splitWith : [],
-        activityId,
-      });
-
-      const transformedExpense = transformExpense(expense);
-
-      return NextResponse.json(
-        { expense: transformedExpense },
-        { status: 201 },
-      );
-    } else {
-      return NextResponse.json(
-        { error: "Method not allowed" },
-        { status: 405 },
-      );
-    }
+    const { tripId } = await params;
+    const expenses =
+      context.isGuest && context.groupCode
+        ? await listExpensesForGuestService(context.groupCode, tripId)
+        : await listExpensesService(context.decodedToken, tripId);
+    return NextResponse.json({ expenses: expenses.map(transformExpense) });
   } catch (error) {
-    logger.error("Expense API error", error);
-    const message =
-      error instanceof Error ? error.message : "Internal server error";
-
-    if (
-      message.includes("not found") ||
-      message.includes("does not have access") ||
-      message.includes("not found")
-    ) {
-      return NextResponse.json(
-        { error: "Trip not found or access denied" },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
-export const GET = withOptionalAuth(handler);
-export const POST = withOptionalAuth(handler);
+async function postHandler(req: NextRequest, context: OptionalAuthContext, { params }: Params) {
+  try {
+    if (context.isGuest) {
+      throw new ForbiddenError("Guest access not allowed for creating expenses");
+    }
+    const { tripId } = await params;
+    const body = createExpenseSchema.parse(await req.json());
+    const expense = await createExpenseService(context.decodedToken, tripId, body);
+    return NextResponse.json({ expense: transformExpense(expense) }, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export const GET = withOptionalAuth(getHandler);
+export const POST = withOptionalAuth(postHandler);

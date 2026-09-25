@@ -28,16 +28,19 @@ Import aliasing: `tsconfig.json` maps `@/*` → repo root (`./*`), so `@/lib/...
 
 ```bash
 npm run dev              # next dev --turbopack
-npm run build             # prisma generate && prisma migrate deploy && next build
+npm run build            # prisma generate && prisma migrate deploy && next build
+npm run build:ci         # prisma generate && next build (no DB migration) — what CI runs
 npm run start
-npm run lint               # eslint
+npm run lint             # eslint
+npm run test             # vitest run (tests are colocated as *.test.ts next to the source)
+npm run test:watch
 
-npm run db:generate        # prisma generate
-npm run db:migrate         # prisma migrate dev — do not run unless the user asks
+npm run db:generate      # prisma generate
+npm run db:migrate       # prisma migrate dev — do not run unless the user asks
 npm run db:studio
 ```
 
-There is no `test` script and no test runner installed — don't reference `npm run test` or assume test coverage exists. If you add tests, add the runner and script as part of that change, and say so explicitly.
+Vitest is configured in `vitest.config.mts` with the `@/*` alias. Coverage is intentionally focused: service-layer tests (repository mocked) and schema tests, added per feature as it is migrated to the service/repository layering below. Most un-migrated features still have no tests — don't assume coverage exists for a file just because the runner does. CI (`.github/workflows/checks.yml`) runs lint, test, and `build:ci` on every PR.
 
 Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explicitly asks — tell them the exact command instead.
 
@@ -69,7 +72,7 @@ Existing `services.ts` files call Prisma directly and mix business logic with da
 - **Repository** (new — e.g. `repository.ts` or `<feature>.repository.ts` next to `services.ts`) — the only place that imports `@/lib/prisma` and issues Prisma calls for that feature. One function per query/mutation (`findTripById`, `createExpense`, `listExpensesByGroup`, ...), typed inputs/outputs, no business rules.
 
 Migrate a feature to this shape when you're already making a non-trivial change to it — don't do a drive-by refactor of unrelated `services.ts` files just to add the repository layer.
-- **Validate every request body with Zod before using it.** `zod` is already a dependency and used in 26+ frontend files, but currently 0 of the 40 API route files validate their input server-side — request bodies are destructured directly from `req.json()` with only compile-time types. New/edited routes must define a schema and `.parse()`/`.safeParse()` the body before touching Prisma.
+- **Validate every request body with Zod before using it.** Migrated features (Profile, Reviews, Groups) validate with a colocated `schemas.ts` and `.parse()` in the route, with `handleApiError` mapping failures to a 400. Routes not yet migrated (Trips/Activities/Budget/Expenses/admin/etc.) still destructure `req.json()` directly with only compile-time types. New/edited routes must define a schema and `.parse()` the body before touching Prisma. Note `z.coerce.date()` turns `null` into 1970-01-01 — guard date fields with a non-empty string/number check first (see `groups/[groupId]/trips/schemas.ts`).
 - Auth: wrap protected routes with `withAuth` (Firebase ID token required) or `withOptionalAuth` (`lib/auth/with-auth.ts`) for routes that also serve guests via `X-Guest-Code`. When using `withOptionalAuth`, the handler/service is responsible for re-verifying the guest code against the actual group/trip being accessed — the wrapper does not do this itself, so don't assume `context.groupCode` is already validated.
 - Admin routes currently gate on a single shared password (`lib/admin-auth.ts`, compared with `===`, no hashing). Treat this as a known weak point, not a pattern to copy — new admin/privileged functionality should not add more surface behind the same shared-password check without discussing it with the user first.
 - The `/api/v1/gateway` proxy (`X-Api-Target` header obfuscation) is legacy and does not provide real security (routes are still visible in the client bundle); don't extend it or route new endpoints through it.
@@ -87,7 +90,7 @@ These exist in the codebase today — don't use them as the template for new cod
 - API routes with no Zod validation.
 - `services.ts` files calling Prisma directly instead of going through a repository (see **Service / Repository Layering** above).
 - New functionality gated behind the shared admin password instead of proper role-based auth.
-- One-off debug/repro scripts committed at the repo root (e.g. `repro_delete.ts`) — put throwaway scripts in `scripts/` or don't commit them.
+- One-off debug/repro scripts committed at the repo root — put throwaway scripts in `scripts/` or don't commit them.
 - Growing an existing 500+ line page component further instead of splitting it.
 
 ## Git Conventions
