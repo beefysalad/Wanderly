@@ -1,18 +1,16 @@
-import { AuthContext, withAuth } from "@/lib/auth/with-auth";
-import { logger } from "@/lib/logger";
-import { NextResponse } from "next/server";
+import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
+import { handleApiError } from "@/lib/handle-api-error";
+import { NextRequest, NextResponse } from "next/server";
 import { syncUserToDatabaseService } from "./syncService";
 
-async function handler(req: Request, auth: AuthContext) {
+async function handler(_req: NextRequest, auth: AuthContext) {
   try {
-    logger.info("Calling User Sync to Databae Service");
     const user = await syncUserToDatabaseService(auth.decodedToken);
-    logger.info("✅ User sync completed successfully");
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("User Sync Error", error);
-    return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    return handleApiError(error);
   }
 }
+
 export const POST = withAuth(handler);
 export const GET = withAuth(handler);
