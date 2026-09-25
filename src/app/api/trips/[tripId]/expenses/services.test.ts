@@ -106,9 +106,9 @@ describe("guest list", () => {
   it("re-verifies the group code before listing", async () => {
     mockList.mockResolvedValue([]);
 
-    await listExpensesForGuestService("ABC123", "t1");
+    await listExpensesForGuestService("g1", "t1");
 
-    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("ABC123", "t1");
+    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("g1", "t1");
   });
 });
 

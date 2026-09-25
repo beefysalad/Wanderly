@@ -2,6 +2,11 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 
+const mockLoggerInfo = vi.fn();
+vi.mock("@/lib/logger", () => ({
+  logger: { info: (...a: unknown[]) => mockLoggerInfo(...a), warn: vi.fn(), error: vi.fn() },
+}));
+
 const mockFindGroupById = vi.fn();
 const mockFindGroupCodeLookup = vi.fn();
 const mockFindGroupOwnership = vi.fn();
@@ -245,26 +250,25 @@ describe("updateGroupService", () => {
 });
 
 describe("getGroupByIdForGuestService", () => {
+  it("throws ForbiddenError when the guest's token is for a different group", async () => {
+    await expect(getGroupByIdForGuestService("other-group", "group-1")).rejects.toThrow(
+      ForbiddenError,
+    );
+    expect(mockFindGroupById).not.toHaveBeenCalled();
+  });
+
   it("throws NotFoundError when the group doesn't exist", async () => {
     mockFindGroupById.mockResolvedValue(null);
 
-    await expect(getGroupByIdForGuestService("ABC123", "group-1")).rejects.toThrow(
+    await expect(getGroupByIdForGuestService("group-1", "group-1")).rejects.toThrow(
       NotFoundError,
     );
   });
 
-  it("throws ForbiddenError when the code doesn't match", async () => {
-    mockFindGroupById.mockResolvedValue({ id: "group-1", code: "REAL123" });
-
-    await expect(getGroupByIdForGuestService("WRONG", "group-1")).rejects.toThrow(
-      ForbiddenError,
-    );
-  });
-
-  it("returns the group when the code matches", async () => {
+  it("returns the group when the token is for that group", async () => {
     mockFindGroupById.mockResolvedValue({ id: "group-1", code: "ABC123" });
 
-    const result = await getGroupByIdForGuestService("ABC123", "group-1");
+    const result = await getGroupByIdForGuestService("group-1", "group-1");
 
     expect(result).toEqual({ id: "group-1", code: "ABC123" });
   });
@@ -283,5 +287,14 @@ describe("validateGroupCodeService", () => {
     const result = await validateGroupCodeService("ABC123");
 
     expect(result).toEqual({ id: "group-1", name: "Trip Squad", code: "ABC123" });
+  });
+
+  it("does not log the group code it was asked to validate", async () => {
+    mockFindGroupCodeLookup.mockResolvedValue({ id: "group-1", name: "Trip Squad", code: "ABC123" });
+    mockLoggerInfo.mockClear();
+
+    await validateGroupCodeService("ABC123");
+
+    expect(JSON.stringify(mockLoggerInfo.mock.calls)).not.toContain("ABC123");
   });
 });

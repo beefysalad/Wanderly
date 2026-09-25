@@ -25,8 +25,8 @@ export async function listPaymentLogsService(token: DecodedIdToken, tripId: stri
   return listPaymentLogsByTrip(tripId);
 }
 
-export async function listPaymentLogsForGuestService(groupCode: string, tripId: string) {
-  await verifyGuestTripAccess(groupCode, tripId);
+export async function listPaymentLogsForGuestService(guestGroupId: string, tripId: string) {
+  await verifyGuestTripAccess(guestGroupId, tripId);
   return listPaymentLogsByTrip(tripId);
 }
 

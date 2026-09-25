@@ -98,8 +98,8 @@ export async function listExpensesService(token: DecodedIdToken, tripId: string)
   return listExpensesByTrip(tripId);
 }
 
-export async function listExpensesForGuestService(groupCode: string, tripId: string) {
-  await verifyGuestTripAccess(groupCode, tripId);
+export async function listExpensesForGuestService(guestGroupId: string, tripId: string) {
+  await verifyGuestTripAccess(guestGroupId, tripId);
   return listExpensesByTrip(tripId);
 }
 
