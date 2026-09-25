@@ -1,6 +1,7 @@
 import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
 import { handleApiError } from "@/lib/handle-api-error";
 import { logger } from "@/lib/logger";
+import { withRateLimit } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { joinGroupSchema } from "../schemas";
 import { joinGroupService } from "../services";
@@ -17,4 +18,4 @@ async function handler(req: NextRequest, auth: AuthContext) {
   }
 }
 
-export const POST = withAuth(handler);
+export const POST = withRateLimit("guest-join", withAuth(handler));

@@ -1,6 +1,7 @@
 import { signGuestToken } from "@/lib/auth/guest-token";
 import { AppError } from "@/lib/errors";
 import { handleApiError } from "@/lib/handle-api-error";
+import { withRateLimit } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { validateCodeSchema } from "../schemas";
 import { validateGroupCodeService } from "../services";
@@ -11,7 +12,7 @@ import { validateGroupCodeService } from "../services";
  * The raw code is never returned or logged; guests present the token on later requests.
  * No authentication required
  */
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   try {
     const { code } = validateCodeSchema.parse(await req.json());
     const group = await validateGroupCodeService(code.toUpperCase());
@@ -32,3 +33,5 @@ export async function POST(req: NextRequest) {
     return handleApiError(error);
   }
 }
+
+export const POST = withRateLimit("validate-code", handler);
