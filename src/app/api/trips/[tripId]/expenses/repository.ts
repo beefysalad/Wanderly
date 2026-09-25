@@ -30,7 +30,14 @@ export function findExpenseById(expenseId: string) {
 export function findExpenseSummary(expenseId: string) {
   return prisma.expense.findUnique({
     where: { id: expenseId },
-    select: { id: true, tripId: true, paidById: true, description: true, amount: true },
+    select: {
+      id: true,
+      tripId: true,
+      paidById: true,
+      createdById: true,
+      description: true,
+      amount: true,
+    },
   });
 }
 

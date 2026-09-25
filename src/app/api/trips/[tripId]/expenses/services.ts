@@ -9,6 +9,8 @@ import { NotificationType, type PaymentMethod } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";
 import { createNotificationService } from "../../../notifications/services";
+import { findGroupOwnership } from "../../../groups/repository";
+import { assertCanModify } from "../../../groups/permissions";
 import { verifyGuestTripAccess, verifyTripAccess } from "../../access";
 import { findUserIdByEmail } from "../../repository";
 import { findActivityById } from "../activities/repository";
@@ -61,6 +63,22 @@ async function findExpenseInTrip(expenseId: string, tripId: string) {
     throw new NotFoundError("Expense not found");
   }
   return expense;
+}
+
+async function assertCanChangeExpense(
+  expense: { paidById: string | null; createdById: string | null },
+  actorId: string,
+  groupId: string,
+) {
+  const group = await findGroupOwnership(groupId);
+  assertCanModify(
+    {
+      actorId,
+      allowedUserIds: [expense.createdById, expense.paidById],
+      groupOwnerId: group?.createdById,
+    },
+    "Only the expense creator, the payer or the group owner can change this expense",
+  );
 }
 
 // Socket clients expect plain numbers/strings and a paidBy object even for guest payers.
@@ -155,6 +173,7 @@ export async function updateExpenseService(
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
   const before = await findExpenseInTrip(expenseId, tripId);
+  await assertCanChangeExpense(before, user.id, trip.groupId);
 
   if (data.activityId) {
     await assertActivityInTrip(data.activityId, tripId);
@@ -208,6 +227,7 @@ export async function deleteExpenseService(
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
   const existing = await findExpenseInTrip(expenseId, tripId);
+  await assertCanChangeExpense(existing, user.id, trip.groupId);
 
   // Notify BEFORE deleting; no relatedExpenseId since the row is about to go.
   await notifyGroupMembers(trip.groupId, user.id, {
