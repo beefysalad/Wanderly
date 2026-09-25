@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/axios";
 import {
   Activity,
   AlertTriangle,
@@ -64,16 +64,7 @@ export default function DatabasePage() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const password = sessionStorage.getItem("admin_password");
-      if (!password) {
-        toast.error("Unauthorized");
-        router.push("/admin");
-        return;
-      }
-
-      const response = await axios.get("/api/admin/db/stats", {
-        headers: { "x-admin-password": password },
-      });
+      const response = await api.get("/admin/db/stats");
 
       setStats(response.data.stats);
       setUsage(response.data.usage);
@@ -96,12 +87,9 @@ export default function DatabasePage() {
 
     setMaintaining(true);
     try {
-      const password = sessionStorage.getItem("admin_password");
-      const response = await axios.post(
-        "/api/admin/db/maintenance",
-        { action: "clean-test-data" },
-        { headers: { "x-admin-password": password } },
-      );
+      const response = await api.post("/admin/db/maintenance", {
+        action: "clean-test-data",
+      });
 
       toast.success(
         response.data.message ||

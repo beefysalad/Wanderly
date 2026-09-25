@@ -14,4 +14,8 @@ describe("upsertConfigSchema", () => {
     expect(upsertConfigSchema.safeParse({ key: "k" }).success).toBe(false);
     expect(upsertConfigSchema.safeParse({ key: "k", value: null }).success).toBe(false);
   });
+
+  it("rejects the retired admin_password key", () => {
+    expect(upsertConfigSchema.safeParse({ key: "admin_password", value: "x" }).success).toBe(false);
+  });
 });

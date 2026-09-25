@@ -19,6 +19,12 @@ describe("config services", () => {
     expect(await listConfigsService()).toEqual([{ key: "a" }]);
   });
 
+  it("never lists the retired admin_password row", async () => {
+    mockList.mockResolvedValue([{ key: "admin_password" }, { key: "a" }]);
+
+    expect(await listConfigsService()).toEqual([{ key: "a" }]);
+  });
+
   it("upserts by key with the given value", async () => {
     mockUpsert.mockResolvedValue({ key: "k" });
 
