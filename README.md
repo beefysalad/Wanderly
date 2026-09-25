@@ -58,7 +58,7 @@ npm run dev            # http://localhost:3000
 | Firebase Admin (server) | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
 | Cloudinary | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
 | Realtime | `NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY` |
-| Admin and guests | `ADMIN_EMAILS` (comma-separated admin emails), `GUEST_TOKEN_SECRET` |
+| Admin and guests | `ADMIN_EMAILS` (verified admin emails) and/or `ADMIN_UIDS` (Firebase UIDs), `GUEST_TOKEN_SECRET` |
 | Rate limiting | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional locally) |
 | App flags | `NEXT_PUBLIC_ENVIRONMENT`, `NEXT_PUBLIC_MAINTENANCE_MODE` |
 

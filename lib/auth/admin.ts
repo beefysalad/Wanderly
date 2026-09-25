@@ -16,3 +16,16 @@ export function isAdminEmail(
   if (emailVerified !== true || !email) return false;
   return allowlist.has(email.toLowerCase());
 }
+
+/** Firebase uids are unforgeable, so an ADMIN_UIDS entry needs no email verification. */
+export function isAdminUid(
+  uid: string | undefined,
+  allowlist: Set<string> = new Set(
+    (process.env.ADMIN_UIDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  ),
+): boolean {
+  return !!uid && allowlist.has(uid);
+}

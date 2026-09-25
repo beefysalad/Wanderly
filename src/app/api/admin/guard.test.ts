@@ -20,6 +20,7 @@ const req = (headers: Record<string, string> = {}) =>
 beforeEach(() => {
   vi.resetAllMocks();
   process.env.ADMIN_EMAILS = "boss@x.com";
+  delete process.env.ADMIN_UIDS;
 });
 
 describe("assertAdmin", () => {
@@ -72,5 +73,27 @@ describe("assertAdmin", () => {
 
     const reasons = mockWarn.mock.calls.map((c) => c[1].reason);
     expect(reasons).toEqual(["email-not-verified", "email-not-on-ADMIN_EMAILS"]);
+  });
+
+  it("accepts an allow-listed uid even when the email is unverified", async () => {
+    process.env.ADMIN_UIDS = "uid-boss";
+    mockVerifyIdToken.mockResolvedValue({
+      uid: "uid-boss",
+      email: "Boss@x.com",
+      email_verified: false,
+    });
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).resolves.toEqual({
+      adminEmail: "boss@x.com",
+    });
+  });
+
+  it("does not accept a different uid with an unverified email", async () => {
+    process.env.ADMIN_UIDS = "uid-boss";
+    mockVerifyIdToken.mockResolvedValue({ uid: "other", email: "boss@x.com", email_verified: false });
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
   });
 });

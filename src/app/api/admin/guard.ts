@@ -1,4 +1,4 @@
-import { isAdminEmail } from "@/lib/auth/admin";
+import { isAdminEmail, isAdminUid } from "@/lib/auth/admin";
 import { UnauthorizedError } from "@/lib/errors";
 import { userAuth } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
@@ -19,7 +19,7 @@ async function adminEmailFromToken(req: NextRequest): Promise<string | null> {
     return null;
   }
 
-  if (!isAdminEmail(decoded.email, decoded.email_verified)) {
+  if (!isAdminUid(decoded.uid) && !isAdminEmail(decoded.email, decoded.email_verified)) {
     // The reason is logged for the operator only; the client just sees "not authorised".
     logger.warn("Admin check failed", {
       reason: decoded.email_verified === true ? "email-not-on-ADMIN_EMAILS" : "email-not-verified",
@@ -28,12 +28,13 @@ async function adminEmailFromToken(req: NextRequest): Promise<string | null> {
     return null;
   }
 
-  return decoded.email!.toLowerCase();
+  return (decoded.email ?? decoded.uid).toLowerCase();
 }
 
 /**
- * Rejects the request unless it comes from an admin: a verified Firebase account whose email is
- * on the ADMIN_EMAILS allowlist. Returns the admin's email for audit logging.
+ * Rejects the request unless it comes from an admin: a Firebase account whose uid is on the
+ * ADMIN_UIDS allowlist, or whose VERIFIED email is on ADMIN_EMAILS. Returns the admin's email (or
+ * uid if it has none) for audit logging.
  */
 export async function assertAdmin(req: NextRequest): Promise<{ adminEmail: string }> {
   const adminEmail = await adminEmailFromToken(req);

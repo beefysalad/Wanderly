@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAdminEmail, parseAdminEmails } from "./admin";
+import { isAdminEmail, isAdminUid, parseAdminEmails } from "./admin";
 
 describe("parseAdminEmails", () => {
   it("splits on commas, trims, lower-cases and drops empties", () => {
@@ -36,5 +36,26 @@ describe("isAdminEmail", () => {
     expect(isAdminEmail("env@x.com", true)).toBe(true);
 
     delete process.env.ADMIN_EMAILS;
+  });
+});
+
+describe("isAdminUid", () => {
+  it("accepts an allow-listed uid regardless of email verification", () => {
+    expect(isAdminUid("uid-1", new Set(["uid-1"]))).toBe(true);
+  });
+
+  it("rejects other or missing uids and an empty list", () => {
+    expect(isAdminUid("uid-2", new Set(["uid-1"]))).toBe(false);
+    expect(isAdminUid(undefined, new Set(["uid-1"]))).toBe(false);
+    expect(isAdminUid("uid-1", new Set())).toBe(false);
+  });
+
+  it("reads a comma-separated ADMIN_UIDS from the environment, trimming spaces", () => {
+    process.env.ADMIN_UIDS = " a , b ";
+
+    expect(isAdminUid("b")).toBe(true);
+    expect(isAdminUid("c")).toBe(false);
+
+    delete process.env.ADMIN_UIDS;
   });
 });
