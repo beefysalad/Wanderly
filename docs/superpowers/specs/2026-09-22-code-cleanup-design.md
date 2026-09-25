@@ -53,7 +53,7 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Sync (user sync + sample-data seeding) | 1 | 2 | testDataService.ts 1266 → 220 lines + declarative `sampleTripData.ts` | 2 | Done. The seeding output was diffed call-for-call against the old implementation (78 identical Prisma calls) before the old code was removed |
 | Guest* page components | — | — | 5 files, largest 255 lines | 2 | Checked — all under the 300-line ceiling, no action needed |
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
-| v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
+| v1 Gateway | 1 | 0 | 94 lines | — | Removed in the security pass |
 
 **Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. All three Groups sub-units (core, Member Tasks, nested Trips) are done; top-level `/api/trips` has no standalone "core" unit (it was a phantom row); the real remaining units are the trip-scoped features under `/api/trips/[tripId]/` listed above.
 

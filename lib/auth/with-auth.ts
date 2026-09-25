@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { handleApiError } from "@/lib/handle-api-error";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { User } from "@prisma/client";
 import { userAuth } from "../firebase-admin";
+
+/**
+ * Reject tokens of revoked or disabled accounts immediately instead of when the token expires
+ * (~1h). Costs one extra Firebase lookup per request; flip to false to fall back to local
+ * signature/expiry verification only.
+ */
+const CHECK_REVOKED = true;
 
 export interface AuthContext {
   uid: string;
@@ -18,10 +26,25 @@ export interface RouteContext<
   params: Promise<Params>;
 }
 
+function authErrorResponse(error: unknown): NextResponse {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code: unknown }).code)
+      : "";
+
+  if (code === "auth/id-token-revoked" || code === "auth/user-disabled") {
+    return NextResponse.json({ message: "Token has been revoked" }, { status: 401 });
+  }
+  if (code === "auth/id-token-expired" || (error instanceof Error && /token/i.test(error.message))) {
+    return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
+  }
+  return NextResponse.json({ message: "Authentication failed" }, { status: 401 });
+}
+
 /**
- * Higher-order function that wraps API route handlers with Firebase auth validation
- * @param handler - The API route handler function
- * @param options - Optional configuration for admin/role checks
+ * Higher-order function that wraps API route handlers with Firebase auth validation.
+ * Authentication failures are 401s; anything the handler itself throws is mapped by
+ * handleApiError (so a database error is a 500, not a 401).
  */
 export function withAuth<
   Params extends Record<string, string> = Record<string, string>,
@@ -36,73 +59,48 @@ export function withAuth<
     req: NextRequest,
     routeContext?: RouteContext<Params>,
   ): Promise<NextResponse> => {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    if (!token) {
+      return NextResponse.json({ message: "No token provided" }, { status: 401 });
+    }
+
+    if (!userAuth) {
+      logger.error("Firebase Admin not initialized");
+      return NextResponse.json(
+        { message: "Authentication service unavailable" },
+        { status: 503 },
+      );
+    }
+
+    let decodedToken: DecodedIdToken;
     try {
-      // 1. Get the Authorization header
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-      }
-      // 2. Extract the token
-      const token = authHeader.split("Bearer ")[1];
-      if (!token) {
-        return NextResponse.json(
-          { message: "No token provided" },
-          { status: 401 },
-        );
-      }
+      decodedToken = await userAuth.verifyIdToken(token, CHECK_REVOKED);
+    } catch (error) {
+      logger.warn("Auth validation failed", { error });
+      return authErrorResponse(error);
+    }
 
-      // 3. Verify the Firebase ID token
-      if (!userAuth) {
-        logger.error("Firebase Admin not initialized");
-        return NextResponse.json(
-          { message: "Authentication service unavailable" },
-          { status: 503 },
-        );
-      }
+    const authContext: AuthContext = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      emailVerified: decodedToken.email_verified,
+      decodedToken,
+    };
 
-      const decodedToken = await userAuth.verifyIdToken(token);
+    logger.info("Auth validation successful", {
+      uid: decodedToken.uid,
+      path: req.nextUrl.pathname,
+    });
 
-      // 4. Create auth context
-      const authContext: AuthContext = {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        emailVerified: decodedToken.email_verified,
-        decodedToken,
-      };
-
-      logger.info("Auth validation successful", {
-        uid: decodedToken.uid,
-        path: req.nextUrl.pathname,
-      });
-
-      // 7. Call the original handler with auth context
+    try {
       return await handler(req, authContext, routeContext as RouteContext<Params>);
     } catch (error) {
-      logger.error("Auth validation failed", error);
-
-      // Handle specific Firebase auth errors
-      if (error instanceof Error) {
-        if (
-          error.message.includes("token") ||
-          error.message.includes("expired")
-        ) {
-          return NextResponse.json(
-            { message: "Invalid or expired token" },
-            { status: 401 },
-          );
-        }
-        if (error.message.includes("revoked")) {
-          return NextResponse.json(
-            { message: "Token has been revoked" },
-            { status: 401 },
-          );
-        }
-      }
-
-      return NextResponse.json(
-        { message: "Authentication failed" },
-        { status: 401 },
-      );
+      return handleApiError(error);
     }
   };
 }
@@ -143,7 +141,7 @@ export function withOptionalAuth<
         const token = authHeader.split("Bearer ")[1];
         if (token && userAuth) {
           try {
-            const decodedToken = await userAuth.verifyIdToken(token);
+            const decodedToken = await userAuth.verifyIdToken(token, CHECK_REVOKED);
             const authContext: OptionalAuthContext = {
               uid: decodedToken.uid,
               email: decodedToken.email,
@@ -187,22 +185,3 @@ export function withOptionalAuth<
     }
   };
 }
-
-// /**
-//  * Version that requires admin access
-//  */
-// export function withAdminAuth(
-//   handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
-// ) {
-//   return withAuth(handler, { requireAdmin: true });
-// }
-
-// /**
-//  * Version that requires specific admin roles
-//  */
-// export function withRoleAuth(
-//   allowedRoles: string[],
-//   handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
-// ) {
-//   return withAuth(handler, { requireAdmin: true, allowedRoles });
-// }

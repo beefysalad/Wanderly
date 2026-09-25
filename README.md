@@ -38,7 +38,7 @@ cd travelscheduleapp
 npm install
 ```
 
-Create a `.env` file in the repo root with the variables below, then set up the database and start the dev server:
+Copy `.env.example` to `.env` and fill it in (the variables are listed below), then set up the database and start the dev server:
 
 ```bash
 npm run db:generate
@@ -52,7 +52,7 @@ npm run dev            # http://localhost:3000
 
 | Group | Variables |
 |---|---|
-| Database | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` |
+| Database | `DATABASE_URL` |
 | Firebase (client) | `NEXT_PUBLIC_FIREBASE_API_KEY`, `..._AUTH_DOMAIN`, `..._PROJECT_ID`, `..._STORAGE_BUCKET`, `..._MESSAGING_SENDER_ID`, `..._APP_ID`, `..._MEASUREMENT_ID` |
 | Firebase Admin (server) | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
 | Cloudinary | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |

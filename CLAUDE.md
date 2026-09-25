@@ -46,7 +46,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 
 ## Environment Variables
 
-No `.env.example` currently exists — `.env` (gitignored, present locally) is the only reference for required vars: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `PG*`, `POSTGRES_*`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), `ADMIN_PASSWORD`, `NEXT_PUBLIC_SOCKET_URL`. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. If you add a required var, create a `.env.example` with placeholder values rather than leaving `.env` as the only source of truth.
+`.env.example` lists every variable the app reads (copy it to `.env`); real values live only in `.env` (gitignored) and the hosting dashboard. Categories: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), realtime (`NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY`), `ADMIN_PASSWORD`, app flags. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. When you add a required variable, add it to `.env.example` in the same PR.
 
 ## Frontend Patterns
 
@@ -82,7 +82,6 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 - **Validate every request body with Zod before using it.** Migrated features (Profile, Reviews, Groups) validate with a colocated `schemas.ts` and `.parse()` in the route, with `handleApiError` mapping failures to a 400. Routes not yet migrated (Trips/Activities/Budget/Expenses/admin/etc.) still destructure `req.json()` directly with only compile-time types. New/edited routes must define a schema and `.parse()` the body before touching Prisma. Note `z.coerce.date()` turns `null` into 1970-01-01 — guard date fields with a non-empty string/number check first (see `groups/[groupId]/trips/schemas.ts`).
 - Auth: wrap protected routes with `withAuth` (Firebase ID token required) or `withOptionalAuth` (`lib/auth/with-auth.ts`) for routes that also serve guests via `X-Guest-Code`. When using `withOptionalAuth`, the handler/service is responsible for re-verifying the guest code against the actual group/trip being accessed — the wrapper does not do this itself, so don't assume `context.groupCode` is already validated.
 - Admin routes currently gate on a single shared password (`lib/admin-auth.ts`, compared with `===`, no hashing). Treat this as a known weak point, not a pattern to copy — new admin/privileged functionality should not add more surface behind the same shared-password check without discussing it with the user first.
-- The `/api/v1/gateway` proxy (`X-Api-Target` header obfuscation) is legacy and does not provide real security (routes are still visible in the client bundle); don't extend it or route new endpoints through it.
 - Prisma access goes through the singleton in `lib/prisma.ts`. Business decisions belong in `services.ts`, not the route handler or the Prisma call site.
 - Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow.
 
