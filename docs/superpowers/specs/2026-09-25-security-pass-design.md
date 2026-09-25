@@ -25,7 +25,7 @@ Out of scope: the external Socket.IO server (not in this repo; it authenticates 
 
 | Topic | Decision |
 |---|---|
-| Admin auth | Firebase login plus an `ADMIN_EMAILS` allowlist; new `withAdmin` wrapper; shared password removed after a dual-mode transition |
+| Admin auth | Firebase login plus an `ADMIN_EMAILS` allowlist; extended `assertAdmin` guard; shared password removed after a dual-mode transition |
 | Guest model | Server-signed, short-lived guest token issued by `validate-code`; guest routes stop accepting the raw code |
 | Rate-limit store | Upstash Redis via `@upstash/ratelimit` |
 | Member permissions | Narrow money and task actions; keep activities and budgets open |
