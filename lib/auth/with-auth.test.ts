@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppError } from "../errors";
 
 const mockVerifyIdToken = vi.fn();
 
@@ -84,5 +85,64 @@ describe("withOptionalAuth", () => {
     expect(guestContext.isGuest).toBe(true);
     expect(guestContext.groupCode).toBe("ABC123");
     expect(forwardedRouteContext).toBe(routeContext);
+  });
+});
+
+describe("withAuth token verification", () => {
+  it("asks Firebase to check for revoked tokens", async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: "user-1" });
+    const wrapped = withAuth(vi.fn().mockResolvedValue(NextResponse.json(null)));
+
+    await wrapped(makeRequest({ Authorization: "Bearer token123" }));
+
+    expect(mockVerifyIdToken).toHaveBeenCalledWith("token123", true);
+  });
+
+  it("returns 401 'Token has been revoked' for a revoked or disabled account", async () => {
+    mockVerifyIdToken.mockRejectedValue(
+      Object.assign(new Error("The Firebase ID token has been revoked."), {
+        code: "auth/id-token-revoked",
+      }),
+    );
+    const handler = vi.fn();
+
+    const response = await withAuth(handler)(makeRequest({ Authorization: "Bearer t" }));
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ message: "Token has been revoked" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 'Invalid or expired token' for an expired token", async () => {
+    mockVerifyIdToken.mockRejectedValue(
+      Object.assign(new Error("expired"), { code: "auth/id-token-expired" }),
+    );
+
+    const response = await withAuth(vi.fn())(makeRequest({ Authorization: "Bearer t" }));
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ message: "Invalid or expired token" });
+  });
+});
+
+describe("withAuth handler errors", () => {
+  it("does not report an error thrown by the handler as a 401", async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: "user-1" });
+    const wrapped = withAuth(vi.fn().mockRejectedValue(new AppError("teapot", 418)));
+
+    const response = await wrapped(makeRequest({ Authorization: "Bearer t" }));
+
+    expect(response.status).toBe(418);
+    expect(await response.json()).toEqual({ error: "teapot" });
+  });
+
+  it("turns an unexpected handler error into a generic 500", async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: "user-1" });
+    const wrapped = withAuth(vi.fn().mockRejectedValue(new Error("db exploded")));
+
+    const response = await wrapped(makeRequest({ Authorization: "Bearer t" }));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "Internal server error" });
   });
 });
