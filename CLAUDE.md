@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-This repo did not have an enforced convention file before this one. `.cursorrules`, `AI_CONTEXT.md`, `API_REFERENCE.md`, and `.agent/*` all describe the project but disagree with the real layout in places (e.g. they claim components/hooks/lib live under `src/`, which is no longer true — see **Repository Shape**). Treat **this file as authoritative** over those; they should eventually be deleted or reconciled into it rather than read alongside it.
+This file is the single source of truth for conventions. Design specs and implementation plans for the ongoing cleanup live in `docs/superpowers/specs/` and `docs/superpowers/plans/`; read the relevant spec before large changes (the cleanup spec's tracking table and "Handoff Notes" record what is migrated and known gotchas).
 
 ## Repository Shape
 
-Single Next.js 15 App Router app (Node 20+), not a monorepo. No workspaces, no `packages/*`.
+Single Next.js 15 App Router app (Node 22.12+), not a monorepo. No workspaces, no `packages/*`.
 
 - `src/app/` — routes (`page.tsx`, `layout.tsx`, `loading.tsx`) and API routes (`src/app/api/**/route.ts`).
 - `src/app/components/pages/<Feature>/` — route-specific, logic-heavy components (e.g. `Trip`, `Expenses`, `Dashboard`).
@@ -20,7 +20,7 @@ Single Next.js 15 App Router app (Node 20+), not a monorepo. No workspaces, no `
 - `prisma/` — `schema.prisma` and migrations.
 - `scripts/` — one-off maintenance scripts run with `tsx` (e.g. `sync-admin-password.ts`), not part of the app runtime.
 
-**`src/components/` and `src/lib/` are empty, dead directories** left over from an earlier layout. Do not add files there — use the root `components/`/`lib/` above. If you're touching this area, prefer deleting the empty `src/components` and `src/lib` dirs entirely to stop this from recurring.
+**Known layout quirk (planned restructure):** shared code is split between the repo root (`components/`, `lib/`) and `src/` (`app`, `hooks`, `shared`). This is intentional for now and everything below documents it as is; the maintainer plans to consolidate it under `src/` in a dedicated mechanical PR (move + codemod of `@/lib` and `@/components` imports + `tsconfig`/`components.json` updates) after in-flight work lands. Do not create `src/components/` or `src/lib/`, and do not move files between the two trees opportunistically.
 
 Import aliasing: `tsconfig.json` maps `@/*` → repo root (`./*`), so `@/lib/...` and `@/components/...` resolve at the root, while anything under `src/` is imported with the `src` segment included (`@/src/hooks/...`, `@/src/shared/types`). `components.json` (shadcn) declares `"hooks": "@/hooks"`, which does not match actual usage (`@/src/hooks`) — don't trust that file for hook imports; it's only accurate for `ui`/`components`/`lib`.
 
@@ -57,6 +57,13 @@ No `.env.example` currently exists — `.env` (gitignored, present locally) is t
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
 - Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (group code).
 - Keep page-level components in `src/app/components/pages/<Feature>/index.tsx` from growing into 500–1000+ line files (several already have — `ExpenseForm`, `Trip`, `OnboardingWizard`, `Expenses`, `Profile`). Split by sub-section/concern instead of adding to the existing file when a component crosses ~300 lines.
+
+## Design & UX Conventions
+
+- Aesthetic: clean, flat and modern: solid colors and subtle borders rather than heavy shadows or gradients, generous whitespace, rounded corners.
+- Mobile-first: every view must work on a phone (touch targets, readable text). Navigation is a bottom bar on mobile, often hidden on detail sub-pages.
+- Icons: `lucide-react` at consistent sizes. Notifications to the user: `sonner` toasts.
+- Conditional class names: `cn()` from `lib/utils.ts`; Tailwind utility classes, no inline styles.
 
 ## Backend / API Patterns
 
