@@ -11,6 +11,11 @@ vi.mock("../firebase-admin", () => ({
   },
 }));
 
+const mockVerifyGuestToken = vi.fn();
+vi.mock("./guest-token", () => ({
+  verifyGuestToken: (...a: unknown[]) => mockVerifyGuestToken(...a),
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
@@ -69,22 +74,58 @@ describe("withAuth", () => {
   });
 });
 
-describe("withOptionalAuth", () => {
-  it("forwards the route context through to the handler alongside guest context", async () => {
+describe("withOptionalAuth guests", () => {
+  it("passes a verified guest token's group id and the route context to the handler", async () => {
+    mockVerifyGuestToken.mockReturnValue({ groupId: "g1" });
     const handler = vi.fn().mockResolvedValue(NextResponse.json(null));
-    const wrapped = withOptionalAuth(handler);
     const routeContext = { params: Promise.resolve({ groupId: "g1" }) };
 
-    await wrapped(
-      makeRequest({ "X-Guest-Code": "ABC123" }),
-      routeContext,
+    await withOptionalAuth(handler)(makeRequest({ "X-Guest-Token": "tok" }), routeContext);
+
+    const [, ctx, forwarded] = handler.mock.calls[0];
+    expect(ctx).toMatchObject({ isGuest: true, guestGroupId: "g1", uid: "guest" });
+    expect(ctx).not.toHaveProperty("groupCode");
+    expect(forwarded).toBe(routeContext);
+  });
+
+  it("returns 401 for an invalid or expired guest token", async () => {
+    mockVerifyGuestToken.mockReturnValue(null);
+    const handler = vi.fn();
+
+    const response = await withOptionalAuth(handler)(makeRequest({ "X-Guest-Token": "bad" }));
+
+    expect(response.status).toBe(401);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("no longer accepts a raw X-Guest-Code header", async () => {
+    const handler = vi.fn();
+
+    const response = await withOptionalAuth(handler)(makeRequest({ "X-Guest-Code": "ABC123" }));
+
+    expect(response.status).toBe(401);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("prefers a valid Firebase user over a guest token", async () => {
+    mockVerifyIdToken.mockResolvedValue({ uid: "user-1" });
+    const handler = vi.fn().mockResolvedValue(NextResponse.json(null));
+
+    await withOptionalAuth(handler)(
+      makeRequest({ Authorization: "Bearer t", "X-Guest-Token": "tok" }),
     );
 
-    expect(handler).toHaveBeenCalledTimes(1);
-    const [, guestContext, forwardedRouteContext] = handler.mock.calls[0];
-    expect(guestContext.isGuest).toBe(true);
-    expect(guestContext.groupCode).toBe("ABC123");
-    expect(forwardedRouteContext).toBe(routeContext);
+    expect(handler.mock.calls[0][1].isGuest).toBe(false);
+  });
+
+  it("returns a generic 500 when a guest handler throws", async () => {
+    mockVerifyGuestToken.mockReturnValue({ groupId: "g1" });
+
+    const response = await withOptionalAuth(vi.fn().mockRejectedValue(new Error("boom")))(
+      makeRequest({ "X-Guest-Token": "tok" }),
+    );
+
+    expect(response.status).toBe(500);
   });
 });
 
