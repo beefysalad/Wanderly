@@ -16,6 +16,8 @@ interface TasksListProps {
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onDelete: (taskId: string) => void;
   isDeleting: boolean;
+  /** The server only lets the creator, the assignee or the group owner change a task. */
+  canChangeTask: (task: MemberTask) => boolean;
 }
 
 export function TasksList({
@@ -25,6 +27,7 @@ export function TasksList({
   onStatusChange,
   onDelete,
   isDeleting,
+  canChangeTask,
 }: TasksListProps) {
   return (
     <section className='border border-slate-800 rounded-2xl bg-slate-900 p-3 sm:p-4'>
@@ -54,6 +57,7 @@ export function TasksList({
                   )}
                 </div>
 
+                {canChangeTask(task) && (
                 <button
                   onClick={() => onDelete(task.id)}
                   disabled={isDeleting}
@@ -63,12 +67,14 @@ export function TasksList({
                 >
                   <Trash2 className='h-4 w-4' />
                 </button>
+                )}
               </div>
 
               <div className='mt-3 flex flex-wrap items-center gap-2'>
                 <select
                   value={task.status}
                   onChange={(e) => onStatusChange(task.id, e.target.value as TaskStatus)}
+                  disabled={!canChangeTask(task)}
                   className='h-8 rounded-lg border border-slate-700 bg-slate-900 px-2 text-xs text-slate-200'
                 >
                   <option value='not_started'>{STATUS_LABELS.not_started}</option>
