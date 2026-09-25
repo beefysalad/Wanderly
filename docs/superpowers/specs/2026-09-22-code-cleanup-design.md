@@ -46,11 +46,11 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | API Done; ExpenseForm split Done (1002 → 175-line index + steps/hooks/components); Expenses page (1275 lines) split still outstanding |
 | Trips → Expense Payments | subset | 1 | payments/services.ts 358 (both `confirm-payment` and `payments/confirm` are live: different clients use each) | 1 | Done |
 | Dashboard | — | 0 | 1853 across 10 files; only OnboardingWizard (651) and index (330) exceed the ceiling | 2 | Verified — see Component backlog |
-| Admin | 6 | 0 | 484 lines | 2 | Deferred |
+| Admin | 6 | 0 | 484 lines | 2 | Done in 3 PRs (config + verify-password + shared `assertAdmin` guard; users; db stats/maintenance). The shared-password gate itself is untouched: security pass |
 | Notifications | 4 | 1 | 393 lines | 2 | Done (the unused POST /api/notifications, which let any user create a notification for any user, was removed) |
 | Upload | 1 | 0 | 98 lines | 2 | Done (folder restricted to the two folders the app uses) |
 | Config / Stats / User | 3 | 0 | small | 2 | Done (admin-password gate on whats-new POST left for the security pass) |
-| Sync (test-data seeding) | 1 | — | testDataService.ts 1266 — internal tool | 2 | Deferred, low priority |
+| Sync (user sync + sample-data seeding) | 1 | 2 | testDataService.ts 1266 → 220 lines + declarative `sampleTripData.ts` | 2 | Done. The seeding output was diffed call-for-call against the old implementation (78 identical Prisma calls) before the old code was removed |
 | Guest* page components | — | — | 5 files, largest 255 lines | 2 | Checked — all under the 300-line ceiling, no action needed |
 | Landing/About/FAQ/HowTo | — | — | — | 2 | Deferred, low priority |
 | v1 Gateway | 1 | 0 | 94 lines | — | **Excluded — removed in security pass, not migrated** |
