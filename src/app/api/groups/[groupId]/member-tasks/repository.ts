@@ -17,7 +17,7 @@ export function listMemberTasksByGroup(groupId: string) {
 export function findMemberTaskById(taskId: string) {
   return prisma.memberTask.findUnique({
     where: { id: taskId },
-    select: { id: true, groupId: true },
+    select: { id: true, groupId: true, createdById: true, assignedToId: true },
   });
 }
 
