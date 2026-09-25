@@ -35,3 +35,15 @@ Source: `npm audit --omit=dev` on `dev` after the security pass work: **31 vulne
 - The Prisma CLI advisories above (build-time only).
 - The external Socket.IO server is not covered by this repo's audit.
 - Re-run `npm audit --omit=dev` after the fix and update this file with the new counts.
+
+## Result after `npm audit fix` (maintainer ran it)
+
+`npm audit --omit=dev` went from **31 to 14 vulnerabilities** (0 low, 8 moderate, 5 high, 1 critical). `axios`, `form-data`, `fast-xml-parser`, `protobufjs`, `@grpc/grpc-js`, `websocket-driver`, `node-forge`, `jws`, `lodash`, `defu`, `ws` and `socket.io-parser` are resolved.
+
+Still open:
+
+| Package | Severity | Why | Action |
+|---|---|---|---|
+| `next` | critical | `package.json` pins `next` to the exact version `15.5.9`, so `npm audit fix` cannot move it. The fix (15.5.26) is a patch release in the same minor. | Run `npm i next@15.5.26` (and `npm i -D eslint-config-next@15.5.26` to keep them in step). This also clears the `postcss` and `sharp` highs, which Next pins. |
+| `prisma`, `@prisma/config`, `deepmerge-ts` | high | Build-time CLI only; npm's suggested "fix" is a downgrade to prisma 6.12.0. | Wait for a patched Prisma 6.x. |
+| `firebase-admin` and its `@google-cloud/*`, `gaxios`, `google-gax`, `retry-request`, `teeny-request`, `uuid` | moderate | Firestore/Storage code paths the app does not use. | Take the next `firebase-admin` release. |
