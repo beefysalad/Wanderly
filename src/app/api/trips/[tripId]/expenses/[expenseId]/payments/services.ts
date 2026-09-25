@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
+import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
 import { createPaymentLogRow } from "../../../payment-logs/repository";
 import type { ConfirmPaymentBody } from "../../schemas";
@@ -70,7 +71,7 @@ export async function markExpensePaidService(
   expenseId: string,
   data: MarkPaidBody,
 ) {
-  const { user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccess(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
   const memberUserId = await requireMemberUserId(data.memberEmail);
 
@@ -81,6 +82,13 @@ export async function markExpensePaidService(
 
   if (data.isPaid && user.email !== data.memberEmail) {
     throw new ForbiddenError("You can only mark yourself as paid");
+  }
+
+  if (!data.isPaid && user.email !== data.memberEmail) {
+    const group = await findGroupOwnership(trip.groupId);
+    if (group?.createdById !== user.id) {
+      throw new ForbiddenError("You can only un-mark your own payment");
+    }
   }
 
   if (data.isPaid) {

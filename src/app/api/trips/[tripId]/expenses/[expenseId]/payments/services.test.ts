@@ -12,6 +12,11 @@ vi.mock("../../../../repository", () => ({
   findUserIdByEmail: (...a: unknown[]) => mockFindUserIdByEmail(...a),
 }));
 
+const mockFindGroupOwnership = vi.fn();
+vi.mock("../../../../../groups/repository", () => ({
+  findGroupOwnership: (...a: unknown[]) => mockFindGroupOwnership(...a),
+}));
+
 const mockCreatePaymentLogRow = vi.fn();
 vi.mock("../../../payment-logs/repository", () => ({
   createPaymentLogRow: (...a: unknown[]) => mockCreatePaymentLogRow(...a),
@@ -56,6 +61,7 @@ beforeEach(() => {
   mockFindForPayments.mockResolvedValue(expense);
   mockFindUserIdByEmail.mockImplementation(async (email: string) => ({ id: `id-${email}` }));
   mockFindExpenseById.mockResolvedValue({ id: "e1", refreshed: true });
+  mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
 });
 
 describe("markExpensePaidService", () => {
@@ -109,6 +115,25 @@ describe("markExpensePaidService", () => {
     await markExpensePaidService(token, "t1", "e1", paid);
 
     expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
+  });
+
+  it("does not let a member un-mark someone else's payment", async () => {
+    // the caller is bob; the payment being removed is cara's
+    await expect(
+      markExpensePaidService(token, "t1", "e1", { memberEmail: "c@x.com", isPaid: false }),
+    ).rejects.toThrow(ForbiddenError);
+    expect(mockDeletePayments).not.toHaveBeenCalled();
+  });
+
+  it("lets the group owner un-mark anyone's payment", async () => {
+    mockVerifyTripAccess.mockResolvedValue({
+      trip: { id: "t1", groupId: "g1" },
+      user: { id: "owner-1", email: "owner@x.com" },
+    });
+
+    await markExpensePaidService(token, "t1", "e1", { memberEmail: "c@x.com", isPaid: false });
+
+    expect(mockDeletePayments).toHaveBeenCalled();
   });
 
   it("unmarking deletes the member's payment and creates no log", async () => {
