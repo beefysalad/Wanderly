@@ -46,7 +46,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 
 ## Environment Variables
 
-No `.env.example` currently exists — `.env` (gitignored, present locally) is the only reference for required vars: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `PG*`, `POSTGRES_*`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), `ADMIN_PASSWORD`, `NEXT_PUBLIC_SOCKET_URL`. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. If you add a required var, create a `.env.example` with placeholder values rather than leaving `.env` as the only source of truth.
+`.env.example` lists every variable the app reads (copy it to `.env`); real values live only in `.env` (gitignored) and the hosting dashboard. Categories: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), realtime (`NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY`), `ADMIN_PASSWORD`, app flags. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. When you add a required variable, add it to `.env.example` in the same PR.
 
 ## Frontend Patterns
 
