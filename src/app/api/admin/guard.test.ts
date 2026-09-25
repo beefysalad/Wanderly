@@ -7,6 +7,11 @@ vi.mock("@/lib/firebase-admin", () => ({
   userAuth: { verifyIdToken: (...a: unknown[]) => mockVerifyIdToken(...a) },
 }));
 
+const mockWarn = vi.fn();
+vi.mock("@/lib/logger", () => ({
+  logger: { warn: (...a: unknown[]) => mockWarn(...a), info: vi.fn(), error: vi.fn() },
+}));
+
 const { assertAdmin } = await import("./guard");
 
 const req = (headers: Record<string, string> = {}) =>
@@ -57,5 +62,15 @@ describe("assertAdmin", () => {
       UnauthorizedError,
     );
     expect(mockVerifyIdToken).not.toHaveBeenCalled();
+  });
+
+  it("logs why a signed-in user was refused (unverified email vs. not on the list)", async () => {
+    mockVerifyIdToken.mockResolvedValueOnce({ email: "boss@x.com", email_verified: false });
+    await assertAdmin(req({ Authorization: "Bearer tok" })).catch(() => undefined);
+    mockVerifyIdToken.mockResolvedValueOnce({ email: "user@x.com", email_verified: true });
+    await assertAdmin(req({ Authorization: "Bearer tok" })).catch(() => undefined);
+
+    const reasons = mockWarn.mock.calls.map((c) => c[1].reason);
+    expect(reasons).toEqual(["email-not-verified", "email-not-on-ADMIN_EMAILS"]);
   });
 });

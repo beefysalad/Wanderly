@@ -6,7 +6,7 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type Status = "checking" | "admin" | "forbidden" | "signed-out";
+type Status = "checking" | "admin" | "forbidden" | "signed-out" | "error";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useCurrentUser();
@@ -22,7 +22,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     api
       .get("/admin/me")
       .then(() => setStatus("admin"))
-      .catch(() => setStatus("forbidden"));
+      .catch((error) => {
+        const code = error?.response?.status;
+        setStatus(code === 401 || code === 403 ? "forbidden" : "error");
+      });
   }, [user, loading]);
 
   if (status === "checking") {
@@ -49,7 +52,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
         <h1 className='text-2xl font-bold text-white text-center mb-2'>Admin Access</h1>
-        {status === "forbidden" ? (
+        {status === "error" ? (
+          <p className='text-slate-400 text-center'>
+            Could not check admin access right now (rate limited or a server error). Try again in a
+            minute.
+          </p>
+        ) : status === "forbidden" ? (
           <p className='text-slate-400 text-center'>
             {user?.email} is not authorised for the admin portal.
           </p>
