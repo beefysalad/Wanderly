@@ -82,7 +82,7 @@ Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consol
 - (Fixed in PR #133, once merged: a non-JSON request body now returns 400 instead of 500 for every migrated route, handled once in `lib/handle-api-error.ts`.)
 - Any group member can PATCH/DELETE any Member Task (no creator/assignee restriction) — preserved as-is from the old code; decide whether that is intended.
 - Expense payments: `expenses/[expenseId]/confirm-payment` (detail page) and `.../payments/confirm` (list hook) are two live, *different* flows — the first upserts the status and notifies the member; the second only updates an existing record and writes a payment log. Marking paid (default) also writes a payment log, and confirming writes another, so a confirmed payment can have two logs. Any member can also un-mark another member's payment. All preserved as-is; decide whether each is intended.
-- Security pass (admin password, gateway proxy, guest-code trust boundary) is still untouched by design.
+- Security pass (admin password, gateway proxy, guest-code trust boundary): implemented on branch `security/revamp` (see `2026-09-25-security-pass-design.md`). Residual risk: the external socket server still authenticates guests by raw group code.
 
 ## Target Architecture (applies to every migrated feature)
 
