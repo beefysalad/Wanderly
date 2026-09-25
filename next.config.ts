@@ -10,14 +10,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/wanderly-api",
-        destination: "/api/v1/gateway",
-      },
-    ];
-  },
 };
 
 export default nextConfig;
