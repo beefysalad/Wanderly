@@ -13,7 +13,7 @@ type Params = RouteContext<{ groupId: string }>;
 
 /**
  * GET /api/groups/[groupId]/guest
- * Returns group data for guest access (requires X-Guest-Code header)
+ * Returns group data for guest access (requires an X-Guest-Token header)
  */
 async function handler(
   _req: NextRequest,

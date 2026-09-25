@@ -1,9 +1,13 @@
+import axios from "axios";
+
 const GUEST_SESSION_KEY = "wanderly_guest_session";
 
 export interface GuestSession {
   groupCode: string;
   guestName: string;
   groupId: string;
+  /** Server-signed, short-lived proof of access; sent on data requests instead of the code. */
+  guestToken?: string;
 }
 
 /**
@@ -12,7 +16,8 @@ export interface GuestSession {
 export function setGuestSession(
   groupCode: string,
   guestName: string,
-  groupId: string
+  groupId: string,
+  guestToken?: string,
 ): void {
   if (typeof window === "undefined") return;
 
@@ -20,6 +25,7 @@ export function setGuestSession(
     groupCode,
     guestName,
     groupId,
+    guestToken,
   };
 
   localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(session));
@@ -59,3 +65,24 @@ export function isGuest(): boolean {
   return getGuestSession() !== null;
 }
 
+
+/**
+ * The stored code is only ever sent to validate-code (rate limited) to obtain a fresh token;
+ * data requests carry the token, never the code.
+ */
+export async function refreshGuestToken(): Promise<string | null> {
+  const session = getGuestSession();
+  if (!session) return null;
+
+  try {
+    const { data } = await axios.post("/api/groups/validate-code", { code: session.groupCode });
+    if (!data?.guestToken) return null;
+    localStorage.setItem(
+      GUEST_SESSION_KEY,
+      JSON.stringify({ ...session, guestToken: data.guestToken }),
+    );
+    return data.guestToken;
+  } catch {
+    return null;
+  }
+}

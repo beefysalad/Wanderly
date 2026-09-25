@@ -30,25 +30,21 @@ const GuestNameForm = ({ setStep, groupCode }: IGuestNameForm) => {
     setError(null);
 
     const normalizedCode = groupCode.trim().toUpperCase();
-    console.log("Attempting to validate group code:", normalizedCode);
 
     try {
       // Validate group code and get groupId
-      console.log("Making API request to /groups/validate-code");
       const response = await api.post("/groups/validate-code", {
         code: normalizedCode,
       });
-
-      console.log("API response received:", response.data);
 
       if (!response.data?.groupId) {
         throw new Error("Invalid response from server");
       }
 
-      const { groupId } = response.data;
+      const { groupId, guestToken } = response.data;
 
       // Store guest session
-      setGuestSession(normalizedCode, data.name, groupId);
+      setGuestSession(normalizedCode, data.name, groupId, guestToken);
 
       // Navigate to guest group page
       router.push(`/guest/group/${groupId}`);
