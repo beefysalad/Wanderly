@@ -1,38 +1,26 @@
-import { verifyAdminPassword } from "@/lib/admin-auth";
-import { logger } from "@/lib/logger";
+import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyPasswordSchema } from "./schemas";
+import { verifyAdminPasswordService } from "./services";
 
 export async function GET(req: NextRequest) {
   try {
-    const password = req.headers.get("x-admin-password");
-    const isValid = await verifyAdminPassword(password);
-
-    if (!isValid) {
-      logger.warn("Admin: Failed password verification attempt", { 
-        hasPassword: !!password,
-        ua: req.headers.get("user-agent") 
-      });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await verifyAdminPasswordService(
+      req.headers.get("x-admin-password"),
+      req.headers.get("user-agent"),
+    );
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Admin: Error in verify-password route", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { password } = await req.json();
-    const isValid = await verifyAdminPassword(password);
-
-    if (!isValid) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const { password } = verifyPasswordSchema.parse(await req.json());
+    await verifyAdminPasswordService(password, req.headers.get("user-agent"));
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
