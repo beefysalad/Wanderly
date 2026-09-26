@@ -1,9 +1,8 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Loader2, Lock } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { PILL } from "../../../shared/Pills";
+import { FIELD_ERROR, FIELD_LABEL, INPUT } from "../../../shared/formStyles";
 import type { TEditProfileSchema } from "../../../shared/Modal/EditProfileModal/editProfileZod";
 
 interface ProfileEditFormProps {
@@ -23,98 +22,83 @@ export function ProfileEditForm({
   showPasswordSection,
   onTogglePasswordSection,
 }: ProfileEditFormProps) {
+  const { errors } = form.formState;
+
   return (
-    <div className='bg-slate-900/60 rounded-3xl border border-white/10 p-6 sm:p-10 mb-10'>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10'>
-          <h2 className='text-xl font-semibold text-white'>Edit Profile</h2>
-          <div className='flex gap-3 w-full sm:w-auto'>
-            <Button
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className='flex flex-col gap-5 rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-[clamp(16px,3cqw,26px)]'
+    >
+      <div className='flex flex-wrap items-center justify-between gap-3'>
+        <h2 className='text-lg font-bold'>Edit profile</h2>
+        <div className='flex gap-[10px]'>
+          <button type='button' onClick={onCancel} className={PILL.ghost}>
+            Cancel
+          </button>
+          <button type='submit' disabled={isSubmitting} className={PILL.gradient}>
+            {isSubmitting ? <Loader2 className='size-4 animate-spin' /> : null}
+            Save changes
+          </button>
+        </div>
+      </div>
+
+      <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
+        <div className='flex flex-col gap-5'>
+          <label className='flex flex-col gap-2'>
+            <span className={FIELD_LABEL}>Name</span>
+            <input {...form.register("name")} className={INPUT} />
+            {errors.name ? <span className={FIELD_ERROR}>{errors.name.message}</span> : null}
+          </label>
+          <label className='flex flex-col gap-2'>
+            <span className={FIELD_LABEL}>Bio</span>
+            <textarea
+              {...form.register("bio")}
+              rows={5}
+              placeholder='A short intro about your travel style...'
+              className={`${INPUT} resize-none`}
+            />
+          </label>
+        </div>
+
+        <div className='flex flex-col gap-5'>
+          <label className='flex flex-col gap-2'>
+            <span className={FIELD_LABEL}>Travel style</span>
+            <input {...form.register("travelStyle")} placeholder='e.g. Foodie, Nature Lover' className={INPUT} />
+          </label>
+
+          <div>
+            <button
               type='button'
-              onClick={onCancel}
-              variant='outline'
-              className='flex-1 sm:flex-none bg-slate-800 border-white/10 text-sm rounded-xl px-5'
+              onClick={onTogglePasswordSection}
+              className='flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-[#94a3b8]'
             >
-              Cancel
-            </Button>
-            <Button
-              type='submit'
-              disabled={isSubmitting}
-              className='flex-1 sm:flex-none bg-white text-slate-950 hover:bg-slate-200 text-sm rounded-xl px-5'
-            >
-              {isSubmitting && <Loader2 className='w-3 h-3 animate-spin mr-2' />}
-              Save Identity
-            </Button>
-          </div>
-        </div>
+              <Lock className='size-[14px]' />
+              {showPasswordSection ? "Keep current password" : "Change password"}
+            </button>
 
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-          <div className='space-y-6'>
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-slate-400 ml-1'>Name</Label>
-              <Input
-                {...form.register("name")}
-                className='bg-slate-800 border-white/10 h-12 rounded-xl text-sm'
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-slate-400 ml-1'>Bio</Label>
-              <textarea
-                {...form.register("bio")}
-                className='w-full min-h-[150px] bg-slate-800 border border-white/10 rounded-xl p-4 text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500 placeholder:text-slate-500 transition-all text-sm resize-none'
-                placeholder='A short intro about your travel style...'
-              />
-            </div>
-          </div>
-
-          <div className='space-y-6'>
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-slate-400 ml-1'>Travel Style</Label>
-              <Input
-                {...form.register("travelStyle")}
-                placeholder='e.g. Adventure, Relaxed, Budget'
-                className='bg-slate-800 border-white/10 h-12 rounded-xl text-sm'
-              />
-            </div>
-
-            <div className='pt-4'>
-              <button
-                type='button'
-                onClick={onTogglePasswordSection}
-                className='flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition-colors'
-              >
-                <Lock className='w-3 h-3' />
-                {showPasswordSection ? "Keep current credentials" : "Update security credentials"}
-              </button>
-
-              {showPasswordSection && (
-                <div className='mt-4 grid grid-cols-1 gap-4 p-4 bg-slate-950 rounded-xl border border-white/10'>
-                  <Input
+            {showPasswordSection ? (
+              <div className='mt-3 flex flex-col gap-3 rounded-2xl border border-white/[.08] bg-[rgba(2,6,23,.5)] p-4'>
+                <input
+                  type='password'
+                  {...form.register("currentPassword")}
+                  placeholder='Current password'
+                  className={INPUT}
+                />
+                <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                  <input type='password' {...form.register("newPassword")} placeholder='New password' className={INPUT} />
+                  <input
                     type='password'
-                    {...form.register("currentPassword")}
-                    className='bg-slate-800 border-white/10 h-11 rounded-xl'
-                    placeholder='Current Password'
+                    {...form.register("confirmPassword")}
+                    placeholder='Confirm new'
+                    className={INPUT}
                   />
-                  <div className='grid grid-cols-2 gap-4'>
-                    <Input
-                      type='password'
-                      {...form.register("newPassword")}
-                      className='bg-slate-800 border-white/10 h-11 rounded-xl'
-                      placeholder='New Password'
-                    />
-                    <Input
-                      type='password'
-                      {...form.register("confirmPassword")}
-                      className='bg-slate-800 border-white/10 h-11 rounded-xl'
-                      placeholder='Confirm New'
-                    />
-                  </div>
                 </div>
-              )}
-            </div>
+                {errors.confirmPassword ? <span className={FIELD_ERROR}>{errors.confirmPassword.message}</span> : null}
+              </div>
+            ) : null}
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

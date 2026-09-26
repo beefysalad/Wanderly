@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 
 const mockFindTripAccessInfo = vi.fn();
-const mockFindTripWithGroupCode = vi.fn();
 vi.mock("./repository", () => ({
   findTripAccessInfo: (...a: unknown[]) => mockFindTripAccessInfo(...a),
-  findTripWithGroupCode: (...a: unknown[]) => mockFindTripWithGroupCode(...a),
 }));
 
 const mockFindGroupMembership = vi.fn();
@@ -57,30 +55,22 @@ describe("verifyTripAccess", () => {
 
 describe("verifyGuestTripAccess", () => {
   it("throws NotFoundError when the trip doesn't exist", async () => {
-    mockFindTripWithGroupCode.mockResolvedValue(null);
+    mockFindTripAccessInfo.mockResolvedValue(null);
 
-    await expect(verifyGuestTripAccess("ABC123", "trip-1")).rejects.toThrow(NotFoundError);
+    await expect(verifyGuestTripAccess("group-1", "trip-1")).rejects.toThrow(NotFoundError);
   });
 
-  it("throws ForbiddenError when the code doesn't match the trip's group", async () => {
-    mockFindTripWithGroupCode.mockResolvedValue({
-      id: "trip-1",
-      groupId: "group-1",
-      group: { code: "ZZZ999" },
-    });
+  it("throws ForbiddenError when the guest's token is for a different group", async () => {
+    mockFindTripAccessInfo.mockResolvedValue({ id: "trip-1", groupId: "group-2", name: "T" });
 
-    await expect(verifyGuestTripAccess("ABC123", "trip-1")).rejects.toThrow(ForbiddenError);
+    await expect(verifyGuestTripAccess("group-1", "trip-1")).rejects.toThrow(ForbiddenError);
   });
 
-  it("accepts a matching code case-insensitively", async () => {
-    mockFindTripWithGroupCode.mockResolvedValue({
-      id: "trip-1",
-      groupId: "group-1",
-      group: { code: "ABC123" },
+  it("returns the trip when the token's group owns it", async () => {
+    mockFindTripAccessInfo.mockResolvedValue({ id: "trip-1", groupId: "group-1", name: "T" });
+
+    expect(await verifyGuestTripAccess("group-1", "trip-1")).toEqual({
+      trip: { id: "trip-1", groupId: "group-1" },
     });
-
-    const result = await verifyGuestTripAccess("abc123", "trip-1");
-
-    expect(result).toEqual({ trip: { id: "trip-1", groupId: "group-1" } });
   });
 });

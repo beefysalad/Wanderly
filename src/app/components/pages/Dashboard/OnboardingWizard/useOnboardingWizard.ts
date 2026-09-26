@@ -5,6 +5,7 @@ import api from "@/lib/axios";
 import type { User } from "@/src/shared/types";
 import type { Step } from "./onboardingOptions";
 import { buildProfileUpdates } from "./onboardingProfile";
+import { canContinue, nextStep, previousStep, savesProfile } from "./onboardingSteps";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -111,9 +112,32 @@ export function useOnboardingWizard(user: User, onComplete: () => void) {
     }
   };
 
+  // The bottom bar's Continue and Back: answers are saved on the way forward, never on the way back.
+  const proceed = () => {
+    const next = nextStep(step);
+    if (!next) return;
+    if (savesProfile(step)) void handleUpdateProfile(next);
+    else setStep(next);
+  };
+
+  const goBack = () => {
+    const previous = previousStep(step);
+    if (previous) setStep(previous);
+  };
+
+  const continueEnabled = canContinue(step, {
+    isUploading,
+    isSubmitting,
+    vibeCount: selectedVibes.length,
+    crew: selectedCrew,
+  });
+
   return {
     step,
     setStep,
+    proceed,
+    goBack,
+    continueEnabled,
     displayName,
     imageUrl,
     bucketList,

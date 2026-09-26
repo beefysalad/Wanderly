@@ -9,6 +9,8 @@ import { useExpenses } from "@/src/hooks/useExpenses";
 import api from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
+import { AppShell } from "../../shared/AppShell/AppShell";
+import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
 
 interface IActivityDetailContainer {
@@ -35,29 +37,28 @@ const ActivityDetailContainer = ({
   const activity = trip?.activities?.find((a: Activity) => a.id === activityId);
   const expenses = expensesData?.expenses || [];
 
+  const back = {
+    href: `/group/${groupId}/trip/${tripId}`,
+    crumb: `${trip?.name ?? group?.name ?? "Trip"} · Activity`,
+  };
+
   if (loadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 p-6'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail' back={back}>
+        <LoadingState className='py-24' />
+      </AppShell>
     );
   }
 
   if (!activity) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 max-w-md'>
-          <h2 className='text-xl font-bold text-white mb-2'>
-            Activity Not Found
-          </h2>
-          <button
-            onClick={() => router.back()}
-            className='px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold'
-          >
-            Go Back
-          </button>
-        </div>
-      </main>
+      <StateCard
+        back={back}
+        title='Activity not found'
+        body='It may have been deleted.'
+        actionLabel='Go back'
+        onAction={() => router.back()}
+      />
     );
   }
 
@@ -72,7 +73,7 @@ const ActivityDetailContainer = ({
     try {
       await api.delete(`/trips/${tripId}/activities/${activityId}`);
       queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      router.push(`/group/${groupId}/trip/${tripId}?tab=schedule`);
+      router.push(`/group/${groupId}/trip/${tripId}?tab=daily`);
     } catch (err) {
       alert(
         err instanceof Error
@@ -143,7 +144,7 @@ const ActivityDetailContainer = ({
   };
 
   return (
-    <>
+    <AppShell level='detail' back={back}>
       <ActivityDetail
         activity={activity}
         expenses={expenses}
@@ -163,7 +164,7 @@ const ActivityDetailContainer = ({
           confirmText='Delete Activity'
         />
       )}
-    </>
+    </AppShell>
   );
 };
 

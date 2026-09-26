@@ -2,14 +2,21 @@ import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
+import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
-import { createPaymentLogRow } from "../../../payment-logs/repository";
+import { NotificationType } from "@prisma/client";
+import { createNotificationService } from "../../../../../notifications/services";
+import {
+  createPaymentLogRow,
+  deletePaymentLogsForShare,
+  findPaymentLogForShare,
+} from "../../../payment-logs/repository";
 import type { ConfirmPaymentBody } from "../../schemas";
 import { findExpenseById } from "../../repository";
 import {
   deletePaymentsForMember,
   findExpenseForPayments,
-  updatePaymentStatus,
+  upsertPaymentStatus,
   upsertPendingPayment,
 } from "./repository";
 import type { MarkPaidBody } from "./schemas";
@@ -32,7 +39,8 @@ async function requireMemberUserId(email: string) {
   return user.id;
 }
 
-// The payment log records the member's equal share of the expense.
+// The payment log records the member's equal share of the expense, once it is confirmed.
+// A member whose share was already logged (e.g. before logging moved to confirmation) isn't logged twice.
 async function logPaymentShare(
   tripId: string,
   expense: ExpenseForPayments,
@@ -41,6 +49,7 @@ async function logPaymentShare(
 ) {
   const splitCount = expense.splits.length;
   if (splitCount === 0) return;
+  if (await findPaymentLogForShare(expense.id, payerId)) return;
 
   await createPaymentLogRow({
     tripId,
@@ -62,7 +71,7 @@ async function reloadExpense(expenseId: string) {
 
 /**
  * Marks a member as paid (a pending payment awaiting the payer's confirmation) or unpaid.
- * Marking paid is self-service only; optionally records a payment log.
+ * Marking paid is self-service only. The payment log is written when the payer confirms.
  */
 export async function markExpensePaidService(
   token: DecodedIdToken,
@@ -70,7 +79,7 @@ export async function markExpensePaidService(
   expenseId: string,
   data: MarkPaidBody,
 ) {
-  const { user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccess(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
   const memberUserId = await requireMemberUserId(data.memberEmail);
 
@@ -83,12 +92,15 @@ export async function markExpensePaidService(
     throw new ForbiddenError("You can only mark yourself as paid");
   }
 
+  if (!data.isPaid && user.email !== data.memberEmail) {
+    const group = await findGroupOwnership(trip.groupId);
+    if (group?.createdById !== user.id) {
+      throw new ForbiddenError("You can only un-mark your own payment");
+    }
+  }
+
   if (data.isPaid) {
     await upsertPendingPayment(expenseId, memberUserId);
-
-    if ((data.createPaymentLog ?? true) && expense.paidById) {
-      await logPaymentShare(tripId, expense, memberUserId, expense.paidById);
-    }
 
     logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   } else {
@@ -100,27 +112,46 @@ export async function markExpensePaidService(
   return reloadExpense(expenseId);
 }
 
-/** Confirms or rejects a member's payment. Only the expense's payer may do this. */
+/**
+ * Confirms or rejects a member's payment and notifies them. Only the expense's payer may do this.
+ * Confirming records the payment log; rejecting removes any log left over for that share.
+ */
 export async function confirmPaymentService(
   token: DecodedIdToken,
   tripId: string,
   expenseId: string,
   data: ConfirmPaymentBody,
 ) {
-  const { user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccess(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
-  if (expense.paidBy?.email !== user.email) {
+  if (expense.paidById !== user.id) {
     throw new ForbiddenError("Only the payer can confirm or reject payments");
   }
 
   const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  await updatePaymentStatus(expenseId, memberUserId, data.status);
+  await upsertPaymentStatus(expenseId, memberUserId, data.status);
 
-  if (data.status === "confirmed" && expense.paidById) {
-    await logPaymentShare(tripId, expense, memberUserId, expense.paidById);
+  if (data.status === "confirmed") {
+    await logPaymentShare(tripId, expense, memberUserId, user.id);
+  } else {
+    await deletePaymentLogsForShare(expenseId, memberUserId);
   }
+
+  await createNotificationService(memberUserId, {
+    type:
+      data.status === "confirmed"
+        ? NotificationType.payment_confirmed
+        : NotificationType.payment_rejected,
+    title: data.status === "confirmed" ? "Payment Confirmed" : "Payment Rejected",
+    message: `${user.name || user.email} ${data.status} your payment for '${expense.description}'`,
+    relatedGroupId: trip.groupId,
+    relatedTripId: tripId,
+    relatedExpenseId: expenseId,
+  }).catch((err) => {
+    logger.error("Failed to create notification", { userId: memberUserId, error: err });
+  });
 
   logger.info("Payment status updated", {
     expenseId,

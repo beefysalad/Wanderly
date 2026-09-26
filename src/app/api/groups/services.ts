@@ -212,16 +212,17 @@ export async function updateGroupService(
   return updatedGroup;
 }
 
-export async function getGroupByIdForGuestService(groupCode: string, groupId: string) {
+export async function getGroupByIdForGuestService(guestGroupId: string, groupId: string) {
+  if (guestGroupId !== groupId) {
+    throw new ForbiddenError("Invalid guest access");
+  }
+
   const group = await findGroupById(groupId);
   if (!group) {
     throw new NotFoundError("Group not found");
   }
-  if (group.code !== groupCode) {
-    throw new ForbiddenError("Invalid group code");
-  }
 
-  logger.info("Guest accessed group", { groupId: group.id, code: groupCode });
+  logger.info("Guest accessed group", { groupId: group.id });
   return group;
 }
 
@@ -231,6 +232,6 @@ export async function validateGroupCodeService(code: string) {
     throw new NotFoundError("Group not found");
   }
 
-  logger.info("Group code validated", { groupId: group.id, code: group.code });
+  logger.info("Group code validated", { groupId: group.id });
   return group;
 }

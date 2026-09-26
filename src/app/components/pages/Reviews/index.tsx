@@ -1,160 +1,88 @@
 "use client";
-import { useCreateReview, useReviews } from "@/src/hooks/useReviews";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import Footer from "../../shared/Footer";
-import { ReviewForm } from "./components/ReviewForm";
-import { ReviewsList } from "./components/ReviewsList";
-import { ReviewsStats } from "./components/ReviewsStats";
-import { reviewsSchema, TReviewsSchema } from "./reviewsZod";
+import { useReviews } from "@/src/hooks/useReviews";
+import { EYEBROW } from "../../shared/Site/PageHero";
+import { Reveal } from "../../shared/Site/Reveal";
+import { COPYRIGHT } from "../../shared/Site/SiteFooter";
+import { SiteShell } from "../../shared/Site/SiteShell";
+import { ReviewCards } from "./ReviewCards";
+import { ReviewForm } from "./ReviewForm";
+import { ReviewsSummary } from "./ReviewsSummary";
+
+const PAGE_SIZE = 6;
 
 const ReviewsComponent = () => {
-  const router = useRouter();
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [starFilter, setStarFilter] = useState<number | null>(null);
-  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
-  const reviewsPerPage = 6;
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
-  const { data: allReviewsData, isLoading: isLoadingAll } = useReviews(1, 10000);
-  const allReviews = allReviewsData?.reviews || [];
+  // Every review feeds the average and the rating spread; only `limit` of them are shown as cards.
+  const { data: everything, isLoading: statsLoading } = useReviews(1, 10000);
+  const { data: shown, isLoading, isError } = useReviews(1, limit);
 
-  const {
-    data: reviewsData,
-    isLoading,
-    isError,
-    error,
-  } = useReviews(currentPage, reviewsPerPage, starFilter || undefined);
-
-  const reviews = reviewsData?.reviews || [];
-  const totalPages = reviewsData?.totalPages || 0;
-  const totalReviews = reviewsData?.total || 0;
-
-  const createReviewMutation = useCreateReview();
-
-  const form = useForm<TReviewsSchema>({
-    resolver: zodResolver(reviewsSchema),
-    defaultValues: {
-      comment: "",
-      rating: 0,
-      name: "",
-      email: "",
-    },
-  });
-
-  const onSubmit = async (values: TReviewsSchema) => {
-    setRateLimitError(null);
-    try {
-      await createReviewMutation.mutateAsync({
-        rating: values.rating,
-        comment: values.comment,
-        name: values.name,
-        email: values.email,
-      });
-      form.reset();
-      setShowReviewForm(false);
-      //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      if (err?.response?.status === 429) {
-        setRateLimitError("You've submitted too many reviews. Please try again later.");
-      } else {
-        setRateLimitError(
-          err?.response?.data?.error || "Failed to submit review. Please try again.",
-        );
-      }
-    }
-  };
-
-  const handleStarFilterChange = (filter: number | null) => {
-    setStarFilter(filter);
-    setCurrentPage(1);
-  };
+  const reviews = shown?.reviews ?? [];
+  const total = shown?.total ?? 0;
 
   return (
-    <div className='min-h-screen bg-slate-950 text-white relative overflow-hidden'>
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-3xl animate-pulse-glow'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-3xl animate-pulse-glow delay-1000'></div>
-      </div>
-
-      <div className='relative z-10'>
-        <div className='px-4 md:px-8 py-6'>
-          <button
-            onClick={() => router.push("/")}
-            className='flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors group'
-          >
-            <ArrowLeft className='w-5 h-5 group-hover:-translate-x-1 transition-transform' />
-            <span className='font-medium'>Back to Home</span>
-          </button>
-        </div>
-
-        <div className='px-4 md:px-8 py-12 md:py-20'>
-          <div className='max-w-5xl mx-auto'>
-            <div className='flex items-center gap-3 mb-6 justify-center'>
-              <h1 className='text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 bg-clip-text text-transparent'>
-                Reviews
-              </h1>
-            </div>
-
-            <p className='text-center text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto'>
-              See what travelers are saying about their Wanderly experience
+    <SiteShell active='/reviews' footerCopyright={COPYRIGHT.location} footerLinks={["home", "about", "howTo", "faq"]}>
+      <section className='relative z-[1] mx-auto box-content grid max-w-[1100px] grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-end gap-[clamp(28px,4vw,56px)] px-[clamp(20px,4vw,48px)] pb-[clamp(28px,3.5vw,44px)] pt-[clamp(48px,7vw,96px)]'>
+        <div className='min-w-0'>
+          <Reveal immediate distance={24} delay={0.05}>
+            <p className={`mb-[14px] ${EYEBROW}`}>Reviews</p>
+          </Reveal>
+          <Reveal immediate distance={24} delay={0.14}>
+            <h1 className='mb-[18px] text-[clamp(38px,5.4vw,60px)] font-extrabold leading-[1.02] tracking-[-.035em]'>
+              What early groups say.
+            </h1>
+          </Reveal>
+          <Reveal immediate distance={24} delay={0.23}>
+            <p className='max-w-[32em] text-[17px] leading-[1.7] text-[#94a3b8]'>
+              Unedited, including the bits about what&apos;s still missing. If you&apos;ve used it for a trip, leave
+              one below.
             </p>
-
-            <ReviewsStats allReviews={allReviews} isLoading={isLoadingAll} />
-          </div>
+          </Reveal>
         </div>
+        <Reveal immediate distance={24} delay={0.32} className='min-w-0'>
+          <ReviewsSummary reviews={everything?.reviews ?? []} ready={!statsLoading && !!everything} />
+        </Reveal>
+      </section>
 
-        <div className='px-4 md:px-8 py-8'>
-          <div className='max-w-4xl mx-auto'>
-            {!showReviewForm ? (
-              <button
-                onClick={() => setShowReviewForm(true)}
-                className='w-full md:w-auto md:mx-auto md:block group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl px-8 py-3 transition-all duration-300 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105'
-              >
-                <div className='flex items-center justify-center gap-2'>
-                  <Send className='w-4 h-4 group-hover:rotate-12 transition-transform' />
-                  <span className='text-base font-semibold'>Share Your Experience</span>
-                </div>
-              </button>
-            ) : (
-              <ReviewForm
-                form={form}
-                onSubmit={onSubmit}
-                onCancel={() => setShowReviewForm(false)}
-                isSubmitting={createReviewMutation.isPending}
-                rateLimitError={rateLimitError}
-              />
-            )}
-          </div>
-        </div>
+      <section className='relative z-[1] mx-auto box-content max-w-[1100px] px-[clamp(20px,4vw,48px)] pb-[clamp(40px,5vw,64px)]'>
+        {isLoading ? (
+          <p className='text-[15px] text-[#94a3b8]'>Loading reviews…</p>
+        ) : isError ? (
+          <p className='text-[15px] text-[#f87171]'>Couldn&apos;t load reviews right now. Please try again later.</p>
+        ) : reviews.length === 0 ? (
+          <p className='text-[15px] text-[#94a3b8]'>No reviews yet — be the first to leave one below.</p>
+        ) : (
+          <>
+            <ReviewCards reviews={reviews} />
+            {reviews.length < total ? (
+              <div className='mt-8 flex justify-center'>
+                <button
+                  type='button'
+                  onClick={() => setLimit((current) => current + PAGE_SIZE)}
+                  className='cursor-pointer rounded-full border border-white/[.14] bg-white/[.03] px-6 py-3 text-[15px] font-semibold text-[#e2e8f0]'
+                >
+                  Show more reviews
+                </button>
+              </div>
+            ) : null}
+          </>
+        )}
+      </section>
 
-        <div className='px-4 md:px-8 py-16'>
-          <div className='max-w-6xl mx-auto'>
-            <h2 className='text-4xl font-bold mb-8 text-center'>
-              What People Are Saying
-            </h2>
-
-            <ReviewsList
-              reviews={reviews}
-              isLoading={isLoading}
-              isError={isError}
-              error={error}
-              starFilter={starFilter}
-              onStarFilterChange={handleStarFilterChange}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalReviews={totalReviews}
-              reviewsPerPage={reviewsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    </div>
+      <section className='relative z-[1] border-t border-white/[.06] bg-[rgba(15,23,42,.35)] px-[clamp(20px,4vw,48px)] py-[clamp(48px,6vw,88px)]'>
+        <Reveal distance={24} className='mx-auto max-w-[620px]'>
+          <h2 className='mb-[10px] text-[clamp(24px,3.2vw,36px)] font-extrabold tracking-[-.03em]'>
+            Used it for a trip? Say so.
+          </h2>
+          <p className='mb-6 text-base text-[#94a3b8]'>
+            Including the parts that annoyed you — that&apos;s the useful half.
+          </p>
+          <ReviewForm />
+        </Reveal>
+      </section>
+    </SiteShell>
   );
 };
 

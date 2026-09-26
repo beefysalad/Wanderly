@@ -272,22 +272,9 @@ const AdminWhatsNew = () => {
   };
 
   const handleSave = async () => {
-    const password = sessionStorage.getItem("admin_password");
-    if (!password) {
-      alert("No admin password found. Please log in again.");
-      return;
-    }
-
     setSaving(true);
     try {
-      await fetch("/api/config/whats-new", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-password": password,
-        },
-        body: JSON.stringify({ version, features }),
-      });
+      await api.post("/config/whats-new", { version, features });
       alert("Configuration saved successfully!");
     } catch (err) {
       console.error(err);

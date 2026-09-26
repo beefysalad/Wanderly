@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/axios";
 import { format } from "date-fns";
 import {
   Activity,
@@ -42,18 +42,7 @@ export default function UserManagementPage() {
 
   const fetchUsers = async () => {
     try {
-      const password = sessionStorage.getItem("admin_password");
-      if (!password) {
-        toast.error("Unauthorized");
-        router.push("/admin");
-        return;
-      }
-
-      const response = await axios.get("/api/admin/users", {
-        headers: {
-          "x-admin-password": password,
-        },
-      });
+      const response = await api.get("/admin/users");
 
       setUsers(response.data.users);
       if (response.data.stats) {
@@ -78,12 +67,7 @@ export default function UserManagementPage() {
 
     setDeletingId(userId);
     try {
-      const password = sessionStorage.getItem("admin_password");
-      await axios.delete(`/api/admin/users/${userId}`, {
-        headers: {
-          "x-admin-password": password,
-        },
-      });
+      await api.delete(`/admin/users/${userId}`);
 
       toast.success("User deleted successfully");
       setUsers((prev) => prev.filter((u) => u.id !== userId));

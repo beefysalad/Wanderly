@@ -14,6 +14,11 @@ vi.mock("../../repository", () => ({
   findUserIdByEmail: (...a: unknown[]) => mockFindUserIdByEmail(...a),
 }));
 
+const mockFindGroupOwnership = vi.fn();
+vi.mock("../../../groups/repository", () => ({
+  findGroupOwnership: (...a: unknown[]) => mockFindGroupOwnership(...a),
+}));
+
 const mockFindActivityById = vi.fn();
 vi.mock("../activities/repository", () => ({
   findActivityById: (...a: unknown[]) => mockFindActivityById(...a),
@@ -25,7 +30,6 @@ const mockFindSummary = vi.fn();
 const mockCreateRow = vi.fn();
 const mockUpdateRow = vi.fn();
 const mockDeleteRow = vi.fn();
-const mockUpsertPayment = vi.fn();
 vi.mock("./repository", () => ({
   listExpensesByTrip: (...a: unknown[]) => mockList(...a),
   findExpenseById: (...a: unknown[]) => mockFindById(...a),
@@ -33,16 +37,11 @@ vi.mock("./repository", () => ({
   createExpenseRow: (...a: unknown[]) => mockCreateRow(...a),
   updateExpenseRow: (...a: unknown[]) => mockUpdateRow(...a),
   deleteExpenseRow: (...a: unknown[]) => mockDeleteRow(...a),
-  upsertExpensePaymentStatus: (...a: unknown[]) => mockUpsertPayment(...a),
 }));
 
 const mockNotifyMembers = vi.fn();
 vi.mock("../../../notifications/notifyMembers", () => ({
   notifyGroupMembers: (...a: unknown[]) => mockNotifyMembers(...a),
-}));
-const mockCreateNotification = vi.fn();
-vi.mock("../../../notifications/services", () => ({
-  createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
 }));
 
 const mockEmitCreated = vi.fn();
@@ -57,7 +56,6 @@ vi.mock("@/lib/socket-events", () => ({
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const {
-  confirmPaymentService,
   createExpenseService,
   deleteExpenseService,
   getExpenseByIdService,
@@ -86,6 +84,7 @@ const expenseRow = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip, user });
+  mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
   mockFindUserIdByEmail.mockImplementation(async (email: string) =>
     email === "ghost@x.com" ? null : { id: `id-${email}` },
   );
@@ -93,16 +92,15 @@ beforeEach(() => {
   mockEmitCreated.mockResolvedValue(undefined);
   mockEmitUpdated.mockResolvedValue(undefined);
   mockEmitDeleted.mockResolvedValue(undefined);
-  mockCreateNotification.mockResolvedValue(undefined);
 });
 
 describe("guest list", () => {
   it("re-verifies the group code before listing", async () => {
     mockList.mockResolvedValue([]);
 
-    await listExpensesForGuestService("ABC123", "t1");
+    await listExpensesForGuestService("g1", "t1");
 
-    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("ABC123", "t1");
+    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("g1", "t1");
   });
 });
 
@@ -235,7 +233,13 @@ describe("updateExpenseService", () => {
 
 describe("deleteExpenseService", () => {
   it("notifies before deleting, without relatedExpenseId, then emits", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", description: "Dinner", amount: 100 });
+    mockFindSummary.mockResolvedValue({
+      id: "e1",
+      tripId: "t1",
+      description: "Dinner",
+      amount: 100,
+      createdById: "u1",
+    });
     const order: string[] = [];
     mockNotifyMembers.mockImplementation(async () => void order.push("notify"));
     mockDeleteRow.mockImplementation(async () => void order.push("delete"));
@@ -259,36 +263,40 @@ describe("deleteExpenseService", () => {
   });
 });
 
-describe("confirmPaymentService", () => {
-  const body = { memberEmail: "bob@x.com", status: "confirmed" as const };
-
-  it("throws NotFoundError when the member email is unknown", async () => {
-    mockFindUserIdByEmail.mockResolvedValue(null);
-
-    await expect(confirmPaymentService(token, "t1", "e1", body)).rejects.toThrow(NotFoundError);
+describe("expense edit/delete permissions", () => {
+  const summary = (over = {}) => ({
+    id: "e1",
+    tripId: "t1",
+    paidById: "payer-1",
+    createdById: "creator-1",
+    description: "Dinner",
+    amount: 100,
+    ...over,
   });
 
-  it("throws ForbiddenError unless the caller paid for the expense", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", paidById: "someone-else", description: "D" });
-
-    await expect(confirmPaymentService(token, "t1", "e1", body)).rejects.toThrow(ForbiddenError);
-    expect(mockUpsertPayment).not.toHaveBeenCalled();
+  beforeEach(() => {
+    mockUpdateRow.mockResolvedValue(expenseRow);
   });
 
-  it("records the status, notifies the member and returns the refreshed expense", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", paidById: "u1", description: "Dinner" });
-    mockFindById.mockResolvedValue({ id: "e1" });
+  it("rejects update and delete by a member who is neither creator, payer nor owner", async () => {
+    mockFindSummary.mockResolvedValue(summary());
 
-    const result = await confirmPaymentService(token, "t1", "e1", { ...body, status: "rejected" });
-
-    expect(mockUpsertPayment).toHaveBeenCalledWith("e1", "id-bob@x.com", "rejected");
-    expect(mockCreateNotification).toHaveBeenCalledWith(
-      "id-bob@x.com",
-      expect.objectContaining({
-        title: "Payment Rejected",
-        message: "Alice rejected your payment for 'Dinner'",
-      }),
+    await expect(updateExpenseService(token, "t1", "e1", { description: "x" })).rejects.toThrow(
+      ForbiddenError,
     );
-    expect(result).toEqual({ id: "e1" });
+    await expect(deleteExpenseService(token, "t1", "e1")).rejects.toThrow(ForbiddenError);
+    expect(mockUpdateRow).not.toHaveBeenCalled();
+    expect(mockDeleteRow).not.toHaveBeenCalled();
+  });
+
+  it("allows the creator, the payer and the group owner", async () => {
+    for (const actor of ["creator-1", "payer-1", "owner-1"]) {
+      mockVerifyTripAccess.mockResolvedValue({ trip, user: { ...user, id: actor } });
+      mockFindSummary.mockResolvedValue(summary());
+
+      await expect(
+        updateExpenseService(token, "t1", "e1", { category: "food" }),
+      ).resolves.toBeDefined();
+    }
   });
 });

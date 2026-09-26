@@ -20,8 +20,8 @@ async function getHandler(_req: NextRequest, context: OptionalAuthContext, { par
   try {
     const { tripId } = await params;
     const expenses =
-      context.isGuest && context.groupCode
-        ? await listExpensesForGuestService(context.groupCode, tripId)
+      context.isGuest && context.guestGroupId
+        ? await listExpensesForGuestService(context.guestGroupId, tripId)
         : await listExpensesService(context.decodedToken, tripId);
     return NextResponse.json({ expenses: expenses.map(transformExpense) });
   } catch (error) {

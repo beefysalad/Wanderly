@@ -3,8 +3,10 @@ import type { Prisma } from "@prisma/client";
 import { listAppConfigs, upsertAppConfig } from "./repository";
 import type { UpsertConfigBody } from "./schemas";
 
-export function listConfigsService() {
-  return listAppConfigs();
+export async function listConfigsService() {
+  const configs = await listAppConfigs();
+  // The retired shared-password row must never be shown (it is plain text).
+  return configs.filter((config) => config.key !== "admin_password");
 }
 
 export async function upsertConfigService(data: UpsertConfigBody) {

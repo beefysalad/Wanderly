@@ -30,7 +30,14 @@ export function findExpenseById(expenseId: string) {
 export function findExpenseSummary(expenseId: string) {
   return prisma.expense.findUnique({
     where: { id: expenseId },
-    select: { id: true, tripId: true, paidById: true, description: true, amount: true },
+    select: {
+      id: true,
+      tripId: true,
+      paidById: true,
+      createdById: true,
+      description: true,
+      amount: true,
+    },
   });
 }
 
@@ -99,16 +106,4 @@ export function updateExpenseRow(expenseId: string, changes: UpdateExpenseRow) {
 
 export function deleteExpenseRow(expenseId: string) {
   return prisma.expense.delete({ where: { id: expenseId } });
-}
-
-export function upsertExpensePaymentStatus(
-  expenseId: string,
-  userId: string,
-  status: "confirmed" | "rejected",
-) {
-  return prisma.expensePayment.upsert({
-    where: { expenseId_userId: { expenseId, userId } },
-    update: { status },
-    create: { expenseId, userId, status },
-  });
 }

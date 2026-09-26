@@ -1,148 +1,156 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
+import { ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { signInSchema, TSignInSchema } from "./authSchema";
-import { Button } from "@/components/ui/button";
+import { AuthItem, FIELD_LABEL, FieldError, FormError, GoogleButton, INPUT, OrDivider, PasswordField, SUBMIT_BUTTON } from "./AuthParts";
+import { signInSchema, type TSignInSchema } from "./authSchema";
 
 interface ISignInFormProps {
   onAuthSuccess: () => void;
+  /** Where "Start free" leads (keeps any ?redirect= the visitor arrived with). */
+  signUpHref: string;
+  /** Position of the heading in the page's entrance sequence; the form's items follow it. */
+  firstIndex: number;
 }
 
-export default function SignInForm({ onAuthSuccess }: ISignInFormProps) {
+const SIGN_IN_ERRORS: Record<string, string> = {
+  "auth/invalid-credential": "Invalid email or password.",
+  "auth/user-not-found": "No account found with this email.",
+  "auth/wrong-password": "Incorrect password.",
+  "auth/too-many-requests": "Too many attempts. Please try again later.",
+};
+
+export default function SignInForm({ onAuthSuccess, signUpHref, firstIndex }: ISignInFormProps) {
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<TSignInSchema>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
+  const errors = form.formState.errors;
 
   const onSubmit = async (values: TSignInSchema) => {
     setLoading(true);
     setError(null);
+    setNotice(null);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       onAuthSuccess();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Sign in error:", err);
-      let message = "Failed to sign in. Please check your credentials.";
-      if (err.code === "auth/invalid-credential") {
-        message = "Invalid email or password.";
-      } else if (err.code === "auth/user-not-found") {
-        message = "No account found with this email.";
-      } else if (err.code === "auth/wrong-password") {
-        message = "Incorrect password.";
-      } else if (err.code === "auth/too-many-requests") {
-        message = "Too many attempts. Please try again later.";
-      }
-      setError(message);
+      setError(SIGN_IN_ERRORS[err.code] ?? "Failed to sign in. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
+  const onForgotPassword = async () => {
+    setError(null);
+    setNotice(null);
+    const email = form.getValues("email").trim();
+    if (!signInSchema.shape.email.safeParse(email).success) {
+      setError("Enter your email above first, then choose Forgot.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (err) {
+      // Deliberately not surfaced: the message below is the same whether or not the account exists.
+      console.error("Password reset error:", err);
+    }
+    setNotice("If an account exists for that email, a reset link is on its way.");
+  };
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-      {error && (
-        <div className='bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3 text-red-200'>
-          <AlertCircle className='w-5 h-5 mt-0.5 flex-shrink-0' />
-          <span className='text-sm'>{error}</span>
-        </div>
-      )}
+    <div className='w-full max-w-[420px]'>
+      <AuthItem index={firstIndex}>
+        <h1 className='mb-2 text-[clamp(30px,3.6vw,42px)] font-extrabold leading-[1.05] tracking-[-.03em]'>
+          Welcome back.
+        </h1>
+      </AuthItem>
+      <AuthItem index={firstIndex + 1}>
+        <p className='mb-[30px] text-[15px] text-[#94a3b8]'>The trip&apos;s still there. Nobody moved anything important.</p>
+      </AuthItem>
 
-      <div className='space-y-5'>
-        {/* Email Input */}
-        <div className='space-y-2'>
-          <label
-            htmlFor='email'
-            className='block text-sm font-medium text-slate-300 mb-2'
-          >
-            Email address
-          </label>
-          <input
-            {...form.register("email")}
-            id='email'
-            type='email'
-            placeholder='you@example.com'
-            className='w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 
-                     focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50
-                     transition-all duration-200 hover:bg-white/[0.07]'
-          />
-          {form.formState.errors.email && (
-            <p className='text-sm text-red-400 mt-1.5'>
-              {form.formState.errors.email.message}
-            </p>
-          )}
-        </div>
+      <AuthItem index={firstIndex + 2}>
+        <GoogleButton onSuccess={onAuthSuccess} onError={setError} />
+      </AuthItem>
+      <AuthItem index={firstIndex + 3}>
+        <OrDivider />
+      </AuthItem>
 
-        {/* Password Input */}
-        <div className='space-y-2'>
-          <label
-            htmlFor='password'
-            className='block text-sm font-medium text-slate-300 mb-2'
-          >
-            Password
-          </label>
-          <div className='relative'>
-            <input
-              {...form.register("password")}
-              id='password'
-              type={showPassword ? "text" : "password"}
-              placeholder='Enter your password'
-              className='w-full px-4 py-3.5 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 
-                       focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50
-                       transition-all duration-200 hover:bg-white/[0.07]'
-            />
-            <button
-              type='button'
-              onClick={() => setShowPassword(!showPassword)}
-              className='absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1'
-            >
-              {showPassword ? (
-                <EyeOff className='w-5 h-5' />
-              ) : (
-                <Eye className='w-5 h-5' />
-              )}
-              <span className='sr-only'>
-                {showPassword ? "Hide password" : "Show password"}
-              </span>
-            </button>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className='flex flex-col gap-[14px]'>
+        {error ? <FormError>{error}</FormError> : null}
+        {notice ? (
+          <div role='status' className='rounded-xl border border-[rgba(52,211,153,.25)] bg-[rgba(52,211,153,.08)] px-4 py-3 text-sm text-[#34d399]'>
+            {notice}
           </div>
-          {form.formState.errors.password && (
-            <p className='text-sm text-red-400 mt-1.5'>
-              {form.formState.errors.password.message}
-            </p>
-          )}
-        </div>
-      </div>
+        ) : null}
 
-      <Button
-        type='submit'
-        disabled={loading}
-        className='w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 
-                 text-white font-bold text-lg h-auto py-4 md:py-5 rounded-xl transition-all duration-200 
-                 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02]
-                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+        <AuthItem index={firstIndex + 4}>
+          <label className='flex flex-col gap-[7px]'>
+            <span className={FIELD_LABEL}>Email</span>
+            <input {...form.register("email")} type='email' autoComplete='email' placeholder='you@example.com' className={INPUT} />
+            <FieldError message={errors.email?.message} />
+          </label>
+        </AuthItem>
+
+        <AuthItem index={firstIndex + 5}>
+          <PasswordField
+            label='Password'
+            placeholder='••••••••'
+            autoComplete='current-password'
+            registration={form.register("password")}
+            error={errors.password?.message}
+            action={
+              <button
+                type='button'
+                onClick={onForgotPassword}
+                className='cursor-pointer font-sans text-xs normal-case tracking-normal text-[#fbbf24] hover:text-[#fcd34d]'
+              >
+                Forgot?
+              </button>
+            }
+          />
+        </AuthItem>
+
+        <AuthItem index={firstIndex + 6}>
+          <button type='submit' disabled={loading} className={SUBMIT_BUTTON}>
+            {loading ? (
+              <>
+                <Loader2 className='size-[17px] animate-spin' /> Signing in…
+              </>
+            ) : (
+              <>
+                Login <ArrowRight className='size-[17px]' />
+              </>
+            )}
+          </button>
+        </AuthItem>
+      </form>
+
+      <AuthItem
+        index={firstIndex + 7}
+        className='mt-7 flex flex-wrap justify-between gap-3 border-t border-white/[.07] pt-[22px] text-sm text-[#94a3b8]'
       >
-        {loading ? (
-          <span className='flex items-center justify-center gap-2'>
-            <Loader2 className='w-5 h-5 animate-spin' />
-            Signing in...
-          </span>
-        ) : (
-          "Sign In"
-        )}
-      </Button>
-    </form>
+        <span>
+          New here?{" "}
+          <Link href={signUpHref} className='font-semibold text-[#fbbf24] hover:text-[#fcd34d]'>
+            Start free
+          </Link>
+        </span>
+        <Link href='/guest/join' className='text-[#94a3b8]'>
+          Join with a code
+        </Link>
+      </AuthItem>
+    </div>
   );
 }

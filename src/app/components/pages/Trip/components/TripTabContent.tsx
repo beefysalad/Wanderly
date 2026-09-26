@@ -1,101 +1,77 @@
-import { useRouter } from "next/navigation";
 import type { Activity } from "@/src/shared/types";
 import BudgetComponent from "../../Budget";
 import ExpensesComponent from "../../Expenses";
-import TravelCalendar from "../TravelCalendar";
-import TravelDayOverview from "../TravelDayOverview";
-import TravelSchedule from "../TravelSchedule";
+import { dayKey } from "../tripView";
 import type { TabType } from "../tripTabs";
+import { DayView } from "./DayView";
+import { TimelineView } from "./TimelineView";
+import { TripCalendarView } from "./TripCalendarView";
 
-interface ITripTabContentProps {
+interface TripTabContentProps {
   activeTab: TabType;
   groupId: string;
   tripId: string;
-  tripName: string;
   startDate: Date;
   endDate: Date;
   activities: Activity[];
-  addActivity: () => void;
-  updateActivity: (id: string, updates: Partial<Activity>) => void;
-  deleteActivity: (id: string) => void;
-  toggleDone: (id: string) => void;
-  handleEditActivity: (activity: Activity) => void;
+  /** The day the Day tab opens on (0-based); set by tapping a day in the Calendar tab. */
+  dayIndex: number;
+  onPickDay: (tripDay: number) => void;
+  /** Omit both for a read-only guest view. */
+  updateActivity?: (id: string, updates: Partial<Activity>) => void;
+  toggleDone?: (id: string) => void;
   handleViewActivity: (activity: Activity) => void;
+  /** Someone peeking in with a group code: no adding, ticking, dragging or budget. */
+  guest?: boolean;
 }
 
 export const TripTabContent = ({
   activeTab,
   groupId,
   tripId,
-  tripName,
   startDate,
   endDate,
   activities,
-  addActivity,
+  dayIndex,
+  onPickDay,
   updateActivity,
-  deleteActivity,
   toggleDone,
-  handleEditActivity,
   handleViewActivity,
-}: ITripTabContentProps) => {
-  const router = useRouter();
+  guest = false,
+}: TripTabContentProps) => {
+  const addHref = guest ? undefined : (date: Date) => `/group/${groupId}/trip/${tripId}/activities/add?date=${dayKey(date)}`;
+
+  if (activeTab === "expenses") return <ExpensesComponent groupId={groupId} tripId={tripId} guest={guest} />;
+  if (activeTab === "budget" && !guest) return <BudgetComponent groupId={groupId} tripId={tripId} />;
+
+  if (activeTab === "calendar") {
+    return <TripCalendarView startDate={startDate} endDate={endDate} activities={activities} onPickDay={onPickDay} />;
+  }
+
+  if (activeTab === "schedule") {
+    return (
+      <TimelineView
+        startDate={startDate}
+        endDate={endDate}
+        activities={activities}
+        readOnly={guest}
+        onViewActivity={handleViewActivity}
+        onToggleDone={toggleDone}
+        onUpdateActivity={updateActivity}
+        addHref={addHref}
+      />
+    );
+  }
 
   return (
-  activeTab === "calendar" ? (
-        <TravelCalendar
-          startDate={startDate}
-          endDate={endDate}
-          activities={activities}
-          onAddActivity={addActivity}
-          onUpdateActivity={updateActivity}
-          onDeleteActivity={deleteActivity}
-          onToggleDone={toggleDone}
-          onEditActivity={handleEditActivity}
-          onViewActivity={handleViewActivity}
-          onOpenAddModal={(date) => {
-            const dateStr = date ? date.toISOString().split("T")[0] : "";
-            router.push(
-              `/group/${groupId}/trip/${tripId}/activities/add${dateStr ? `?date=${dateStr}` : ""}`,
-            );
-          }}
-        />
-      ) : activeTab === "expenses" ? (
-        <ExpensesComponent
-          groupId={groupId}
-          tripId={tripId}
-          isEmbedded={true}
-        />
-      ) : activeTab === "budget" ? (
-        <BudgetComponent
-          groupId={groupId}
-          tripId={tripId}
-          isEmbedded={true}
-        />
-      ) : activeTab === "daily" ? (
-        <TravelDayOverview
-          startDate={startDate}
-          endDate={endDate}
-          activities={activities}
-          onAddActivity={addActivity}
-          onUpdateActivity={updateActivity}
-          onDeleteActivity={deleteActivity}
-          onToggleDone={toggleDone}
-          onEditActivity={handleEditActivity}
-          onViewActivity={handleViewActivity}
-        />
-      ) : (
-        <TravelSchedule
-          startDate={startDate}
-          endDate={endDate}
-          activities={activities}
-          onAddActivity={addActivity}
-          onUpdateActivity={updateActivity}
-          onDeleteActivity={deleteActivity}
-          onToggleDone={toggleDone}
-          onEditActivity={handleEditActivity}
-          onViewActivity={handleViewActivity}
-          tripName={tripName}
-        />
-      )
+    <DayView
+      startDate={startDate}
+      endDate={endDate}
+      activities={activities}
+      initialDay={dayIndex}
+      onViewActivity={handleViewActivity}
+      onToggleDone={toggleDone}
+      addHref={addHref}
+    />
   );
 };

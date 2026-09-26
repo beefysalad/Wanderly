@@ -8,7 +8,8 @@ import {
 import { NotificationType, type PaymentMethod } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";
-import { createNotificationService } from "../../../notifications/services";
+import { findGroupOwnership } from "../../../groups/repository";
+import { assertCanModify } from "../../../groups/permissions";
 import { verifyGuestTripAccess, verifyTripAccess } from "../../access";
 import { findUserIdByEmail } from "../../repository";
 import { findActivityById } from "../activities/repository";
@@ -19,11 +20,10 @@ import {
   findExpenseSummary,
   listExpensesByTrip,
   updateExpenseRow,
-  upsertExpensePaymentStatus,
   type SplitRow,
   type UpdateExpenseRow,
 } from "./repository";
-import type { ConfirmPaymentBody, CreateExpenseBody, UpdateExpenseBody } from "./schemas";
+import type { CreateExpenseBody, UpdateExpenseBody } from "./schemas";
 import type { ExpenseWithRelations } from "./transformers";
 
 /**
@@ -63,6 +63,22 @@ async function findExpenseInTrip(expenseId: string, tripId: string) {
   return expense;
 }
 
+async function assertCanChangeExpense(
+  expense: { paidById: string | null; createdById: string | null },
+  actorId: string,
+  groupId: string,
+) {
+  const group = await findGroupOwnership(groupId);
+  assertCanModify(
+    {
+      actorId,
+      allowedUserIds: [expense.createdById, expense.paidById],
+      groupOwnerId: group?.createdById,
+    },
+    "Only the expense creator, the payer or the group owner can change this expense",
+  );
+}
+
 // Socket clients expect plain numbers/strings and a paidBy object even for guest payers.
 function toSocketExpense(expense: ExpenseWithRelations) {
   return {
@@ -80,8 +96,8 @@ export async function listExpensesService(token: DecodedIdToken, tripId: string)
   return listExpensesByTrip(tripId);
 }
 
-export async function listExpensesForGuestService(groupCode: string, tripId: string) {
-  await verifyGuestTripAccess(groupCode, tripId);
+export async function listExpensesForGuestService(guestGroupId: string, tripId: string) {
+  await verifyGuestTripAccess(guestGroupId, tripId);
   return listExpensesByTrip(tripId);
 }
 
@@ -155,6 +171,7 @@ export async function updateExpenseService(
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
   const before = await findExpenseInTrip(expenseId, tripId);
+  await assertCanChangeExpense(before, user.id, trip.groupId);
 
   if (data.activityId) {
     await assertActivityInTrip(data.activityId, tripId);
@@ -208,6 +225,7 @@ export async function deleteExpenseService(
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
   const existing = await findExpenseInTrip(expenseId, tripId);
+  await assertCanChangeExpense(existing, user.id, trip.groupId);
 
   // Notify BEFORE deleting; no relatedExpenseId since the row is about to go.
   await notifyGroupMembers(trip.groupId, user.id, {
@@ -229,49 +247,4 @@ export async function deleteExpenseService(
   });
 
   logger.info("Expense deleted", { expenseId, tripId });
-}
-
-export async function confirmPaymentService(
-  token: DecodedIdToken,
-  tripId: string,
-  expenseId: string,
-  data: ConfirmPaymentBody,
-) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
-
-  const member = await findUserIdByEmail(data.memberEmail);
-  if (!member) {
-    throw new NotFoundError("Member not found");
-  }
-
-  const expense = await findExpenseInTrip(expenseId, tripId);
-
-  // Only the person who paid for the expense can confirm payments.
-  if (expense.paidById !== user.id) {
-    throw new ForbiddenError("Only the payer can confirm payments");
-  }
-
-  await upsertExpensePaymentStatus(expenseId, member.id, data.status);
-
-  await createNotificationService(member.id, {
-    type:
-      data.status === "confirmed"
-        ? NotificationType.payment_confirmed
-        : NotificationType.payment_rejected,
-    title: data.status === "confirmed" ? "Payment Confirmed" : "Payment Rejected",
-    message: `${user.name || user.email} ${data.status} your payment for '${expense.description}'`,
-    relatedGroupId: trip.groupId,
-    relatedTripId: tripId,
-    relatedExpenseId: expenseId,
-  }).catch((err) => {
-    logger.error("Failed to create notification", { userId: member.id, error: err });
-  });
-
-  logger.info(`Payment ${data.status}`, { expenseId, memberId: member.id, status: data.status });
-
-  const updated = await findExpenseById(expenseId);
-  if (!updated) {
-    throw new NotFoundError("Expense not found");
-  }
-  return updated;
 }

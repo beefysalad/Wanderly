@@ -1,14 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { use } from "react";
-import GuestExpensesComponent from "@/src/app/components/pages/GuestExpenses";
-
-export default function GuestExpensesPage({
-  params,
-}: {
-  params: Promise<{ groupId: string; tripId: string }>;
-}) {
-  const { groupId, tripId } = use(params);
-  return <GuestExpensesComponent groupId={groupId} tripId={tripId} />;
+// The guest trip page has an Expenses tab; this route just opens it.
+export default async function GuestExpensesPage({ params }: { params: Promise<{ groupId: string; tripId: string }> }) {
+  const { groupId, tripId } = await params;
+  redirect(`/guest/group/${groupId}/trip/${tripId}?tab=expenses`);
 }
-

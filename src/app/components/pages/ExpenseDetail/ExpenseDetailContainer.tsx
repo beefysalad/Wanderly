@@ -11,17 +11,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
+import { AppShell } from "../../shared/AppShell/AppShell";
 import LoadingState from "../../shared/LoadingState";
+import { PILL } from "../../shared/Pills";
 
 interface IExpenseDetailContainer {
   groupId: string;
   expenseId: string;
 }
 
-const ExpenseDetailContainer = ({
-  groupId,
-  expenseId,
-}: IExpenseDetailContainer) => {
+const ExpenseDetailContainer = ({ groupId, expenseId }: IExpenseDetailContainer) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -38,9 +37,7 @@ const ExpenseDetailContainer = ({
   // If we don't have tripId, we might fail to load expenses if they are not in groupData.
   // But typically expenses are fetched per trip.
 
-  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(
-    tripId || "",
-  );
+  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId || "");
 
   useSocketGroupUpdates(groupId);
 
@@ -51,36 +48,35 @@ const ExpenseDetailContainer = ({
 
   const trip = group?.trips?.find((t: Trip) => t.id === tripId);
 
+  const back = {
+    href: tripId ? `/group/${groupId}/trip/${tripId}?tab=expenses` : `/group/${groupId}`,
+    crumb: `${trip?.name ?? group?.name ?? "Trip"} · Expense`,
+  };
+
   if (loadingGroup || (tripId && loadingExpenses)) {
     return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail' back={back}>
+        <LoadingState className='py-24' />
+      </AppShell>
     );
   }
 
   if (!expense) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 max-w-md'>
-          <h2 className='text-xl font-bold text-white mb-2'>
-            Expense Not Found
-          </h2>
-          <button
-            onClick={() => router.back()}
-            className='px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold'
-          >
-            Go Back
+      <AppShell level='detail' back={back}>
+        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
+          <h2 className='mb-2 text-xl font-bold'>Expense not found</h2>
+          <p className='mb-6 text-[#94a3b8]'>It may have been deleted.</p>
+          <button type='button' onClick={() => router.back()} className={PILL.ghost}>
+            Go back
           </button>
         </div>
-      </main>
+      </AppShell>
     );
   }
 
   const handleEdit = () => {
-    router.push(
-      `/group/${groupId}/expenses/${expense.id}/edit?tripId=${tripId}`,
-    );
+    router.push(`/group/${groupId}/expenses/${expense.id}/edit?tripId=${tripId}`);
   };
 
   const handleDelete = async () => {
@@ -104,18 +100,13 @@ const ExpenseDetailContainer = ({
     const newPaidMembers = [...currentPaidMembers, memberId];
 
     // Update local cache
-    queryClient.setQueryData<{ expenses: Expense[] }>(
-      ["expenses", tripId],
-      (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          expenses: old.expenses.map((e) =>
-            e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e,
-          ),
-        };
-      },
-    );
+    queryClient.setQueryData<{ expenses: Expense[] }>(["expenses", tripId], (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        expenses: old.expenses.map((e) => (e.id === expenseId ? { ...e, paidMembers: newPaidMembers } : e)),
+      };
+    });
 
     try {
       await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
@@ -133,15 +124,11 @@ const ExpenseDetailContainer = ({
     }
   };
 
-  const handleConfirmPayment = async (
-    memberEmail: string,
-    status: "confirmed" | "rejected",
-  ) => {
+  const handleConfirmPayment = async (memberEmail: string, status: "confirmed" | "rejected") => {
     if (!tripId) return;
 
     try {
-      // This endpoint might need to be verified, assuming structure based on usage
-      await api.post(`/trips/${tripId}/expenses/${expenseId}/confirm-payment`, {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments/confirm`, {
         memberEmail,
         status,
       });
@@ -153,35 +140,30 @@ const ExpenseDetailContainer = ({
     }
   };
 
+  // Mirrors the server rule: the creator, the payer or the group owner may change an expense.
+  const userEmail = user?.email;
+  const canChangeExpense =
+    !!userEmail &&
+    (expense.createdBy?.email === userEmail ||
+      expense.paidBy === userEmail ||
+      group?.createdByEmail === userEmail ||
+      group?.createdBy === userEmail);
+
   return (
-    <ExpenseDetail
-      expense={expense}
-      members={group?.memberEmails || []}
-      memberNames={group?.memberNames}
-      memberMetadata={group?.memberMetadata}
-      activities={trip?.activities || []}
-      onEdit={
-        !expense.createdBy
-          ? expense.paidBy === user?.email
-            ? handleEdit
-            : undefined
-          : expense.createdBy.email === user?.email
-            ? handleEdit
-            : undefined
-      }
-      onDelete={
-        !expense.createdBy
-          ? expense.paidBy === user?.email
-            ? handleDelete
-            : undefined
-          : expense.createdBy.email === user?.email
-            ? handleDelete
-            : undefined
-      }
-      onMarkPaid={handleMarkPaid}
-      onConfirmPayment={handleConfirmPayment}
-      currentUser={user?.email || ""}
-    />
+    <AppShell level='detail' back={back}>
+      <ExpenseDetail
+        expense={expense}
+        members={group?.memberEmails || []}
+        memberNames={group?.memberNames}
+        memberMetadata={group?.memberMetadata}
+        activities={trip?.activities || []}
+        onEdit={canChangeExpense ? handleEdit : undefined}
+        onDelete={canChangeExpense ? handleDelete : undefined}
+        onMarkPaid={handleMarkPaid}
+        onConfirmPayment={handleConfirmPayment}
+        currentUser={user?.email || ""}
+      />
+    </AppShell>
   );
 };
 

@@ -17,30 +17,6 @@ export interface Group {
   >; // email -> metadata with joined date and imageUrl
 }
 
-export interface MemberTask {
-  id: string;
-  groupId: string;
-  assignedToId: string;
-  createdById: string;
-  title: string;
-  notes?: string;
-  dueDate?: string;
-  status: "not_started" | "in_progress" | "done";
-  createdAt: string;
-  updatedAt: string;
-  assignedTo: {
-    id: string;
-    name: string;
-    email: string;
-    imageUrl?: string;
-  };
-  createdBy: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
 export interface Trip {
   id: string;
   groupId: string;

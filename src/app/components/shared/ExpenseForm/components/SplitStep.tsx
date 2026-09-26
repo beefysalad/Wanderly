@@ -1,6 +1,9 @@
-import { CheckCircle, Plus, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Trash2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { cn } from "@/lib/utils";
+import { formatPeso } from "@/lib/utils/money";
+import { FIELD_ERROR, INPUT } from "../../formStyles";
+import { UserAvatar } from "../../UserAvatar";
 import type { TExpenseSchema } from "../expenseSchema";
 
 interface ISplitStepProps {
@@ -13,165 +16,115 @@ interface ISplitStepProps {
   setGuestName: (value: string) => void;
 }
 
-export const SplitStep = ({
-  form,
-  members,
-  getDisplayName,
-  toggleMember,
-  toggleSelectAll,
-  guestName,
-  setGuestName,
-}: ISplitStepProps) => {
+/** Step 2: tick who is in on it; each ticked person's share updates as you go. Guests can be added by name. */
+export const SplitStep = ({ form, members, getDisplayName, toggleMember, toggleSelectAll, guestName, setGuestName }: ISplitStepProps) => {
+  const splitWith = form.watch("splitWith");
+  const amount = Number(form.watch("amount")) || 0;
+  const per = splitWith.length ? amount / splitWith.length : 0;
+  const guests = splitWith.filter((member) => !members.includes(member));
+
+  const addGuest = () => {
+    const name = guestName.trim();
+    if (!name) return;
+    toggleMember(name);
+    setGuestName("");
+  };
+
+  const row = (key: string, name: string, selected: boolean, onToggle: () => void, note?: string) => (
+    <button
+      key={key}
+      type='button'
+      onClick={onToggle}
+      aria-pressed={selected}
+      className='flex w-full cursor-pointer items-center gap-3 border-t border-white/[.05] bg-transparent px-4 py-3 text-left text-inherit first:border-t-0'
+    >
+      <span
+        className={cn(
+          "box-border flex size-[22px] flex-none items-center justify-center rounded-[7px] border-2 text-xs font-extrabold text-[#160c02]",
+          selected ? "border-[#fbbf24] bg-[#fbbf24]" : "border-[#475569]",
+        )}
+      >
+        {selected ? "✓" : ""}
+      </span>
+      <UserAvatar name={name} colorKey={key} className='size-8 text-[10px]' />
+      <span className='flex min-w-0 flex-1 flex-col'>
+        <span className='truncate text-sm font-semibold text-[#e2e8f0]'>{name}</span>
+        {note ? <span className='text-[10px] text-[#fbbf24]'>{note}</span> : null}
+      </span>
+      <span className={cn("text-sm font-bold tabular-nums", selected ? "text-[#e2e8f0]" : "text-[#475569]")}>
+        {selected ? formatPeso(per) : "—"}
+      </span>
+    </button>
+  );
+
   return (
-    <div className='space-y-4'>
-      <div className='text-center mb-2 hidden sm:block'>
-        <h3 className='text-lg font-bold text-white'>
-          Split Cost
-        </h3>
-        <p className='text-sm text-slate-400'>
-          Who are you splitting this with?
-        </p>
+    <div className='flex flex-col gap-[14px]'>
+      <div className='flex flex-wrap items-baseline justify-between gap-[10px]'>
+        <span className='text-[15px] font-bold'>Who&apos;s in on this?</span>
+        <span className='font-mono text-xs text-[#fbbf24]'>
+          {formatPeso(per)} each · {splitWith.length} {splitWith.length === 1 ? "person" : "people"}
+        </span>
       </div>
 
-      <div className='flex items-center justify-between'>
-        <label className='text-sm font-semibold text-slate-300'>
-          Select Members
-        </label>
-        <button
-          type='button'
-          onClick={toggleSelectAll}
-          className='text-xs font-medium text-orange-400 hover:text-orange-300 transition-colors'
-        >
-          {form.watch("splitWith").length === members.length
-            ? "Deselect All"
-            : "Select All"}
-        </button>
+      <div className='overflow-hidden rounded-[20px] border border-white/[.08] bg-[rgba(15,23,42,.6)]'>
+        {members.map((member) => row(member, getDisplayName(member), splitWith.includes(member), () => toggleMember(member)))}
+        {guests.map((guest) => row(guest, guest, true, () => toggleMember(guest), "Guest"))}
       </div>
 
-      <div className='space-y-2 max-h-[400px] overflow-y-auto pr-2'>
-        {members.map((member) => {
-          const isSelected = form
-            .watch("splitWith")
-            .includes(member);
-          return (
-            <motion.div
-              key={member}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => toggleMember(member)}
-              className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${
-                isSelected
-                  ? "bg-slate-800 border-orange-500/50 shadow-lg shadow-orange-500/5"
-                  : "bg-slate-800/30 border-white/5 hover:bg-slate-800/50"
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 transition-colors ${
-                  isSelected
-                    ? "bg-orange-500 border-orange-500"
-                    : "border-slate-500"
-                }`}
-              >
-                {isSelected && (
-                  <CheckCircle className='w-3.5 h-3.5 text-white' />
-                )}
-              </div>
-              <div className='flex-1'>
-                <p
-                  className={`font-medium text-sm ${isSelected ? "text-white" : "text-slate-400"}`}
-                >
-                  {getDisplayName(member)}
-                </p>
-                <p className='text-xs text-slate-500'>{member}</p>
-              </div>
-              {isSelected && (
-                <span className='text-xs font-medium text-orange-400'>
-                  Split
-                </span>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+      <button
+        type='button'
+        onClick={toggleSelectAll}
+        className='w-fit cursor-pointer text-[13px] font-semibold text-[#fbbf24] hover:text-[#fcd34d]'
+      >
+        {splitWith.length === members.length ? "Deselect everyone" : "Select everyone"}
+      </button>
 
-      {/* Guests Section */}
-      <div className='space-y-3 pt-2 border-t border-white/5'>
-        <label className='text-sm font-semibold text-slate-300'>
-          Add Guests
-        </label>
+      <div className='flex flex-col gap-[10px] border-t border-white/[.06] pt-4'>
+        <span className='text-[13px] font-semibold text-[#cbd5e1]'>Add a guest</span>
         <div className='flex gap-2'>
           <input
             type='text'
             value={guestName}
-            onChange={(e) => setGuestName(e.target.value)}
-            placeholder='Enter guest name'
-            className='flex-1 px-3 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all'
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (guestName.trim()) {
-                  toggleMember(guestName.trim());
-                  setGuestName("");
-                }
+            onChange={(event) => setGuestName(event.target.value)}
+            placeholder="Someone who isn't on Wanderly"
+            className={cn(INPUT, "flex-1")}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addGuest();
               }
             }}
           />
           <button
             type='button'
-            onClick={() => {
-              if (guestName.trim()) {
-                toggleMember(guestName.trim());
-                setGuestName("");
-              }
-            }}
+            aria-label='Add guest'
+            onClick={addGuest}
             disabled={!guestName.trim()}
-            className='p-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+            className='flex size-[46px] flex-none cursor-pointer items-center justify-center rounded-xl bg-[#fbbf24] text-[#0b0a06] disabled:cursor-not-allowed disabled:opacity-[.45]'
           >
-            <Plus className='w-5 h-5' />
+            <Plus className='size-5' />
           </button>
         </div>
-
-        {/* Display Guests */}
-        <div className='space-y-2'>
-          {form
-            .watch("splitWith")
-            .filter((m) => !members.includes(m))
-            .map((guest) => (
-              <motion.div
-                key={guest}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className='flex items-center justify-between p-3 rounded-xl border border-orange-500/30 bg-orange-500/10'
-              >
-                <div className='flex items-center gap-3'>
-                  <div className='w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 font-bold text-xs'>
-                    {guest.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className='font-medium text-sm text-white'>
-                      {guest}
-                    </p>
-                    <p className='text-[10px] text-orange-400'>
-                      Guest
-                    </p>
-                  </div>
-                </div>
+        {guests.length > 0 ? (
+          <div className='flex flex-wrap gap-2'>
+            {guests.map((guest) => (
+              <span key={guest} className='flex items-center gap-2 rounded-full border border-[rgba(251,191,36,.3)] bg-[rgba(251,191,36,.08)] py-1 pl-3 pr-1 text-[13px] text-[#fde68a]'>
+                {guest}
                 <button
                   type='button'
+                  aria-label={`Remove ${guest}`}
                   onClick={() => toggleMember(guest)}
-                  className='p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors'
+                  className='flex size-6 cursor-pointer items-center justify-center rounded-full text-[#fbbf24] hover:bg-white/[.08]'
                 >
-                  <Trash2 className='w-4 h-4' />
+                  <Trash2 className='size-[13px]' />
                 </button>
-              </motion.div>
+              </span>
             ))}
-        </div>
+          </div>
+        ) : null}
       </div>
 
-      {form.formState.errors.splitWith && (
-        <p className='text-sm text-red-400 text-center'>
-          {form.formState.errors.splitWith.message}
-        </p>
-      )}
+      {form.formState.errors.splitWith ? <p className={cn(FIELD_ERROR, "text-center")}>{form.formState.errors.splitWith.message}</p> : null}
     </div>
   );
 };

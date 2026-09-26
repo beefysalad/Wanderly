@@ -1,7 +1,8 @@
-import { Receipt } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight } from "lucide-react";
+import { formatPeso } from "@/lib/utils/money";
 import type { Group, PaymentLog } from "@/src/shared/types";
-import { getMemberAvatarFromLog, getMemberInitialsFromLog } from "../paymentLogMembers";
+import { UserAvatar } from "../../../shared/UserAvatar";
+import { getMemberAvatarFromLog } from "../paymentLogMembers";
 
 interface IPaymentHistoryProps {
   group: Group;
@@ -9,141 +10,56 @@ interface IPaymentHistoryProps {
   isLoading: boolean;
 }
 
+const METHOD_EMOJI: Record<string, string> = { cash: "💵", bank: "🏦", maya: "💳", gcash: "💰" };
+
+function Person({ log, side, group }: { log: PaymentLog; side: "payer" | "payee"; group: Group }) {
+  const name = (side === "payer" ? log.payer : log.payee).split("@")[0];
+  return (
+    <span className='flex items-center gap-2 rounded-lg border border-white/[.05] bg-[rgba(2,6,23,.6)] px-2 py-1'>
+      <UserAvatar name={name} colorKey={name} imageUrl={getMemberAvatarFromLog(log, side, group)} className='size-5 text-[9px]' />
+      <span className='max-w-[100px] truncate text-[13px] font-medium text-[#cbd5e1]'>{name}</span>
+    </span>
+  );
+}
+
+/** Confirmed payments in this trip, newest first. */
 export const PaymentHistory = ({ group, paymentLogs, isLoading }: IPaymentHistoryProps) => {
-  if (isLoading) {
-    return (
-      <div className='text-center py-20'>
-        <div className='w-12 h-12 border-4 border-slate-700 border-t-orange-500 rounded-full animate-spin mx-auto mb-4'></div>
-        <p className='text-slate-400 font-medium'>
-          Loading
-        </p>
-      </div>
-    );
-  }
+  if (isLoading) return <p className='py-16 text-center text-sm text-[#94a3b8]'>Loading…</p>;
+
+  const sorted = [...paymentLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
-    <div className='space-y-4 animate-in fade-in zoom-in-95 duration-300'>
-      <h3 className='text-xl font-bold text-white px-1 flex items-center gap-2'>
-        <Receipt className='w-5 h-5 text-orange-400' />
-        Payment History
-      </h3>
-
-      {paymentLogs.length === 0 ? (
-        <div className='bg-slate-900/30 border border-dashed border-slate-700 rounded-3xl p-12 text-center'>
-          <div className='w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <Receipt className='w-8 h-8 text-slate-600' />
+    <div className='flex flex-col gap-2'>
+      <span className='font-mono text-[10px] uppercase tracking-[.16em] text-[#64748b]'>Payment history</span>
+      {sorted.map((log) => (
+        <div
+          key={log.id}
+          className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[.06] bg-[rgba(15,23,42,.6)] p-[14px]'
+        >
+          <div className='flex min-w-0 flex-col gap-2'>
+            <span className='flex items-center gap-2 truncate text-[15px] font-semibold'>
+              <span>{METHOD_EMOJI[log.paymentMethod ?? "cash"] ?? "💵"}</span>
+              {log.expenseDescription}
+            </span>
+            <span className='flex flex-wrap items-center gap-2'>
+              <Person log={log} side='payer' group={group} />
+              <ArrowRight className='size-[14px] text-[#475569]' />
+              <Person log={log} side='payee' group={group} />
+            </span>
           </div>
-          <p className='text-slate-400 font-medium mb-1'>
-            No payment logs yet
-          </p>
-          <p className='text-sm text-slate-600'>
-            Payments and settlements will appear here
-          </p>
+          <div className='text-right'>
+            <p className='text-[17px] font-extrabold tabular-nums text-[#34d399]'>{formatPeso(log.amount)}</p>
+            <p className='mt-[2px] font-mono text-[10px] text-[#64748b]'>
+              {new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+            </p>
+          </div>
         </div>
-      ) : (
-        <div className='grid gap-3'>
-          {paymentLogs
-            .sort(
-              (a, b) =>
-                new Date(b.timestamp).getTime() -
-                new Date(a.timestamp).getTime(),
-            )
-            .map((log) => (
-              <div
-                key={log.id}
-                className='bg-slate-800/40 backdrop-blur-sm rounded-2xl p-5 border border-white/5 hover:border-orange-500/20 transition-all hover:bg-slate-800/60 group'
-              >
-                <div className='flex items-start justify-between gap-4'>
-                  <div className='flex items-start gap-4 flex-1 min-w-0'>
-                    <span className='text-2xl mt-1'>
-                      {log.paymentMethod === "cash" && "💵"}
-                      {log.paymentMethod === "bank" && "🏦"}
-                      {log.paymentMethod === "maya" && "💳"}
-                      {log.paymentMethod === "gcash" && "💰"}
-                      {!log.paymentMethod && "💵"}
-                    </span>
-                    <div className='flex-1 min-w-0'>
-                      <p className='font-bold text-white truncate mb-1 text-lg'>
-                        {log.expenseDescription}
-                      </p>
-
-                      <div className='flex items-center gap-3 text-sm flex-wrap relative z-10'>
-                        <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
-                          {getMemberAvatarFromLog(log, "payer", group) ? (
-                            <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
-                              <Image
-                                src={
-                                  getMemberAvatarFromLog(log, "payer", group)!
-                                }
-                                alt={log.payer.split("@")[0]}
-                                fill
-                                className='object-cover'
-                              />
-                            </div>
-                          ) : (
-                            <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
-                              {getMemberInitialsFromLog(
-                                log,
-                                "payer",
-                              )}
-                            </div>
-                          )}
-                          <span className='font-medium text-slate-300 truncate max-w-[100px]'>
-                            {log.payer.split("@")[0]}
-                          </span>
-                        </div>
-
-                        <span className='text-slate-500'>→</span>
-
-                        <div className='flex items-center gap-2 bg-slate-900/50 px-2 py-1 rounded-lg border border-white/5'>
-                          {getMemberAvatarFromLog(log, "payee", group) ? (
-                            <div className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0'>
-                              <Image
-                                src={
-                                  getMemberAvatarFromLog(log, "payee", group)!
-                                }
-                                alt={log.payee.split("@")[0]}
-                                fill
-                                className='object-cover'
-                              />
-                            </div>
-                          ) : (
-                            <div className='w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0'>
-                              {getMemberInitialsFromLog(
-                                log,
-                                "payee",
-                              )}
-                            </div>
-                          )}
-                          <span className='font-medium text-slate-300 truncate max-w-[100px]'>
-                            {log.payee.split("@")[0]}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className='text-right flex-shrink-0'>
-                    <p className='text-xl font-bold text-emerald-400 tracking-tight'>
-                      ₱{log.amount.toFixed(2)}
-                    </p>
-                    <p className='text-xs text-slate-500 mt-1'>
-                      {new Date(log.timestamp).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+      ))}
+      {sorted.length === 0 ? (
+        <div className='rounded-[18px] border border-dashed border-white/[.14] p-7 text-center text-sm text-[#94a3b8]'>
+          No payments logged yet. Confirmed payments will appear here.
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

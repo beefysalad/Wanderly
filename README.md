@@ -1,338 +1,94 @@
-# Wanderly - Group Trip Planning Platform
+# Wanderly
 
-**The all-in-one platform for seamless group trip planning**
-
-Wanderly is a modern web application designed to simplify group trip planning. No more juggling between different tools or losing track of important details. Everything your group needs is right here, organized and accessible to everyone.
+**Group trip planning, in one place.** Wanderly helps a group of friends plan a trip together: shared itineraries, budgets, expenses that split themselves, and real-time updates for everyone in the group.
 
 ## Features
 
-### Core Functionality
+- **Groups**: create a group, invite people with a 6-character code or invite link.
+- **Trips**: multiple trips per group with dates, location and a status (planning, finalized, ongoing, cancelled).
+- **Itinerary**: activities with times, notes and transport details, shown as a day overview, a timeline and a calendar. Mark activities done; export the schedule as a PNG or an `.ics` calendar file.
+- **Budgets**: plan spending per trip and per activity and mark what is already booked.
+- **Expenses**: record who paid, split costs across members (including non-registered guests), attach a payment method and QR code, and track who has paid and who still owes. Charts summarise spending.
+- **Payments**: members mark themselves paid, the payer confirms, and every settlement lands in a payment history.
+- **Guest view**: share a group code to give someone read-only access without an account.
+- **Notifications**: in-app notifications plus real-time updates over Socket.IO.
+- **Onboarding**: a first-run wizard, with a sample trip so new accounts have something to explore.
+- **Admin portal**: sign in with an allow-listed Firebase account for user management, app configuration ("What's new"), and database and storage usage.
 
-- **Group Management**
+## Tech stack
 
-  - Create and manage travel groups
-  - Invite members via email
-  - Unique 6-character group codes for easy sharing
-  - Guest view mode with read-only access via group codes
+| Area | Tools |
+|---|---|
+| Framework | Next.js 15 (App Router, Turbopack), React 19, TypeScript |
+| UI | Tailwind CSS 4, shadcn/ui (Radix), Framer Motion, Lucide icons, Recharts, Sonner toasts |
+| Data | PostgreSQL with Prisma 6 |
+| Client state | TanStack Query, React Hook Form, Zod |
+| Auth | Firebase Authentication (client) and Firebase Admin (server token verification) |
+| Storage | Cloudinary (avatars and payment QR codes) |
+| Rate limiting | Upstash Redis |
+| Realtime | Socket.IO client, talking to a separate socket server |
+| Tests | Vitest |
 
-- **Trip Planning**
+## Getting started
 
-  - Create multiple trips within groups
-  - Set trip dates, locations, and status (planning, finalized, ongoing, cancelled)
-  - Visual calendar and schedule views
-  - Track trip progress and completion
-
-- **Activity Scheduling**
-
-  - Add activities with dates, times, and notes
-  - Mark activities as done
-  - Calendar overview and detailed schedule views
-  - Export schedules as PNG images or ICS files for calendar apps
-
-- **Expense Tracking**
-
-  - Track expenses with categories (accommodation, food, transportation, activities, other)
-  - Split expenses among group members
-  - Mark payments as received
-  - Payment history and logs
-  - QR code upload for payment methods (via Cloudinary)
-  - Support for multiple payment methods (Cash, Bank Transfer, Maya, GCash)
-
-- **Guest Access**
-
-  - Share group code with non-members
-  - Read-only view of trips, activities, and expenses
-  - Real-time updates via polling
-  - Privacy-focused (blurred email addresses)
-
-- **Export & Integration**
-  - Export trip schedules as PNG images
-  - Export to ICS format for calendar apps (Google Calendar, Apple Calendar, Outlook)
-  - Download QR codes for payment methods
-
-## Tech Stack
-
-### Frontend
-
-- **Next.js 15.5.6** - React framework with App Router
-- **React 19.1.0** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS 4** - Styling
-- **TanStack Query** - Data fetching and caching
-- **React Hook Form** - Form management
-- **Zod** - Schema validation
-- **Lucide React** - Icons
-
-### Backend
-
-- **Next.js API Routes** - Serverless API endpoints
-- **Prisma 6.19.0** - ORM and database toolkit
-- **PostgreSQL** - Database
-- **Firebase Authentication** - User authentication
-- **Firebase Admin SDK** - Server-side Firebase operations
-
-### Services
-
-- **Cloudinary** - Image upload and storage for QR codes
-- **Axios** - HTTP client
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- PostgreSQL database
-- Firebase project with Authentication enabled
-- Cloudinary account (for QR code uploads)
-
-### Installation
-
-1. Clone the repository:
+**Prerequisites:** Node.js 22.12 or newer (`.nvmrc` pins it), a PostgreSQL database, a Firebase project with Email/Password authentication, and a Cloudinary account.
 
 ```bash
 git clone <repository-url>
 cd travelscheduleapp
-```
-
-2. Install dependencies:
-
-```bash
 npm install
 ```
 
-3. Set up environment variables:
-   Create a `.env` file in the root directory with the following variables:
-
-```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/travelscheduleapp"
-
-# Firebase
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-
-# Firebase Admin (Server-side)
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_CLIENT_EMAIL=your_client_email
-FIREBASE_PRIVATE_KEY=your_private_key
-
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# Socket.IO Server
-NEXT_PUBLIC_SOCKET_URL=http://localhost:8080
-SOCKET_API_KEY=your-secret-api-key
-```
-
-4. Set up the database:
+Copy `.env.example` to `.env` and fill it in (the variables are listed below), then set up the database and start the dev server:
 
 ```bash
-# Generate Prisma Client
 npm run db:generate
-
-# Run migrations
-npm run db:migrate
+npm run db:migrate     # applies migrations to the database in DATABASE_URL
+npm run dev            # http://localhost:3000
 ```
 
-5. Start the development server:
+### Environment variables
 
-```bash
-npm run dev
-```
+`.env` is gitignored; never commit real values. Anything read in the browser must be `NEXT_PUBLIC_`-prefixed.
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+| Group | Variables |
+|---|---|
+| Database | `DATABASE_URL` |
+| Firebase (client) | `NEXT_PUBLIC_FIREBASE_API_KEY`, `..._AUTH_DOMAIN`, `..._PROJECT_ID`, `..._STORAGE_BUCKET`, `..._MESSAGING_SENDER_ID`, `..._APP_ID`, `..._MEASUREMENT_ID` |
+| Firebase Admin (server) | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
+| Cloudinary | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
+| Realtime | `NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY` |
+| Admin and guests | `ADMIN_EMAILS` (verified admin emails) and/or `ADMIN_UIDS` (Firebase UIDs), `GUEST_TOKEN_SECRET` |
+| Rate limiting | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional locally) |
+| App flags | `NEXT_PUBLIC_ENVIRONMENT`, `NEXT_PUBLIC_MAINTENANCE_MODE` |
 
-## Available Scripts
+## Scripts
 
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build for production (includes Prisma generation and migrations)
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run db:generate` - Generate Prisma Client
-- `npm run db:migrate` - Run database migrations
-- `npm run db:studio` - Open Prisma Studio (database GUI)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server (Turbopack) |
+| `npm run build` | Production build: `prisma generate`, `prisma migrate deploy`, `next build` |
+| `npm run build:ci` | Same without the migration step (what CI runs) |
+| `npm start` | Start the production server |
+| `npm run lint` | ESLint |
+| `npm test` / `npm run test:watch` | Vitest (colocated `*.test.ts` files) |
+| `npm run db:generate` / `db:migrate` / `db:studio` | Prisma client, migrations, and the Prisma Studio GUI |
 
-## Project Structure
+Every pull request runs lint, tests and a CI build (`.github/workflows/checks.yml`).
 
-```
-travelscheduleapp/
-├── src/
-│   ├── app/
-│   │   ├── api/              # API routes
-│   │   │   ├── groups/       # Group management endpoints
-│   │   │   ├── trips/        # Trip and activity endpoints
-│   │   │   ├── upload/       # Image upload endpoints
-│   │   │   └── sync/         # User sync endpoints
-│   │   ├── components/
-│   │   │   ├── pages/        # Page components
-│   │   │   └── shared/       # Shared components (modals, header, footer)
-│   │   ├── dashboard/        # Dashboard page
-│   │   ├── group/            # Group pages
-│   │   ├── guest/            # Guest view pages
-│   │   └── profile/          # User profile page
-│   ├── hooks/                # Custom React hooks
-│   └── shared/
-│       └── types/            # TypeScript type definitions
-├── lib/                      # Utility libraries
-│   ├── auth/                 # Authentication utilities
-│   ├── utils/                # Helper functions
-│   └── prisma.ts             # Prisma client
-├── prisma/
-│   ├── schema.prisma         # Database schema
-│   └── migrations/          # Database migrations
-└── components/               # UI components
-```
+## How the code is organised
 
-## Key Features Explained
+- `src/app`: routes and API routes (`src/app/api/**/route.ts`). Each API feature follows the same layering: a thin `route.ts`, a `services.ts` with the business rules, a `repository.ts` that is the only file talking to Prisma, and a `schemas.ts` with the Zod request schemas.
+- `src/app/components`: page-level and shared React components. `src/hooks`: TanStack Query hooks. `src/shared/types`: shared types.
+- `components/ui` and `lib/` at the repo root: shadcn/ui primitives and shared singletons and utilities (Prisma client, Firebase, Axios, logger, auth wrappers).
+- `prisma`: schema and migrations. `docs/superpowers`: design specs and implementation plans.
 
-### Group Management
-
-- Create groups with unique 6-character codes
-- Add members via email
-- Leave groups
-- View group members and details
-
-### Trip Planning
-
-- Create trips within groups
-- Set start/end dates and locations
-- Track trip status
-- Delete trips
-
-### Activity Scheduling
-
-- Add activities with:
-  - Title and description
-  - Date and optional time range
-  - Notes
-  - Completion status
-- View activities in calendar or schedule format
-- Edit and delete activities
-- Mark activities as done/undone
-
-### Expense Tracking
-
-- Create expenses with:
-  - Amount and description
-  - Category (accommodation, food, transportation, activities, other)
-  - Payment method (cash, bank, maya, gcash)
-  - Account details and QR codes
-  - Split among selected members
-- Track who paid and who owes
-- Mark payments as received
-- View payment history
-- Filter by settled/unsettled expenses
-
-### Guest Access
-
-- Share group code for read-only access
-- View trips, activities, and expenses
-- Real-time updates (30-second polling)
-- Privacy protection (blurred emails)
-
-### Export Features
-
-- **PNG Export**: Export trip schedule as high-quality image
-- **ICS Export**: Export to calendar format for import into calendar apps
-
-## Authentication
-
-The app uses Firebase Authentication for user management. Users can:
-
-- Sign up with email/password
-- Sign in with existing accounts
-- Automatic user sync to database on first login
-
-## Database Schema
-
-The application uses Prisma ORM with PostgreSQL. Key models include:
-
-- **User** - User accounts
-- **Group** - Travel groups
-- **GroupMember** - Many-to-many relationship between users and groups
-- **Trip** - Trips within groups
-- **Activity** - Activities within trips
-- **Expense** - Expenses for trips
-- **ExpenseSplit** - Expense splitting relationships
-- **PaymentLog** - Payment history
-
-## API Routes
-
-### Groups
-
-- `GET /api/groups` - List user's groups
-- `POST /api/groups` - Create a group
-- `GET /api/groups/[groupId]` - Get group details
-- `POST /api/groups/join` - Join a group by code
-- `POST /api/groups/[groupId]/leave` - Leave a group
-- `GET /api/groups/[groupId]/guest` - Get group (guest access)
-- `POST /api/groups/validate-code` - Validate group code
-
-### Trips
-
-- `POST /api/groups/[groupId]/trips` - Create a trip
-- `DELETE /api/groups/[groupId]/trips/[tripId]` - Delete a trip
-
-### Activities
-
-- `POST /api/trips/[tripId]/activities` - Create an activity
-- `PATCH /api/trips/[tripId]/activities/[activityId]` - Update an activity
-- `DELETE /api/trips/[tripId]/activities/[activityId]` - Delete an activity
-
-### Expenses
-
-- `GET /api/trips/[tripId]/expenses` - List expenses
-- `POST /api/trips/[tripId]/expenses` - Create an expense
-- `GET /api/trips/[tripId]/expenses/[expenseId]` - Get expense details
-- `PATCH /api/trips/[tripId]/expenses/[expenseId]` - Update an expense
-- `DELETE /api/trips/[tripId]/expenses/[expenseId]` - Delete an expense
-- `POST /api/trips/[tripId]/expenses/[expenseId]/payments` - Mark payment
-
-### Payment Logs
-
-- `GET /api/trips/[tripId]/payment-logs` - Get payment history
-- `POST /api/trips/[tripId]/payment-logs` - Create payment log
-
-### Upload
-
-- `POST /api/upload/image` - Upload image to Cloudinary
-
-## Development
-
-### Code Style
-
-- TypeScript for type safety
-- ESLint for code quality
-- Consistent component structure
-- Modular architecture
-
-### State Management
-
-- TanStack Query for server state
-- React hooks for local state
-- Optimistic updates for better UX
+Conventions and architecture rules for contributors (and coding agents) are in [`CLAUDE.md`](./CLAUDE.md).
 
 ## Deployment
 
-The application is configured for deployment on platforms like Vercel:
-
-1. Set up environment variables in your deployment platform
-2. Ensure PostgreSQL database is accessible
-3. Configure Firebase project
-4. Set up Cloudinary account
-5. Run `npm run build` to build the application
-6. Deploy using your platform's deployment process
+The app is deployed on Vercel. The build runs `prisma migrate deploy`, so the deployment environment needs `DATABASE_URL` and the other variables above. Work merges into `dev`; a GitHub workflow keeps a `dev` to `prod` pull request open, and merging that one deploys to production.
 
 ## License
 
-This project is private and proprietary.
-
-## Support
-
-For issues or questions, please contact the development team.
+Private and proprietary.

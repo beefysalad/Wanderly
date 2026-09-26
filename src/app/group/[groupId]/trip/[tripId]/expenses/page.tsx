@@ -1,13 +1,9 @@
-import ExpensesComponent from "@/src/app/components/pages/Expenses";
-import React from "react";
+import { redirect } from "next/navigation";
 
-const ExpensesPage = async ({
-  params,
-}: {
-  params: Promise<{ groupId: string; tripId: string }>;
-}) => {
+// Expenses now live in the trip's Expenses tab; this keeps old links working.
+const ExpensesPage = async ({ params }: { params: Promise<{ groupId: string; tripId: string }> }) => {
   const { groupId, tripId } = await params;
-  return <ExpensesComponent groupId={groupId} tripId={tripId} />;
+  redirect(`/group/${groupId}/trip/${tripId}?tab=expenses`);
 };
 
 export default ExpensesPage;
