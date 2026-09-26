@@ -6,7 +6,6 @@ interface MemberRow {
   displayName: string;
   isCreator: boolean;
   imageUrl?: string;
-  openTaskCount: number;
 }
 
 interface MembersListProps {
@@ -65,10 +64,6 @@ export function MembersList({ members }: MembersListProps) {
                   <Mail className='h-3.5 w-3.5' />
                   <span className='truncate'>{member.email}</span>
                 </div>
-              </div>
-
-              <div className='rounded-lg border border-slate-700 px-2.5 py-1 text-xs text-slate-300'>
-                {member.openTaskCount} open
               </div>
             </div>
           ))}
