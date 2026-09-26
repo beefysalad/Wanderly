@@ -140,8 +140,7 @@ const ExpenseDetailContainer = ({
     if (!tripId) return;
 
     try {
-      // This endpoint might need to be verified, assuming structure based on usage
-      await api.post(`/trips/${tripId}/expenses/${expenseId}/confirm-payment`, {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments/confirm`, {
         memberEmail,
         status,
       });

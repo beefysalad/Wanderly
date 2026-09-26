@@ -13,6 +13,7 @@ export async function updateUserProfileService(caller: ProfileCaller, data: Upda
   const changes: UserProfileChanges = {
     ...(data.lastSeenWhatsNew !== undefined && { lastSeenWhatsNew: data.lastSeenWhatsNew }),
     ...(data.bio !== undefined && { bio: data.bio }),
+    ...(data.travelStyle !== undefined && { travelStyle: data.travelStyle }),
     ...(data.name !== undefined && { name: data.name }),
     ...(data.hasCompletedOnboarding !== undefined && {
       hasCompletedOnboarding: data.hasCompletedOnboarding,

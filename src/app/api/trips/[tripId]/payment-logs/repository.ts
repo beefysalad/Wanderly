@@ -38,3 +38,11 @@ export function createPaymentLogRow(data: CreatePaymentLogRow) {
     include: PAYMENT_LOG_INCLUDE,
   });
 }
+
+export function findPaymentLogForShare(expenseId: string, payerId: string) {
+  return prisma.paymentLog.findFirst({ where: { expenseId, payerId }, select: { id: true } });
+}
+
+export function deletePaymentLogsForShare(expenseId: string, payerId: string) {
+  return prisma.paymentLog.deleteMany({ where: { expenseId, payerId } });
+}

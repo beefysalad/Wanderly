@@ -23,11 +23,15 @@ export function deletePaymentsForMember(expenseId: string, userId: string) {
   return prisma.expensePayment.deleteMany({ where: { expenseId, userId } });
 }
 
-/** No-op (rather than an error) when the member has no payment record yet. */
-export function updatePaymentStatus(
+/** The payer may confirm or reject before the member has marked themselves paid, so this creates the row if needed. */
+export function upsertPaymentStatus(
   expenseId: string,
   userId: string,
   status: "confirmed" | "rejected",
 ) {
-  return prisma.expensePayment.updateMany({ where: { expenseId, userId }, data: { status } });
+  return prisma.expensePayment.upsert({
+    where: { expenseId_userId: { expenseId, userId } },
+    update: { status },
+    create: { expenseId, userId, status },
+  });
 }

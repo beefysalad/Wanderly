@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 export interface UserProfileChanges {
   lastSeenWhatsNew?: string | null;
   bio?: string | null;
+  travelStyle?: string | null;
   name?: string;
   hasCompletedOnboarding?: boolean;
   imageUrl?: string | null;
