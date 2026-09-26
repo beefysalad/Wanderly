@@ -18,6 +18,12 @@ describe("updateUserProfileService", () => {
     expect(mockUpsert.mock.calls[0][1]).toEqual({ bio: "hi" });
   });
 
+  it("saves the onboarding travelStyle", async () => {
+    await updateUserProfileService({ uid: "f1", email: "a@x.com" }, { travelStyle: "Foodie, City" });
+
+    expect(mockUpsert.mock.calls.at(-1)?.[1]).toEqual({ travelStyle: "Foodie, City" });
+  });
+
   it("supplies defaults for creating a user who hasn't synced yet", async () => {
     await updateUserProfileService({ uid: "f1", email: "alice@x.com" }, {});
 

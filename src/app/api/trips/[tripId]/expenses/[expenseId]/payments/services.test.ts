@@ -18,8 +18,17 @@ vi.mock("../../../../../groups/repository", () => ({
 }));
 
 const mockCreatePaymentLogRow = vi.fn();
+const mockFindLog = vi.fn();
+const mockDeleteLogs = vi.fn();
 vi.mock("../../../payment-logs/repository", () => ({
   createPaymentLogRow: (...a: unknown[]) => mockCreatePaymentLogRow(...a),
+  findPaymentLogForShare: (...a: unknown[]) => mockFindLog(...a),
+  deletePaymentLogsForShare: (...a: unknown[]) => mockDeleteLogs(...a),
+}));
+
+const mockCreateNotification = vi.fn();
+vi.mock("../../../../../notifications/services", () => ({
+  createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
 }));
 
 const mockFindExpenseById = vi.fn();
@@ -30,12 +39,12 @@ vi.mock("../../repository", () => ({
 const mockFindForPayments = vi.fn();
 const mockUpsertPending = vi.fn();
 const mockDeletePayments = vi.fn();
-const mockUpdateStatus = vi.fn();
+const mockUpsertStatus = vi.fn();
 vi.mock("./repository", () => ({
   findExpenseForPayments: (...a: unknown[]) => mockFindForPayments(...a),
   upsertPendingPayment: (...a: unknown[]) => mockUpsertPending(...a),
   deletePaymentsForMember: (...a: unknown[]) => mockDeletePayments(...a),
-  updatePaymentStatus: (...a: unknown[]) => mockUpdateStatus(...a),
+  upsertPaymentStatus: (...a: unknown[]) => mockUpsertStatus(...a),
 }));
 
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
@@ -44,12 +53,13 @@ const { confirmPaymentService, markExpensePaidService } = await import("./servic
 
 const token = { uid: "f1" } as DecodedIdToken;
 const bob = { id: "u-bob", email: "bob@x.com" };
-const alice = { id: "u-alice", email: "alice@x.com" };
+const alice = { id: "u-alice", email: "alice@x.com", name: "Alice" };
 const expense = {
   id: "e1",
   tripId: "t1",
   amount: 90,
   paymentMethod: "gcash",
+  description: "Dinner",
   paidById: "u-alice",
   paidBy: alice,
   splits: [{ user: alice }, { user: bob }, { user: { id: "u-c", email: "c@x.com" } }],
@@ -62,6 +72,8 @@ beforeEach(() => {
   mockFindUserIdByEmail.mockImplementation(async (email: string) => ({ id: `id-${email}` }));
   mockFindExpenseById.mockResolvedValue({ id: "e1", refreshed: true });
   mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
+  mockFindLog.mockResolvedValue(null);
+  mockCreateNotification.mockResolvedValue(undefined);
 });
 
 describe("markExpensePaidService", () => {
@@ -87,34 +99,12 @@ describe("markExpensePaidService", () => {
     expect(mockUpsertPending).not.toHaveBeenCalled();
   });
 
-  it("creates a pending payment and, by default, a payment log for an equal share", async () => {
+  it("creates a pending payment and writes no payment log until the payer confirms", async () => {
     const result = await markExpensePaidService(token, "t1", "e1", paid);
 
     expect(mockUpsertPending).toHaveBeenCalledWith("e1", "id-bob@x.com");
-    expect(mockCreatePaymentLogRow).toHaveBeenCalledWith({
-      tripId: "t1",
-      expenseId: "e1",
-      payerId: "id-bob@x.com",
-      payeeId: "u-alice",
-      amount: 30,
-      paymentMethod: "gcash",
-    });
+    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
     expect(result).toEqual({ id: "e1", refreshed: true });
-  });
-
-  it("skips the payment log when createPaymentLog is false", async () => {
-    await markExpensePaidService(token, "t1", "e1", { ...paid, createPaymentLog: false });
-
-    expect(mockUpsertPending).toHaveBeenCalled();
-    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
-  });
-
-  it("skips the payment log for a guest payer (no paidById)", async () => {
-    mockFindForPayments.mockResolvedValue({ ...expense, paidById: null });
-
-    await markExpensePaidService(token, "t1", "e1", paid);
-
-    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
   });
 
   it("does not let a member un-mark someone else's payment", async () => {
@@ -146,6 +136,9 @@ describe("markExpensePaidService", () => {
 });
 
 describe("confirmPaymentService", () => {
+  const confirm = { memberEmail: "bob@x.com", status: "confirmed" as const };
+  const reject = { memberEmail: "bob@x.com", status: "rejected" as const };
+
   beforeEach(() => {
     mockVerifyTripAccess.mockResolvedValue({ trip: { id: "t1", groupId: "g1" }, user: alice });
   });
@@ -153,32 +146,74 @@ describe("confirmPaymentService", () => {
   it("only lets the payer confirm or reject", async () => {
     mockVerifyTripAccess.mockResolvedValue({ trip: { id: "t1", groupId: "g1" }, user: bob });
 
-    await expect(
-      confirmPaymentService(token, "t1", "e1", { memberEmail: "bob@x.com", status: "confirmed" }),
-    ).rejects.toThrow(ForbiddenError);
-    expect(mockUpdateStatus).not.toHaveBeenCalled();
+    await expect(confirmPaymentService(token, "t1", "e1", confirm)).rejects.toThrow(ForbiddenError);
+    expect(mockUpsertStatus).not.toHaveBeenCalled();
+    expect(mockCreateNotification).not.toHaveBeenCalled();
   });
 
-  it("confirming updates the status and logs the member's share to the payer", async () => {
-    await confirmPaymentService(token, "t1", "e1", { memberEmail: "bob@x.com", status: "confirmed" });
+  it("rejects an expense from another trip", async () => {
+    mockFindForPayments.mockResolvedValue({ ...expense, tripId: "other" });
 
-    expect(mockUpdateStatus).toHaveBeenCalledWith("e1", "id-bob@x.com", "confirmed");
-    expect(mockCreatePaymentLogRow).toHaveBeenCalledWith(
-      expect.objectContaining({ payerId: "id-bob@x.com", payeeId: "u-alice", amount: 30 }),
+    await expect(confirmPaymentService(token, "t1", "e1", confirm)).rejects.toThrow(NotFoundError);
+  });
+
+  it("confirming records the status, logs the member's share to the payer and notifies them", async () => {
+    const result = await confirmPaymentService(token, "t1", "e1", confirm);
+
+    expect(mockUpsertStatus).toHaveBeenCalledWith("e1", "id-bob@x.com", "confirmed");
+    expect(mockCreatePaymentLogRow).toHaveBeenCalledWith({
+      tripId: "t1",
+      expenseId: "e1",
+      payerId: "id-bob@x.com",
+      payeeId: "u-alice",
+      amount: 30,
+      paymentMethod: "gcash",
+    });
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      "id-bob@x.com",
+      expect.objectContaining({
+        title: "Payment Confirmed",
+        message: "Alice confirmed your payment for 'Dinner'",
+        relatedGroupId: "g1",
+        relatedExpenseId: "e1",
+      }),
+    );
+    expect(result).toEqual({ id: "e1", refreshed: true });
+  });
+
+  it("does not log a share twice", async () => {
+    mockFindLog.mockResolvedValue({ id: "log-1" });
+
+    await confirmPaymentService(token, "t1", "e1", confirm);
+
+    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
+  });
+
+  it("rejecting notifies the member and removes any log left for that share", async () => {
+    await confirmPaymentService(token, "t1", "e1", reject);
+
+    expect(mockUpsertStatus).toHaveBeenCalledWith("e1", "id-bob@x.com", "rejected");
+    expect(mockDeleteLogs).toHaveBeenCalledWith("e1", "id-bob@x.com");
+    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      "id-bob@x.com",
+      expect.objectContaining({ title: "Payment Rejected" }),
     );
   });
 
-  it("rejecting updates the status without a payment log", async () => {
-    await confirmPaymentService(token, "t1", "e1", { memberEmail: "bob@x.com", status: "rejected" });
+  it("still succeeds when the notification fails", async () => {
+    mockCreateNotification.mockRejectedValue(new Error("boom"));
 
-    expect(mockUpdateStatus).toHaveBeenCalledWith("e1", "id-bob@x.com", "rejected");
-    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
+    await expect(confirmPaymentService(token, "t1", "e1", confirm)).resolves.toEqual({
+      id: "e1",
+      refreshed: true,
+    });
   });
 
   it("does not divide by zero when an expense has no splits", async () => {
     mockFindForPayments.mockResolvedValue({ ...expense, splits: [] });
 
-    await confirmPaymentService(token, "t1", "e1", { memberEmail: "bob@x.com", status: "confirmed" });
+    await confirmPaymentService(token, "t1", "e1", confirm);
 
     expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
   });

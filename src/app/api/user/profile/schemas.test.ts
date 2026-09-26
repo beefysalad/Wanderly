@@ -8,10 +8,15 @@ describe("updateUserProfileSchema", () => {
     expect(updateUserProfileSchema.safeParse({}).success).toBe(true);
   });
 
-  it("drops unknown fields such as the wizard's travelStyle", () => {
-    const result = updateUserProfileSchema.parse({ name: "Al", travelStyle: "beach" });
+  it("keeps the onboarding wizard's travelStyle and drops unknown fields", () => {
+    const result = updateUserProfileSchema.parse({ name: "Al", travelStyle: "beach", nope: 1 });
 
-    expect(result).toEqual({ name: "Al" });
+    expect(result).toEqual({ name: "Al", travelStyle: "beach" });
+  });
+
+  it("has room for several joined vibes but not unbounded text", () => {
+    expect(updateUserProfileSchema.safeParse({ travelStyle: "Foodie, City, Beach, Adventure, Culture" }).success).toBe(true);
+    expect(updateUserProfileSchema.safeParse({ travelStyle: "x".repeat(201) }).success).toBe(false);
   });
 
   it("rejects an empty name and wrongly typed values", () => {

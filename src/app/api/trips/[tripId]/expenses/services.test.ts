@@ -30,7 +30,6 @@ const mockFindSummary = vi.fn();
 const mockCreateRow = vi.fn();
 const mockUpdateRow = vi.fn();
 const mockDeleteRow = vi.fn();
-const mockUpsertPayment = vi.fn();
 vi.mock("./repository", () => ({
   listExpensesByTrip: (...a: unknown[]) => mockList(...a),
   findExpenseById: (...a: unknown[]) => mockFindById(...a),
@@ -38,16 +37,11 @@ vi.mock("./repository", () => ({
   createExpenseRow: (...a: unknown[]) => mockCreateRow(...a),
   updateExpenseRow: (...a: unknown[]) => mockUpdateRow(...a),
   deleteExpenseRow: (...a: unknown[]) => mockDeleteRow(...a),
-  upsertExpensePaymentStatus: (...a: unknown[]) => mockUpsertPayment(...a),
 }));
 
 const mockNotifyMembers = vi.fn();
 vi.mock("../../../notifications/notifyMembers", () => ({
   notifyGroupMembers: (...a: unknown[]) => mockNotifyMembers(...a),
-}));
-const mockCreateNotification = vi.fn();
-vi.mock("../../../notifications/services", () => ({
-  createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
 }));
 
 const mockEmitCreated = vi.fn();
@@ -62,7 +56,6 @@ vi.mock("@/lib/socket-events", () => ({
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const {
-  confirmPaymentService,
   createExpenseService,
   deleteExpenseService,
   getExpenseByIdService,
@@ -99,7 +92,6 @@ beforeEach(() => {
   mockEmitCreated.mockResolvedValue(undefined);
   mockEmitUpdated.mockResolvedValue(undefined);
   mockEmitDeleted.mockResolvedValue(undefined);
-  mockCreateNotification.mockResolvedValue(undefined);
 });
 
 describe("guest list", () => {
@@ -268,40 +260,6 @@ describe("deleteExpenseService", () => {
 
     await expect(deleteExpenseService(token, "t1", "e1")).rejects.toThrow(NotFoundError);
     expect(mockDeleteRow).not.toHaveBeenCalled();
-  });
-});
-
-describe("confirmPaymentService", () => {
-  const body = { memberEmail: "bob@x.com", status: "confirmed" as const };
-
-  it("throws NotFoundError when the member email is unknown", async () => {
-    mockFindUserIdByEmail.mockResolvedValue(null);
-
-    await expect(confirmPaymentService(token, "t1", "e1", body)).rejects.toThrow(NotFoundError);
-  });
-
-  it("throws ForbiddenError unless the caller paid for the expense", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", paidById: "someone-else", description: "D" });
-
-    await expect(confirmPaymentService(token, "t1", "e1", body)).rejects.toThrow(ForbiddenError);
-    expect(mockUpsertPayment).not.toHaveBeenCalled();
-  });
-
-  it("records the status, notifies the member and returns the refreshed expense", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", paidById: "u1", description: "Dinner" });
-    mockFindById.mockResolvedValue({ id: "e1" });
-
-    const result = await confirmPaymentService(token, "t1", "e1", { ...body, status: "rejected" });
-
-    expect(mockUpsertPayment).toHaveBeenCalledWith("e1", "id-bob@x.com", "rejected");
-    expect(mockCreateNotification).toHaveBeenCalledWith(
-      "id-bob@x.com",
-      expect.objectContaining({
-        title: "Payment Rejected",
-        message: "Alice rejected your payment for 'Dinner'",
-      }),
-    );
-    expect(result).toEqual({ id: "e1" });
   });
 });
 
