@@ -13,7 +13,7 @@ type Params = RouteContext<{ groupId: string }>;
 
 /**
  * GET /api/groups/[groupId]/guest
- * Returns group data for guest access (requires X-Guest-Code header)
+ * Returns group data for guest access (requires an X-Guest-Token header)
  */
 async function handler(
   _req: NextRequest,
@@ -21,12 +21,12 @@ async function handler(
   { params }: Params,
 ) {
   try {
-    if (!context.isGuest || !context.groupCode) {
+    if (!context.isGuest || !context.guestGroupId) {
       throw new ForbiddenError("Guest access required");
     }
 
     const { groupId } = await params;
-    const group = await getGroupByIdForGuestService(context.groupCode, groupId);
+    const group = await getGroupByIdForGuestService(context.guestGroupId, groupId);
 
     return NextResponse.json(transformGroup(group));
   } catch (error) {

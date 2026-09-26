@@ -2,9 +2,14 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UnauthorizedError } from "@/lib/errors";
 
-const mockVerify = vi.fn();
-vi.mock("@/lib/admin-auth", () => ({
-  verifyAdminPassword: (...a: unknown[]) => mockVerify(...a),
+const mockVerifyIdToken = vi.fn();
+vi.mock("@/lib/firebase-admin", () => ({
+  userAuth: { verifyIdToken: (...a: unknown[]) => mockVerifyIdToken(...a) },
+}));
+
+const mockWarn = vi.fn();
+vi.mock("@/lib/logger", () => ({
+  logger: { warn: (...a: unknown[]) => mockWarn(...a), info: vi.fn(), error: vi.fn() },
 }));
 
 const { assertAdmin } = await import("./guard");
@@ -12,20 +17,83 @@ const { assertAdmin } = await import("./guard");
 const req = (headers: Record<string, string> = {}) =>
   new NextRequest("http://localhost/api/admin/x", { headers });
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.resetAllMocks();
+  process.env.ADMIN_EMAILS = "boss@x.com";
+  delete process.env.ADMIN_UIDS;
+});
 
 describe("assertAdmin", () => {
-  it("passes the x-admin-password header to the verifier and resolves when valid", async () => {
-    mockVerify.mockResolvedValue(true);
+  it("accepts an allow-listed verified admin and returns their lower-cased email", async () => {
+    mockVerifyIdToken.mockResolvedValue({ email: "Boss@x.com", email_verified: true });
 
-    await expect(assertAdmin(req({ "x-admin-password": "pw" }))).resolves.toBeUndefined();
-    expect(mockVerify).toHaveBeenCalledWith("pw");
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).resolves.toEqual({
+      adminEmail: "boss@x.com",
+    });
+    expect(mockVerifyIdToken).toHaveBeenCalledWith("tok", true);
   });
 
-  it("throws UnauthorizedError when the password is wrong or missing", async () => {
-    mockVerify.mockResolvedValue(false);
+  it("rejects a signed-in user who is not on the allowlist", async () => {
+    mockVerifyIdToken.mockResolvedValue({ email: "user@x.com", email_verified: true });
 
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
+  });
+
+  it("rejects an unverified allow-listed email", async () => {
+    mockVerifyIdToken.mockResolvedValue({ email: "boss@x.com", email_verified: false });
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
+  });
+
+  it("rejects an invalid, expired or revoked token", async () => {
+    mockVerifyIdToken.mockRejectedValue(new Error("bad token"));
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
+  });
+
+  it("rejects a request with no credentials, and the old password header no longer works", async () => {
     await expect(assertAdmin(req())).rejects.toThrow(UnauthorizedError);
-    expect(mockVerify).toHaveBeenCalledWith(null);
+    await expect(assertAdmin(req({ "x-admin-password": "anything" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
+    expect(mockVerifyIdToken).not.toHaveBeenCalled();
+  });
+
+  it("logs why a signed-in user was refused (unverified email vs. not on the list)", async () => {
+    mockVerifyIdToken.mockResolvedValueOnce({ email: "boss@x.com", email_verified: false });
+    await assertAdmin(req({ Authorization: "Bearer tok" })).catch(() => undefined);
+    mockVerifyIdToken.mockResolvedValueOnce({ email: "user@x.com", email_verified: true });
+    await assertAdmin(req({ Authorization: "Bearer tok" })).catch(() => undefined);
+
+    const reasons = mockWarn.mock.calls.map((c) => c[1].reason);
+    expect(reasons).toEqual(["email-not-verified", "email-not-on-ADMIN_EMAILS"]);
+  });
+
+  it("accepts an allow-listed uid even when the email is unverified", async () => {
+    process.env.ADMIN_UIDS = "uid-boss";
+    mockVerifyIdToken.mockResolvedValue({
+      uid: "uid-boss",
+      email: "Boss@x.com",
+      email_verified: false,
+    });
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).resolves.toEqual({
+      adminEmail: "boss@x.com",
+    });
+  });
+
+  it("does not accept a different uid with an unverified email", async () => {
+    process.env.ADMIN_UIDS = "uid-boss";
+    mockVerifyIdToken.mockResolvedValue({ uid: "other", email: "boss@x.com", email_verified: false });
+
+    await expect(assertAdmin(req({ Authorization: "Bearer tok" }))).rejects.toThrow(
+      UnauthorizedError,
+    );
   });
 });

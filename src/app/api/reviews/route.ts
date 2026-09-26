@@ -1,6 +1,6 @@
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { reviewsRateLimiter, getClientIP } from "@/lib/rate-limit";
+import { getClientIP, limit } from "@/lib/rate-limit";
 import { handleApiError } from "@/lib/handle-api-error";
 import { createReviewService, listReviewsService } from "./services";
 import { listReviewsQuerySchema } from "./schemas";
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const clientIP = getClientIP(req);
 
-    const rateLimitResult = reviewsRateLimiter.check(clientIP);
+    const rateLimitResult = await limit("reviews", clientIP);
     if (!rateLimitResult.allowed) {
       logger.warn("Rate limit exceeded", {
         ip: clientIP,
@@ -55,11 +55,11 @@ export async function POST(req: NextRequest) {
         {
           status: 429,
           headers: {
-            "X-RateLimit-Limit": "3",
             "X-RateLimit-Remaining": "0",
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
-            "Retry-After": Math.ceil(
-              (rateLimitResult.resetTime - Date.now()) / 1000,
+            "Retry-After": Math.max(
+              1,
+              Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
             ).toString(),
           },
         },
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
       {
         status: 201,
         headers: {
-          "X-RateLimit-Limit": "3",
           "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
           "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
         },

@@ -14,6 +14,11 @@ vi.mock("../../repository", () => ({
   findUserIdByEmail: (...a: unknown[]) => mockFindUserIdByEmail(...a),
 }));
 
+const mockFindGroupOwnership = vi.fn();
+vi.mock("../../../groups/repository", () => ({
+  findGroupOwnership: (...a: unknown[]) => mockFindGroupOwnership(...a),
+}));
+
 const mockFindActivityById = vi.fn();
 vi.mock("../activities/repository", () => ({
   findActivityById: (...a: unknown[]) => mockFindActivityById(...a),
@@ -86,6 +91,7 @@ const expenseRow = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip, user });
+  mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
   mockFindUserIdByEmail.mockImplementation(async (email: string) =>
     email === "ghost@x.com" ? null : { id: `id-${email}` },
   );
@@ -100,9 +106,9 @@ describe("guest list", () => {
   it("re-verifies the group code before listing", async () => {
     mockList.mockResolvedValue([]);
 
-    await listExpensesForGuestService("ABC123", "t1");
+    await listExpensesForGuestService("g1", "t1");
 
-    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("ABC123", "t1");
+    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("g1", "t1");
   });
 });
 
@@ -235,7 +241,13 @@ describe("updateExpenseService", () => {
 
 describe("deleteExpenseService", () => {
   it("notifies before deleting, without relatedExpenseId, then emits", async () => {
-    mockFindSummary.mockResolvedValue({ id: "e1", tripId: "t1", description: "Dinner", amount: 100 });
+    mockFindSummary.mockResolvedValue({
+      id: "e1",
+      tripId: "t1",
+      description: "Dinner",
+      amount: 100,
+      createdById: "u1",
+    });
     const order: string[] = [];
     mockNotifyMembers.mockImplementation(async () => void order.push("notify"));
     mockDeleteRow.mockImplementation(async () => void order.push("delete"));
@@ -290,5 +302,43 @@ describe("confirmPaymentService", () => {
       }),
     );
     expect(result).toEqual({ id: "e1" });
+  });
+});
+
+describe("expense edit/delete permissions", () => {
+  const summary = (over = {}) => ({
+    id: "e1",
+    tripId: "t1",
+    paidById: "payer-1",
+    createdById: "creator-1",
+    description: "Dinner",
+    amount: 100,
+    ...over,
+  });
+
+  beforeEach(() => {
+    mockUpdateRow.mockResolvedValue(expenseRow);
+  });
+
+  it("rejects update and delete by a member who is neither creator, payer nor owner", async () => {
+    mockFindSummary.mockResolvedValue(summary());
+
+    await expect(updateExpenseService(token, "t1", "e1", { description: "x" })).rejects.toThrow(
+      ForbiddenError,
+    );
+    await expect(deleteExpenseService(token, "t1", "e1")).rejects.toThrow(ForbiddenError);
+    expect(mockUpdateRow).not.toHaveBeenCalled();
+    expect(mockDeleteRow).not.toHaveBeenCalled();
+  });
+
+  it("allows the creator, the payer and the group owner", async () => {
+    for (const actor of ["creator-1", "payer-1", "owner-1"]) {
+      mockVerifyTripAccess.mockResolvedValue({ trip, user: { ...user, id: actor } });
+      mockFindSummary.mockResolvedValue(summary());
+
+      await expect(
+        updateExpenseService(token, "t1", "e1", { category: "food" }),
+      ).resolves.toBeDefined();
+    }
   });
 });

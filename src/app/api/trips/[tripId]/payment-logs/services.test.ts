@@ -61,9 +61,9 @@ describe("list services", () => {
   it("guest list re-verifies the group code against the trip", async () => {
     mockList.mockResolvedValue([]);
 
-    await listPaymentLogsForGuestService("ABC123", "t1");
+    await listPaymentLogsForGuestService("g1", "t1");
 
-    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("ABC123", "t1");
+    expect(mockVerifyGuestTripAccess).toHaveBeenCalledWith("g1", "t1");
   });
 
   it("guest list does not query when verification fails", async () => {

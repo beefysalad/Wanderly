@@ -4,6 +4,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import type { MemberTaskStatus } from "@prisma/client";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
 import { findGroupMembership, findGroupOwnership } from "../../repository";
+import { assertCanModify } from "../../permissions";
 import {
   createMemberTaskRow,
   deleteMemberTaskRow,
@@ -76,12 +77,21 @@ export async function updateMemberTaskService(
   taskId: string,
   updates: UpdateMemberTaskBody,
 ) {
-  await verifyGroupMembership(token, groupId);
+  const { user, group } = await verifyGroupMembership(token, groupId);
 
   const existingTask = await findMemberTaskById(taskId);
   if (!existingTask || existingTask.groupId !== groupId) {
     throw new NotFoundError("Task not found");
   }
+
+  assertCanModify(
+    {
+      actorId: user.id,
+      allowedUserIds: [existingTask.createdById, existingTask.assignedToId],
+      groupOwnerId: group.createdById,
+    },
+    "Only the task creator, the assignee or the group owner can change this task",
+  );
 
   if (updates.assignedToId) {
     const assigneeMembership = await findGroupMembership(groupId, updates.assignedToId);
@@ -104,12 +114,21 @@ export async function deleteMemberTaskService(
   groupId: string,
   taskId: string,
 ) {
-  await verifyGroupMembership(token, groupId);
+  const { user, group } = await verifyGroupMembership(token, groupId);
 
   const existingTask = await findMemberTaskById(taskId);
   if (!existingTask || existingTask.groupId !== groupId) {
     throw new NotFoundError("Task not found");
   }
+
+  assertCanModify(
+    {
+      actorId: user.id,
+      allowedUserIds: [existingTask.createdById, existingTask.assignedToId],
+      groupOwnerId: group.createdById,
+    },
+    "Only the task creator, the assignee or the group owner can change this task",
+  );
 
   await deleteMemberTaskRow(taskId);
 }

@@ -1,7 +1,7 @@
 # Security Pass: Admin Auth, Guest Tokens, Rate Limiting, Gateway Removal
 
 Date: 2026-09-25
-Status: Design approved in conversation; written spec awaiting review. Implementation plan: `docs/superpowers/plans/2026-09-25-security-pass.md`
+Status: Implemented on branch `security/revamp` as a single pull request (pending review and the setup steps below). Deviations from the original design: shipped as ONE PR instead of seven; the admin password path was removed directly instead of via a dual-mode transition, so `ADMIN_EMAILS` must be set before the PR is deployed; a missing `.env.example` (git-ignored) was fixed along the way. Implementation plan: `docs/superpowers/plans/2026-09-25-security-pass.md`
 Scope: backend API and the few client files that talk to it. Independent of the frontend component backlog.
 
 ## Background

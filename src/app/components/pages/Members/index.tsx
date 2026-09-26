@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import React, { useCallback, useMemo, useState } from "react";
 import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup } from "@/src/hooks/useGroups";
 import {
   useCreateMemberTask,
@@ -27,6 +28,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
   const updateTask = useUpdateMemberTask(groupId);
   const deleteTask = useDeleteMemberTask(groupId);
 
+  const { user } = useCurrentUser();
   const group = groupData?.group || null;
   const tasks = useMemo(() => tasksData?.tasks ?? [], [tasksData?.tasks]);
 
@@ -104,6 +106,14 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
     },
     [displayName, emailByUserId],
   );
+
+  // Mirrors the server rule: creator, assignee or the group owner may change a task.
+  const currentUserId = user?.email ? group?.memberIds?.[user.email] : undefined;
+  const isGroupOwner =
+    !!user?.email && (user.email === group?.createdByEmail || user.email === group?.createdBy);
+  const canChangeTask = (task: (typeof tasks)[number]) =>
+    isGroupOwner ||
+    (!!currentUserId && (task.createdById === currentUserId || task.assignedToId === currentUserId));
 
   const openTasks = tasks.filter((task) => task.status !== "done").length;
   const memberCount = memberEmails.length;
@@ -196,6 +206,7 @@ const MembersComponent = ({ groupId }: IMembersComponent) => {
           onStatusChange={(taskId, status) => updateTask.mutate({ taskId, status })}
           onDelete={(taskId) => deleteTask.mutate(taskId)}
           isDeleting={deleteTask.isPending}
+          canChangeTask={canChangeTask}
         />
       </div>
     </main>

@@ -13,7 +13,7 @@
 - **Guest view**: share a group code to give someone read-only access without an account.
 - **Notifications**: in-app notifications plus real-time updates over Socket.IO.
 - **Onboarding**: a first-run wizard, with a sample trip so new accounts have something to explore.
-- **Admin portal**: user management, app configuration ("What's new"), and database and storage usage.
+- **Admin portal**: sign in with an allow-listed Firebase account for user management, app configuration ("What's new"), and database and storage usage.
 
 ## Tech stack
 
@@ -25,6 +25,7 @@
 | Client state | TanStack Query, React Hook Form, Zod |
 | Auth | Firebase Authentication (client) and Firebase Admin (server token verification) |
 | Storage | Cloudinary (avatars and payment QR codes) |
+| Rate limiting | Upstash Redis |
 | Realtime | Socket.IO client, talking to a separate socket server |
 | Tests | Vitest |
 
@@ -57,7 +58,8 @@ npm run dev            # http://localhost:3000
 | Firebase Admin (server) | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
 | Cloudinary | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
 | Realtime | `NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY` |
-| Admin | `ADMIN_PASSWORD` |
+| Admin and guests | `ADMIN_EMAILS` (verified admin emails) and/or `ADMIN_UIDS` (Firebase UIDs), `GUEST_TOKEN_SECRET` |
+| Rate limiting | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional locally) |
 | App flags | `NEXT_PUBLIC_ENVIRONMENT`, `NEXT_PUBLIC_MAINTENANCE_MODE` |
 
 ## Scripts
@@ -79,7 +81,7 @@ Every pull request runs lint, tests and a CI build (`.github/workflows/checks.ym
 - `src/app`: routes and API routes (`src/app/api/**/route.ts`). Each API feature follows the same layering: a thin `route.ts`, a `services.ts` with the business rules, a `repository.ts` that is the only file talking to Prisma, and a `schemas.ts` with the Zod request schemas.
 - `src/app/components`: page-level and shared React components. `src/hooks`: TanStack Query hooks. `src/shared/types`: shared types.
 - `components/ui` and `lib/` at the repo root: shadcn/ui primitives and shared singletons and utilities (Prisma client, Firebase, Axios, logger, auth wrappers).
-- `prisma`: schema and migrations. `scripts`: one-off maintenance scripts. `docs/superpowers`: design specs and implementation plans.
+- `prisma`: schema and migrations. `docs/superpowers`: design specs and implementation plans.
 
 Conventions and architecture rules for contributors (and coding agents) are in [`CLAUDE.md`](./CLAUDE.md).
 

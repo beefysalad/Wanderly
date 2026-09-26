@@ -16,9 +16,9 @@ Single Next.js 15 App Router app (Node 22.12+), not a monorepo. No workspaces, n
 - `src/hooks/` — TanStack Query hooks (`useTrips`, `useExpenses`, ...). Imported as `@/src/hooks/...`.
 - `src/shared/types/` — shared TS types. Imported as `@/src/shared/types`.
 - `components/` (repo root, **not** under `src/`) — shadcn/ui primitives (`components/ui/*`) and a couple of top-level shared components (`socket-provider.tsx`). Imported as `@/components/...`.
-- `lib/` (repo root, **not** under `src/`) — singletons and utilities: `prisma.ts`, `firebase.ts`, `firebase-admin.ts`, `axios.ts`, `socket.ts`, `logger.ts`, `admin-auth.ts`, `rate-limit.ts`, `helper.ts`, `utils.ts`, `auth/with-auth.ts`. Imported as `@/lib/...`.
+- `lib/` (repo root, **not** under `src/`) — singletons and utilities: `prisma.ts`, `firebase.ts`, `firebase-admin.ts`, `axios.ts`, `socket.ts`, `logger.ts`, `rate-limit.ts`, `helper.ts`, `utils.ts`, `auth/with-auth.ts`. Imported as `@/lib/...`.
 - `prisma/` — `schema.prisma` and migrations.
-- `scripts/` — one-off maintenance scripts run with `tsx` (e.g. `sync-admin-password.ts`), not part of the app runtime.
+- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime.
 
 **Known layout quirk (planned restructure):** shared code is split between the repo root (`components/`, `lib/`) and `src/` (`app`, `hooks`, `shared`). This is intentional for now and everything below documents it as is; the maintainer plans to consolidate it under `src/` in a dedicated mechanical PR (move + codemod of `@/lib` and `@/components` imports + `tsconfig`/`components.json` updates) after in-flight work lands. Do not create `src/components/` or `src/lib/`, and do not move files between the two trees opportunistically.
 
@@ -46,7 +46,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 
 ## Environment Variables
 
-`.env.example` lists every variable the app reads (copy it to `.env`); real values live only in `.env` (gitignored) and the hosting dashboard. Categories: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), realtime (`NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY`), `ADMIN_PASSWORD`, app flags. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. When you add a required variable, add it to `.env.example` in the same PR.
+`.env.example` lists every variable the app reads (copy it to `.env`); real values live only in `.env` (gitignored) and the hosting dashboard. Categories: Firebase (`FIREBASE_*`, `NEXT_PUBLIC_FIREBASE_*`), Postgres/Neon (`DATABASE_URL`), Cloudinary (`CLOUDINARY_*`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), realtime (`NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY`), `ADMIN_EMAILS`, `ADMIN_UIDS`, `GUEST_TOKEN_SECRET`, `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`, app flags. Browser-exposed vars must be `NEXT_PUBLIC_`-prefixed; everything else must stay server-only. When you add a required variable, add it to `.env.example` in the same PR.
 
 ## Frontend Patterns
 
@@ -55,7 +55,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 - Server state: TanStack Query hooks in `src/hooks/`; components consuming them handle `isPending`/`isLoading`/`isError` explicitly rather than assuming data is present.
 - HTTP: shared Axios instance at `lib/axios.ts`.
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
-- Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (group code).
+- Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (the socket server still receives the raw group code for guests; see the security spec).
 - Keep page-level components in `src/app/components/pages/<Feature>/index.tsx` from growing into 500–1000+ line files (several already have — `ExpenseForm`, `Trip`, `OnboardingWizard`, `Expenses`, `Profile`). Split by sub-section/concern instead of adding to the existing file when a component crosses ~300 lines.
 
 ## Design & UX Conventions
@@ -80,8 +80,10 @@ Existing `services.ts` files call Prisma directly and mix business logic with da
 
 Migrate a feature to this shape when you're already making a non-trivial change to it — don't do a drive-by refactor of unrelated `services.ts` files just to add the repository layer.
 - **Validate every request body with Zod before using it.** Migrated features (Profile, Reviews, Groups) validate with a colocated `schemas.ts` and `.parse()` in the route, with `handleApiError` mapping failures to a 400. Routes not yet migrated (Trips/Activities/Budget/Expenses/admin/etc.) still destructure `req.json()` directly with only compile-time types. New/edited routes must define a schema and `.parse()` the body before touching Prisma. Note `z.coerce.date()` turns `null` into 1970-01-01 — guard date fields with a non-empty string/number check first (see `groups/[groupId]/trips/schemas.ts`).
-- Auth: wrap protected routes with `withAuth` (Firebase ID token required) or `withOptionalAuth` (`lib/auth/with-auth.ts`) for routes that also serve guests via `X-Guest-Code`. When using `withOptionalAuth`, the handler/service is responsible for re-verifying the guest code against the actual group/trip being accessed — the wrapper does not do this itself, so don't assume `context.groupCode` is already validated.
-- Admin routes currently gate on a single shared password (`lib/admin-auth.ts`, compared with `===`, no hashing). Treat this as a known weak point, not a pattern to copy — new admin/privileged functionality should not add more surface behind the same shared-password check without discussing it with the user first.
+- Auth: wrap protected routes with `withAuth` (Firebase ID token required, revocation checked) or `withOptionalAuth` (`lib/auth/with-auth.ts`) for routes that also serve guests. Guests present a server-signed `X-Guest-Token` (issued by `POST /api/groups/validate-code`, 24h); the wrapper verifies it and exposes `context.guestGroupId`, but services must still compare that id with the group/trip actually being accessed (see `verifyGuestTripAccess`). The raw group code is never sent on data requests and never logged.
+- Admin routes call `assertAdmin(req)` (`src/app/api/admin/guard.ts`): a Firebase account whose uid is in `ADMIN_UIDS` or whose verified email is in `ADMIN_EMAILS`. Destructive admin actions must call `auditAdminAction`. There is no shared password anymore.
+- Rate limiting: wrap public or guessable routes with `withRateLimit(name, handler)` (`lib/rate-limit.ts`, Upstash Redis; fails open if Redis is unset). Add a new limiter to the `LIMITERS` table there.
+- Member permissions: edits to expenses, member tasks and un-marking payments are enforced in services with `assertCanModify` (`src/app/api/groups/permissions.ts`): the item's creator/owner-user or the group owner. Activities and budgets stay open to all members.
 - Prisma access goes through the singleton in `lib/prisma.ts`. Business decisions belong in `services.ts`, not the route handler or the Prisma call site.
 - Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow.
 
@@ -95,7 +97,6 @@ These exist in the codebase today — don't use them as the template for new cod
 - Manual `pathname.split("/")` parsing instead of `context.params`.
 - API routes with no Zod validation.
 - `services.ts` files calling Prisma directly instead of going through a repository (see **Service / Repository Layering** above).
-- New functionality gated behind the shared admin password instead of proper role-based auth.
 - One-off debug/repro scripts committed at the repo root — put throwaway scripts in `scripts/` or don't commit them.
 - Growing an existing 500+ line page component further instead of splitting it.
 

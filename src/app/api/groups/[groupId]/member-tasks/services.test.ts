@@ -148,7 +148,8 @@ describe("updateMemberTaskService", () => {
 
   it("updates only the provided fields", async () => {
     mockFindGroupMembership.mockResolvedValue({ groupId: "group-1", userId: "user-1" });
-    mockFindMemberTaskById.mockResolvedValue({ id: "task-1", groupId: "group-1" });
+    mockFindGroupOwnership.mockResolvedValue({ createdById: "user-1", name: "Trip Squad" });
+    mockFindMemberTaskById.mockResolvedValue({ id: "task-1", groupId: "group-1", createdById: "user-1" });
     mockUpdateMemberTaskRow.mockResolvedValue({ id: "task-1", status: "done" });
 
     await updateMemberTaskService(token, "group-1", "task-1", { status: "done" });
@@ -178,10 +179,52 @@ describe("deleteMemberTaskService", () => {
 
   it("deletes the task when it belongs to the group", async () => {
     mockFindGroupMembership.mockResolvedValue({ groupId: "group-1", userId: "user-1" });
-    mockFindMemberTaskById.mockResolvedValue({ id: "task-1", groupId: "group-1" });
+    mockFindGroupOwnership.mockResolvedValue({ createdById: "user-1", name: "Trip Squad" });
+    mockFindMemberTaskById.mockResolvedValue({ id: "task-1", groupId: "group-1", createdById: "user-1" });
 
     await deleteMemberTaskService(token, "group-1", "task-1");
 
     expect(mockDeleteMemberTaskRow).toHaveBeenCalledWith("task-1");
+  });
+});
+
+describe("member task edit/delete permissions", () => {
+  const task = (over = {}) => ({
+    id: "task-1",
+    groupId: "group-1",
+    createdById: "creator-1",
+    assignedToId: "assignee-1",
+    ...over,
+  });
+
+  beforeEach(() => {
+    mockFindGroupMembership.mockResolvedValue({ groupId: "group-1", userId: "user-1" });
+    mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
+    mockUpdateMemberTaskRow.mockResolvedValue({ id: "task-1" });
+    mockSyncUserToDatabaseService.mockResolvedValue(user);
+  });
+
+  it("rejects update and delete by a member who is neither creator, assignee nor owner", async () => {
+    mockFindMemberTaskById.mockResolvedValue(task());
+
+    await expect(
+      updateMemberTaskService(token, "group-1", "task-1", { status: "done" }),
+    ).rejects.toThrow(ForbiddenError);
+    await expect(deleteMemberTaskService(token, "group-1", "task-1")).rejects.toThrow(
+      ForbiddenError,
+    );
+    expect(mockUpdateMemberTaskRow).not.toHaveBeenCalled();
+    expect(mockDeleteMemberTaskRow).not.toHaveBeenCalled();
+  });
+
+  it("allows the creator, the assignee and the group owner", async () => {
+    for (const actor of ["creator-1", "assignee-1", "owner-1"]) {
+      mockSyncUserToDatabaseService.mockResolvedValue({ ...user, id: actor });
+      mockFindMemberTaskById.mockResolvedValue(task());
+
+      await expect(
+        updateMemberTaskService(token, "group-1", "task-1", { status: "done" }),
+      ).resolves.toBeDefined();
+    }
   });
 });

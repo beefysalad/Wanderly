@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/axios";
 import { format } from "date-fns";
 import {
   AlertTriangle,
@@ -35,16 +35,7 @@ export default function ConfigPage() {
 
   const fetchConfigs = async () => {
     try {
-      const password = sessionStorage.getItem("admin_password");
-      if (!password) {
-        toast.error("Unauthorized");
-        router.push("/admin");
-        return;
-      }
-
-      const response = await axios.get("/api/admin/config", {
-        headers: { "x-admin-password": password },
-      });
+      const response = await api.get("/admin/config");
 
       setConfigs(response.data.configs);
     } catch (error) {
@@ -59,14 +50,7 @@ export default function ConfigPage() {
   const handleUpdateConfig = async (key: string, value: any) => {
     setSavingKey(key);
     try {
-      const password = sessionStorage.getItem("admin_password");
-      await axios.post(
-        "/api/admin/config",
-        { key, value },
-        {
-          headers: { "x-admin-password": password },
-        },
-      );
+      await api.post("/admin/config", { key, value });
 
       toast.success(`${key} updated successfully`);
       fetchConfigs();

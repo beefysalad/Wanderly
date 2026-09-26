@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { handleApiError } from "@/lib/handle-api-error";
+import { verifyGuestToken } from "./guest-token";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { User } from "@prisma/client";
 import { userAuth } from "../firebase-admin";
@@ -113,13 +114,14 @@ export function withBasicAuth(
 
 export interface OptionalAuthContext extends AuthContext {
   isGuest: boolean;
-  groupCode?: string;
+  /** Set only for guests: the group their verified token was issued for. */
+  guestGroupId?: string;
 }
 
 /**
- * Higher-order function that wraps API route handlers with optional auth validation
- * Allows both authenticated users and guests (with group code)
- * @param handler - The API route handler function
+ * Allows both authenticated users (Firebase token) and guests (server-signed X-Guest-Token,
+ * obtained from POST /api/groups/validate-code). `guestGroupId` is already verified, but each
+ * handler must still check it against the group/trip actually being accessed.
  */
 export function withOptionalAuth<
   Params extends Record<string, string> = Record<string, string>,
@@ -134,54 +136,53 @@ export function withOptionalAuth<
     req: NextRequest,
     routeContext?: RouteContext<Params>,
   ): Promise<NextResponse> => {
-    try {
-      // Try to authenticate as a regular user first
-      const authHeader = req.headers.get("Authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.split("Bearer ")[1];
-        if (token && userAuth) {
-          try {
-            const decodedToken = await userAuth.verifyIdToken(token, CHECK_REVOKED);
-            const authContext: OptionalAuthContext = {
-              uid: decodedToken.uid,
-              email: decodedToken.email,
-              emailVerified: decodedToken.email_verified,
-              decodedToken,
-              isGuest: false,
-            };
-            return await handler(req, authContext, routeContext as RouteContext<Params>);
-          } catch (_error) {
-            // Token invalid, fall through to guest check
-            logger.warn("Token validation failed, checking for guest access", {
-              error: _error,
-            });
-          }
+    const run = async (context: OptionalAuthContext) => {
+      try {
+        return await handler(req, context, routeContext as RouteContext<Params>);
+      } catch (error) {
+        return handleApiError(error);
+      }
+    };
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.split("Bearer ")[1];
+      if (token && userAuth) {
+        let decodedToken: DecodedIdToken | null = null;
+        try {
+          decodedToken = await userAuth.verifyIdToken(token, CHECK_REVOKED);
+        } catch (error) {
+          logger.warn("Token validation failed, checking for guest access", { error });
+        }
+        if (decodedToken) {
+          return run({
+            uid: decodedToken.uid,
+            email: decodedToken.email,
+            emailVerified: decodedToken.email_verified,
+            decodedToken,
+            isGuest: false,
+          });
         }
       }
-
-      // If no valid auth token, check for guest access
-      const groupCode = req.headers.get("X-Guest-Code");
-      if (groupCode) {
-        const guestContext: OptionalAuthContext = {
-          uid: "guest",
-          isGuest: true,
-          groupCode,
-          decodedToken: {} as DecodedIdToken,
-        };
-        return await handler(req, guestContext, routeContext as RouteContext<Params>);
-      }
-
-      // Neither authenticated nor guest
-      return NextResponse.json(
-        { message: "Unauthorized - Authentication or guest code required" },
-        { status: 401 },
-      );
-    } catch (error) {
-      logger.error("Optional auth validation failed", error);
-      return NextResponse.json(
-        { message: "Authentication failed" },
-        { status: 401 },
-      );
     }
+
+    const guestToken = req.headers.get("X-Guest-Token");
+    if (guestToken) {
+      const verified = verifyGuestToken(guestToken);
+      if (!verified) {
+        return NextResponse.json({ message: "Invalid or expired guest token" }, { status: 401 });
+      }
+      return run({
+        uid: "guest",
+        isGuest: true,
+        guestGroupId: verified.groupId,
+        decodedToken: {} as DecodedIdToken,
+      });
+    }
+
+    return NextResponse.json(
+      { message: "Unauthorized - authentication or a guest token is required" },
+      { status: 401 },
+    );
   };
 }

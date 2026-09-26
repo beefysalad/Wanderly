@@ -1,6 +1,7 @@
-import { UnauthorizedError } from "@/lib/errors";
 import { handleApiError } from "@/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
+import { auditAdminAction } from "../../admin/audit";
+import { assertAdmin } from "../../admin/guard";
 import { whatsNewConfigSchema } from "./schemas";
 import { getWhatsNewConfigService, updateWhatsNewConfigService } from "./services";
 
@@ -14,13 +15,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    // NOTE: shared-password gate kept as-is; replacing it is the security pass's job.
-    const adminPassword = req.headers.get("x-admin-password");
-    if (adminPassword !== process.env.ADMIN_PASSWORD) {
-      throw new UnauthorizedError("Unauthorized");
-    }
+    const { adminEmail } = await assertAdmin(req);
 
     const body = whatsNewConfigSchema.parse(await req.json());
+    auditAdminAction(adminEmail, "update-whats-new", { version: body.version });
     const config = await updateWhatsNewConfigService(body);
     return NextResponse.json({ success: true, config });
   } catch (error) {

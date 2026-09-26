@@ -153,6 +153,15 @@ const ExpenseDetailContainer = ({
     }
   };
 
+  // Mirrors the server rule: the creator, the payer or the group owner may change an expense.
+  const userEmail = user?.email;
+  const canChangeExpense =
+    !!userEmail &&
+    (expense.createdBy?.email === userEmail ||
+      expense.paidBy === userEmail ||
+      group?.createdByEmail === userEmail ||
+      group?.createdBy === userEmail);
+
   return (
     <ExpenseDetail
       expense={expense}
@@ -160,24 +169,8 @@ const ExpenseDetailContainer = ({
       memberNames={group?.memberNames}
       memberMetadata={group?.memberMetadata}
       activities={trip?.activities || []}
-      onEdit={
-        !expense.createdBy
-          ? expense.paidBy === user?.email
-            ? handleEdit
-            : undefined
-          : expense.createdBy.email === user?.email
-            ? handleEdit
-            : undefined
-      }
-      onDelete={
-        !expense.createdBy
-          ? expense.paidBy === user?.email
-            ? handleDelete
-            : undefined
-          : expense.createdBy.email === user?.email
-            ? handleDelete
-            : undefined
-      }
+      onEdit={canChangeExpense ? handleEdit : undefined}
+      onDelete={canChangeExpense ? handleDelete : undefined}
       onMarkPaid={handleMarkPaid}
       onConfirmPayment={handleConfirmPayment}
       currentUser={user?.email || ""}
