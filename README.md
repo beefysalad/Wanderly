@@ -4,7 +4,7 @@
 
 ## Features
 
-- **Groups**: create a group, invite people with a 6-character code or invite link, assign tasks to members.
+- **Groups**: create a group, invite people with a 6-character code or invite link.
 - **Trips**: multiple trips per group with dates, location and a status (planning, finalized, ongoing, cancelled).
 - **Itinerary**: activities with times, notes and transport details, shown as a day overview, a timeline and a calendar. Mark activities done; export the schedule as a PNG or an `.ics` calendar file.
 - **Budgets**: plan spending per trip and per activity and mark what is already booked.
