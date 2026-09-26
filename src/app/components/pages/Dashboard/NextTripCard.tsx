@@ -6,7 +6,7 @@ import { calculateUnsettledStats, partitionExpenses } from "@/src/app/components
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { AvatarStack } from "../../shared/UserAvatar";
 import { useShellUser } from "../../shared/AppShell/useShellUser";
-import { shortRange, tripCountdown, tripMeta, type TripWithGroup } from "./dashboardData";
+import { shortRange, tripCountdown, tripMeta, type TripWithGroup } from "../../shared/tripDates";
 import { groupPeople } from "./groupPeople";
 
 const TILE = "flex flex-col gap-1 rounded-2xl border p-[14px]";

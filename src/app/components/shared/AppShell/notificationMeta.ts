@@ -12,6 +12,16 @@ export function notificationKind(type: Notification["type"]): NotificationKind {
   return "trip";
 }
 
+/** The small coloured dot beside a notification in a feed. */
+export const NOTIFICATION_DOT: Record<NotificationKind, string> = {
+  pay: "bg-[#fbbf24]",
+  ok: "bg-[#34d399]",
+  exp: "bg-[#fb923c]",
+  join: "bg-[#38bdf8]",
+  act: "bg-[#a78bfa]",
+  trip: "bg-[#fbbf24]",
+};
+
 type LinkFields = Pick<
   Notification,
   "type" | "relatedGroupId" | "relatedTripId" | "relatedExpenseId" | "relatedActivityId"

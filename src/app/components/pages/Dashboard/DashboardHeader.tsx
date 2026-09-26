@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { dateEyebrow } from "./dashboardData";
+import { dateEyebrow } from "../../shared/tripDates";
 
 /** Mono date, "Welcome back, {name}." and the two ways to get into a group. */
 export function DashboardHeader({ firstName, today }: { firstName: string; today: Date }) {

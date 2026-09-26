@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { getGroupTheme } from "@/lib/utils/groupTheme";
-import { buildMonthCells, dateTile, monthLabel, tripWhen, type TripWithGroup } from "./dashboardData";
+import { buildMonthCells, dateTile, monthLabel, tripWhen, type TripWithGroup } from "../../shared/tripDates";
 
 const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 const ARROW = "flex size-7 cursor-pointer items-center justify-center rounded-lg text-[#94a3b8] hover:bg-white/[.06] hover:text-[#f8fafc]";

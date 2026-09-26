@@ -1,169 +1,82 @@
 "use client";
-import { Expense, Trip } from "@/src/shared/types";
-import { useRouter } from "next/navigation";
-import ExpensesList from "./ExpenseList";
-import ExpenseCharts from "./ExpenseCharts";
-import React, { useState } from "react";
+import { useState } from "react";
+import type { Trip } from "@/src/shared/types";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
-import { useGroup } from "@/src/hooks/useGroups";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
+import { useGroup } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import LoadingState from "../../shared/LoadingState";
-import { ExpensesHeader } from "./components/ExpensesHeader";
+import { CategoryBars } from "./CategoryBars";
+import { ExpenseFilters } from "./ExpenseFilters";
+import { ExpenseRow } from "./ExpenseRow";
+import { ExpenseSummary } from "./ExpenseSummary";
 import { PaymentHistory } from "./components/PaymentHistory";
-import { SettledSummary, UnsettledSummary } from "./components/SummaryCards";
-import { TripNotFound } from "./components/TripNotFound";
-import {
-  calculateSettledStats,
-  calculateUnsettledStats,
-  filterExpensesForView,
-  partitionExpenses,
-  type ExpensesView,
-} from "./expenseStats";
+import { calculateUnsettledStats, filterExpensesForView, partitionExpenses, type ExpensesView } from "./expenseStats";
 
 interface IExpensesComponent {
   groupId: string;
   tripId: string;
-  isEmbedded?: boolean;
 }
 
-const ExpensesComponent = ({
-  groupId,
-  tripId,
-  isEmbedded = false,
-}: IExpensesComponent) => {
-  const router = useRouter();
+/** The Expenses tab of a trip: totals, filters, the list, a category breakdown and the payment history. */
+const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
-  const { data: expensesData, isLoading: loadingExpenses } =
-    useExpenses(tripId);
-  const { data: paymentLogsData, isLoading: loadingLogs } =
-    usePaymentLogs(tripId);
-
-  const group = groupData?.group || null;
-  const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
-  const expenses = expensesData?.expenses || [];
-  const paymentLogs = paymentLogsData?.paymentLogs || [];
-
-  const [view, setView] = useState<ExpensesView>("all");
+  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
+  const { data: paymentLogsData, isLoading: loadingLogs } = usePaymentLogs(tripId);
   const { user } = useCurrentUser();
+  const [view, setView] = useState<ExpensesView>("all");
 
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
 
-  const currentUserEmail = user?.email || "";
+  const group = groupData?.group || null;
+  const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
+  const expenses = expensesData?.expenses || [];
+  const email = user?.email || "";
 
-  const partitions = partitionExpenses(expenses, currentUserEmail);
-  const unsettledStats = calculateUnsettledStats(partitions.unsettled, currentUserEmail);
-  const settledStats = calculateSettledStats(partitions.settled);
-  const filteredExpenses = filterExpensesForView(view, expenses, partitions);
+  if (loadingGroup || loadingExpenses) return <LoadingState className='py-20' />;
+  if (!group || !trip) return <p className='py-16 text-center text-sm text-[#94a3b8]'>This trip couldn&apos;t be found.</p>;
 
-  const counts = {
-    all: expenses.length,
-    unsettled: partitions.unsettled.length,
-    settled: partitions.settled.length,
-  };
-
-  const handleViewExpense = (expense: Expense) => {
-    router.push(`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`);
-  };
-
-  const handleViewActivity = (activityId: string) => {
-    router.push(`/group/${groupId}/trip/${tripId}/activities/${activityId}`);
-  };
-
-  if (loadingGroup) {
-    if (isEmbedded) {
-      return <LoadingState className='py-20' />;
-    }
-    return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
-    );
-  }
-
-  if (!group || !trip) {
-    return <TripNotFound isEmbedded={isEmbedded} groupId={groupId} tripId={tripId} />;
-  }
-
-  const Wrapper = isEmbedded ? "div" : "main";
-  const wrapperClass = isEmbedded
-    ? ""
-    : "min-h-screen bg-slate-950 pb-6 relative overflow-hidden";
+  const partitions = partitionExpenses(expenses, email);
+  const { youOwe, youAreOwed } = calculateUnsettledStats(partitions.unsettled, email);
+  const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const shown = filterExpensesForView(view, expenses, partitions);
 
   return (
-    <>
-      <Wrapper className={wrapperClass}>
-        {/* Background Effects */}
-        {!isEmbedded && (
-          <div className='fixed inset-0 pointer-events-none'>
-            <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px]'></div>
-            <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[100px]'></div>
-          </div>
-        )}
-        <div
-          className={`max-w-4xl mx-auto ${!isEmbedded ? "px-4 py-4 md:py-6" : ""} relative z-10`}
-        >
-          <div className='mb-8'>
-            <ExpensesHeader
-              isEmbedded={isEmbedded}
-              groupId={groupId}
-              tripId={tripId}
-              tripName={trip.name}
-              view={view}
-              setView={setView}
-              counts={counts}
+    <div className='flex flex-col gap-[18px]'>
+      <ExpenseSummary youOwe={youOwe} youAreOwed={youAreOwed} total={total} />
+      <ExpenseFilters
+        view={view}
+        onChange={setView}
+        counts={{ all: expenses.length, unsettled: partitions.unsettled.length, settled: partitions.settled.length }}
+        addHref={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+      />
+
+      {view === "logs" ? (
+        <PaymentHistory group={group} paymentLogs={paymentLogsData?.paymentLogs || []} isLoading={loadingLogs} />
+      ) : null}
+
+      {view === "analysis" ? <CategoryBars expenses={expenses} /> : null}
+
+      {view !== "logs" && view !== "analysis" ? (
+        <div className='flex flex-col gap-2'>
+          {shown.map((expense) => (
+            <ExpenseRow
+              key={expense.id}
+              expense={expense}
+              group={group}
+              userEmail={email}
+              href={`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`}
             />
-          </div>
-
-          {/* Content Area */}
-          <div className='space-y-6'>
-            {view === "logs" ? (
-              <PaymentHistory
-                group={group}
-                paymentLogs={paymentLogs}
-                isLoading={loadingLogs}
-              />
-            ) : loadingExpenses ? (
-              <LoadingState className='py-20' />
-            ) : (
-              <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
-                {view === "unsettled" && (
-                  <UnsettledSummary
-                    youOwe={unsettledStats.youOwe}
-                    youAreOwed={unsettledStats.youAreOwed}
-                  />
-                )}
-
-                {view === "settled" && (
-                  <SettledSummary totalSettled={settledStats.totalSettled} />
-                )}
-
-                {view === "analysis" && (
-                  <ExpenseCharts
-                    expenses={expenses}
-                    currentUserEmail={user?.email || ""}
-                  />
-                )}
-
-                {view !== "analysis" && (
-                  <ExpensesList
-                    expenses={filteredExpenses}
-                    members={group.memberEmails || []}
-                    memberNames={group.memberNames}
-                    memberMetadata={group.memberMetadata}
-                    activities={trip.activities || []}
-                    onSelectExpense={handleViewExpense}
-                    onSelectActivity={(activity) => handleViewActivity(activity.id)}
-                    currentUser={user?.email ?? ""}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+          ))}
+          {shown.length === 0 ? (
+            <div className='rounded-[18px] border border-dashed border-white/[.14] p-7 text-center text-sm text-[#94a3b8]'>
+              No expenses here yet.
+            </div>
+          ) : null}
         </div>
-      </Wrapper>
-    </>
+      ) : null}
+    </div>
   );
 };
 

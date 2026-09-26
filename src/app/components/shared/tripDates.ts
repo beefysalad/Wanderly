@@ -120,3 +120,13 @@ export function buildMonthCells(year: number, month: number, trips: TripWithGrou
   }
   return cells;
 }
+
+/** "Next · Siargao, Oct 8" for a group card, or a note when nothing is planned. */
+export function nextTripLine(trips: Trip[], today: Date): string {
+  const next = trips
+    .filter((trip) => trip.status !== "cancelled" && endOf(trip) >= dayStart(today))
+    .sort((a, b) => startOf(a).getTime() - startOf(b).getTime())[0];
+  if (!next) return "No upcoming trips";
+  const start = startOf(next);
+  return `Next · ${next.name}, ${MONTHS[start.getMonth()]} ${start.getDate()}`;
+}

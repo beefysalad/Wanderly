@@ -5,7 +5,7 @@ import { useCurrentUserDB } from "@/src/hooks/useProfile";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import LoadingState from "../../shared/LoadingState";
 import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
-import { allTrips, upcomingTrips } from "./dashboardData";
+import { allTrips, upcomingTrips } from "../../shared/tripDates";
 import { DashboardHeader } from "./DashboardHeader";
 import { NextTripCard } from "./NextTripCard";
 import OnboardingWizard from "./OnboardingWizard";

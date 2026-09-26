@@ -1,13 +1,9 @@
-import BudgetComponent from "@/src/app/components/pages/Budget";
-import React from "react";
+import { redirect } from "next/navigation";
 
-const BudgetPage = async ({
-  params,
-}: {
-  params: Promise<{ groupId: string; tripId: string }>;
-}) => {
+// The budget now lives in the trip's Budget tab; this keeps old links working.
+const BudgetPage = async ({ params }: { params: Promise<{ groupId: string; tripId: string }> }) => {
   const { groupId, tripId } = await params;
-  return <BudgetComponent groupId={groupId} tripId={tripId} />;
+  redirect(`/group/${groupId}/trip/${tripId}?tab=budget`);
 };
 
 export default BudgetPage;

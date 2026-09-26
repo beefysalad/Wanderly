@@ -7,13 +7,14 @@ import {
   dateTile,
   dayDiff,
   fullRange,
+  nextTripLine,
   pastTrips,
   shortRange,
   tripCountdown,
   tripMeta,
   tripWhen,
   upcomingTrips,
-} from "./dashboardData";
+} from "./tripDates";
 
 const TODAY = new Date(2026, 8, 26); // Sat, Sep 26 2026
 
@@ -98,5 +99,13 @@ describe("buildMonthCells", () => {
   it("caps the bars at three trips per day", () => {
     const many = allTrips([group([1, 2, 3, 4].map((n) => trip(`t${n}`, [2026, 8, 20], [2026, 8, 30])))]);
     expect(buildMonthCells(2026, 8, many, TODAY).find((c) => c.day === 25)?.schemes).toHaveLength(3);
+  });
+});
+
+describe("nextTripLine", () => {
+  it("names the soonest unfinished trip, or says there is none", () => {
+    expect(nextTripLine([coron, siargao], TODAY)).toBe("Next · siargao, Oct 8");
+    expect(nextTripLine([batangas, cancelled], TODAY)).toBe("No upcoming trips");
+    expect(nextTripLine([], TODAY)).toBe("No upcoming trips");
   });
 });
