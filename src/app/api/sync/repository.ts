@@ -11,13 +11,20 @@ export interface FirebaseProfile {
   disabled: boolean;
 }
 
-/** Creates the user or refreshes their Firebase-owned fields, matched by email. */
-export function upsertUserFromFirebase(firebaseId: string, profile: FirebaseProfile) {
-  const { disabled, ...fields } = profile;
+export function findUserByEmail(email: string) {
+  return prisma.user.findUnique({ where: { email } });
+}
 
-  return prisma.user.upsert({
-    where: { email: profile.email },
-    create: { ...fields, firebaseId },
-    update: { ...fields, firebaseId, firebaseDisabled: disabled },
+export function createUserFromFirebase(firebaseId: string, profile: FirebaseProfile) {
+  const { disabled, ...fields } = profile;
+  return prisma.user.create({ data: { ...fields, firebaseId, firebaseDisabled: disabled } });
+}
+
+/** Refreshes the Firebase-owned fields of a user row and sets the Firebase account it belongs to. */
+export function updateUserFromFirebase(userId: string, firebaseId: string, profile: FirebaseProfile) {
+  const { disabled, ...fields } = profile;
+  return prisma.user.update({
+    where: { id: userId },
+    data: { ...fields, firebaseId, firebaseDisabled: disabled },
   });
 }
