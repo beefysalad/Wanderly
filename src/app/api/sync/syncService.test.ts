@@ -10,10 +10,14 @@ vi.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockFind = vi.fn();
-const mockUpsert = vi.fn();
+const mockFindByEmail = vi.fn();
+const mockCreate = vi.fn();
+const mockUpdate = vi.fn();
 vi.mock("./repository", () => ({
   findUserByFirebaseId: (...a: unknown[]) => mockFind(...a),
-  upsertUserFromFirebase: (...a: unknown[]) => mockUpsert(...a),
+  findUserByEmail: (...a: unknown[]) => mockFindByEmail(...a),
+  createUserFromFirebase: (...a: unknown[]) => mockCreate(...a),
+  updateUserFromFirebase: (...a: unknown[]) => mockUpdate(...a),
 }));
 
 const mockSeed = vi.fn();
@@ -29,10 +33,12 @@ beforeEach(() => {
   firebase.userAuth = { getUser: mockGetUser };
   mockGetUser.mockResolvedValue({
     email: "a@x.com",
+    emailVerified: false,
     displayName: "Al",
     photoURL: null,
     disabled: false,
   });
+  mockFindByEmail.mockResolvedValue(null);
 });
 
 describe("syncUserToDatabaseService", () => {
@@ -61,11 +67,11 @@ describe("syncUserToDatabaseService", () => {
 
   it("creates a new user from the Firebase profile, then seeds them", async () => {
     mockFind.mockResolvedValue(null);
-    mockUpsert.mockResolvedValue({ id: "u2", hasSeededTestData: false });
+    mockCreate.mockResolvedValue({ id: "u2", hasSeededTestData: false });
 
     const result = await syncUserToDatabaseService(token);
 
-    expect(mockUpsert).toHaveBeenCalledWith("f1", {
+    expect(mockCreate).toHaveBeenCalledWith("f1", {
       email: "a@x.com",
       name: "Al",
       imageUrl: "",
@@ -75,14 +81,52 @@ describe("syncUserToDatabaseService", () => {
     expect(result).toEqual({ id: "u2", hasSeededTestData: false });
   });
 
-  it("force sync refreshes an existing user from Firebase", async () => {
+  it("refuses to attach a new Firebase account to an existing user through an unverified email", async () => {
+    mockFind.mockResolvedValue(null);
+    mockFindByEmail.mockResolvedValue({ id: "victim", firebaseId: "someone-else" });
+
+    await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockSeed).not.toHaveBeenCalled();
+  });
+
+  it("links an existing user to a new Firebase account when the email is verified", async () => {
+    mockFind.mockResolvedValue(null);
+    mockFindByEmail.mockResolvedValue({ id: "u3", firebaseId: "old-uid" });
+    mockGetUser.mockResolvedValue({
+      email: "a@x.com",
+      emailVerified: true,
+      displayName: "Al",
+      photoURL: null,
+      disabled: false,
+    });
+    mockUpdate.mockResolvedValue({ id: "u3", hasSeededTestData: true });
+
+    const result = await syncUserToDatabaseService(token);
+
+    expect(mockUpdate).toHaveBeenCalledWith("u3", "f1", expect.objectContaining({ email: "a@x.com" }));
+    expect(result).toEqual({ id: "u3", hasSeededTestData: true });
+  });
+
+  it("rejects a Firebase account without an email address", async () => {
+    mockFind.mockResolvedValue(null);
+    mockGetUser.mockResolvedValue({ email: undefined, emailVerified: false, disabled: false });
+
+    await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("force sync refreshes the caller's own row, keeping its Firebase id", async () => {
     mockFind.mockResolvedValue({ id: "u1", hasSeededTestData: true });
-    mockUpsert.mockResolvedValue({ id: "u1", hasSeededTestData: true });
+    mockUpdate.mockResolvedValue({ id: "u1", hasSeededTestData: true });
 
     await syncUserToDatabaseService(token, true);
 
     expect(mockGetUser).toHaveBeenCalledWith("f1");
-    expect(mockUpsert).toHaveBeenCalled();
+    expect(mockFindByEmail).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalledWith("u1", "f1", expect.objectContaining({ email: "a@x.com" }));
     expect(mockSeed).not.toHaveBeenCalled();
   });
 });
