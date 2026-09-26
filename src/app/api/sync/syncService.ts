@@ -1,7 +1,8 @@
 import { userAuth } from "@/lib/firebase-admin";
 import { AppError, ForbiddenError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-import { DecodedIdToken } from "firebase-admin/auth";
+import { Prisma } from "@prisma/client";
+import type { DecodedIdToken } from "firebase-admin/auth";
 import {
   createUserFromFirebase,
   findUserByEmail,
@@ -9,8 +10,9 @@ import {
   updateUserFromFirebase,
   type FirebaseProfile,
 } from "./repository";
+import { DUMMY_USERS } from "./sampleTripData";
 
-// Loaded lazily: the seeding module (and its sample data) is only needed for brand-new users.
+// Loaded lazily: the seeding module is only needed for brand-new users.
 async function seedIfNeeded(user: { id: string; hasSeededTestData: boolean }) {
   if (!user.hasSeededTestData) {
     const { seedTestData } = await import("./testDataService");
@@ -71,9 +73,23 @@ export async function syncUserToDatabaseService(
 }
 
 async function createOrLinkUser(firebaseId: string, profile: FirebaseProfile, emailVerified: boolean) {
+  // The sample-data members are shared by every seeded group, so nobody may own their emails.
+  if (DUMMY_USERS.some((d) => d.email === profile.email.toLowerCase())) {
+    throw new ForbiddenError("This email address can't be used");
+  }
+
   const emailOwner = await findUserByEmail(profile.email);
   if (!emailOwner) {
-    return createUserFromFirebase(firebaseId, profile);
+    try {
+      return await createUserFromFirebase(firebaseId, profile);
+    } catch (error) {
+      // A new user's first page load syncs from several requests at once; one of them wins the insert.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        const created = await findUserByFirebaseId(firebaseId);
+        if (created) return created;
+      }
+      throw error;
+    }
   }
   if (!emailVerified) {
     logger.warn("Refused to link a Firebase account to an existing user with an unverified email", {

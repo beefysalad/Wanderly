@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -112,6 +113,34 @@ describe("syncUserToDatabaseService", () => {
   it("rejects a Firebase account without an email address", async () => {
     mockFind.mockResolvedValue(null);
     mockGetUser.mockResolvedValue({ email: undefined, emailVerified: false, disabled: false });
+
+    await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("returns the row a concurrent first sign-in created instead of failing on the unique constraint", async () => {
+    const createdByOtherRequest = { id: "u2", hasSeededTestData: true };
+    mockFind.mockResolvedValueOnce(null).mockResolvedValueOnce(createdByOtherRequest);
+    mockCreate.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      }),
+    );
+
+    expect(await syncUserToDatabaseService(token)).toBe(createdByOtherRequest);
+  });
+
+  it("refuses to register a sample-data member email, even when no row exists for it yet", async () => {
+    mockFind.mockResolvedValue(null);
+    mockGetUser.mockResolvedValue({
+      email: "steve.dummy@example.com",
+      emailVerified: false,
+      displayName: "Steve",
+      photoURL: null,
+      disabled: false,
+    });
 
     await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
     expect(mockCreate).not.toHaveBeenCalled();
