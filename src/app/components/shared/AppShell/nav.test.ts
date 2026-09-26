@@ -6,8 +6,11 @@ describe("activeNavKey", () => {
     expect(activeNavKey("/dashboard")).toBe("home");
     expect(activeNavKey("/trips")).toBe("trips");
     expect(activeNavKey("/groups")).toBe("groups");
-    expect(activeNavKey("/notifications")).toBe("notifications");
     expect(activeNavKey("/profile")).toBe("profile");
+  });
+
+  it("leaves the notifications page out of the nav (it opens from the bell)", () => {
+    expect(activeNavKey("/notifications")).toBeNull();
   });
 
   it("keeps create and join group under Home, and everything else inside a group under Groups", () => {

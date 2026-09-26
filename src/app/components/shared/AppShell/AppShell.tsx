@@ -4,6 +4,7 @@ import { GridBackdrop } from "../Site/GridBackdrop";
 import { DetailHeader } from "./DetailHeader";
 import { MobileTabBar } from "./MobileTabBar";
 import { MobileTopBar } from "./MobileTopBar";
+import { ShellEffects } from "./ShellEffects";
 import { Sidebar } from "./Sidebar";
 
 interface AppShellProps {
@@ -27,6 +28,7 @@ export function AppShell({ children, level = "top", back }: AppShellProps) {
 
   return (
     <div className='relative flex min-h-screen bg-[#020617] font-[family-name:var(--font-geist-sans)] leading-[normal] text-[#f8fafc]'>
+      <ShellEffects />
       <Sidebar />
       <div className='@container relative min-w-0 flex-1'>
         <GridBackdrop position='absolute' className='bottom-auto h-[640px]' />

@@ -1,15 +1,13 @@
 "use client";
 
-import { Bell } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUnreadCount } from "@/src/hooks/useNotifications";
 import { UserAvatar } from "../UserAvatar";
+import { NotificationsMenu } from "./NotificationsMenu";
 import { useShellUser } from "./useShellUser";
 
 /** Sticky bar for the top-level pages on phones: logo, notifications, you. */
 export function MobileTopBar() {
-  const { data: unread } = useUnreadCount();
   const user = useShellUser();
 
   return (
@@ -19,16 +17,7 @@ export function MobileTopBar() {
         <span className='text-[17px] font-extrabold tracking-[-.02em]'>Wanderly</span>
       </Link>
       <div className='flex items-center gap-[10px]'>
-        <Link
-          href='/notifications'
-          aria-label='Notifications'
-          className='relative flex size-[38px] items-center justify-center rounded-full border border-white/[.1] bg-white/[.03] text-[#e2e8f0]'
-        >
-          <Bell className='size-[17px]' />
-          {(unread?.count ?? 0) > 0 ? (
-            <span className='absolute right-2 top-[7px] size-2 rounded-full border-2 border-[#020617] bg-[#fbbf24]' />
-          ) : null}
-        </Link>
+        <NotificationsMenu align='right' buttonClassName='size-[38px]' />
         <Link href='/profile' aria-label='Profile'>
           <UserAvatar name={user.name} colorKey={user.email} imageUrl={user.imageUrl} className='size-9 text-xs' />
         </Link>

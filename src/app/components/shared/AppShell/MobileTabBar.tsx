@@ -10,7 +10,7 @@ export function MobileTabBar() {
   const activeKey = activeNavKey(usePathname() ?? "");
 
   return (
-    <nav className='fixed inset-x-0 bottom-0 z-[6] grid grid-cols-5 border-t border-white/[.06] bg-[rgba(2,6,23,.9)] px-2 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 backdrop-blur-[18px] md:hidden'>
+    <nav className='fixed inset-x-0 bottom-0 z-[6] grid grid-cols-4 border-t border-white/[.06] bg-[rgba(2,6,23,.9)] px-2 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 backdrop-blur-[18px] md:hidden'>
       {NAV_ITEMS.map(({ key, tabLabel, href, icon: Icon }) => (
         <Link
           key={key}

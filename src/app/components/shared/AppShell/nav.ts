@@ -1,6 +1,6 @@
-import { Bell, Calendar, House, User, Users, type LucideIcon } from "lucide-react";
+import { Calendar, House, User, Users, type LucideIcon } from "lucide-react";
 
-export type NavKey = "home" | "trips" | "groups" | "notifications" | "profile";
+export type NavKey = "home" | "trips" | "groups" | "profile";
 
 export interface NavItem {
   key: NavKey;
@@ -15,16 +15,15 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "home", label: "Home", tabLabel: "Home", href: "/dashboard", icon: House },
   { key: "trips", label: "Trips", tabLabel: "Trips", href: "/trips", icon: Calendar },
   { key: "groups", label: "Groups", tabLabel: "Groups", href: "/groups", icon: Users },
-  { key: "notifications", label: "Notifications", tabLabel: "Alerts", href: "/notifications", icon: Bell },
   { key: "profile", label: "Profile", tabLabel: "Profile", href: "/profile", icon: User },
 ];
 
-/** Which nav item a page belongs to: the five top-level pages themselves, and groups for anything inside a group. */
-export function activeNavKey(pathname: string): NavKey {
+/** Which nav item a page belongs to: the four top-level pages themselves, and groups for anything inside a group. The notifications page belongs to none (it opens from the bell). */
+export function activeNavKey(pathname: string): NavKey | null {
   if (pathname === "/dashboard") return "home";
   if (pathname === "/group/create" || pathname === "/group/join") return "home";
   if (pathname.startsWith("/trips")) return "trips";
-  if (pathname.startsWith("/notifications")) return "notifications";
+  if (pathname.startsWith("/notifications")) return null;
   if (pathname.startsWith("/profile")) return "profile";
   return "groups";
 }
