@@ -5,8 +5,8 @@ import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
-import { Reveal } from "./Reveal";
-import { EASE, useCountUp } from "./motion";
+import { Reveal } from "../../shared/Site/Reveal";
+import { EASE, useCountUp } from "../../shared/Site/motion";
 
 const GOAL = 1000;
 

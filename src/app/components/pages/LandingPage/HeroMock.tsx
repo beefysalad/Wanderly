@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Clock, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { EASE, useCountUp } from "./motion";
+import { EASE, useCountUp } from "../../shared/Site/motion";
 
 const AVATARS = [
   { label: "MJ", className: "bg-[#f59e0b] text-[#160c02] font-bold" },

@@ -3,21 +3,21 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar, Link2, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { Reveal } from "./Reveal";
-import { EASE, useRevealDistance } from "./motion";
+import { Reveal } from "../../shared/Site/Reveal";
+import { EASE, useRevealDistance } from "../../shared/Site/motion";
 
 const FEATURES: { icon: LucideIcon; title: string; body: string; href: string }[] = [
   {
     icon: Calendar,
     title: "One schedule",
     body: "Everyone's on the same day, hour by hour. Export it to the calendar app they already use.",
-    href: "/how-to",
+    href: "/features",
   },
   {
     icon: Wallet,
     title: "One running tab",
     body: "Log it, split it, settle it. Nobody has to be the spreadsheet guy this time.",
-    href: "/how-to",
+    href: "/features",
   },
   {
     icon: Link2,
@@ -27,7 +27,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; href: string }[
   },
 ];
 
-export function Features() {
+export function FeatureCards() {
   const distance = useRevealDistance();
 
   return (
@@ -40,7 +40,7 @@ export function Features() {
           Three things, done properly.
         </h2>
         <Link
-          href='/how-to'
+          href='/features'
           className='inline-flex items-center gap-2 text-[15px] font-semibold text-[#fbbf24] hover:text-[#fcd34d]'
         >
           All the features <ArrowRight className='size-[15px]' />

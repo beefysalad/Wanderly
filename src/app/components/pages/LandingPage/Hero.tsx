@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import { HeroMock } from "./HeroMock";
-import { EASE, useRevealDistance } from "./motion";
+import { EASE, useRevealDistance } from "../../shared/Site/motion";
 
 const HEADLINE = [
   { text: "Everyone's in.", accent: false },

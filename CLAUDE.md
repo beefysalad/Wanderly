@@ -56,6 +56,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 - HTTP: shared Axios instance at `lib/axios.ts`.
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
 - Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (the socket server still receives the raw group code for guests; see the security spec).
+- Public pages (landing, features, how it works, about, FAQ, reviews, how to) share `src/app/components/shared/Site/`: `SiteShell` (canvas, header, footer, Geist), `PageHero`, `CtaSection`, `Reveal`/`Stagger` and `motion.ts` (the design's ease and count-up). The design uses exact hex colours as Tailwind arbitrary values on purpose; keep them rather than mapping to the v4 palette. Set Geist via `SiteShell` (the app's `<html>` never receives the font variable).
 - Keep page-level components in `src/app/components/pages/<Feature>/index.tsx` from growing into 500–1000+ line files (several already have — `ExpenseForm`, `Trip`, `OnboardingWizard`, `Expenses`, `Profile`). Split by sub-section/concern instead of adding to the existing file when a component crosses ~300 lines.
 
 ## Design & UX Conventions

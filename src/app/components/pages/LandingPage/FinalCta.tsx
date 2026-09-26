@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Reveal } from "./Reveal";
+import { Reveal } from "../../shared/Site/Reveal";
 
 export function FinalCta() {
   return (

@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 const EXPLORE_LINKS = [
-  { href: "/how-to", label: "How it works" },
-  { href: "#features", label: "Features" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/features", label: "Features" },
   { href: "/how-to", label: "How to" },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
