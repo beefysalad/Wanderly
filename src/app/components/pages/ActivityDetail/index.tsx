@@ -1,24 +1,11 @@
 "use client";
 
-import { Activity, Expense } from "@/src/shared/types";
-import {
-  Calendar,
-  Clock,
-  FileText,
-  Pencil,
-  Trash2,
-  Navigation2,
-  DollarSign,
-  ArrowRight,
-  CheckCircle2,
-  Circle,
-  MoreVertical,
-} from "lucide-react";
-import React, { useState } from "react";
-import { formatTime12Hour } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import PremiumPageHeader from "../../shared/PremiumPageHeader";
-import PremiumBackground from "../../shared/PremiumBackground";
+import { ArrowRight, Calendar, FileText, Navigation2, Wallet } from "lucide-react";
+import { cn, formatTime12Hour } from "@/lib/utils";
+import { formatPeso } from "@/lib/utils/money";
+import type { Activity, Expense } from "@/src/shared/types";
+import { ItemMenu } from "../../shared/ItemMenu";
+import { TickButton } from "../Trip/components/ActivityParts";
 
 interface IActivityDetailProps {
   activity: Activity;
@@ -30,6 +17,29 @@ interface IActivityDetailProps {
   readOnly?: boolean;
 }
 
+const CARD = "rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-[18px]";
+const CARD_LABEL = "font-mono text-[10px] uppercase tracking-[.16em] text-[#64748b]";
+
+const MODE_EMOJI: Record<string, string> = {
+  car: "🚗",
+  bus: "🚌",
+  plane: "✈️",
+  train: "🚊",
+  taxi: "🚕",
+  walking: "🚶",
+  commute: "🚌",
+};
+
+const timeRange = (activity: Activity) => {
+  if (activity.startTime && activity.endTime) {
+    return `${formatTime12Hour(activity.startTime)} – ${formatTime12Hour(activity.endTime)}`;
+  }
+  if (activity.startTime) return `Starts at ${formatTime12Hour(activity.startTime)}`;
+  if (activity.endTime) return `Ends at ${formatTime12Hour(activity.endTime)}`;
+  return null;
+};
+
+/** One activity: when, notes, how to get there, and the expenses linked to it. Chrome comes from the container. */
 const ActivityDetail = ({
   activity,
   expenses = [],
@@ -39,332 +49,121 @@ const ActivityDetail = ({
   onSelectExpense,
   readOnly = false,
 }: IActivityDetailProps) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const activityDate = new Date(activity.date);
-
-  // Filter expenses linked to this activity
-  const linkedExpenses = expenses.filter(
-    (exp) => exp.activityId === activity.id,
-  );
+  const linkedExpenses = expenses.filter((expense) => expense.activityId === activity.id);
+  const when = timeRange(activity);
+  const hasJourney =
+    activity.transportationMode || activity.pickupTime || activity.pickupLocation || activity.dropoffLocation;
 
   return (
-    <div className='min-h-screen bg-slate-950 pb-32 relative overflow-x-hidden font-sans selection:bg-orange-500/30'>
-      <PremiumBackground />
-
-      <PremiumPageHeader 
-        title='Activity Details' 
-        actions={
-          !readOnly && (
-            <div className='relative'>
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
-                title='Options'
-              >
-                <MoreVertical className='w-5 h-5' />
-              </button>
-
-              {showMenu && (
-                <>
-                  <div
-                    className='fixed inset-0 z-40'
-                    onClick={() => setShowMenu(false)}
-                  />
-                  <div className='absolute right-0 top-full mt-3 w-52 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in duration-200'>
-                    <div className='px-4 py-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white/5'>
-                      Options
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        onEdit && onEdit();
-                      }}
-                      className='w-full px-4 py-3.5 text-left text-sm text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-3 transition-colors'
-                    >
-                      <Pencil className='w-4 h-4' />
-                      Edit Activity
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        onDelete && onDelete();
-                      }}
-                      className='w-full px-4 py-3.5 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5'
-                    >
-                      <Trash2 className='w-4 h-4' />
-                      Delete Activity
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )
-        }
-      />
-
-      <div className='max-w-3xl mx-auto w-full relative z-10 px-4 sm:px-6'>
-        {/* Title & Status Section */}
-        <div className='pt-4 pb-8'>
-          <div className='flex flex-col gap-6'>
-            {/* Badges */}
-            <div className='flex flex-wrap items-center gap-3'>
-              <button
-                onClick={!readOnly ? onToggleDone : undefined}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border shadow-sm",
-                  activity.done
-                    ? "bg-emerald-500 text-slate-950 border-emerald-500 hover:bg-emerald-600"
-                    : "bg-slate-800 text-orange-400 border-orange-500/30 hover:bg-slate-700",
-                )}
-              >
-                {activity.done ? (
-                  <>
-                    <CheckCircle2 className='w-3.5 h-3.5' />
-                    <span>Completed</span>
-                  </>
-                ) : (
-                  <>
-                    <Circle className='w-3.5 h-3.5' />
-                    <span>Planned</span>
-                  </>
-                )}
-              </button>
-
-              <span className='px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm'>
-                <Calendar className='w-3.5 h-3.5' />
-                {activityDate.toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-
-            {/* Title */}
-            <div>
-              <h1
-                className={cn(
-                  "text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-2",
-                  activity.done &&
-                    "text-slate-500 line-through decoration-slate-700 decoration-4",
-                )}
-              >
-                {activity.title}
-              </h1>
-
-              {/* Time */}
-              {(activity.startTime || activity.endTime) && (
-                <div className='inline-flex items-center gap-2 text-lg sm:text-xl font-medium text-orange-400/90'>
-                  <Clock className='w-5 h-5' />
-                  <span>
-                    {activity.startTime && activity.endTime
-                      ? `${formatTime12Hour(activity.startTime)} - ${formatTime12Hour(activity.endTime)}`
-                      : activity.startTime
-                        ? `Starts at ${formatTime12Hour(activity.startTime)}`
-                        : `Ends at ${formatTime12Hour(activity.endTime || "")}`}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className='mx-auto flex max-w-[760px] flex-col gap-5'>
+      <div className='flex items-start gap-4'>
+        <TickButton
+          done={activity.done}
+          onToggle={readOnly ? undefined : onToggleDone}
+          label={activity.title}
+        />
+        <div className='min-w-0 flex-1'>
+          <p className='mb-2 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#64748b]'>
+            <Calendar className='size-3' />
+            {new Date(activity.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            <span className={activity.done ? "text-[#34d399]" : "text-[#fbbf24]"}>
+              · {activity.done ? "Completed" : "Planned"}
+            </span>
+          </p>
+          <h1
+            className={cn(
+              "text-[clamp(28px,4.4cqw,40px)] font-extrabold leading-[1.05] tracking-[-.03em] [overflow-wrap:anywhere]",
+              activity.done && "text-[#64748b] line-through decoration-[#334155]",
+            )}
+          >
+            {activity.title}
+          </h1>
+          {when ? <p className='mt-2 font-mono text-[15px] text-[#fbbf24]'>{when}</p> : null}
         </div>
-
-        {/* Content Cards */}
-        <div className='space-y-6'>
-          {/* Notes Card */}
-          {activity.notes ? (
-            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
-              <div className='flex items-center gap-3 mb-4 text-slate-500'>
-                <FileText className='w-4 h-4' />
-                <span className='text-xs font-bold uppercase tracking-widest'>
-                  Notes
-                </span>
-              </div>
-              <p className='text-base text-slate-300 leading-relaxed whitespace-pre-wrap font-medium'>
-                {activity.notes}
-              </p>
-            </div>
-          ) : (
-            <div className='bg-slate-900/50 rounded-2xl p-8 border border-slate-800/50 border-dashed text-center'>
-              <div className='w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-500'>
-                <FileText className='w-6 h-6' />
-              </div>
-              <p className='text-slate-400 font-medium'>No notes added yet</p>
-              <p className='text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold'>
-                Edit activity to add helpful details
-              </p>
-            </div>
-          )}
-
-          {/* Transportation Card */}
-          {(activity.transportationMode ||
-            activity.pickupTime ||
-            activity.pickupLocation ||
-            activity.dropoffLocation) && (
-            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden group'>
-              {/* Decorative Icon */}
-              <div className='absolute -right-6 -top-6 text-slate-800/50 transform rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none'>
-                <Navigation2 className='w-32 h-32' />
-              </div>
-
-              <div className='relative z-10'>
-                <div className='flex items-center gap-3 mb-6 text-blue-500'>
-                  <Navigation2 className='w-4 h-4' />
-                  <span className='text-xs font-bold uppercase tracking-widest'>
-                    Journey Details
-                  </span>
-                </div>
-
-                <div className='grid gap-8'>
-                  {activity.transportationMode && (
-                    <div className='flex items-center gap-4'>
-                      <div className='w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-white/5 shadow-inner'>
-                        {activity.transportationMode === "car" && "🚗"}
-                        {activity.transportationMode === "bus" && "🚌"}
-                        {activity.transportationMode === "plane" && "✈️"}
-                        {activity.transportationMode === "train" && "🚊"}
-                        {activity.transportationMode === "taxi" && "🚕"}
-                        {activity.transportationMode === "walking" && "🚶"}
-                        {activity.transportationMode === "commute" && "🚌"}
-                      </div>
-                      <div>
-                        <p className='text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5'>
-                          Mode
-                        </p>
-                        <p className='text-lg font-bold text-white capitalize'>
-                          {activity.transportationMode}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Locations Flow */}
-                  <div className='relative pl-4 space-y-8'>
-                    {/* Vertical Line */}
-                    {activity.pickupLocation && activity.dropoffLocation && (
-                      <div className='absolute left-[21px] top-3 bottom-8 w-0.5 bg-slate-800' />
-                    )}
-
-                    {(activity.pickupLocation || activity.pickupTime) && (
-                      <div className='relative flex gap-4'>
-                        <div className='flex flex-col items-center pt-1'>
-                          <div className='w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-slate-900/50' />
-                        </div>
-                        <div>
-                          <p className='text-xs text-slate-500 font-bold uppercase mb-1'>
-                            {activity.transportationMode === "plane"
-                              ? "Departure"
-                              : "Pickup"}
-                          </p>
-                          <p className='text-base font-medium text-white'>
-                            {activity.pickupLocation || "No location set"}
-                          </p>
-                          {activity.pickupTime && (
-                            <p className='text-sm text-blue-400 font-medium mt-1 bg-blue-500/10 inline-block px-2 py-0.5 rounded-md'>
-                              {formatTime12Hour(activity.pickupTime)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {activity.dropoffLocation && (
-                      <div className='relative flex gap-4'>
-                        <div className='flex flex-col items-center pt-1'>
-                          <div className='w-2.5 h-2.5 rounded-full bg-orange-500 ring-4 ring-slate-900/50' />
-                        </div>
-                        <div>
-                          <p className='text-xs text-slate-500 font-bold uppercase mb-1'>
-                            {activity.transportationMode === "plane"
-                              ? "Arrival"
-                              : "Dropoff"}
-                          </p>
-                          <p className='text-base font-medium text-white'>
-                            {activity.dropoffLocation}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Linked Expenses */}
-          {linkedExpenses.length > 0 ? (
-            <div className='bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm'>
-              <div className='flex items-center justify-between mb-6'>
-                <div className='flex items-center gap-3 text-emerald-500'>
-                  <DollarSign className='w-4 h-4' />
-                  <span className='text-xs font-bold uppercase tracking-widest'>
-                    Linked Expenses
-                  </span>
-                </div>
-                <span className='bg-emerald-500 text-slate-950 px-2.5 py-1 rounded-full text-[10px] font-black border border-emerald-500 shadow-sm'>
-                  {linkedExpenses.length}
-                </span>
-              </div>
-
-              <div className='grid gap-3'>
-                {linkedExpenses.map((expense) => (
-                  <button
-                    key={expense.id}
-                    onClick={() => onSelectExpense?.(expense)}
-                    className='flex items-center justify-between w-full bg-slate-800 hover:bg-slate-700/50 p-4 rounded-xl transition-all border border-slate-700 hover:border-emerald-500 group text-left shadow-sm'
-                  >
-                    <div className='min-w-0 pr-4'>
-                      <p className='font-bold text-white group-hover:text-emerald-400 transition-colors truncate text-sm'>
-                        {expense.description}
-                      </p>
-                      <p className='text-xs text-slate-500 mt-0.5'>
-                        Paid by {expense.paidBy.split("@")[0]}
-                      </p>
-                    </div>
-                    <div className='text-right whitespace-nowrap'>
-                      <p className='font-bold text-emerald-400 text-sm'>
-                        ₱{expense.amount.toFixed(2)}
-                      </p>
-                      <div className='flex items-center justify-end gap-1 text-[10px] text-slate-600 mt-1 uppercase font-bold tracking-wider group-hover:text-emerald-500/70 transition-colors'>
-                        <span>View</span>
-                        <ArrowRight className='w-3 h-3' />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className='bg-slate-900/50 rounded-2xl p-8 border border-slate-800/50 border-dashed text-center'>
-              <div className='w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4 text-emerald-500/50'>
-                <DollarSign className='w-6 h-6' />
-              </div>
-              <p className='text-slate-400 font-medium'>No expenses linked</p>
-              <p className='text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold'>
-                Easily track costs for this activity
-              </p>
-            </div>
-          )}
-        </div>
+        {readOnly ? null : <ItemMenu noun='activity' onEdit={onEdit} onDelete={onDelete} />}
       </div>
 
-      {/* Floating Action Button for Completion */}
-      {!readOnly && (
-        <div className='fixed bottom-6 right-6 z-50'>
-          <button
-            onClick={onToggleDone}
-            className={cn(
-              "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95",
-              activity.done
-                ? "bg-green-500 text-white shadow-green-500/30"
-                : "bg-slate-800 text-slate-400 border border-white/10 hover:bg-slate-700 hover:text-white",
-            )}
-            title={activity.done ? "Mark as Incomplete" : "Mark as Complete"}
-          >
-            <CheckCircle2 className='w-7 h-7' />
-          </button>
+      <div className={CARD}>
+        <p className={cn(CARD_LABEL, "mb-3 flex items-center gap-2")}>
+          <FileText className='size-[13px]' />
+          Notes
+        </p>
+        {activity.notes ? (
+          <p className='whitespace-pre-wrap text-[15px] leading-[1.6] text-[#cbd5e1]'>{activity.notes}</p>
+        ) : (
+          <p className='text-sm text-[#64748b]'>No notes added yet.</p>
+        )}
+      </div>
+
+      {hasJourney ? (
+        <div className={CARD}>
+          <p className={cn(CARD_LABEL, "mb-4 flex items-center gap-2")}>
+            <Navigation2 className='size-[13px]' />
+            Journey
+          </p>
+          <div className='flex flex-col gap-4'>
+            {activity.transportationMode ? (
+              <div className='flex items-center gap-3'>
+                <span className='flex size-11 items-center justify-center rounded-xl border border-white/[.08] bg-[rgba(2,6,23,.6)] text-xl'>
+                  {MODE_EMOJI[activity.transportationMode] ?? "🧭"}
+                </span>
+                <span className='text-base font-bold capitalize'>{activity.transportationMode}</span>
+              </div>
+            ) : null}
+
+            {activity.pickupLocation || activity.pickupTime ? (
+              <div className='flex gap-3'>
+                <span className='mt-[6px] size-2 flex-none rounded-full bg-[#38bdf8]' />
+                <div>
+                  <p className={CARD_LABEL}>{activity.transportationMode === "plane" ? "Departure" : "Pickup"}</p>
+                  <p className='mt-1 text-[15px] font-semibold'>{activity.pickupLocation || "No location set"}</p>
+                  {activity.pickupTime ? (
+                    <p className='mt-1 font-mono text-[13px] text-[#38bdf8]'>{formatTime12Hour(activity.pickupTime)}</p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {activity.dropoffLocation ? (
+              <div className='flex gap-3'>
+                <span className='mt-[6px] size-2 flex-none rounded-full bg-[#fb923c]' />
+                <div>
+                  <p className={CARD_LABEL}>{activity.transportationMode === "plane" ? "Arrival" : "Dropoff"}</p>
+                  <p className='mt-1 text-[15px] font-semibold'>{activity.dropoffLocation}</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
-      )}
+      ) : null}
+
+      <div className={CARD}>
+        <p className={cn(CARD_LABEL, "mb-3 flex items-center gap-2")}>
+          <Wallet className='size-[13px]' />
+          Linked expenses{linkedExpenses.length > 0 ? ` · ${linkedExpenses.length}` : ""}
+        </p>
+        {linkedExpenses.length === 0 ? (
+          <p className='text-sm text-[#64748b]'>No expenses linked to this activity.</p>
+        ) : (
+          <div className='flex flex-col gap-2'>
+            {linkedExpenses.map((expense) => (
+              <button
+                key={expense.id}
+                type='button'
+                onClick={() => onSelectExpense?.(expense)}
+                className='flex w-full cursor-pointer items-center gap-3 rounded-xl border border-white/[.08] bg-[rgba(2,6,23,.4)] p-3 text-left hover:border-white/[.18]'
+              >
+                <span className='min-w-0 flex-1'>
+                  <span className='block truncate text-sm font-bold'>{expense.description}</span>
+                  <span className='block truncate text-xs text-[#64748b]'>Paid by {expense.paidBy.split("@")[0]}</span>
+                </span>
+                <span className='font-mono text-sm font-semibold text-[#fbbf24]'>{formatPeso(expense.amount)}</span>
+                <ArrowRight className='size-4 flex-none text-[#64748b]' />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

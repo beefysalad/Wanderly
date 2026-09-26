@@ -8,7 +8,8 @@ interface ExpenseFiltersProps {
   view: ExpensesView;
   onChange: (view: ExpensesView) => void;
   counts: { all: number; unsettled: number; settled: number };
-  addHref: string;
+  /** Omit for a read-only viewer. */
+  addHref?: string;
 }
 
 /** All / Unsettled / Settled / Analysis / History pills, and the Add expense pill. */
@@ -42,10 +43,12 @@ export function ExpenseFilters({ view, onChange, counts, addHref }: ExpenseFilte
           </button>
         ))}
       </div>
-      <Link href={addHref} className={cn(PILL.amber, "px-[15px] py-[9px]")}>
-        <Plus className='size-[14px]' strokeWidth={2.4} />
-        Add expense
-      </Link>
+      {addHref ? (
+        <Link href={addHref} className={cn(PILL.amber, "px-[15px] py-[9px]")}>
+          <Plus className='size-[14px]' strokeWidth={2.4} />
+          Add expense
+        </Link>
+      ) : null}
     </div>
   );
 }

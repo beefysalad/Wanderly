@@ -13,9 +13,10 @@ const STATUS_OPTIONS: TripStatus[] = ["planning", "finalized", "ongoing", "cance
 interface TripHeroProps {
   trip: Trip;
   group: Group;
-  isEditingStatus: boolean;
-  setIsEditingStatus: (value: boolean) => void;
-  onStatusChange: (status: TripStatus) => void;
+  /** Leave the three status props out for a read-only viewer; the status is then a plain pill. */
+  isEditingStatus?: boolean;
+  setIsEditingStatus?: (value: boolean) => void;
+  onStatusChange?: (status: TripStatus) => void;
   /** The Export pill. */
   actions?: ReactNode;
 }
@@ -35,12 +36,12 @@ export function TripHero({ trip, group, isEditingStatus, setIsEditingStatus, onS
           {trip.name}
         </h1>
         <div className='flex flex-wrap items-center gap-x-[14px] gap-y-2 text-[13px] text-[#94a3b8]'>
-          {isEditingStatus ? (
+          {isEditingStatus && onStatusChange ? (
             <select
               value={status.key}
               autoFocus
               onChange={(event) => onStatusChange(event.target.value as TripStatus)}
-              onBlur={() => setIsEditingStatus(false)}
+              onBlur={() => setIsEditingStatus?.(false)}
               className='cursor-pointer rounded-full border border-white/[.14] bg-[#0f172a] px-[10px] py-1 text-[11px] font-bold text-[#e2e8f0] focus:outline-none'
             >
               {STATUS_OPTIONS.map((option) => (
@@ -49,7 +50,7 @@ export function TripHero({ trip, group, isEditingStatus, setIsEditingStatus, onS
                 </option>
               ))}
             </select>
-          ) : (
+          ) : onStatusChange && setIsEditingStatus ? (
             <button
               type='button'
               title='Change status'
@@ -58,6 +59,8 @@ export function TripHero({ trip, group, isEditingStatus, setIsEditingStatus, onS
             >
               {status.label}
             </button>
+          ) : (
+            <span className={cn("rounded-full border px-[10px] py-1 text-[11px] font-bold", status.pill)}>{status.label}</span>
           )}
           <span className='flex items-center gap-[6px]'>
             <Calendar className='size-[14px]' />

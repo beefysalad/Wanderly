@@ -87,7 +87,7 @@ function DroppableDay({ id, activities, children }: { id: string; activities: Ac
       <div
         ref={setNodeRef}
         className={cn(
-          "flex min-w-0 flex-1 flex-col gap-2 border-l border-white/[.08] pb-[26px] pl-[18px]",
+          "flex min-h-[96px] min-w-0 flex-1 flex-col gap-2 border-l border-white/[.08] pb-[26px] pl-[18px]",
           isOver && "bg-[rgba(251,191,36,.05)]",
         )}
       >

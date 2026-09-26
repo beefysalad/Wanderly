@@ -1,11 +1,9 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signOut } from "firebase/auth";
-import { Edit, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups } from "@/src/hooks/useGroups";
@@ -19,9 +17,13 @@ import {
   editProfileSchema,
   TEditProfileSchema,
 } from "../../shared/Modal/EditProfileModal/editProfileZod";
-import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import { AppShell } from "../../shared/AppShell/AppShell";
+import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
-import DashboardBottomNav from "../Dashboard/DashboardBottomNav";
+import { parseProfileBio } from "../Dashboard/OnboardingWizard/onboardingProfile";
+import { vibesOf } from "./profileView";
+import { RecentJourneys } from "./components/RecentJourneys";
+import { TravelDna } from "./components/TravelDna";
 import { ProfileEditForm } from "./components/ProfileEditForm";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileStats } from "./components/ProfileStats";
@@ -136,30 +138,20 @@ const ProfileComponent = () => {
 
   if (firebaseLoading || dbLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 p-6'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='top'>
+        <LoadingState />
+      </AppShell>
     );
   }
 
   if (!firebaseUser) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center px-4'>
-        <div className='text-center max-w-md'>
-          <div className='w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10'>
-            <User className='w-10 h-10 text-slate-400' />
-          </div>
-          <p className='text-slate-400 font-medium text-lg'>
-            Please sign in to view your profile
-          </p>
-          <Button
-            onClick={() => router.push("/login")}
-            className='mt-4 bg-orange-500 hover:bg-orange-600'
-          >
-            Login
-          </Button>
-        </div>
-      </main>
+      <StateCard
+        back={{ href: "/", crumb: "Home" }}
+        title='Please sign in to view your profile'
+        actionLabel='Login'
+        onAction={() => router.push("/login")}
+      />
     );
   }
 
@@ -167,58 +159,32 @@ const ProfileComponent = () => {
     userDB?.name || firebaseUser?.displayName || firebaseUser?.email?.split("@")[0] || "Traveler";
   const avatarUrl = photoPreview || userDB?.imageUrl || firebaseUser?.photoURL || null;
   const email = firebaseUser?.email || "";
-  const memberSince = userDB?.createdAt ? new Date(userDB.createdAt) : new Date();
+  const { about, bucketList, crew } = parseProfileBio(userDB?.bio);
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 text-slate-200 overflow-x-hidden font-sans'>
-      <PremiumPageHeader
-        title='My Profile'
-        onBack={() => router.push("/dashboard")}
-        actions={
-          !isEditMode && (
-            <button
-              onClick={() => setIsEditMode(true)}
-              className='flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90'
-              title='Edit Profile'
-            >
-              <Edit className='w-5 h-5' />
-            </button>
-          )
-        }
-      />
-
-      <div className='max-w-4xl mx-auto px-6 pt-8 sm:pt-12 pb-8'>
+    <AppShell level='top'>
+      <div className='flex flex-col gap-6'>
         <ProfileHeader
           displayName={displayName}
           email={email}
-          memberSince={memberSince}
+          about={about}
           avatarUrl={avatarUrl}
-          travelStyle={userDB?.travelStyle}
-          bio={userDB?.bio}
           isEditMode={isEditMode}
           uploadingImage={uploadingImage}
           fileInputRef={fileInputRef}
           onFileChange={handleImageUpload}
-          onAvatarButtonClick={() => {
-            if (isEditMode && !uploadingImage) {
-              fileInputRef.current?.click();
-            } else if (!isEditMode) {
-              setIsEditMode(true);
-            }
-          }}
           onEditClick={() => setIsEditMode(true)}
-          onLogout={handleLogout}
         />
 
         {(error || uploadError) && (
-          <div className='mb-6 space-y-2'>
+          <div className='flex flex-col gap-2'>
             {error && (
-              <div className='rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200'>
+              <div className='rounded-xl border border-[rgba(248,113,113,.3)] bg-[rgba(248,113,113,.08)] px-4 py-3 text-sm text-[#fecaca]'>
                 {error}
               </div>
             )}
             {uploadError && (
-              <div className='rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100'>
+              <div className='rounded-xl border border-[rgba(245,158,11,.3)] bg-[rgba(245,158,11,.08)] px-4 py-3 text-sm text-[#fde68a]'>
                 {uploadError}
               </div>
             )}
@@ -235,12 +201,21 @@ const ProfileComponent = () => {
             onTogglePasswordSection={() => setShowPasswordSection(!showPasswordSection)}
           />
         ) : (
-          <ProfileStats groups={groups} />
+          <>
+            <ProfileStats groups={groups} />
+            <div className='flex flex-wrap items-start gap-6'>
+              <RecentJourneys groups={groups} />
+              <TravelDna
+                vibes={vibesOf(userDB?.travelStyle)}
+                crew={crew}
+                bucketList={bucketList}
+                onSignOut={handleLogout}
+              />
+            </div>
+          </>
         )}
       </div>
-
-      <DashboardBottomNav />
-    </main>
+    </AppShell>
   );
 };
 

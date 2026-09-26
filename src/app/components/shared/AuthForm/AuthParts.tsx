@@ -8,13 +8,9 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 import { auth } from "@/lib/firebase";
 import { EASE, useRevealDistance } from "../Site/motion";
 
-export const FIELD_LABEL = "font-mono text-[10px] uppercase tracking-[.16em] text-[#94a3b8]";
+import { FIELD_LABEL, INPUT, SUBMIT_BUTTON } from "../formStyles";
 
-export const INPUT =
-  "w-full rounded-xl border border-white/[.1] bg-[rgba(15,23,42,.6)] px-[15px] py-[13px] text-[15px] text-[#f8fafc] transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[#475569] focus:border-[rgba(251,191,36,.55)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(251,191,36,.12)]";
-
-export const SUBMIT_BUTTON =
-  "mt-[6px] flex w-full cursor-pointer items-center justify-center gap-[10px] rounded-xl bg-[linear-gradient(100deg,#fbbf24,#f97316)] p-4 text-base font-extrabold text-[#160c02] shadow-[0_18px_40px_-18px_rgba(251,146,60,.9)] disabled:cursor-not-allowed disabled:opacity-60";
+export { FIELD_LABEL, INPUT, SUBMIT_BUTTON };
 
 interface AuthItemProps {
   /** Position in the page's entrance sequence; each item follows the previous one. */

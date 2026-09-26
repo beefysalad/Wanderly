@@ -51,3 +51,31 @@ export function buildProfileUpdates(currentBio: string, answers: OnboardingAnswe
 
   return updates;
 }
+
+const CREW_LABEL_BY_BIO_TEXT: Record<string, string> = {
+  [CREW_BIO_TEXT.Solo]: "Solo Traveler",
+  [CREW_BIO_TEXT.Couple]: "Couple",
+  [CREW_BIO_TEXT.Friends]: "Friends Group",
+  [CREW_BIO_TEXT.Family]: "Family",
+};
+
+/** Splits a bio back into what the user wrote and the two answers onboarding appended to it. */
+export function parseProfileBio(bio: string | undefined | null) {
+  const about: string[] = [];
+  let bucketList: string | null = null;
+  let crew: string | null = null;
+
+  for (const line of (bio ?? "").split("\n")) {
+    const text = line.trim();
+    if (!text) continue;
+    if (text.startsWith("Dreaming of ")) {
+      bucketList = text.slice("Dreaming of ".length).replace(/\s*🌍$/u, "").trim() || null;
+    } else if (CREW_LABEL_BY_BIO_TEXT[text]) {
+      crew = CREW_LABEL_BY_BIO_TEXT[text];
+    } else {
+      about.push(text);
+    }
+  }
+
+  return { about: about.join("\n"), bucketList, crew };
+}

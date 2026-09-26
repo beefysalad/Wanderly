@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Trip } from "@/src/shared/types";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
-import { useGroup } from "@/src/hooks/useGroups";
+import { useGroup, useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import LoadingState from "../../shared/LoadingState";
 import { CategoryBars } from "./CategoryBars";
@@ -16,11 +16,14 @@ import { calculateUnsettledStats, filterExpensesForView, partitionExpenses, type
 interface IExpensesComponent {
   groupId: string;
   tripId: string;
+  /** Someone peeking in with a group code: read-only, and the rows open the guest expense page. */
+  guest?: boolean;
 }
 
 /** The Expenses tab of a trip: totals, filters, the list, a category breakdown and the payment history. */
-const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
-  const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
+const ExpensesComponent = ({ groupId, tripId, guest = false }: IExpensesComponent) => {
+  const { data: memberGroup, isLoading: loadingMemberGroup } = useGroup(guest ? null : groupId);
+  const { data: guestGroup, isLoading: loadingGuestGroup } = useGroupAsGuest(guest ? groupId : null);
   const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
   const { data: paymentLogsData, isLoading: loadingLogs } = usePaymentLogs(tripId);
   const { user } = useCurrentUser();
@@ -29,7 +32,8 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
 
-  const group = groupData?.group || null;
+  const group = (guest ? guestGroup : memberGroup?.group) || null;
+  const loadingGroup = guest ? loadingGuestGroup : loadingMemberGroup;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const expenses = expensesData?.expenses || [];
   const email = user?.email || "";
@@ -49,7 +53,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
         view={view}
         onChange={setView}
         counts={{ all: expenses.length, unsettled: partitions.unsettled.length, settled: partitions.settled.length }}
-        addHref={`/group/${groupId}/expenses/add?tripId=${tripId}`}
+        addHref={guest ? undefined : `/group/${groupId}/expenses/add?tripId=${tripId}`}
       />
 
       {view === "logs" ? (
@@ -66,7 +70,7 @@ const ExpensesComponent = ({ groupId, tripId }: IExpensesComponent) => {
               expense={expense}
               group={group}
               userEmail={email}
-              href={`/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`}
+              href={`${guest ? "/guest" : ""}/group/${groupId}/expenses/${expense.id}?tripId=${tripId}`}
             />
           ))}
           {shown.length === 0 ? (

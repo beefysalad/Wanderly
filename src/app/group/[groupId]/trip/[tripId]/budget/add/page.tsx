@@ -5,8 +5,8 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { Trip } from "@/src/shared/types";
 import BudgetForm from "@/src/app/components/pages/Budget/BudgetForm";
 import { toast } from "sonner";
-import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
-import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
+import { FormPage } from "@/src/app/components/shared/AppShell/FormPage";
 import LoadingState from "@/src/app/components/shared/LoadingState";
 
 const AddBudgetPage = ({
@@ -23,7 +23,7 @@ const AddBudgetPage = ({
 
   const handleSuccess = () => {
     toast.success("Budget added successfully");
-    router.push(`/group/${groupId}/trip/${tripId}/budget`);
+    router.push(`/group/${groupId}/trip/${tripId}?tab=budget`);
   };
 
   const handleCancel = () => {
@@ -32,30 +32,24 @@ const AddBudgetPage = ({
 
   if (isLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail'>
+        <LoadingState />
+      </AppShell>
     );
   }
 
   if (!trip) return null;
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-6 relative overflow-hidden'>
-      <PremiumBackground />
-      <div className='max-w-xl mx-auto px-4 py-4 md:py-6 relative z-10'>
-        <PremiumPageHeader onBack={handleCancel} title='NEW BUDGET' />
-        <div className='mt-6'>
-          <BudgetForm
-            tripId={tripId}
-            groupId={groupId}
-            activities={trip.activities || []}
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-          />
-        </div>
-      </div>
-    </main>
+    <FormPage back={{ href: `/group/${groupId}/trip/${tripId}?tab=budget`, crumb: trip.name }} title='New budget'>
+      <BudgetForm
+        tripId={tripId}
+        groupId={groupId}
+        activities={trip.activities || []}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+      />
+    </FormPage>
   );
 };
 

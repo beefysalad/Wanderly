@@ -17,9 +17,12 @@ interface TripTabContentProps {
   /** The day the Day tab opens on (0-based); set by tapping a day in the Calendar tab. */
   dayIndex: number;
   onPickDay: (tripDay: number) => void;
-  updateActivity: (id: string, updates: Partial<Activity>) => void;
-  toggleDone: (id: string) => void;
+  /** Omit both for a read-only guest view. */
+  updateActivity?: (id: string, updates: Partial<Activity>) => void;
+  toggleDone?: (id: string) => void;
   handleViewActivity: (activity: Activity) => void;
+  /** Someone peeking in with a group code: no adding, ticking, dragging or budget. */
+  guest?: boolean;
 }
 
 export const TripTabContent = ({
@@ -34,11 +37,12 @@ export const TripTabContent = ({
   updateActivity,
   toggleDone,
   handleViewActivity,
+  guest = false,
 }: TripTabContentProps) => {
-  const addHref = (date: Date) => `/group/${groupId}/trip/${tripId}/activities/add?date=${dayKey(date)}`;
+  const addHref = guest ? undefined : (date: Date) => `/group/${groupId}/trip/${tripId}/activities/add?date=${dayKey(date)}`;
 
-  if (activeTab === "expenses") return <ExpensesComponent groupId={groupId} tripId={tripId} />;
-  if (activeTab === "budget") return <BudgetComponent groupId={groupId} tripId={tripId} />;
+  if (activeTab === "expenses") return <ExpensesComponent groupId={groupId} tripId={tripId} guest={guest} />;
+  if (activeTab === "budget" && !guest) return <BudgetComponent groupId={groupId} tripId={tripId} />;
 
   if (activeTab === "calendar") {
     return <TripCalendarView startDate={startDate} endDate={endDate} activities={activities} onPickDay={onPickDay} />;
@@ -50,6 +54,7 @@ export const TripTabContent = ({
         startDate={startDate}
         endDate={endDate}
         activities={activities}
+        readOnly={guest}
         onViewActivity={handleViewActivity}
         onToggleDone={toggleDone}
         onUpdateActivity={updateActivity}

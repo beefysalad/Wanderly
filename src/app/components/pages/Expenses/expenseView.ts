@@ -79,7 +79,7 @@ export function spendingByCategory(expenses: Expense[]): CategorySpend[] {
 }
 
 /** The name and photo to show for a payer, who may be a member's email or a free-text name. */
-export function payerIdentity(group: Group, paidBy: string, userEmail: string) {
+export function payerIdentity(group: Pick<Group, "memberNames" | "memberMetadata">, paidBy: string, userEmail: string) {
   const isYou = paidBy === userEmail;
   const name =
     group.memberNames?.[paidBy] || group.memberMetadata?.[paidBy]?.name || (paidBy.includes("@") ? paidBy.split("@")[0] : paidBy);

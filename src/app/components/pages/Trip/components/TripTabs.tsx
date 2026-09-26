@@ -13,17 +13,19 @@ const TABS: { id: TabType; label: string }[] = [
 interface TripTabsProps {
   activeTab: TabType;
   onChange: (tab: TabType) => void;
+  /** Which tabs to show; a guest has no Budget tab. */
+  tabs?: TabType[];
 }
 
 /** A sticky, sideways-scrolling pill row at the top of the trip, in place of the old floating icon bar. */
-export function TripTabs({ activeTab, onChange }: TripTabsProps) {
+export function TripTabs({ activeTab, onChange, tabs }: TripTabsProps) {
   return (
     <div className='sticky top-0 z-[4] -mx-1 bg-[rgba(2,6,23,.85)] px-1 py-2 backdrop-blur-[18px]'>
       <div
         role='tablist'
         className='box-border flex w-max max-w-full gap-1 overflow-x-auto rounded-full border border-white/[.08] bg-[rgba(15,23,42,.6)] p-1 [scrollbar-width:none]'
       >
-        {TABS.map((tab) => (
+        {TABS.filter((tab) => !tabs || tabs.includes(tab.id)).map((tab) => (
           <button
             key={tab.id}
             type='button'

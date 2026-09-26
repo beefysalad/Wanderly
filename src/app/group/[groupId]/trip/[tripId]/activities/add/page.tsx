@@ -29,10 +29,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { Trip } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import PremiumPageHeader from "@/src/app/components/shared/PremiumPageHeader";
+import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
+import { StateCard } from "@/src/app/components/shared/AppShell/StateCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
 import LoadingState from "@/src/app/components/shared/LoadingState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -187,39 +187,29 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
 
   if (isLoadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail'>
+        <LoadingState />
+      </AppShell>
     );
   }
 
   if (!trip) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
-          <button
-            onClick={() => router.back()}
-            className='text-orange-500 hover:text-orange-600 font-medium'
-          >
-            Go Back
-          </button>
-        </div>
-      </main>
+      <StateCard
+        back={{ href: `/group/${groupId}`, crumb: 'Group' }}
+        title='Trip not found'
+        actionLabel='Go back'
+        onAction={() => router.back()}
+      />
     );
   }
 
   return (
-    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden font-sans selection:bg-orange-500/30'>
-      <PremiumBackground />
-
+    <AppShell level='detail' back={{ href: `/group/${groupId}/trip/${tripId}`, crumb: trip.name }}>
       {isNavigating && <NavigationLoader message='Adding activity...' />}
 
-      <div className='max-w-xl mx-auto w-full px-4 pt-4 md:pt-6 relative z-20'>
-        <PremiumPageHeader title='NEW ACTIVITY' onBack={() => router.back()} />
-      </div>
-
-      <div className='flex-1 flex flex-col max-w-xl mx-auto w-full px-4 pb-24 relative z-10 pt-6'>
+      <div className='mx-auto flex w-full max-w-xl flex-col gap-6'>
+        <h1 className='text-[clamp(28px,4.4cqw,40px)] font-extrabold leading-[1.05] tracking-[-.03em]'>New activity</h1>
         <div className='w-full'>
           <AnimatePresence mode='wait'>
             {/* Step 1: Type Selection */}
@@ -577,7 +567,7 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
           </AnimatePresence>
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 };
 
