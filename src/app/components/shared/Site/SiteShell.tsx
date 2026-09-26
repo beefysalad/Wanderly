@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GridBackdrop } from "./GridBackdrop";
 import { COPYRIGHT, SiteFooter, type FooterLinkKey } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -22,10 +23,7 @@ interface SiteShellProps {
 export function SiteShell({ children, active, roomyNav, footer, footerCopyright, footerLinks }: SiteShellProps) {
   return (
     <main className='relative min-h-screen overflow-x-hidden bg-[#020617] font-[family-name:var(--font-geist-sans)] leading-[normal] text-[#f8fafc]'>
-      <div
-        aria-hidden
-        className='pointer-events-none fixed inset-0 z-0 [background-image:linear-gradient(rgba(148,163,184,.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.055)_1px,transparent_1px)] [background-size:72px_72px] [-webkit-mask-image:radial-gradient(ellipse_90%_60%_at_50%_0%,#000_30%,transparent_75%)] [mask-image:radial-gradient(ellipse_90%_60%_at_50%_0%,#000_30%,transparent_75%)]'
-      />
+      <GridBackdrop />
       <SiteHeader active={active} roomy={roomyNav} />
       {children}
       {footer ?? <SiteFooter copyright={footerCopyright ?? COPYRIGHT.rights} links={footerLinks ?? []} />}
