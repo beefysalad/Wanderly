@@ -1,19 +1,18 @@
 "use client";
-import { Activity, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
-import { getStatusBadge } from "@/lib/helper";
+import { useState } from "react";
+import type { Activity, Trip } from "@/src/shared/types";
 import { useGroup } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
-import PremiumPageHeader from "../../shared/PremiumPageHeader";
+import { AppShell } from "../../shared/AppShell/AppShell";
+import LoadingState from "../../shared/LoadingState";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import NavigationLoader from "../../shared/NavigationLoader";
-import LoadingState from "../../shared/LoadingState";
-import { AddFab } from "./components/AddFab";
-import { TabSwitcher } from "./components/TabSwitcher";
-import { TripActionsMenu } from "./components/TripActionsMenu";
-import { TripHeader } from "./components/TripHeader";
+import { TripExportMenu } from "./components/TripExportMenu";
+import { TripHero } from "./components/TripHero";
 import { TripNotFound } from "./components/TripNotFound";
 import { TripTabContent } from "./components/TripTabContent";
+import { TripTabs } from "./components/TripTabs";
 import { useCurrentDbUserId } from "./useCurrentDbUserId";
 import { useTripActions } from "./useTripActions";
 import { useTripTab } from "./useTripTab";
@@ -34,6 +33,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const { data: groupData, isLoading: loading } = useGroup(groupId);
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
+  const [dayIndex, setDayIndex] = useState(0);
 
   const currentUserId = useCurrentDbUserId();
   const { activeTab, handleTabChange } = useTripTab(groupId, tripId);
@@ -42,88 +42,70 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
 
-  const isTripCreator = Boolean(
-    trip?.createdById && currentUserId && trip.createdById === currentUserId,
-  );
+  const isTripCreator = Boolean(trip?.createdById && currentUserId && trip.createdById === currentUserId);
 
-  /* Navigation Handlers */
-  const handleEditActivity = (activity: Activity) => {
-    router.push(
-      `/group/${groupId}/trip/${tripId}/activities/${activity.id}/edit`,
-    );
-  };
   const handleViewActivity = (activity: Activity) => {
-    // For now, view acts as edit since we want full page experience
     router.push(`/group/${groupId}/trip/${tripId}/activities/${activity.id}`);
   };
 
+  // Tapping a day in the calendar opens it in the Day tab.
+  const pickDay = (tripDay: number) => {
+    setDayIndex(tripDay);
+    handleTabChange("daily");
+  };
+
+  const back = { href: `/group/${groupId}`, crumb: `${group?.name ?? "Group"} · Trips` };
+
   if (loading) {
     return (
-      <main className='min-h-screen bg-slate-950 p-6'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail' back={back}>
+        <LoadingState className='py-24' />
+      </AppShell>
     );
   }
 
-  if (!trip) {
+  if (!trip || !group) {
     return <TripNotFound groupId={groupId} />;
   }
 
   const startDate = resolveDates(trip.startDate) || new Date();
   const endDate = resolveDates(trip.endDate) || new Date();
-  const activities = trip.activities || [];
-  const statusBadge = getStatusBadge(trip.status);
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-24 font-sans'>
-      <PremiumPageHeader
-        title='Trip Details'
-        onBack={() => router.push(`/group/${groupId}`)}
-        actions={
-          <TripActionsMenu
-            showExportMenu={actions.showExportMenu}
-            setShowExportMenu={actions.setShowExportMenu}
-            isExporting={actions.isExporting}
-            handleExportSchedule={actions.handleExportSchedule}
-            isTripCreator={isTripCreator}
-            setShowDeleteModal={actions.setShowDeleteModal}
-          />
-        }
-      />
-
-      <div className='max-w-5xl mx-auto px-4 py-6'>
-        <TripHeader
+    <AppShell level='detail' back={back}>
+      <div className='flex flex-col gap-[18px]'>
+        <TripHero
           trip={trip}
-          statusBadge={statusBadge}
-          startDate={startDate}
-          endDate={endDate}
+          group={group}
           isEditingStatus={actions.isEditingStatus}
           setIsEditingStatus={actions.setIsEditingStatus}
-          handleStatusChange={actions.handleStatusChange}
+          onStatusChange={actions.handleStatusChange}
+          actions={
+            <TripExportMenu
+              isExporting={actions.isExporting}
+              onExport={actions.handleExportSchedule}
+              isTripCreator={isTripCreator}
+              onDelete={() => actions.setShowDeleteModal(true)}
+            />
+          }
         />
-        <div className='bg-slate-900/60 rounded-2xl border border-white/10 p-4 sm:p-6 min-h-[400px]'>
-          <TripTabContent
-            activeTab={activeTab}
-            groupId={groupId}
-            tripId={tripId}
-            tripName={trip.name}
-            startDate={startDate}
-            endDate={endDate}
-            activities={activities}
-            addActivity={() => {
-              // Activity creation happens on the dedicated add page
-            }}
-            updateActivity={actions.handleUpdateActivity}
-            deleteActivity={actions.openDeleteActivityModal}
-            toggleDone={actions.handleToggleDone}
-            handleEditActivity={handleEditActivity}
-            handleViewActivity={handleViewActivity}
-          />
-        </div>
-        <AddFab activeTab={activeTab} groupId={groupId} tripId={tripId} />
-      </div>
 
-      <TabSwitcher activeTab={activeTab} handleTabChange={handleTabChange} />
+        <TripTabs activeTab={activeTab} onChange={handleTabChange} />
+
+        <TripTabContent
+          activeTab={activeTab}
+          groupId={groupId}
+          tripId={tripId}
+          startDate={startDate}
+          endDate={endDate}
+          activities={trip.activities || []}
+          dayIndex={dayIndex}
+          onPickDay={pickDay}
+          updateActivity={actions.handleUpdateActivity}
+          toggleDone={actions.handleToggleDone}
+          handleViewActivity={handleViewActivity}
+        />
+      </div>
 
       {actions.showDeleteModal && (
         <ConfirmDeleteModal
@@ -148,7 +130,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
       )}
 
       {actions.isNavigating && <NavigationLoader message='Loading' />}
-    </main>
+    </AppShell>
   );
 };
 

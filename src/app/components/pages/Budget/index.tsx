@@ -1,192 +1,93 @@
 "use client";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import api from "@/lib/axios";
 import { useBudgets } from "@/src/hooks/useBudgets";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { useGroup } from "@/src/hooks/useGroups";
-import { Budget, Trip } from "@/src/shared/types";
-import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Target } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import DashboardLayoutHeader from "../../shared/DashboardLayoutHeader";
-import BudgetList from "./BudgetList";
-import BudgetTracker from "./BudgetTracker";
+import type { Budget, Trip } from "@/src/shared/types";
 import LoadingState from "../../shared/LoadingState";
-
+import { PILL } from "../../shared/Pills";
+import { BudgetMeters } from "./BudgetMeters";
+import { BudgetRow } from "./BudgetRow";
 
 interface IBudgetComponent {
   groupId: string;
   tripId: string;
-  isEmbedded?: boolean;
 }
 
-const BudgetComponent = ({
-  groupId,
-  tripId,
-  isEmbedded = false,
-}: IBudgetComponent) => {
+/** The Budget tab of a trip: planned, booked and spent, and the list of planned items. */
+const BudgetComponent = ({ groupId, tripId }: IBudgetComponent) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
   const { data: budgetsData, isLoading: loadingBudgets } = useBudgets(tripId);
-  const { data: expensesData, isLoading: loadingExpenses } =
-    useExpenses(tripId);
+  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
 
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const budgets = budgetsData?.budgets || [];
   const expenses = expensesData?.expenses || [];
 
+  const addHref = `/group/${groupId}/trip/${tripId}/budget/add`;
+
   const handleEditBudget = (budget: Budget) => {
     router.push(`/group/${groupId}/trip/${tripId}/budget/${budget.id}/edit`);
   };
 
   const handleDeleteBudget = async (budgetId: string) => {
-    if (confirm("Are you sure you want to delete this budget item?")) {
-      try {
-        await api.delete(`/trips/${tripId}/budgets/${budgetId}`);
-        toast.success("Budget item deleted");
-        queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
-      } catch {
-        toast.error("Failed to delete budget item");
-      }
+    if (!confirm("Are you sure you want to delete this budget item?")) return;
+    try {
+      await api.delete(`/trips/${tripId}/budgets/${budgetId}`);
+      toast.success("Budget item deleted");
+      queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
+    } catch {
+      toast.error("Failed to delete budget item");
     }
   };
 
-  const handleAddBudget = () => {
-    router.push(`/group/${groupId}/trip/${tripId}/budget/add`);
-  };
-
-  if (loadingGroup || loadingBudgets || loadingExpenses) {
-    if (isEmbedded) {
-      return (
-        <LoadingState className='py-20' />
-      );
-    }
-    return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
-    );
-  }
-
-  if (!group || !trip) {
-    if (isEmbedded) {
-      return (
-        <div className='text-center py-10'>
-          <p className='text-slate-400'>Trip not found.</p>
-        </div>
-      );
-    }
-    return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-xl border border-white/5 p-8 max-w-md'>
-          <div className='w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <span className='text-3xl'>😞</span>
-          </div>
-          <h2 className='text-xl font-bold text-white mb-2'>Trip Not Found</h2>
-          <p className='text-slate-400 mb-6'>
-            This trip doesn&apos;t exist or has been removed.
-          </p>
-          <button
-            onClick={() => router.push(`/group/${groupId}/trip/${tripId}`)}
-            className='px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-orange-500/20'
-          >
-            Go Back to Trip
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  const Wrapper = isEmbedded ? "div" : "main";
-  const wrapperClass = isEmbedded
-    ? ""
-    : "min-h-screen bg-slate-950 pb-6 relative overflow-hidden";
+  if (loadingGroup || loadingBudgets || loadingExpenses) return <LoadingState className='py-20' />;
+  if (!group || !trip) return <p className='py-16 text-center text-sm text-[#94a3b8]'>This trip couldn&apos;t be found.</p>;
 
   return (
-    <Wrapper className={wrapperClass}>
-      {!isEmbedded && (
-        <div className='fixed inset-0 pointer-events-none'>
-          <div className='absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px]'></div>
-          <div className='absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[100px]'></div>
-        </div>
-      )}
-
-      <div
-        className={`max-w-4xl mx-auto ${!isEmbedded ? "px-4 py-4 md:py-6" : ""} relative z-10`}
-      >
-        {!isEmbedded && (
-          <DashboardLayoutHeader
-            showBack={true}
-            title='Trip Budget'
-            description={
-              <span className='flex items-center gap-2'>
-                <span className='p-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 inline-flex'>
-                  <Target className='w-3 h-3 text-orange-400' />
-                </span>
-                <span>{trip.name}</span>
-                <div className='group relative flex items-center ml-2'>
-                  <span className='px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-300 cursor-help'>
-                    BETA
-                  </span>
-                  <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded-md shadow-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center'>
-                    This feature is still in beta and may be unstable.
-                    <div className='absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800'></div>
-                  </div>
-                </div>
-              </span>
-            }
-            rightContent={
-              <Link
-                href={`/group/${groupId}/trip/${tripId}/budget/add`}
-                className='p-3 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 flex items-center justify-center active:scale-95 transition-all w-12 h-12'
-                title='Add Budget'
-              >
-                <Plus className='w-6 h-6' />
-              </Link>
-            }
-          />
-        )}
-
-        {isEmbedded && (
-          <div className='flex items-center justify-between mb-4'>
-            <div className='flex items-center gap-2'>
-              <h2 className='text-xl font-bold text-white'>Trip Budget</h2>
-              <div className='group relative flex items-center'>
-                <span className='px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 text-[10px] font-bold text-purple-300 cursor-help'>
-                  BETA
-                </span>
-                <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] px-2 py-1 bg-slate-800 text-slate-200 text-xs rounded-md shadow-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center'>
-                  This feature is still in beta and may be unstable.
-                  <div className='absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800'></div>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={handleAddBudget}
-              className='hidden sm:flex px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-lg shadow-orange-500/20 border border-white/10 items-center gap-2 active:scale-95 transition-all text-sm font-bold'
-            >
-              <Plus className='w-4 h-4' />
-              <span>Add Budget</span>
-            </button>
-          </div>
-        )}
-
-        <div className='animate-in fade-in zoom-in-95 duration-300 space-y-6'>
-          <BudgetTracker budgets={budgets} expenses={expenses} />
-
-          <BudgetList
-            budgets={budgets}
-            onAddBudget={handleAddBudget}
-            onEditBudget={handleEditBudget}
-            onDeleteBudget={handleDeleteBudget}
-          />
-        </div>
+    <div className='flex flex-col gap-[18px]'>
+      <div className='flex flex-wrap items-center justify-between gap-3'>
+        <span className='flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#64748b]'>
+          Trip budget
+          <span className='rounded-md border border-[rgba(167,139,250,.3)] bg-[rgba(167,139,250,.15)] px-[6px] py-[2px] text-[10px] font-bold text-[#c4b5fd]'>
+            Beta
+          </span>
+        </span>
+        <Link href={addHref} className={PILL.amber}>
+          <Plus className='size-[14px]' strokeWidth={2.4} />
+          Add item
+        </Link>
       </div>
-    </Wrapper>
+
+      <BudgetMeters budgets={budgets} expenses={expenses} />
+
+      <div className='overflow-hidden rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)]'>
+        <div className='flex justify-between border-b border-white/[.06] px-[18px] py-[14px] font-mono text-[10px] uppercase tracking-[.16em] text-[#64748b]'>
+          <span>Planned items</span>
+          <span>Booked</span>
+        </div>
+        {budgets.map((budget) => (
+          <BudgetRow
+            key={budget.id}
+            budget={budget}
+            groupId={groupId}
+            tripId={tripId}
+            onEdit={handleEditBudget}
+            onDelete={handleDeleteBudget}
+          />
+        ))}
+        {budgets.length === 0 ? <div className='p-7 text-center text-sm text-[#94a3b8]'>No budget items yet.</div> : null}
+      </div>
+    </div>
   );
 };
 

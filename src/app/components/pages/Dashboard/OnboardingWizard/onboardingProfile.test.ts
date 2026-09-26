@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildBioUpdate, buildProfileUpdates } from "./onboardingProfile";
+import { buildBioUpdate, buildProfileUpdates, parseProfileBio } from "./onboardingProfile";
 
 describe("buildBioUpdate", () => {
   it("leaves the bio alone when nothing was answered", () => {
@@ -48,5 +48,23 @@ describe("buildProfileUpdates", () => {
   it("includes the bio only when the answers change it", () => {
     expect(buildProfileUpdates("Hi", { ...empty, bucketList: "Peru" }).bio).toBe("Hi\nDreaming of Peru 🌍");
     expect(buildProfileUpdates("Hi", empty)).not.toHaveProperty("bio");
+  });
+});
+
+describe("parseProfileBio", () => {
+  it("separates what the user wrote from the bucket-list and crew lines onboarding added", () => {
+    const bio = buildBioUpdate("Chasing waves.", "Kyoto, Japan", "Friends");
+    expect(parseProfileBio(bio)).toEqual({ about: "Chasing waves.", bucketList: "Kyoto, Japan", crew: "Friends Group" });
+  });
+
+  it("copes with an empty or plain bio", () => {
+    expect(parseProfileBio(undefined)).toEqual({ about: "", bucketList: null, crew: null });
+    expect(parseProfileBio("Just a bio")).toEqual({ about: "Just a bio", bucketList: null, crew: null });
+  });
+
+  it("understands each crew", () => {
+    expect(parseProfileBio(buildBioUpdate("", "", "Solo")).crew).toBe("Solo Traveler");
+    expect(parseProfileBio(buildBioUpdate("", "", "Couple")).crew).toBe("Couple");
+    expect(parseProfileBio(buildBioUpdate("", "", "Family")).crew).toBe("Family");
   });
 });

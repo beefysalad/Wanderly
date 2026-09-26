@@ -6,7 +6,9 @@ import { Activity, Trip } from "@/src/shared/types";
 import { useRouter } from "next/navigation";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useExpenses } from "@/src/hooks/useExpenses";
+import { GuestShell } from "../../shared/AppShell/GuestShell";
 import LoadingState from "../../shared/LoadingState";
+import { PILL } from "../../shared/Pills";
 
 interface IGuestActivityDetailContainer {
   groupId: string;
@@ -28,29 +30,30 @@ const GuestActivityDetailContainer = ({
   const activity = trip?.activities?.find((a: Activity) => a.id === activityId);
   const expenses = expensesData?.expenses || [];
 
+  const back = {
+    href: `/guest/group/${groupId}/trip/${tripId}`,
+    crumb: `${trip?.name ?? group?.name ?? "Trip"} · Activity`,
+  };
+
   if (loadingGroup) {
     return (
-      <main className='min-h-screen bg-slate-950 p-6'>
-        <LoadingState fullScreen />
-      </main>
+      <GuestShell group={group} back={back}>
+        <LoadingState className='py-24' />
+      </GuestShell>
     );
   }
 
   if (!activity) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 max-w-md'>
-          <h2 className='text-xl font-bold text-white mb-2'>
-            Activity Not Found
-          </h2>
-          <button
-            onClick={() => router.back()}
-            className='px-6 py-3 bg-orange-600 text-white rounded-xl font-semibold'
-          >
-            Go Back
+      <GuestShell group={group} back={back}>
+        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
+          <h2 className='mb-2 text-xl font-bold'>Activity not found</h2>
+          <p className='mb-6 text-[#94a3b8]'>It may have been deleted.</p>
+          <button type='button' onClick={() => router.back()} className={PILL.ghost}>
+            Go back
           </button>
         </div>
-      </main>
+      </GuestShell>
     );
   }
 
@@ -64,12 +67,14 @@ const GuestActivityDetailContainer = ({
   };
 
   return (
-    <ActivityDetail
-      activity={activity}
-      expenses={expenses}
-      onSelectExpense={handleSelectExpense}
-      readOnly={true}
-    />
+    <GuestShell group={group} back={back}>
+      <ActivityDetail
+        activity={activity}
+        expenses={expenses}
+        onSelectExpense={handleSelectExpense}
+        readOnly={true}
+      />
+    </GuestShell>
   );
 };
 

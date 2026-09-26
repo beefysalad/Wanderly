@@ -28,7 +28,8 @@ import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { Trip, Activity } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
-import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
+import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
+import { StateCard } from "@/src/app/components/shared/AppShell/StateCard";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import LoadingState from "@/src/app/components/shared/LoadingState";
@@ -172,44 +173,32 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
 
   if (isLoadingGroup || initialLoading) {
     return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail'>
+        <LoadingState />
+      </AppShell>
     );
   }
 
   if (!trip || !activity) {
     return (
-      <main className='min-h-screen bg-slate-950 flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <h2 className='text-xl font-bold text-white mb-2'>
-            Activity Not Found
-          </h2>
-          <button
-            onClick={() => router.back()}
-            className='text-orange-500 hover:text-orange-600 font-medium'
-          >
-            Go Back
-          </button>
-        </div>
-      </main>
+      <StateCard
+        back={{ href: `/group/${groupId}`, crumb: 'Group' }}
+        title='Activity not found'
+        actionLabel='Go back'
+        onAction={() => router.back()}
+      />
     );
   }
 
   return (
-    <main className='min-h-screen bg-slate-950 flex flex-col relative overflow-hidden'>
-      {/* Background Effects */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none'>
-        <div className='absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/[0.02] rounded-full blur-3xl'></div>
-        <div className='absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white/[0.02] rounded-full blur-3xl'></div>
-      </div>
+    <AppShell level='detail' back={{ href: `/group/${groupId}/trip/${tripId}`, crumb: trip.name }}>
       {isNavigating && <NavigationLoader message='Updating activity...' />}
 
-      <div className='max-w-4xl mx-auto w-full px-4 relative z-20'>
-        <DashboardLayoutHeader showBack={true} title='Edit Activity' />
-      </div>
+      <h1 className='mx-auto mb-6 w-full max-w-3xl text-[clamp(28px,4.4cqw,40px)] font-extrabold leading-[1.05] tracking-[-.03em]'>
+        Edit activity
+      </h1>
 
-      <div className='flex-1 overflow-y-auto px-4 py-6 pb-24 max-w-4xl mx-auto w-full'>
+      <div className='w-full'>
         <div className='max-w-3xl mx-auto space-y-8'>
           <form className='space-y-8'>
             {/* Basic Info Section */}
@@ -476,7 +465,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
           )}
         </Button>
       </div>
-    </main>
+    </AppShell>
   );
 };
 

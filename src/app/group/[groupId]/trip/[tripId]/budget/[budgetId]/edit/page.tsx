@@ -6,9 +6,8 @@ import { useBudgets } from "@/src/hooks/useBudgets";
 import { Trip } from "@/src/shared/types";
 import BudgetForm from "@/src/app/components/pages/Budget/BudgetForm";
 import { toast } from "sonner";
-import DashboardLayoutHeader from "@/src/app/components/shared/DashboardLayoutHeader";
-import { Target } from "lucide-react";
-import PremiumBackground from "@/src/app/components/shared/PremiumBackground";
+import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
+import { FormPage } from "@/src/app/components/shared/AppShell/FormPage";
 import LoadingState from "@/src/app/components/shared/LoadingState";
 
 const EditBudgetPage = ({
@@ -29,7 +28,7 @@ const EditBudgetPage = ({
 
   const handleSuccess = () => {
     toast.success("Budget updated successfully");
-    router.push(`/group/${groupId}/trip/${tripId}/budget`);
+    router.push(`/group/${groupId}/trip/${tripId}?tab=budget`);
   };
 
   const handleCancel = () => {
@@ -38,43 +37,25 @@ const EditBudgetPage = ({
 
   if (loadingGroup || loadingBudgets) {
     return (
-      <main className='min-h-screen bg-slate-950 p-4'>
-        <LoadingState fullScreen />
-      </main>
+      <AppShell level='detail'>
+        <LoadingState />
+      </AppShell>
     );
   }
 
   if (!trip || !budget) return null;
 
   return (
-    <main className='min-h-screen bg-slate-950 pb-6 relative overflow-hidden'>
-      <PremiumBackground />
-      <div className='max-w-xl mx-auto px-4 py-4 md:py-6 relative z-10'>
-        <DashboardLayoutHeader
-          showBack={true}
-          onBack={handleCancel}
-          title='Edit Budget'
-          description={
-            <span className='flex items-center gap-2'>
-              <span className='p-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 inline-flex'>
-                <Target className='w-3 h-3 text-orange-400' />
-              </span>
-              <span>{trip.name}</span>
-            </span>
-          }
-        />
-        <div className='mt-6'>
-          <BudgetForm
-            tripId={tripId}
-            groupId={groupId}
-            activities={trip.activities || []}
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-            initialData={budget}
-          />
-        </div>
-      </div>
-    </main>
+    <FormPage back={{ href: `/group/${groupId}/trip/${tripId}?tab=budget`, crumb: trip.name }} title='Edit budget'>
+      <BudgetForm
+        tripId={tripId}
+        groupId={groupId}
+        activities={trip.activities || []}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+        initialData={budget}
+      />
+    </FormPage>
   );
 };
 

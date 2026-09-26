@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { X } from "lucide-react";
 
 interface IQrImageModalProps {
@@ -8,24 +7,18 @@ interface IQrImageModalProps {
 
 export const QrImageModal = ({ src, onClose }: IQrImageModalProps) => {
   return (
-    <div
-      className='fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm'
-      onClick={() => onClose()}
-    >
-      <div className='relative max-w-2xl w-full max-h-[90vh]'>
+    <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4' onClick={onClose} role='dialog' aria-modal>
+      <div className='relative w-full max-w-md' onClick={(event) => event.stopPropagation()}>
         <button
-          onClick={() => onClose()}
-          className='absolute -top-12 right-0 text-white/70 hover:text-white transition-colors'
+          type='button'
+          aria-label='Close'
+          onClick={onClose}
+          className='absolute -top-12 right-0 cursor-pointer text-white/70 hover:text-white'
         >
-          <X className='w-8 h-8' />
+          <X className='size-8' />
         </button>
-        <Image
-          src={src}
-          alt='QR Code Full'
-          width={800}
-          height={800}
-          className='object-contain w-full h-full rounded-2xl'
-        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt='QR code' className='max-h-[80vh] w-full rounded-2xl bg-white object-contain' />
       </div>
     </div>
   );
