@@ -87,7 +87,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <div className='relative z-[1] order-1 flex min-w-0 flex-col justify-center px-[clamp(24px,5vw,64px)] py-[clamp(40px,6vw,72px)] min-[680px]:order-2'>
+      <div className='relative z-[1] order-1 flex min-w-0 flex-col items-center justify-center px-[clamp(24px,5vw,64px)] py-[clamp(40px,6vw,72px)] min-[680px]:order-2'>
         <SignInForm
           firstIndex={3}
           signUpHref={signUpHref}
