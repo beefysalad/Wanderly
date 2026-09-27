@@ -135,7 +135,7 @@ model Expense {
   paidById      String?
   tempPaidBy    String?
   createdById   String?
-  amount        Decimal
+  amount        Decimal        @db.Decimal(12, 2)
   description   String
   date          DateTime
   category      String?
@@ -189,7 +189,7 @@ model ExpensePayment {
   id        String        @id @default(cuid())
   expenseId String
   userId    String
-  amount    Decimal       @default(0)
+  amount    Decimal       @default(0) @db.Decimal(12, 2)
   status    PaymentStatus @default(pending)
   paidAt    DateTime      @default(now())
   createdAt DateTime      @default(now())
@@ -207,7 +207,7 @@ model PaymentLog {
   expenseId     String
   payerId       String
   payeeId       String
-  amount        Decimal
+  amount        Decimal        @db.Decimal(12, 2)
   paymentMethod PaymentMethod?
   timestamp     DateTime       @default(now())
   createdAt     DateTime       @default(now())
@@ -282,7 +282,7 @@ model Budget {
   tripId      String
   activityId  String? // Optional: Link to a specific activity
   category    String? // e.g. "Food", "Transport"
-  amount      Decimal
+  amount      Decimal  @db.Decimal(12, 2)
   description String?
   isBooked    Boolean  @default(false) // Whether this is a confirmed price
   createdAt   DateTime @default(now())
