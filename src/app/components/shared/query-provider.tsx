@@ -13,7 +13,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0, // 1 minute
+            // Socket events and mutations invalidate what they change, so a short freshness window
+            // only stops every remount (switching trip tabs, back navigation, window focus) from
+            // refetching the same group and trip data again. Budgets have no socket event, so this
+            // also bounds how long another member's budget change can go unseen.
+            staleTime: 30_000,
             retry: 1,
           },
         },

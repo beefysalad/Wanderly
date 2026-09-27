@@ -1,5 +1,3 @@
-"use client";
-
 import { Calendar, Users, Wallet, type LucideIcon } from "lucide-react";
 import { CtaSection } from "../../shared/Site/CtaSection";
 import { EYEBROW, PageHero } from "../../shared/Site/PageHero";

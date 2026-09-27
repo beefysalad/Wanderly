@@ -1,16 +1,16 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import api from "@/lib/axios";
-import { useBudgets } from "@/src/hooks/useBudgets";
+import { useBudgets, useDeleteBudget } from "@/src/hooks/useBudgets";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { useGroup } from "@/src/hooks/useGroups";
 import type { Budget, Trip } from "@/src/shared/types";
 import LoadingState from "../../shared/LoadingState";
 import { PILL } from "../../shared/Pills";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { BudgetMeters } from "./BudgetMeters";
 import { BudgetRow } from "./BudgetRow";
 
@@ -22,11 +22,13 @@ interface IBudgetComponent {
 /** The Budget tab of a trip: planned, booked and spent, and the list of planned items. */
 const BudgetComponent = ({ groupId, tripId }: IBudgetComponent) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
-
-  const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
-  const { data: budgetsData, isLoading: loadingBudgets } = useBudgets(tripId);
-  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
+  const groupQuery = useGroup(groupId);
+  const budgetsQuery = useBudgets(tripId);
+  const expensesQuery = useExpenses(tripId);
+  const deleteBudget = useDeleteBudget(tripId, groupId);
+  const { data: groupData, isLoading: loadingGroup } = groupQuery;
+  const { data: budgetsData, isLoading: loadingBudgets } = budgetsQuery;
+  const { data: expensesData, isLoading: loadingExpenses } = expensesQuery;
 
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
@@ -39,18 +41,17 @@ const BudgetComponent = ({ groupId, tripId }: IBudgetComponent) => {
     router.push(`/group/${groupId}/trip/${tripId}/budget/${budget.id}/edit`);
   };
 
-  const handleDeleteBudget = async (budgetId: string) => {
+  const handleDeleteBudget = (budgetId: string) => {
     if (!confirm("Are you sure you want to delete this budget item?")) return;
-    try {
-      await api.delete(`/trips/${tripId}/budgets/${budgetId}`);
-      toast.success("Budget item deleted");
-      queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
-    } catch {
-      toast.error("Failed to delete budget item");
-    }
+    deleteBudget.mutate(budgetId, {
+      onSuccess: () => toast.success("Budget item deleted"),
+      onError: () => toast.error("Failed to delete budget item"),
+    });
   };
 
   if (loadingGroup || loadingBudgets || loadingExpenses) return <LoadingState className='py-20' />;
+  const failed = blockingQuery(groupQuery, budgetsQuery, expensesQuery);
+  if (failed) return <StateMessage variant='error' query={failed} what="this trip's budget" />;
   if (!group || !trip) return <p className='py-16 text-center text-sm text-[#94a3b8]'>This trip couldn&apos;t be found.</p>;
 
   return (

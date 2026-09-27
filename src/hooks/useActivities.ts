@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Activity } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface ActivityResponse {
   activity: Activity;
@@ -47,15 +48,12 @@ export function useCreateActivity(tripId: string, groupId: string) {
     },
     onSuccess: () => {
       // Invalidate group query to refetch with new activity
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
 }
 
-/**
- * Mutation hook to update an activity
- */
 /**
  * Mutation hook to update an activity
  */
@@ -76,7 +74,7 @@ export function useUpdateActivity(tripId: string, groupId: string) {
     },
     onSuccess: () => {
       // Invalidate group query to refetch with updated activity
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
@@ -85,20 +83,16 @@ export function useUpdateActivity(tripId: string, groupId: string) {
 /**
  * Mutation hook to delete an activity
  */
-export function useDeleteActivity(
-  tripId: string,
-  activityId: string,
-  groupId: string,
-) {
+export function useDeleteActivity(tripId: string, groupId: string) {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, void>({
-    mutationFn: async () => {
+  return useMutation<void, Error, string>({
+    mutationFn: async (activityId) => {
       await api.delete(`/trips/${tripId}/activities/${activityId}`);
     },
     onSuccess: () => {
       // Invalidate group query to refetch without deleted activity
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });

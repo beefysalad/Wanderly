@@ -7,7 +7,8 @@ import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import type { Activity, Trip } from "@/src/shared/types";
 import { GuestShell } from "../../shared/AppShell/GuestShell";
 import LoadingState from "../../shared/LoadingState";
-import { PILL } from "../../shared/Pills";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { TripHero } from "../Trip/components/TripHero";
 import { TripTabContent } from "../Trip/components/TripTabContent";
 import { TripTabs } from "../Trip/components/TripTabs";
@@ -22,7 +23,8 @@ const GUEST_TABS: TabType[] = ["daily", "schedule", "calendar", "expenses"];
 
 const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
   const router = useRouter();
-  const { data: group, isLoading: loading } = useGroupAsGuest(groupId);
+  const groupQuery = useGroupAsGuest(groupId);
+  const { data: group, isLoading: loading } = groupQuery;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>(() => {
@@ -44,16 +46,24 @@ const GuestTripComponent = ({ groupId, tripId }: IGuestTripComponent) => {
     );
   }
 
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
+    return (
+      <GuestShell group={group} back={back}>
+        <StateMessage variant='error' query={failed} what='this trip' signInHref='/guest/join' />
+      </GuestShell>
+    );
+  }
+
   if (!trip || !group) {
     return (
       <GuestShell group={group} back={back}>
-        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-          <h2 className='mb-2 text-xl font-bold'>Trip not found</h2>
-          <p className='mb-6 text-[#94a3b8]'>This trip doesn&apos;t exist or has been removed.</p>
-          <button type='button' onClick={() => router.push(`/guest/group/${groupId}`)} className={PILL.ghost}>
-            Back to the group
-          </button>
-        </div>
+        <StateMessage
+          title='Trip not found'
+          body="This trip doesn't exist or has been removed."
+          actionLabel='Back to the group'
+          onAction={() => router.push(`/guest/group/${groupId}`)}
+        />
       </GuestShell>
     );
   }

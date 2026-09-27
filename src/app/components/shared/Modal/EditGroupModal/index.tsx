@@ -8,13 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUpdateGroup } from "@/src/hooks/useGroups";
 import { Group } from "@/src/shared/types";
-import {
-  VIBES,
-  getVibeInfo,
-  getGroupColorClasses,
-} from "@/lib/utils/groupColors";
-
-// Vibes are imported from groupColors
+import { VIBES, getVibeInfo } from "@/lib/utils/groupColors";
+import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/lib/utils";
 
 interface IEditGroupModalProps {
   group: Group;
@@ -59,7 +55,7 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
     }
   }, [selectedColorScheme, form, selectedEmoji]);
 
-  const currentColors = getGroupColorClasses(selectedColorScheme);
+  const currentTheme = getGroupTheme(selectedColorScheme);
   const currentVibe = getVibeInfo(selectedColorScheme);
 
   const onSubmit = async (values: TEditGroupSchema) => {
@@ -84,16 +80,16 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
       <div className='bg-slate-950 rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/10'>
         {/* Header with Vibe Background */}
         <div className='flex-shrink-0 p-8 relative overflow-hidden'>
-          <div
-            className='absolute inset-0 opacity-20'
-            style={{ backgroundColor: currentColors.bg.replace("bg-", "") }}
-          />
+          <div className={cn("absolute inset-0 opacity-20", currentTheme.dot)} />
           <div className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-950 to-transparent' />
 
           <div className='relative z-10 flex items-center justify-between'>
             <div className='flex items-center gap-4'>
               <div
-                className={`w-16 h-16 ${currentColors.bg} rounded-2xl flex items-center justify-center text-3xl shadow-xl border border-white/20`}
+                className={cn(
+                  "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-xl border border-white/20",
+                  currentTheme.dot,
+                )}
               >
                 {selectedEmoji || currentVibe.emoji}
               </div>
@@ -102,9 +98,7 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
                   Edit Group
                 </h2>
                 <div className='flex items-center gap-2 mt-1'>
-                  <span
-                    className={`w-2 h-2 rounded-full ${currentColors.bg} animate-pulse`}
-                  ></span>
+                  <span className={cn("w-2 h-2 rounded-full animate-pulse", currentTheme.dot)}></span>
                   <span className='text-[10px] font-black uppercase text-slate-400 tracking-widest'>
                     {currentVibe.name} Vibe
                   </span>
@@ -151,7 +145,7 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
             </Label>
             <div className='grid grid-cols-2 gap-3 pb-2'>
               {Object.entries(VIBES).map(([key, vibe]) => {
-                const vibeColors = getGroupColorClasses(key);
+                const vibeTheme = getGroupTheme(key);
                 const isSelected = selectedColorScheme === key;
 
                 return (
@@ -171,7 +165,10 @@ const EditGroupModal = ({ group, onClose }: IEditGroupModalProps) => {
                     }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isSelected ? vibeColors.bg : "bg-slate-800"}`}
+                      className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center text-sm",
+                        isSelected ? vibeTheme.dot : "bg-slate-800",
+                      )}
                     >
                       {vibe.emoji}
                     </div>

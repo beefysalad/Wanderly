@@ -11,6 +11,8 @@ import { AppShell } from "../../shared/AppShell/AppShell";
 import { GuestShell } from "../../shared/AppShell/GuestShell";
 import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { UserAvatar } from "../../shared/UserAvatar";
 import { memberRows } from "./memberView";
 
@@ -21,8 +23,10 @@ interface IMembersComponent {
 }
 
 const MembersComponent = ({ groupId, guest = false }: IMembersComponent) => {
-  const { data: memberGroup, isLoading: loadingMember } = useGroup(guest ? null : groupId);
-  const { data: guestGroup, isLoading: loadingGuest } = useGroupAsGuest(guest ? groupId : null);
+  const memberQuery = useGroup(guest ? null : groupId);
+  const guestQuery = useGroupAsGuest(guest ? groupId : null);
+  const { data: memberGroup, isLoading: loadingMember } = memberQuery;
+  const { data: guestGroup, isLoading: loadingGuest } = guestQuery;
   const { user } = useCurrentUser();
   const group = (guest ? guestGroup : memberGroup?.group) || null;
   const isLoading = guest ? loadingGuest : loadingMember;
@@ -43,6 +47,18 @@ const MembersComponent = ({ groupId, guest = false }: IMembersComponent) => {
 
   if (isLoading) {
     return wrap(<LoadingState className='py-24' />);
+  }
+
+  const failed = blockingQuery(guest ? guestQuery : memberQuery);
+  if (failed) {
+    return wrap(
+      <StateMessage
+        variant='error'
+        query={failed}
+        what="this group's members"
+        signInHref={guest ? "/guest/join" : undefined}
+      />,
+    );
   }
 
   if (!group) {
