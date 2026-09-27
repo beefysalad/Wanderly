@@ -59,7 +59,7 @@ export default function UserManagementPage() {
   const handleDeleteUser = async (userId: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone and will delete all their data from Database and Firebase.",
+        "Delete this user from the database and Firebase? This can't be undone. Trips, expenses and payments shared with other members stay under their name, groups they own pass to the longest-standing member, and groups nobody else is in are deleted.",
       )
     ) {
       return;

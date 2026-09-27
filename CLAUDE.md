@@ -93,6 +93,8 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 
 Core Prisma models: `User` → `Group` (via `GroupMember`) → `Trip` → `Activity`/`Expense`. Expenses split via `ExpenseSplit`, settlements via `ExpensePayment`/`PaymentLog`. Admin/system config lives in `AppConfig` (key/value), including the admin password fallback and "what's new" content. Check `prisma/schema.prisma` directly for current fields/relations rather than relying on this summary for anything non-trivial.
 
+Deleting a user must not change what other members see. Relations from shared rows to `User` (trip creator, expense payer/creator, split, payment, payment-log payer/payee) are nullable with `onDelete: SetNull`, and the admin delete (`admin/users/repository.ts`) copies the user's name onto them first (`ExpenseSplit.tempName`, `ExpensePayment.tempName`, `Expense.tempPaidBy`, `PaymentLog.payerName`/`payeeName`) in the same transaction. A trip without a creator reads "Former member" and the group owner may delete it. Groups the user owns pass to the longest-standing other member, and only groups nobody else is in are deleted. Only the user's own rows (memberships, notifications) cascade. New relations to `User` on shared data should follow the same pattern.
+
 ## Things Not to Propagate
 
 These exist in the codebase today — don't use them as the template for new code:
