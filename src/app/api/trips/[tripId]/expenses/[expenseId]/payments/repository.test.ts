@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
 
 const { confirmPaymentAndLog } = await import("./repository");
 
-const log = { tripId: "t1", payeeId: "u-alice", amount: 30, paymentMethod: null };
+const log = { tripId: "t1", payeeId: "u-alice", payeeName: null, amount: 30, paymentMethod: null };
 
 describe("confirmPaymentAndLog", () => {
   it("always records the confirmed status", async () => {

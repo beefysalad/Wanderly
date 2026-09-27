@@ -18,6 +18,7 @@ interface IExpenseDetailProps {
   activities?: Activity[]; // activities from the trip
   onMarkPaid?: (memberId: string) => void;
   onConfirmPayment?: (memberEmail: string, status: "confirmed" | "rejected") => void;
+  onRecordGuestPayment?: (member: string, isPaid: boolean) => void;
   onEdit?: () => void;
   onDelete?: () => void;
   currentUser?: string;
@@ -37,6 +38,7 @@ const ExpenseDetail = ({
   onEdit,
   onMarkPaid,
   onConfirmPayment,
+  onRecordGuestPayment,
   currentUser = "",
   readOnly = false,
 }: IExpenseDetailProps) => {
@@ -49,11 +51,15 @@ const ExpenseDetail = ({
   const rows: OwesRow[] = splitMembers(expense).map((email) => {
     const person = payerIdentity(identityMaps, email, currentUser);
     const share = isUserInvolved(expense, email) ? shareOf(expense, email) : null;
-    return { email, name: person.name, imageUrl: person.imageUrl, status: memberStatus(expense, email), share, isYou: person.isYou };
+    const isGuest = expense.splits.find((split) => split.member === email)?.isGuest ?? false;
+    return { email, name: person.name, imageUrl: person.imageUrl, status: memberStatus(expense, email), share, isYou: person.isYou, isGuest };
   });
 
   const box = shareBox(expense, currentUser, payer.short);
   const canManage = !readOnly && (onEdit || onDelete);
+  // Mirrors the server rule: only the expense's creator or payer may record a guest's payment.
+  const canRecordGuestPayments =
+    !readOnly && !!currentUser && (currentUser === expense.createdBy?.email || currentUser === expense.paidBy);
 
   return (
     <div className='flex flex-wrap items-start gap-6'>
@@ -71,8 +77,10 @@ const ExpenseDetail = ({
         />
         <WhoOwesWhat
           rows={rows}
-          canConfirm={!readOnly && currentUser === expense.paidBy}
+          canConfirm={!readOnly && (currentUser === expense.paidBy || (!!expense.paidByIsGuest && canRecordGuestPayments))}
           onConfirm={onConfirmPayment}
+          canRecordGuestPayments={canRecordGuestPayments}
+          onRecordGuestPayment={onRecordGuestPayment}
         />
       </div>
 

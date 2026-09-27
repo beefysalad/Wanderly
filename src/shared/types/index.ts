@@ -63,6 +63,7 @@ export interface Activity {
 export interface ExpenseSplitShare {
   member: string; // email, or a guest's name (same identifiers as splitWith)
   shareAmount: number; // pesos, exact to the centavo; the shares add up to the expense amount
+  isGuest?: boolean; // true when member is a free-text name with no account, not a registered member's email
 }
 
 export interface Expense {
@@ -70,6 +71,7 @@ export interface Expense {
   groupId: string;
   tripId: string;
   paidBy: string;
+  paidByIsGuest?: boolean; // true when paidBy is a free-text name with no account
   createdById?: string;
   createdBy?: {
     id: string;
