@@ -1,11 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
+import { queryKeys } from "@/src/hooks/queryKeys";
 import type { Group } from "@/src/shared/types";
 import { patchActivityInCache, patchTripInCache } from "./tripCache";
 
 const seed = () => {
   const client = new QueryClient();
-  client.setQueryData<{ group: Group }>(["groups", "g1"], {
+  client.setQueryData<{ group: Group }>(queryKeys.groups.detail("g1"), {
     group: {
       id: "g1",
       name: "Crew",
@@ -27,7 +28,7 @@ const seed = () => {
 };
 
 const read = (client: QueryClient) =>
-  client.getQueryData<{ group: Group }>(["groups", "g1"])!.group.trips!;
+  client.getQueryData<{ group: Group }>(queryKeys.groups.detail("g1"))!.group.trips!;
 
 describe("patchTripInCache", () => {
   it("patches only the matching trip", () => {
@@ -44,7 +45,7 @@ describe("patchTripInCache", () => {
 
     patchTripInCache(client, "g1", "t1", (t) => t);
 
-    expect(client.getQueryData(["groups", "g1"])).toBeUndefined();
+    expect(client.getQueryData(queryKeys.groups.detail("g1"))).toBeUndefined();
   });
 });
 

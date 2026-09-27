@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import api from "@/lib/axios";
+import { queryKeys } from "@/src/hooks/queryKeys";
 import type { User } from "@/src/shared/types";
 import type { Step } from "./onboardingOptions";
 import { buildProfileUpdates } from "./onboardingProfile";
@@ -77,7 +78,7 @@ export function useOnboardingWizard(user: User, onComplete: () => void) {
 
       if (Object.keys(updates).length > 0) {
         await api.patch("/user/profile", updates);
-        queryClient.invalidateQueries({ queryKey: ["user"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
       }
 
       setStep(nextStep);
@@ -96,8 +97,7 @@ export function useOnboardingWizard(user: User, onComplete: () => void) {
       await api.patch("/user/profile", {
         hasCompletedOnboarding: true,
       });
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["current-user-db"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
 
       if (nextAction === "CREATE_GROUP") {
         router.push("/group/create");
