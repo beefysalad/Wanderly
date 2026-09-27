@@ -174,4 +174,24 @@ describe("deleteTripService", () => {
     expect(mockCreateNotificationService).toHaveBeenCalledTimes(1);
     expect(callOrder).toEqual(["notify", "delete"]);
   });
+
+  it("lets the group owner delete a trip whose creator's account was deleted", async () => {
+    mockFindGroupMembership.mockResolvedValue(membership);
+    mockFindGroupOwnership.mockResolvedValue(ownership);
+    mockFindTripById.mockResolvedValue({ id: "trip-1", groupId: "group-1", name: "Summer Trip", createdById: null });
+    mockListGroupMembersForNotify.mockResolvedValue([]);
+
+    await deleteTripService(token, "group-1", "trip-1");
+
+    expect(mockDeleteTripRow).toHaveBeenCalledWith("trip-1");
+  });
+
+  it("does not let other members delete a trip whose creator's account was deleted", async () => {
+    mockFindGroupMembership.mockResolvedValue(membership);
+    mockFindGroupOwnership.mockResolvedValue({ ...ownership, createdById: "owner-9" });
+    mockFindTripById.mockResolvedValue({ id: "trip-1", groupId: "group-1", name: "Summer Trip", createdById: null });
+
+    await expect(deleteTripService(token, "group-1", "trip-1")).rejects.toThrow(ForbiddenError);
+    expect(mockDeleteTripRow).not.toHaveBeenCalled();
+  });
 });

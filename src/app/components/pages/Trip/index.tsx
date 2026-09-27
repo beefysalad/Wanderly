@@ -42,7 +42,9 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   // Enable real-time updates for this group via Socket.IO
   useSocketGroupUpdates(groupId);
 
-  const isTripCreator = Boolean(trip?.createdById && currentUserId && trip.createdById === currentUserId);
+  // Mirrors the server: the creator deletes a trip, or the group owner once the creator's account is gone.
+  const ownerId = group?.createdByEmail ? group.memberIds?.[group.createdByEmail] : undefined;
+  const canDeleteTrip = Boolean(currentUserId && (trip?.createdById ?? ownerId) === currentUserId);
 
   const handleViewActivity = (activity: Activity) => {
     router.push(`/group/${groupId}/trip/${tripId}/activities/${activity.id}`);
@@ -84,7 +86,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             <TripExportMenu
               isExporting={actions.isExporting}
               onExport={actions.handleExportSchedule}
-              isTripCreator={isTripCreator}
+              canDelete={canDeleteTrip}
               onDelete={() => actions.setShowDeleteModal(true)}
             />
           }

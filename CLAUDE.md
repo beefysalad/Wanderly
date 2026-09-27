@@ -18,7 +18,7 @@ Single Next.js 15 App Router app (Node 22.12+), not a monorepo. No workspaces, n
 - `components/` (repo root, **not** under `src/`) — shadcn/ui primitives (`components/ui/*`) and a couple of top-level shared components (`socket-provider.tsx`). Imported as `@/components/...`.
 - `lib/` (repo root, **not** under `src/`) — singletons and utilities: `prisma.ts`, `firebase.ts`, `firebase-admin.ts`, `axios.ts`, `socket.ts`, `logger.ts`, `rate-limit.ts`, `helper.ts`, `utils.ts`, `auth/with-auth.ts`. Imported as `@/lib/...`.
 - `prisma/` — `schema.prisma` and migrations.
-- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime.
+- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime, plus `build.mjs` (the `npm run build` entry point).
 
 **Known layout quirk (planned restructure):** shared code is split between the repo root (`components/`, `lib/`) and `src/` (`app`, `hooks`, `shared`). This is intentional for now and everything below documents it as is; the maintainer plans to consolidate it under `src/` in a dedicated mechanical PR (move + codemod of `@/lib` and `@/components` imports + `tsconfig`/`components.json` updates) after in-flight work lands. Do not create `src/components/` or `src/lib/`, and do not move files between the two trees opportunistically.
 
@@ -28,8 +28,8 @@ Import aliasing: `tsconfig.json` maps `@/*` → repo root (`./*`), so `@/lib/...
 
 ```bash
 npm run dev              # next dev --turbopack
-npm run build            # prisma generate && prisma migrate deploy && next build
-npm run build:ci         # prisma generate && next build (no DB migration) — what CI runs
+npm run build            # scripts/build.mjs: prisma generate, prisma migrate deploy only when VERCEL_ENV=production, next build
+npm run build:ci         # prisma generate && next build (never migrates) — what CI runs
 npm run start
 npm run lint             # eslint
 npm run test             # vitest run (tests are colocated as *.test.ts next to the source)
@@ -87,11 +87,13 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 - Rate limiting: wrap public or guessable routes with `withRateLimit(name, handler)` (`lib/rate-limit.ts`, Upstash Redis; fails open if Redis is unset). Add a new limiter to the `LIMITERS` table there.
 - Member permissions: edits to expenses and un-marking payments are enforced in services with `assertCanModify` (`src/app/api/groups/permissions.ts`): the item's creator/owner-user or the group owner. Activities and budgets stay open to all members.
 - Prisma access goes through the singleton in `lib/prisma.ts`. Business decisions belong in `services.ts`, not the route handler or the Prisma call site.
-- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow.
+- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow. Pass caught errors as-is (`logger.error("…", error)` or `{ error }`): outside development it writes one JSON line per entry, serialising `Error` values at any depth to `{ name, message, stack, cause }` plus their own fields, and sends `warn`/`error` to `console.warn`/`console.error`. `logger.debug` is dropped when `NODE_ENV=production`.
 
 ## Data Model
 
 Core Prisma models: `User` → `Group` (via `GroupMember`) → `Trip` → `Activity`/`Expense`. Expenses split via `ExpenseSplit`, settlements via `ExpensePayment`/`PaymentLog`. Admin/system config lives in `AppConfig` (key/value), including the admin password fallback and "what's new" content. Check `prisma/schema.prisma` directly for current fields/relations rather than relying on this summary for anything non-trivial.
+
+Deleting a user must not change what other members see. Relations from shared rows to `User` (trip creator, expense payer/creator, split, payment, payment-log payer/payee) are nullable with `onDelete: SetNull`, and the admin delete (`admin/users/repository.ts`) copies the user's name onto them first (`ExpenseSplit.tempName`, `ExpensePayment.tempName`, `Expense.tempPaidBy`, `PaymentLog.payerName`/`payeeName`) in the same transaction. A trip without a creator reads "Former member" and the group owner may delete it. Groups the user owns pass to the longest-standing other member, and only groups nobody else is in are deleted. Only the user's own rows (memberships, notifications) cascade. New relations to `User` on shared data should follow the same pattern.
 
 ## Things Not to Propagate
 
