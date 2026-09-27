@@ -11,7 +11,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import { CHIP, CHIP_OFF, CHIP_ON, FIELD_LABEL, SUBMIT_BUTTON } from "../../shared/formStyles";
-import { tripDetailsSchema, type TCreateTripSchema, type TTripDetailsSchema } from "../../shared/Modal/CreateTripModal/createTripZod";
+import { tripDetailsSchema, type TCreateTripSchema, type TTripDetailsSchema } from "./createTripZod";
 import NavigationLoader from "../../shared/NavigationLoader";
 import { TripDetailsFields } from "../../shared/TripForm/TripDetailsFields";
 

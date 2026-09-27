@@ -94,21 +94,14 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
   };
 }
 
+/** Shown in place of someone whose account was deleted when their name wasn't kept. */
+export const FORMER_MEMBER = "Former member";
+
 /**
  * Transforms Prisma Trip model to TypeScript Trip interface
  */
 export function transformTrip(prismaTrip: TripWithRelations): Trip {
-  let createdBy: string | undefined = undefined;
-  let createdById: string | undefined = undefined;
-  if (prismaTrip.creator) {
-    const creator = prismaTrip.creator as {
-      id: string;
-      name: string;
-      email: string;
-    };
-    createdBy = creator.name || creator.email;
-    createdById = creator.id;
-  }
+  const { creator } = prismaTrip;
 
   return {
     id: prismaTrip.id,
@@ -119,8 +112,8 @@ export function transformTrip(prismaTrip: TripWithRelations): Trip {
     location: prismaTrip.location || undefined,
     status: prismaTrip.status || undefined,
     createdAt: prismaTrip.createdAt.toISOString(),
-    createdBy,
-    createdById,
+    createdBy: creator ? creator.name || creator.email : FORMER_MEMBER,
+    createdById: creator?.id,
     activities: prismaTrip.activities.map(transformActivity),
   };
 }

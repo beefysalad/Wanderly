@@ -62,7 +62,7 @@ export async function createPaymentLogService(
     await createNotificationService(payeeId, {
       type: NotificationType.payment,
       title: "Payment Received",
-      message: `${paymentLog.payer.name || paymentLog.payer.email} paid you ₱${data.amount.toFixed(2)} for ${paymentLog.expense.description}`,
+      message: `${paymentLog.payer?.name || data.payerEmail} paid you ₱${data.amount.toFixed(2)} for ${paymentLog.expense.description}`,
       relatedGroupId: trip.groupId,
       relatedTripId: tripId,
       relatedExpenseId: data.expenseId,

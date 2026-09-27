@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Budget } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface BudgetsResponse {
   budgets: Budget[];
@@ -29,15 +30,16 @@ interface UpdateBudgetRequest {
 /**
  * Query hook to fetch budgets for a trip
  */
-export function useBudgets(tripId: string) {
+export function useBudgets(tripId: string | null) {
   return useQuery<BudgetsResponse, Error>({
-    queryKey: ["budgets", tripId],
+    queryKey: queryKeys.budgets.trip(tripId),
     queryFn: async () => {
       const response = await api.get<BudgetsResponse>(
         `/trips/${tripId}/budgets`,
       );
       return response.data;
     },
+    enabled: !!tripId,
   });
 }
 
@@ -56,9 +58,9 @@ export function useCreateBudget(tripId: string, groupId: string) {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.trip(tripId) });
       // Also invalidate group query just in case it's used there
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
     },
   });
 }
@@ -82,8 +84,8 @@ export function useUpdateBudget(
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.trip(tripId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
     },
   });
 }
@@ -91,20 +93,16 @@ export function useUpdateBudget(
 /**
  * Mutation hook to delete a budget item
  */
-export function useDeleteBudget(
-  tripId: string,
-  budgetId: string,
-  groupId: string,
-) {
+export function useDeleteBudget(tripId: string, groupId: string) {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, void>({
-    mutationFn: async () => {
+  return useMutation<void, Error, string>({
+    mutationFn: async (budgetId) => {
       await api.delete(`/trips/${tripId}/budgets/${budgetId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgets", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.trip(tripId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
     },
   });
 }

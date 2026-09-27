@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import {
   activitySchema,
   TActivitySchema,
-} from "@/src/app/components/shared/Modal/ActivityModal/activityAddZod";
+} from "../activityAddZod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
 import {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import api from "@/lib/axios";
 import { useJoinGroup } from "@/src/hooks/useGroups";
+import { queryKeys } from "@/src/hooks/queryKeys";
 import { useSocket } from "@/src/hooks/useSocket";
 
 export interface WhatsNewFeature {
@@ -34,7 +35,7 @@ function useGroupSocketRefresh() {
   useEffect(() => {
     if (!socket) return;
 
-    const refresh = () => queryClient.invalidateQueries({ queryKey: ["groups"] });
+    const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     socket.on("group:updated", refresh);
     socket.on("trip:created", refresh);
 

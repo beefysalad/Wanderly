@@ -1,6 +1,6 @@
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { FIELD_ERROR, FIELD_LABEL, INPUT } from "../formStyles";
-import type { TTripDetailsSchema } from "../Modal/CreateTripModal/createTripZod";
+import type { TTripDetailsSchema } from "../../pages/CreateTrip/createTripZod";
 
 interface TripDetailsFieldsProps {
   register: UseFormRegister<TTripDetailsSchema>;

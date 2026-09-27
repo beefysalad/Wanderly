@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 interface LoadingStateProps {
   fullScreen?: boolean;
   className?: string;
+  message?: string;
 }
 
-const LoadingState = ({ fullScreen = false, className }: LoadingStateProps) => {
+const LoadingState = ({ fullScreen = false, className, message = "Loading" }: LoadingStateProps) => {
   return (
     <div
       className={cn(
@@ -19,7 +20,7 @@ const LoadingState = ({ fullScreen = false, className }: LoadingStateProps) => {
     >
       <div className='flex flex-col items-center gap-3'>
         <div className='h-8 w-8 rounded-full border-2 border-slate-700 border-t-amber-400 animate-spin' />
-        <p className='text-sm text-slate-400'>Loading</p>
+        <p className='text-sm text-slate-400'>{message}</p>
       </div>
     </div>
   );

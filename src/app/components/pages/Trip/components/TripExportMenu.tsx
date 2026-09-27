@@ -10,15 +10,15 @@ interface TripExportMenuProps {
   onExport: (format: "png" | "ics") => void;
   /** Opens the edit-trip page; any member can edit. */
   onEdit: () => void;
-  /** Deleting a trip is only offered to the person who created it. */
-  isTripCreator: boolean;
+  /** Deleting is offered to the trip's creator, or the group owner once the creator's account is deleted. */
+  canDelete: boolean;
   onDelete: () => void;
 }
 
 const ITEM = "flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm text-[#cbd5e1] hover:bg-white/[.05] disabled:cursor-not-allowed disabled:opacity-60";
 
-/** "Export" pill: save the itinerary as an image or calendar file, edit the trip, and (for the creator) delete it. */
-export function TripExportMenu({ isExporting, onExport, onEdit, isTripCreator, onDelete }: TripExportMenuProps) {
+/** "Export" pill: save the itinerary as an image or calendar file, edit the trip, and (when allowed) delete it. */
+export function TripExportMenu({ isExporting, onExport, onEdit, canDelete, onDelete }: TripExportMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
 
@@ -88,7 +88,7 @@ export function TripExportMenu({ isExporting, onExport, onEdit, isTripCreator, o
             <Pencil className='size-4' />
             Edit trip
           </button>
-          {isTripCreator ? (
+          {canDelete ? (
             <button
               type='button'
               role='menuitem'

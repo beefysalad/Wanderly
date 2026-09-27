@@ -4,9 +4,10 @@ import { deleteFirebaseUser, getFirebaseUserInfo } from "./firebase";
 import {
   countUsers,
   countUsersCreatedSince,
-  deleteUserAndCreatedGroups,
-  findUserFirebaseId,
+  deleteUserKeepingSharedData,
+  findUserForDeletion,
   listUsersWithCreationCounts,
+  type UserDeletionPlan,
 } from "./repository";
 
 export async function listUsersService() {
@@ -47,18 +48,43 @@ export async function listUsersService() {
 }
 
 /**
- * Deletes a user and the groups they created, then their Firebase account.
+ * Deletes a user, then their Firebase account, without touching what other members share
+ * with them: trips, expenses, splits, payments and payment logs stay and show the user's name.
+ * Each group they own goes to its longest-standing other member; groups nobody else is in are deleted.
  * Firebase goes last: a Firebase failure leaves the user gone from the app, so it is
  * reported as a warning instead of an error.
  */
 export async function deleteUserService(userId: string) {
-  const user = await findUserFirebaseId(userId);
+  const user = await findUserForDeletion(userId);
   if (!user) {
     throw new NotFoundError("User not found");
   }
 
-  await deleteUserAndCreatedGroups(userId);
-  logger.info(`Admin: Deleted user ${userId} and their created groups from DB`);
+  const groupTransfers: UserDeletionPlan["groupTransfers"] = [];
+  const groupIdsToDelete: string[] = [];
+  for (const group of user.createdGroups) {
+    const [successor] = group.members
+      .filter((member) => member.userId !== userId)
+      .sort((a, b) => a.joinedAt.getTime() - b.joinedAt.getTime());
+    if (successor) {
+      groupTransfers.push({ groupId: group.id, newOwnerId: successor.userId });
+    } else {
+      groupIdsToDelete.push(group.id);
+    }
+  }
+
+  await deleteUserKeepingSharedData({
+    userId,
+    // Same fallback the group member list uses for users without a name.
+    displayName: user.name || user.email.split("@")[0],
+    groupTransfers,
+    groupIdsToDelete,
+  });
+  logger.info("Admin: Deleted user from DB", {
+    userId,
+    groupsHandedOver: groupTransfers.length,
+    groupsDeleted: groupIdsToDelete.length,
+  });
 
   if (!user.firebaseId) {
     return { success: true as const };

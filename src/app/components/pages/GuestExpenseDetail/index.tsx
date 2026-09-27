@@ -8,7 +8,8 @@ import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { GuestShell } from "../../shared/AppShell/GuestShell";
 import LoadingState from "../../shared/LoadingState";
-import { PILL } from "../../shared/Pills";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 
 interface IGuestExpenseDetailContainer {
   groupId: string;
@@ -23,11 +24,10 @@ const GuestExpenseDetailContainer = ({
   const searchParams = useSearchParams();
   const tripId = searchParams.get("tripId");
 
-  const { data: groupData, isLoading: loadingGroup } = useGroupAsGuest(groupId);
-
-  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(
-    tripId || "",
-  );
+  const groupQuery = useGroupAsGuest(groupId);
+  const expensesQuery = useExpenses(tripId);
+  const { data: groupData, isLoading: loadingGroup } = groupQuery;
+  const { data: expensesData, isLoading: loadingExpenses } = expensesQuery;
 
   const group = groupData;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId);
@@ -46,16 +46,24 @@ const GuestExpenseDetailContainer = ({
     );
   }
 
+  const failed = blockingQuery(groupQuery, expensesQuery);
+  if (failed) {
+    return (
+      <GuestShell group={group} back={back}>
+        <StateMessage variant='error' query={failed} what='this expense' signInHref='/guest/join' />
+      </GuestShell>
+    );
+  }
+
   if (!expense) {
     return (
       <GuestShell group={group} back={back}>
-        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-          <h2 className='mb-2 text-xl font-bold'>Expense not found</h2>
-          <p className='mb-6 text-[#94a3b8]'>It may have been deleted.</p>
-          <button type='button' onClick={() => router.back()} className={PILL.ghost}>
-            Go back
-          </button>
-        </div>
+        <StateMessage
+          title='Expense not found'
+          body='It may have been deleted.'
+          actionLabel='Go back'
+          onAction={() => router.back()}
+        />
       </GuestShell>
     );
   }

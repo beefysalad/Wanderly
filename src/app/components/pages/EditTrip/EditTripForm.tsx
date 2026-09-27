@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useUpdateTrip } from "@/src/hooks/useTrips";
 import type { Trip } from "@/src/shared/types";
 import { SUBMIT_BUTTON } from "../../shared/formStyles";
-import { tripDetailsSchema, type TTripDetailsSchema } from "../../shared/Modal/CreateTripModal/createTripZod";
+import { tripDetailsSchema, type TTripDetailsSchema } from "../CreateTrip/createTripZod";
 import { TripDetailsFields } from "../../shared/TripForm/TripDetailsFields";
 import { activitiesOutside, dateInputValue } from "../Trip/tripView";
 
