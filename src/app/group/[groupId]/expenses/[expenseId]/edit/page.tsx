@@ -17,7 +17,7 @@ export default function EditExpensePage({ params }: { params: Promise<{ groupId:
   const { groupId, expenseId } = React.use(params);
 
   const { data: groupData, isLoading: loadingGroup } = useGroup(groupId);
-  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId || "");
+  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
 
   const group = groupData?.group;
   const expense = expensesData?.expenses?.find((e) => e.id === expenseId);

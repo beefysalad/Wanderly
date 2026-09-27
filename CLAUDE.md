@@ -18,7 +18,7 @@ Single Next.js 15 App Router app (Node 22.12+), not a monorepo. No workspaces, n
 - `components/` (repo root, **not** under `src/`) — shadcn/ui primitives (`components/ui/*`) and a couple of top-level shared components (`socket-provider.tsx`). Imported as `@/components/...`.
 - `lib/` (repo root, **not** under `src/`) — singletons and utilities: `prisma.ts`, `firebase.ts`, `firebase-admin.ts`, `axios.ts`, `socket.ts`, `logger.ts`, `rate-limit.ts`, `helper.ts`, `utils.ts`, `auth/with-auth.ts`. Imported as `@/lib/...`.
 - `prisma/` — `schema.prisma` and migrations.
-- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime.
+- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime, plus `build.mjs` (the `npm run build` entry point).
 
 **Known layout quirk (planned restructure):** shared code is split between the repo root (`components/`, `lib/`) and `src/` (`app`, `hooks`, `shared`). This is intentional for now and everything below documents it as is; the maintainer plans to consolidate it under `src/` in a dedicated mechanical PR (move + codemod of `@/lib` and `@/components` imports + `tsconfig`/`components.json` updates) after in-flight work lands. Do not create `src/components/` or `src/lib/`, and do not move files between the two trees opportunistically.
 
@@ -28,8 +28,8 @@ Import aliasing: `tsconfig.json` maps `@/*` → repo root (`./*`), so `@/lib/...
 
 ```bash
 npm run dev              # next dev --turbopack
-npm run build            # prisma generate && prisma migrate deploy && next build
-npm run build:ci         # prisma generate && next build (no DB migration) — what CI runs
+npm run build            # scripts/build.mjs: prisma generate, prisma migrate deploy only when VERCEL_ENV=production, next build
+npm run build:ci         # prisma generate && next build (never migrates) — what CI runs
 npm run start
 npm run lint             # eslint
 npm run test             # vitest run (tests are colocated as *.test.ts next to the source)
@@ -51,12 +51,14 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 ## Frontend Patterns
 
 - Server Components by default; add `"use client"` only for state/effects/interactivity.
-- Forms: React Hook Form + Zod resolvers (see `AuthForm`, `ExpenseForm`, `EditProfileModal` for the pattern).
-- Server state: TanStack Query hooks in `src/hooks/`; components consuming them handle `isPending`/`isLoading`/`isError` explicitly rather than assuming data is present.
+- Forms: React Hook Form + Zod resolvers (see `AuthForm`, `ExpenseForm`, `Profile` for the pattern).
+- Server state: TanStack Query hooks in `src/hooks/`. Every query key comes from `src/hooks/queryKeys.ts` (queries, invalidations, socket handlers, optimistic `setQueryData`); never write a key array inline. Mutations go through a hook in `src/hooks/` that owns its invalidations, not raw `api.post`/`patch`/`delete` in components. Queries that depend on an id from the URL pass `enabled: !!id`. Components handle loading explicitly and check `blockingQuery(...)` (`shared/StateMessage/loadError.ts`) before their not-found branch, rendering `<StateMessage variant='error' query={failed} what='…' />` (or `StateCard` inside the app chrome) so a 500 or dropped connection offers a retry instead of "not found".
 - HTTP: shared Axios instance at `lib/axios.ts`.
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
 - Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (the socket server still receives the raw group code for guests; see the security spec).
+- Auth state: `useCurrentUser` (`src/hooks/useCurrentUser.ts`) reads the single `AuthProvider` (`components/auth-provider.tsx`) mounted in the root layout; don't add `onAuthStateChanged` subscriptions in components. Which routes are public, guest-only (login/register) or protected is decided in `shared/routeAccess.ts`; public routes skip `AuthGuard` entirely so their server HTML is the page, not a spinner.
 - Public pages (landing, features, how it works, about, FAQ, reviews, how to) share `src/app/components/shared/Site/`: `SiteShell` (canvas, header, footer, Geist), `PageHero`, `CtaSection`, `Reveal`/`Stagger` and `motion.ts` (the design's ease and count-up). The design uses exact hex colours as Tailwind arbitrary values on purpose; keep them rather than mapping to the v4 palette. Set Geist via `SiteShell` (the app's `<html>` never receives the font variable).
+- Public `page.tsx` files stay Server Components (no `"use client"`; animated or stateful parts live in client leaf components) and each exports its own `metadata` (title + description). The root layout's `title.template` appends "| Wanderly" to child routes; the landing page is in the layout's own segment, so it spells its full title out.
 - Signed-in pages opt in to the app chrome by wrapping themselves in `shared/AppShell/AppShell` (desktop sidebar; phone top bar and bottom tabs on `level="top"` pages; back button and mono breadcrumb via `back` on `level="detail"` pages). Group colours come from `lib/utils/groupTheme.ts` (literal class strings, so Tailwind can see them) and trip status pills from `lib/utils/tripStatus.ts`; don't build colour classes from a hex at runtime and don't use inline styles. Guests (group code, no account) use `shared/AppShell/GuestShell` (read-only banner, sidebar listing only that group) and reuse the same page bodies with a `guest`/`readOnly` prop rather than separate copies. Forms use the class strings in `shared/formStyles.ts`.
 - Keep page-level components in `src/app/components/pages/<Feature>/index.tsx` from growing into 500–1000+ line files (several already have — `ExpenseForm`, `Trip`, `OnboardingWizard`, `Expenses`, `Profile`). Split by sub-section/concern instead of adding to the existing file when a component crosses ~300 lines.
 
@@ -87,11 +89,13 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 - Rate limiting: wrap public or guessable routes with `withRateLimit(name, handler)` (`lib/rate-limit.ts`, Upstash Redis; fails open if Redis is unset). Add a new limiter to the `LIMITERS` table there.
 - Member permissions: edits to expenses and un-marking payments are enforced in services with `assertCanModify` (`src/app/api/groups/permissions.ts`): the item's creator/owner-user or the group owner. Activities and budgets stay open to all members.
 - Prisma access goes through the singleton in `lib/prisma.ts`. Business decisions belong in `services.ts`, not the route handler or the Prisma call site.
-- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow.
+- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow. Pass caught errors as-is (`logger.error("…", error)` or `{ error }`): outside development it writes one JSON line per entry, serialising `Error` values at any depth to `{ name, message, stack, cause }` plus their own fields, and sends `warn`/`error` to `console.warn`/`console.error`. `logger.debug` is dropped when `NODE_ENV=production`.
 
 ## Data Model
 
 Core Prisma models: `User` → `Group` (via `GroupMember`) → `Trip` → `Activity`/`Expense`. Expenses split via `ExpenseSplit`, settlements via `ExpensePayment`/`PaymentLog`. Admin/system config lives in `AppConfig` (key/value), including the admin password fallback and "what's new" content. Check `prisma/schema.prisma` directly for current fields/relations rather than relying on this summary for anything non-trivial.
+
+Deleting a user must not change what other members see. Relations from shared rows to `User` (trip creator, expense payer/creator, split, payment, payment-log payer/payee) are nullable with `onDelete: SetNull`, and the admin delete (`admin/users/repository.ts`) copies the user's name onto them first (`ExpenseSplit.tempName`, `ExpensePayment.tempName`, `Expense.tempPaidBy`, `PaymentLog.payerName`/`payeeName`) in the same transaction. A trip without a creator reads "Former member" and the group owner may delete it. Groups the user owns pass to the longest-standing other member, and only groups nobody else is in are deleted. Only the user's own rows (memberships, notifications) cascade. New relations to `User` on shared data should follow the same pattern.
 
 ## Things Not to Propagate
 

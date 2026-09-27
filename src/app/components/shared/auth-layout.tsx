@@ -2,27 +2,15 @@
 import { usePathname } from "next/navigation";
 import React from "react";
 import { AuthGuard } from "./auth-guard";
+import { routeAccess } from "./routeAccess";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const pathName = usePathname();
-  const guestOnlyRoutes = ["/login", "/register"];
-  const publicRoutes = ["/", "/about", "/faq", "/reviews", "/how-to", "/features", "/how-it-works"];
+  const access = routeAccess(usePathname());
 
-  const isGuestOnly = guestOnlyRoutes.includes(pathName);
-  const isPublicRoute =
-    publicRoutes.includes(pathName) ||
-    pathName.startsWith("/guest") ||
-    pathName.startsWith("/invite") ||
-    pathName.startsWith("/admin");
+  // Public pages skip the guard entirely so their server HTML is the page, not a spinner.
+  if (access === "public") return <>{children}</>;
 
-  return (
-    <AuthGuard
-      requireAuth={!isPublicRoute && !isGuestOnly}
-      guestOnly={isGuestOnly}
-    >
-      {children}
-    </AuthGuard>
-  );
+  return <AuthGuard access={access}>{children}</AuthGuard>;
 };
 
 export default AuthLayout;

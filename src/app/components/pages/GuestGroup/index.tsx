@@ -8,7 +8,8 @@ import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { GuestShell } from "../../shared/AppShell/GuestShell";
 import LoadingState from "../../shared/LoadingState";
-import { PILL } from "../../shared/Pills";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { allTrips, upcomingTrips } from "../../shared/tripDates";
 import { GroupHero } from "../Group/GroupHero";
 import { GroupTrips } from "../Group/GroupTrips";
@@ -19,7 +20,8 @@ interface IGuestGroupComponent {
 
 const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
   const router = useRouter();
-  const { data: group, isLoading, error } = useGroupAsGuest(groupId);
+  const groupQuery = useGroupAsGuest(groupId);
+  const { data: group, isLoading } = groupQuery;
   const today = useMemo(() => new Date(), []);
 
   // Enable real-time updates for this group via Socket.IO
@@ -39,16 +41,24 @@ const GuestGroupComponent = ({ groupId }: IGuestGroupComponent) => {
     );
   }
 
-  if (!group || error) {
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
     return (
       <GuestShell>
-        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-          <h2 className='mb-2 text-xl font-bold'>Group not found</h2>
-          <p className='mb-6 text-[#94a3b8]'>This group doesn&apos;t exist or has been removed.</p>
-          <button type='button' onClick={() => router.push("/")} className={PILL.ghost}>
-            Go home
-          </button>
-        </div>
+        <StateMessage variant='error' query={failed} what='this group' signInHref='/guest/join' />
+      </GuestShell>
+    );
+  }
+
+  if (!group) {
+    return (
+      <GuestShell>
+        <StateMessage
+          title='Group not found'
+          body="This group doesn't exist or has been removed."
+          actionLabel='Go home'
+          onAction={() => router.push("/")}
+        />
       </GuestShell>
     );
   }

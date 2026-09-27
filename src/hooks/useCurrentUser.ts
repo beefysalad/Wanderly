@@ -1,21 +1,9 @@
-// import { useCurrentUserDB } from "@/app/components/Profile/hooks/useProfile";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useContext } from "react";
+import { AuthContext, type AuthState } from "@/components/auth-provider";
 
-export function useCurrentUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  // const { data: userDB } = useCurrentUserDB();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return { user, loading };
+/** The Firebase user and whether its initial state is still loading, from the app-wide `AuthProvider`. */
+export function useCurrentUser(): AuthState {
+  const state = useContext(AuthContext);
+  if (!state) throw new Error("useCurrentUser must be used inside <AuthProvider>");
+  return state;
 }

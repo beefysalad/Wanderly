@@ -128,7 +128,8 @@ export async function deleteTripService(
   const { user, group } = await verifyGroupMembership(token, groupId);
   const trip = await verifyTripInGroup(groupId, tripId);
 
-  if (trip.createdById !== user.id) {
+  // Once the creator's account is deleted, the trip is the group owner's to delete.
+  if ((trip.createdById ?? group.createdById) !== user.id) {
     throw new ForbiddenError("Only the trip creator can delete this trip");
   }
 

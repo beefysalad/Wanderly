@@ -6,6 +6,7 @@ import { SocketProvider } from "@/components/socket-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 import AuthLayout from "./components/shared/auth-layout";
+import { AuthProvider } from "@/components/auth-provider";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -21,7 +22,10 @@ const geistMono = Geist_Mono({
 import { Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: `Wanderly ${isDev() ? "(Development)" : ""}`,
+  title: {
+    default: `Wanderly${isDev() ? " (Development)" : ""}`,
+    template: `%s | Wanderly${isDev() ? " (Development)" : ""}`,
+  },
   description: "Plan and track your travel itinerary",
   appleWebApp: {
     capable: true,
@@ -86,12 +90,14 @@ export default async function RootLayout({
           isEnabled={isMaintenanceMode}
           estimate={maintenanceEstimate}
         >
-          <QueryProvider>
-            <SocketProvider>
-              <AuthLayout>{children}</AuthLayout>
-              <Toaster position='bottom-right' richColors closeButton />
-            </SocketProvider>
-          </QueryProvider>
+          <AuthProvider>
+            <QueryProvider>
+              <SocketProvider>
+                <AuthLayout>{children}</AuthLayout>
+                <Toaster position='bottom-right' richColors closeButton />
+              </SocketProvider>
+            </QueryProvider>
+          </AuthProvider>
         </MaintenanceProvider>
         <Analytics />
       </body>

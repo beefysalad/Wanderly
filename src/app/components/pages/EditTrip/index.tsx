@@ -1,11 +1,12 @@
 "use client";
 
 import { getVibeInfo } from "@/lib/utils/groupColors";
+import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
-import { TripNotFound } from "../Trip/components/TripNotFound";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { EditTripForm } from "./EditTripForm";
 
 interface EditTripProps {
@@ -15,7 +16,9 @@ interface EditTripProps {
 
 /** Edit a trip's name, location and dates. Any member of the group can. */
 export default function EditTrip({ groupId, tripId }: EditTripProps) {
-  const { data, isLoading, isError } = useGroup(groupId);
+  const router = useRouter();
+  const groupQuery = useGroup(groupId);
+  const { data, isLoading } = groupQuery;
   const group = data?.group;
   const trip = group?.trips?.find((t) => t.id === tripId);
   const back = { href: `/group/${groupId}/trip/${tripId}`, crumb: `${trip?.name ?? "Trip"} · Edit` };
@@ -28,11 +31,22 @@ export default function EditTrip({ groupId, tripId }: EditTripProps) {
     );
   }
 
-  if (isError) {
-    return <StateCard back={back} title="Couldn't load this trip" body='Check your connection and try again.' />;
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
+    return <StateCard back={back} variant='error' query={failed} what='this trip' />;
   }
 
-  if (!group || !trip) return <TripNotFound groupId={groupId} />;
+  if (!group || !trip) {
+    return (
+      <StateCard
+        back={back}
+        title='Trip not found'
+        body="This trip doesn't exist or has been removed."
+        actionLabel='Go back to group'
+        onAction={() => router.push(`/group/${groupId}`)}
+      />
+    );
+  }
 
   return (
     <AppShell level='detail' back={back}>
