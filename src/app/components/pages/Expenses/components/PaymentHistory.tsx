@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { formatPeso } from "@/lib/utils/money";
+import { formatPesoExact } from "@/lib/utils/money";
 import type { Group, PaymentLog } from "@/src/shared/types";
 import { UserAvatar } from "../../../shared/UserAvatar";
 import { getMemberAvatarFromLog } from "../paymentLogMembers";
@@ -48,7 +48,7 @@ export const PaymentHistory = ({ group, paymentLogs, isLoading }: IPaymentHistor
             </span>
           </div>
           <div className='text-right'>
-            <p className='text-[17px] font-extrabold tabular-nums text-[#34d399]'>{formatPeso(log.amount)}</p>
+            <p className='text-[17px] font-extrabold tabular-nums text-[#34d399]'>{formatPesoExact(log.amount)}</p>
             <p className='mt-[2px] font-mono text-[10px] text-[#64748b]'>
               {new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
             </p>

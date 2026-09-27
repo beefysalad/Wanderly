@@ -3,19 +3,35 @@ import type { Expense, Group } from "@/src/shared/types";
 import { categoryKey, expenseStatusLine, payerIdentity, spendingByCategory } from "./expenseView";
 
 const me = "me@x.com";
+// ₱100 split three ways, paid by MJ, as the API returns it: the leftover centavo sits on the payer.
 const exp = (over: Partial<Expense>): Expense => ({
   id: "e",
   groupId: "g",
   tripId: "t",
   paidBy: "mj@x.com",
-  amount: 900,
+  amount: 100,
   description: "d",
   date: "",
-  splitWith: [me, "mj@x.com", "rc@x.com"],
+  splits: [
+    { member: me, shareAmount: 33.33 },
+    { member: "mj@x.com", shareAmount: 33.34 },
+    { member: "rc@x.com", shareAmount: 33.33 },
+  ],
   paidMembers: [],
   pendingPayments: [],
   ...over,
 });
+// The same ₱100, paid by me.
+const paidByMe = (over: Partial<Expense> = {}) =>
+  exp({
+    paidBy: me,
+    splits: [
+      { member: me, shareAmount: 33.34 },
+      { member: "mj@x.com", shareAmount: 33.33 },
+      { member: "rc@x.com", shareAmount: 33.33 },
+    ],
+    ...over,
+  });
 
 describe("categoryKey", () => {
   it("accepts any case, the transportation alias, and falls back to other", () => {
@@ -28,22 +44,25 @@ describe("categoryKey", () => {
 });
 
 describe("expenseStatusLine", () => {
-  it("says what you owe when you're in the split and haven't paid", () => {
-    expect(expenseStatusLine(exp({}), me)).toEqual({ text: "You owe ₱300", tone: "owe" });
+  it("says what you owe, to the centavo, when you're in the split and haven't paid", () => {
+    expect(expenseStatusLine(exp({}), me)).toEqual({ text: "You owe ₱33.33", tone: "owe" });
   });
 
   it("shows waiting, settled and not-in-split", () => {
     expect(expenseStatusLine(exp({ pendingPayments: [me] }), me).tone).toBe("waiting");
     expect(expenseStatusLine(exp({ paidMembers: [me] }), me)).toEqual({ text: "Settled", tone: "muted" });
-    expect(expenseStatusLine(exp({ splitWith: ["mj@x.com", "rc@x.com"] }), me).text).toBe("Not in split");
+    expect(expenseStatusLine(exp({ splits: [{ member: "mj@x.com", shareAmount: 50 }, { member: "rc@x.com", shareAmount: 50 }] }), me).text).toBe(
+      "Not in split",
+    );
   });
 
   it("tells the payer what is still owed to them, or that everyone paid", () => {
-    expect(expenseStatusLine(exp({ paidBy: me }), me)).toEqual({ text: "You're owed ₱600", tone: "owed" });
-    expect(expenseStatusLine(exp({ paidBy: me, paidMembers: ["mj@x.com", "rc@x.com"] }), me)).toEqual({
+    expect(expenseStatusLine(paidByMe(), me)).toEqual({ text: "You're owed ₱66.66", tone: "owed" });
+    expect(expenseStatusLine(paidByMe({ paidMembers: ["mj@x.com", "rc@x.com"] }), me)).toEqual({
       text: "All paid back",
       tone: "muted",
     });
+    expect(expenseStatusLine(paidByMe({ splits: [] }), me)).toEqual({ text: "All paid back", tone: "muted" });
   });
 });
 

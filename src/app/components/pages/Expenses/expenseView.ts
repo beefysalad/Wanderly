@@ -1,6 +1,6 @@
-import { formatPeso } from "@/lib/utils/money";
+import { formatPesoExact } from "@/lib/utils/money";
 import type { Expense, Group } from "@/src/shared/types";
-import { isExpenseSettled } from "./expenseStats";
+import { isExpenseSettled, isUserInvolved, shareOf, stillOwedToPayer } from "./expenseStats";
 
 export type CategoryKey = "accommodation" | "activities" | "food" | "transport" | "other";
 
@@ -24,20 +24,16 @@ export type StatusTone = "owe" | "owed" | "waiting" | "muted";
 
 /** The coloured line on the right of an expense row: what this expense means for you. */
 export function expenseStatusLine(expense: Expense, userEmail: string): { text: string; tone: StatusTone } {
-  const splitWith = expense.splitWith ?? [];
-  const share = splitWith.length ? expense.amount / splitWith.length : expense.amount;
-  const paid = expense.paidMembers ?? [];
-
   if (expense.paidBy === userEmail) {
-    const stillOwed = splitWith.filter((member) => member !== userEmail && !paid.includes(member)).length * share;
+    const stillOwed = stillOwedToPayer(expense);
     return stillOwed > 0
-      ? { text: `You're owed ${formatPeso(stillOwed)}`, tone: "owed" }
+      ? { text: `You're owed ${formatPesoExact(stillOwed)}`, tone: "owed" }
       : { text: "All paid back", tone: "muted" };
   }
-  if (!splitWith.includes(userEmail)) return { text: "Not in split", tone: "muted" };
-  if (paid.includes(userEmail)) return { text: "Settled", tone: "muted" };
+  if (!isUserInvolved(expense, userEmail)) return { text: "Not in split", tone: "muted" };
+  if (expense.paidMembers?.includes(userEmail)) return { text: "Settled", tone: "muted" };
   if (expense.pendingPayments?.includes(userEmail)) return { text: "Awaiting confirmation", tone: "waiting" };
-  return { text: `You owe ${formatPeso(share)}`, tone: "owe" };
+  return { text: `You owe ${formatPesoExact(shareOf(expense, userEmail))}`, tone: "owe" };
 }
 
 export const TONE_CLASS: Record<StatusTone, string> = {

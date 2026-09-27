@@ -153,7 +153,6 @@ const ExpenseDetailContainer = ({ groupId, expenseId }: IExpenseDetailContainer)
     <AppShell level='detail' back={back}>
       <ExpenseDetail
         expense={expense}
-        members={group?.memberEmails || []}
         memberNames={group?.memberNames}
         memberMetadata={group?.memberMetadata}
         activities={trip?.activities || []}

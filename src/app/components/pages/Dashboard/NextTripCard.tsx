@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatPeso } from "@/lib/utils/money";
+import { formatPeso, formatPesoExact } from "@/lib/utils/money";
 import { calculateUnsettledStats, partitionExpenses } from "@/src/app/components/pages/Expenses/expenseStats";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { AvatarStack } from "../../shared/UserAvatar";
@@ -53,8 +53,8 @@ export function NextTripCard({ trip, today }: { trip: TripWithGroup; today: Date
         </div>
         <div className={`${TILE} border-[rgba(245,158,11,.22)] bg-[rgba(245,158,11,.07)]`}>
           <span className='font-mono text-[10px] uppercase tracking-[.16em] text-[#fcd34d]'>Running tab</span>
-          <span className='text-2xl font-extrabold tabular-nums text-[#fb923c]'>
-            {youOwe === null ? "—" : formatPeso(youOwe)}
+          <span className='text-2xl font-extrabold tabular-nums text-[#fb923c] [overflow-wrap:anywhere]'>
+            {youOwe === null ? "—" : formatPesoExact(youOwe)}
           </span>
           <span className='text-[11px] text-[#94a3b8]'>you owe · {formatPeso(total)} trip total</span>
         </div>

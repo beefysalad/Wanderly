@@ -1,5 +1,6 @@
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { fromCents } from "@/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
 import { findGroupOwnership } from "../../../../../groups/repository";
@@ -13,6 +14,7 @@ import {
 } from "../../../payment-logs/repository";
 import type { ConfirmPaymentBody } from "../../schemas";
 import { findExpenseById } from "../../repository";
+import { splitShareCents } from "../../transformers";
 import {
   deletePaymentsForMember,
   findExpenseForPayments,
@@ -39,16 +41,17 @@ async function requireMemberUserId(email: string) {
   return user.id;
 }
 
-// The payment log records the member's equal share of the expense, once it is confirmed.
+// The payment log records the member's share of the expense (the same one the API shows), once it is confirmed.
 // A member whose share was already logged (e.g. before logging moved to confirmation) isn't logged twice.
 async function logPaymentShare(
   tripId: string,
   expense: ExpenseForPayments,
+  memberEmail: string,
   payerId: string,
   payeeId: string,
 ) {
-  const splitCount = expense.splits.length;
-  if (splitCount === 0) return;
+  const splitIndex = expense.splits.findIndex((split) => split.user?.email === memberEmail);
+  if (splitIndex === -1) return;
   if (await findPaymentLogForShare(expense.id, payerId)) return;
 
   await createPaymentLogRow({
@@ -56,7 +59,7 @@ async function logPaymentShare(
     expenseId: expense.id,
     payerId,
     payeeId,
-    amount: Number(expense.amount) / splitCount,
+    amount: fromCents(splitShareCents(expense)[splitIndex]),
     paymentMethod: expense.paymentMethod,
   });
 }
@@ -134,7 +137,7 @@ export async function confirmPaymentService(
   await upsertPaymentStatus(expenseId, memberUserId, data.status);
 
   if (data.status === "confirmed") {
-    await logPaymentShare(tripId, expense, memberUserId, user.id);
+    await logPaymentShare(tripId, expense, data.memberEmail, memberUserId, user.id);
   } else {
     await deletePaymentLogsForShare(expenseId, memberUserId);
   }

@@ -13,6 +13,7 @@ interface ExpenseHeroProps {
   payer: { name: string; key: string; imageUrl?: string; isYou: boolean };
   linkedActivity?: Activity;
   onOpenActivity?: (activity: Activity) => void;
+  /** How many people share the cost. */
   ways: number;
   paidBack: { done: number; total: number; percent: number };
   menu?: ReactNode;
@@ -54,7 +55,7 @@ export function ExpenseHero({ expense, payer, linkedActivity, onOpenActivity, wa
             <span className={CHIP}>{linkedActivity.title}</span>
           )
         ) : null}
-        <span className={CHIP}>Split {ways} ways</span>
+        <span className={CHIP}>{ways === 0 ? "Not split" : `Split ${ways} ${ways === 1 ? "way" : "ways"}`}</span>
       </div>
 
       <div className='flex flex-col gap-2'>

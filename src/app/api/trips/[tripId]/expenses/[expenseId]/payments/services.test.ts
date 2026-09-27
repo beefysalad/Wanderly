@@ -189,6 +189,32 @@ describe("confirmPaymentService", () => {
     expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
   });
 
+  it("logs the member's share to the centavo, with the leftover centavo on the payer", async () => {
+    mockFindForPayments.mockResolvedValue({ ...expense, amount: 100 });
+
+    await confirmPaymentService(token, "t1", "e1", confirm);
+
+    expect(mockCreatePaymentLogRow).toHaveBeenCalledWith(expect.objectContaining({ amount: 33.33 }));
+  });
+
+  it("logs the leftover centavo on the first person in the split when the payer isn't in it", async () => {
+    mockFindForPayments.mockResolvedValue({
+      ...expense,
+      amount: 100,
+      splits: [{ user: bob }, { user: { id: "u-c", email: "c@x.com" } }, { user: null, tempName: "Guest Gary" }],
+    });
+
+    await confirmPaymentService(token, "t1", "e1", confirm);
+
+    expect(mockCreatePaymentLogRow).toHaveBeenCalledWith(expect.objectContaining({ amount: 33.34 }));
+  });
+
+  it("logs nothing for a member who isn't in the split", async () => {
+    await confirmPaymentService(token, "t1", "e1", { memberEmail: "dan@x.com", status: "confirmed" });
+
+    expect(mockCreatePaymentLogRow).not.toHaveBeenCalled();
+  });
+
   it("rejecting notifies the member and removes any log left for that share", async () => {
     await confirmPaymentService(token, "t1", "e1", reject);
 
@@ -210,7 +236,7 @@ describe("confirmPaymentService", () => {
     });
   });
 
-  it("does not divide by zero when an expense has no splits", async () => {
+  it("logs nothing when an expense has no splits", async () => {
     mockFindForPayments.mockResolvedValue({ ...expense, splits: [] });
 
     await confirmPaymentService(token, "t1", "e1", confirm);
