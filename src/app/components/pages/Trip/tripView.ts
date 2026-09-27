@@ -22,13 +22,18 @@ export function tripDays(start: Date, end: Date): Date[] {
   return days;
 }
 
-/** The id a day uses as a drag-and-drop target; activities dropped on it are rescheduled to that date. */
-export function dayKey(date: Date): string {
-  return date.toISOString().split("T")[0];
-}
-
 const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+/**
+ * The id a day uses as a drag-and-drop target; activities dropped on it are rescheduled to that date.
+ * Built from local parts so it names the same day `activitiesOn` groups by.
+ */
+export function dayKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 /** The activities on a day, earliest first (untimed ones last). */
 export function activitiesOn(activities: Activity[], date: Date): Activity[] {
@@ -40,6 +45,19 @@ export function activitiesOn(activities: Activity[], date: Date): Activity[] {
       if (!b.startTime) return -1;
       return a.startTime.localeCompare(b.startTime);
     });
+}
+
+/**
+ * The date to reschedule a dragged activity to, or null when the drop leaves it on its own day.
+ * `overId` is either a day's `dayKey` or the id of the activity it was dropped on.
+ */
+export function dropDate(moved: Activity, overId: string, activities: Activity[]): string | null {
+  const movedDay = new Date(moved.date);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(overId)) return dayKey(movedDay) !== overId ? overId : null;
+
+  const target = activities.find((activity) => activity.id === overId);
+  if (!target || target.id === moved.id || sameDay(movedDay, new Date(target.date))) return null;
+  return target.date;
 }
 
 /** "6:30 AM" from the start time, falling back to the pickup time; null when there is neither. */

@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Activity } from "@/src/shared/types";
-import { activitiesOn, activitySubline, activityTime, dayKey, dayMeta, monthGrids, tripDays } from "./tripView";
+import { activitiesOn, activitySubline, activityTime, dayKey, dayMeta, dropDate, monthGrids, tripDays } from "./tripView";
 
 const act = (over: Partial<Activity>): Activity => ({ id: "a", date: new Date(2026, 9, 8).toISOString(), title: "x", done: false, ...over });
 
@@ -15,9 +15,78 @@ describe("tripDays", () => {
   });
 });
 
+// Node re-reads TZ when it's assigned, so these run in zones far from UTC on every machine.
+const inZone = (tz: string, run: () => void) => {
+  describe(`in ${tz}`, () => {
+    const original = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = tz;
+    });
+    afterAll(() => {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    });
+    run();
+  });
+};
+
 describe("dayKey", () => {
-  it("is the ISO date, the id a day drops onto", () => {
-    expect(dayKey(new Date("2026-10-08T00:00:00.000Z"))).toBe("2026-10-08");
+  it("is the local Y-M-D, zero-padded", () => {
+    expect(dayKey(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+
+  inZone("Asia/Manila", () => {
+    it("keeps local midnight on its own day, not the previous UTC day", () => {
+      expect(dayKey(new Date(2026, 9, 8))).toBe("2026-10-08");
+    });
+  });
+
+  inZone("America/Los_Angeles", () => {
+    it("keeps a late-evening time on its own day, not the next UTC day", () => {
+      expect(dayKey(new Date(2026, 9, 8, 23, 30))).toBe("2026-10-08");
+    });
+
+    it("names the same day activitiesOn puts the activity under", () => {
+      const day = new Date(2026, 9, 8);
+      const late = act({ id: "late", date: new Date(2026, 9, 8, 23, 30).toISOString() });
+      expect(activitiesOn([late], day)).toHaveLength(1);
+      expect(dayKey(new Date(late.date))).toBe(dayKey(day));
+    });
+  });
+});
+
+describe("dropDate", () => {
+  const moved = act({ id: "m", date: new Date(2026, 9, 8).toISOString() });
+  const sameDayOther = act({ id: "s", date: new Date(2026, 9, 8, 9).toISOString() });
+  const nextDay = act({ id: "n", date: new Date(2026, 9, 9).toISOString() });
+  const all = [moved, sameDayOther, nextDay];
+
+  it("does nothing when an activity is dropped back on its own day", () => {
+    expect(dropDate(moved, dayKey(new Date(2026, 9, 8)), all)).toBeNull();
+  });
+
+  it("does nothing when dropped on another activity of the same day", () => {
+    expect(dropDate(moved, "s", all)).toBeNull();
+    expect(dropDate(moved, "m", all)).toBeNull();
+  });
+
+  it("moves it to another day it's dropped on", () => {
+    expect(dropDate(moved, "2026-10-09", all)).toBe("2026-10-09");
+  });
+
+  it("moves it to the day of another activity it's dropped on", () => {
+    expect(dropDate(moved, "n", all)).toBe(nextDay.date);
+  });
+
+  it("ignores an unknown drop target", () => {
+    expect(dropDate(moved, "ghost", all)).toBeNull();
+  });
+
+  inZone("Asia/Manila", () => {
+    it("does nothing on a same-day drop far from UTC", () => {
+      const local = act({ id: "m", date: new Date(2026, 9, 8).toISOString() });
+      expect(dropDate(local, dayKey(new Date(2026, 9, 8)), [local])).toBeNull();
+    });
   });
 });
 

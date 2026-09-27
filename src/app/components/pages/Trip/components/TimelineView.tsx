@@ -22,7 +22,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { PILL } from "../../../shared/Pills";
-import { activitiesOn, activitySubline, activityTime, dayKey, tripDays } from "../tripView";
+import { activitiesOn, activitySubline, activityTime, dayKey, dropDate, tripDays } from "../tripView";
 import { TickButton } from "./ActivityParts";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -134,19 +134,8 @@ export function TimelineView({
 
     const moved = activities.find((activity) => activity.id === active.id.toString());
     if (!moved) return;
-    const overId = over.id.toString();
-
-    // Dropped on a day: move it there.
-    if (/^\d{4}-\d{2}-\d{2}$/.test(overId)) {
-      if (moved.date !== overId) onUpdateActivity(moved.id, { date: overId });
-      return;
-    }
-
-    // Dropped on another activity: join its day.
-    const target = activities.find((activity) => activity.id === overId);
-    if (target && target.id !== moved.id && moved.date !== target.date) {
-      onUpdateActivity(moved.id, { date: target.date });
-    }
+    const date = dropDate(moved, over.id.toString(), activities);
+    if (date) onUpdateActivity(moved.id, { date });
   };
 
   return (
