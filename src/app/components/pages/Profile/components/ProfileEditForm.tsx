@@ -3,7 +3,7 @@ import { Loader2, Lock } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { PILL } from "../../../shared/Pills";
 import { FIELD_ERROR, FIELD_LABEL, INPUT } from "../../../shared/formStyles";
-import type { TEditProfileSchema } from "../../../shared/Modal/EditProfileModal/editProfileZod";
+import type { TEditProfileSchema } from "../editProfileZod";
 
 interface ProfileEditFormProps {
   form: UseFormReturn<TEditProfileSchema>;

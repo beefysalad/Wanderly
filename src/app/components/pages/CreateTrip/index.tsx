@@ -11,7 +11,7 @@ import { useGroup } from "@/src/hooks/useGroups";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import { CHIP, CHIP_OFF, CHIP_ON, FIELD_ERROR, FIELD_LABEL, INPUT, SUBMIT_BUTTON } from "../../shared/formStyles";
-import { createTripSchema, type TCreateTripSchema } from "../../shared/Modal/CreateTripModal/createTripZod";
+import { createTripSchema, type TCreateTripSchema } from "./createTripZod";
 import NavigationLoader from "../../shared/NavigationLoader";
 
 const STATUS_OPTIONS: Array<{ value: TCreateTripSchema["status"]; label: string }> = [
