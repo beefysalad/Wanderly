@@ -87,7 +87,7 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 - Rate limiting: wrap public or guessable routes with `withRateLimit(name, handler)` (`lib/rate-limit.ts`, Upstash Redis; fails open if Redis is unset). Add a new limiter to the `LIMITERS` table there.
 - Member permissions: edits to expenses and un-marking payments are enforced in services with `assertCanModify` (`src/app/api/groups/permissions.ts`): the item's creator/owner-user or the group owner. Activities and budgets stay open to all members.
 - Prisma access goes through the singleton in `lib/prisma.ts`. Business decisions belong in `services.ts`, not the route handler or the Prisma call site.
-- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow.
+- Use `logger` (`lib/logger.ts`) instead of raw `console.*` in `src/` and `lib/` — existing `console.*` calls (60+) are inconsistent, not the standard to follow. Pass caught errors as-is (`logger.error("…", error)` or `{ error }`): outside development it writes one JSON line per entry, serialising `Error` values at any depth to `{ name, message, stack, cause }` plus their own fields, and sends `warn`/`error` to `console.warn`/`console.error`. `logger.debug` is dropped when `NODE_ENV=production`.
 
 ## Data Model
 
