@@ -3,17 +3,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Activity, Trip } from "@/src/shared/types";
 import { useGroup } from "@/src/hooks/useGroups";
+import { useCurrentUserDB } from "@/src/hooks/useProfile";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { AppShell } from "../../shared/AppShell/AppShell";
+import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import NavigationLoader from "../../shared/NavigationLoader";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { TripExportMenu } from "./components/TripExportMenu";
 import { TripHero } from "./components/TripHero";
-import { TripNotFound } from "./components/TripNotFound";
 import { TripTabContent } from "./components/TripTabContent";
 import { TripTabs } from "./components/TripTabs";
-import { useCurrentDbUserId } from "./useCurrentDbUserId";
 import { useTripActions } from "./useTripActions";
 import { useTripTab } from "./useTripTab";
 
@@ -30,12 +31,13 @@ const resolveDates = (dateInput: Date | string) => {
 
 const TripComponent = ({ groupId, tripId }: ITripComponent) => {
   const router = useRouter();
-  const { data: groupData, isLoading: loading } = useGroup(groupId);
+  const groupQuery = useGroup(groupId);
+  const { data: groupData, isLoading: loading } = groupQuery;
   const group = groupData?.group || null;
   const trip = group?.trips?.find((t: Trip) => t.id === tripId) || null;
   const [dayIndex, setDayIndex] = useState(0);
 
-  const currentUserId = useCurrentDbUserId();
+  const currentUserId = useCurrentUserDB().data?.id;
   const { activeTab, handleTabChange } = useTripTab(groupId, tripId);
   const actions = useTripActions(groupId, tripId, trip);
 
@@ -66,8 +68,21 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
     );
   }
 
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
+    return <StateCard back={back} variant='error' query={failed} what='this trip' />;
+  }
+
   if (!trip || !group) {
-    return <TripNotFound groupId={groupId} />;
+    return (
+      <StateCard
+        back={back}
+        title='Trip not found'
+        body="This trip doesn't exist or has been removed."
+        actionLabel='Go back to group'
+        onAction={() => router.push(`/group/${groupId}`)}
+      />
+    );
   }
 
   const startDate = resolveDates(trip.startDate) || new Date();

@@ -16,7 +16,7 @@ import {
 import {
   editProfileSchema,
   TEditProfileSchema,
-} from "../../shared/Modal/EditProfileModal/editProfileZod";
+} from "./editProfileZod";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";

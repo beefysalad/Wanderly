@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/src/hooks/queryKeys";
 import type { Activity, Group, Trip } from "@/src/shared/types";
 
 /** Optimistically patches one trip inside the cached group. */
@@ -8,7 +9,7 @@ export function patchTripInCache(
   tripId: string,
   patch: (trip: Trip) => Trip,
 ) {
-  queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+  queryClient.setQueryData<{ group: Group }>(queryKeys.groups.detail(groupId), (old) => {
     if (!old) return old;
     return {
       group: {

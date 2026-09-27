@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Review } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface ReviewsResponse {
   reviews: Review[];
@@ -30,7 +31,7 @@ export function useReviews(
   ratingFilter?: number | null
 ) {
   return useQuery<ReviewsResponse>({
-    queryKey: ["reviews", page, limit, ratingFilter],
+    queryKey: queryKeys.reviews.page(page, limit, ratingFilter),
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -60,9 +61,9 @@ export function useCreateReview() {
     },
     onSuccess: async () => {
       // Invalidate and refetch all reviews queries
-      await queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all });
       // Explicitly refetch to ensure data is fresh
-      await queryClient.refetchQueries({ queryKey: ["reviews"] });
+      await queryClient.refetchQueries({ queryKey: queryKeys.reviews.all });
     },
   });
 }

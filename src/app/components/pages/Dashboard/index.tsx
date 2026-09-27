@@ -4,6 +4,8 @@ import { useGroups } from "@/src/hooks/useGroups";
 import { useCurrentUserDB } from "@/src/hooks/useProfile";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import LoadingState from "../../shared/LoadingState";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import WhatsNewModal from "../../shared/Modal/WhatsNewModal";
 import { allTrips, upcomingTrips } from "../../shared/tripDates";
 import { DashboardHeader } from "./DashboardHeader";
@@ -16,7 +18,9 @@ import { YourGroups } from "./YourGroups";
 
 const DashboardComponent = () => {
   const { user } = useCurrentUser();
-  const { data: groupsData, isLoading } = useGroups();
+  const groupsQuery = useGroups();
+  const { data: groupsData, isLoading } = groupsQuery;
+  const failed = blockingQuery(groupsQuery);
   const { data: dbUser } = useCurrentUserDB();
   const whatsNew = useDashboardEffects(user);
 
@@ -44,6 +48,8 @@ const DashboardComponent = () => {
     <AppShell>
       {isLoading ? (
         <LoadingState className="py-24" />
+      ) : failed ? (
+        <StateMessage variant='error' query={failed} what='your dashboard' />
       ) : (
         <div className='flex flex-col gap-[26px]'>
           <DashboardHeader firstName={firstName} today={today} />

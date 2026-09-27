@@ -6,11 +6,15 @@ import { useGroups } from "@/src/hooks/useGroups";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import { PageHeading } from "../../shared/AppShell/PageHeading";
 import LoadingState from "../../shared/LoadingState";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { PillLink } from "../../shared/Pills";
 import { GroupCard } from "./GroupCard";
 
 const GroupsComponent = () => {
-  const { data, isLoading } = useGroups();
+  const groupsQuery = useGroups();
+  const { data, isLoading } = groupsQuery;
+  const failed = blockingQuery(groupsQuery);
   const today = useMemo(() => new Date(), []);
 
   const groups = useMemo(
@@ -42,7 +46,9 @@ const GroupsComponent = () => {
 
         {isLoading ? <LoadingState className='py-24' /> : null}
 
-        {!isLoading && groups.length === 0 ? (
+        {failed ? <StateMessage variant='error' query={failed} what='your groups' /> : null}
+
+        {!isLoading && !failed && groups.length === 0 ? (
           <div className='rounded-[22px] border border-dashed border-white/[.14] bg-[rgba(15,23,42,.4)] p-10 text-center'>
             <h2 className='mb-2 text-xl font-bold'>No groups yet</h2>
             <p className='mx-auto max-w-md text-[#94a3b8]'>
