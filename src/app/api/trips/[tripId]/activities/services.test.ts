@@ -169,7 +169,7 @@ describe("updateActivityService", () => {
     expect(mockUpdateActivityRow).not.toHaveBeenCalled();
   });
 
-  it("does not notify or emit for a non-significant change (done toggle)", async () => {
+  it("does not notify for a non-significant change (done toggle), but still broadcasts it", async () => {
     mockFindActivityById.mockResolvedValue({ id: "a", tripId: "trip-1", title: "Old" });
     mockUpdateActivityRow.mockResolvedValue({ id: "a" });
 
@@ -177,7 +177,7 @@ describe("updateActivityService", () => {
 
     expect(mockUpdateActivityRow).toHaveBeenCalledWith("a", { done: true });
     expect(mockCreateNotification).not.toHaveBeenCalled();
-    expect(mockEmitUpdated).not.toHaveBeenCalled();
+    expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 
   it("notifies with the pre-update title and emits when the title changes", async () => {

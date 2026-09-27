@@ -25,7 +25,7 @@ import {
   type UpdateExpenseRow,
 } from "./repository";
 import type { CreateExpenseBody, UpdateExpenseBody } from "./schemas";
-import type { ExpenseWithRelations } from "./transformers";
+import { toSocketExpense } from "./transformers";
 
 /**
  * A payer/split entry is either a registered user's email or a free-text guest name.
@@ -78,18 +78,6 @@ async function assertCanChangeExpense(
     },
     "Only the expense creator, the payer or the group owner can change this expense",
   );
-}
-
-// Socket clients expect plain numbers/strings and a paidBy object even for guest payers.
-function toSocketExpense(expense: ExpenseWithRelations) {
-  return {
-    ...expense,
-    amount: Number(expense.amount),
-    date: expense.date.toISOString(),
-    paidBy: expense.paidBy
-      ? { id: expense.paidBy.id, email: expense.paidBy.email, name: expense.paidBy.name }
-      : { id: "guest", name: expense.tempPaidBy || "Guest", email: "" },
-  };
 }
 
 export async function listExpensesService(token: DecodedIdToken, tripId: string) {
@@ -208,7 +196,8 @@ export async function updateExpenseService(
 
   const expense = await updateExpenseRow(expenseId, changes);
 
-  // Only description/amount edits on an expense that had a non-zero amount are broadcast.
+  // Only description/amount edits on an expense that had a non-zero amount are notified;
+  // every change is still broadcast so other clients stay in sync (split/date/category edits included).
   const previousAmount = Number(before.amount);
   if (previousAmount > 0 && (data.description !== undefined || data.amount !== undefined)) {
     await notifyGroupMembers(trip.groupId, user.id, {
@@ -218,13 +207,13 @@ export async function updateExpenseService(
       relatedTripId: tripId,
       relatedExpenseId: expense.id,
     });
-
-    emitExpenseUpdated(trip.groupId, toSocketExpense(expense), {
-      updatedBy: user.name || user.email || undefined,
-    }).catch((err) => {
-      logger.error("Failed to emit expense updated event", { error: err });
-    });
   }
+
+  emitExpenseUpdated(trip.groupId, toSocketExpense(expense), {
+    updatedBy: user.name || user.email || undefined,
+  }).catch((err) => {
+    logger.error("Failed to emit expense updated event", { error: err });
+  });
 
   logger.info("Expense updated", { expenseId: expense.id, tripId });
   return expense;

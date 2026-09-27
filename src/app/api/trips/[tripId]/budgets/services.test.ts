@@ -22,6 +22,15 @@ vi.mock("./repository", () => ({
   deleteBudgetRow: (...a: unknown[]) => mockDeleteBudgetRow(...a),
 }));
 
+const mockEmitCreated = vi.fn();
+const mockEmitUpdated = vi.fn();
+const mockEmitDeleted = vi.fn();
+vi.mock("@/lib/socket-events", () => ({
+  emitBudgetCreated: (...a: unknown[]) => mockEmitCreated(...a),
+  emitBudgetUpdated: (...a: unknown[]) => mockEmitUpdated(...a),
+  emitBudgetDeleted: (...a: unknown[]) => mockEmitDeleted(...a),
+}));
+
 const {
   createBudgetService,
   deleteBudgetService,
@@ -34,6 +43,9 @@ const token = { uid: "firebase-1" } as DecodedIdToken;
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip: { id: "trip-1", groupId: "group-1" }, user: { id: "user-1" } });
+  mockEmitCreated.mockResolvedValue(undefined);
+  mockEmitUpdated.mockResolvedValue(undefined);
+  mockEmitDeleted.mockResolvedValue(undefined);
 });
 
 describe("listBudgetsService", () => {
@@ -58,8 +70,8 @@ describe("createBudgetService", () => {
     expect(mockCreateBudgetRow).not.toHaveBeenCalled();
   });
 
-  it("applies defaults and turns an empty-string activityId into null without an activity lookup", async () => {
-    mockCreateBudgetRow.mockResolvedValue({ id: "b1" });
+  it("applies defaults, turns an empty-string activityId into null without an activity lookup, and broadcasts the new budget", async () => {
+    mockCreateBudgetRow.mockResolvedValue({ id: "b1", tripId: "trip-1", amount: 10 });
 
     await createBudgetService(token, "trip-1", { amount: 10, category: "", activityId: "" });
 
@@ -72,6 +84,7 @@ describe("createBudgetService", () => {
       activityId: null,
       isBooked: false,
     });
+    expect(mockEmitCreated).toHaveBeenCalledWith("group-1", { id: "b1", tripId: "trip-1", amount: 10 });
   });
 
   it("links a valid activity from the same trip", async () => {
@@ -126,13 +139,14 @@ describe("updateBudgetService", () => {
     expect(mockUpdateBudgetRow).toHaveBeenCalledWith("b1", { activityId: null });
   });
 
-  it("passes only the fields that were provided", async () => {
+  it("passes only the fields that were provided, and broadcasts the updated budget", async () => {
     mockFindBudgetById.mockResolvedValue({ id: "b1", tripId: "trip-1" });
-    mockUpdateBudgetRow.mockResolvedValue({ id: "b1" });
+    mockUpdateBudgetRow.mockResolvedValue({ id: "b1", tripId: "trip-1", amount: 99 });
 
     await updateBudgetService(token, "trip-1", "b1", { amount: 99, isBooked: true });
 
     expect(mockUpdateBudgetRow).toHaveBeenCalledWith("b1", { amount: 99, isBooked: true });
+    expect(mockEmitUpdated).toHaveBeenCalledWith("group-1", { id: "b1", tripId: "trip-1", amount: 99 });
   });
 });
 
@@ -144,11 +158,12 @@ describe("deleteBudgetService", () => {
     expect(mockDeleteBudgetRow).not.toHaveBeenCalled();
   });
 
-  it("deletes a budget that belongs to the trip", async () => {
+  it("deletes a budget that belongs to the trip, and broadcasts the deletion", async () => {
     mockFindBudgetById.mockResolvedValue({ id: "b1", tripId: "trip-1" });
 
     await deleteBudgetService(token, "trip-1", "b1");
 
     expect(mockDeleteBudgetRow).toHaveBeenCalledWith("b1");
+    expect(mockEmitDeleted).toHaveBeenCalledWith("group-1", "b1", "trip-1");
   });
 });

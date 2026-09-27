@@ -149,6 +149,20 @@ export async function emitExpenseDeleted(
 }
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function emitBudgetCreated(groupId: string, budget: any) {
+  await emitEvent("budget/created", { groupId, budget });
+}
+
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function emitBudgetUpdated(groupId: string, budget: any) {
+  await emitEvent("budget/updated", { groupId, budget });
+}
+
+export async function emitBudgetDeleted(groupId: string, budgetId: string, tripId: string) {
+  await emitEvent("budget/deleted", { groupId, budgetId, tripId });
+}
+
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function emitGroupUpdated(groupId: string, group: any) {
   await emitEvent("group/updated", { groupId, group });
 }

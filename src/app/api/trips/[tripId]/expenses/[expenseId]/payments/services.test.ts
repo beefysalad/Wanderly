@@ -22,6 +22,19 @@ vi.mock("../../../../../notifications/services", () => ({
   createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
 }));
 
+const mockEmitUpdated = vi.fn();
+vi.mock("@/lib/socket-events", () => ({
+  emitExpenseUpdated: (...a: unknown[]) => mockEmitUpdated(...a),
+}));
+
+// splitShareCents stays real (centavo-precision tests below depend on it); toSocketExpense
+// is stubbed to identity so the placeholder findExpenseById fixtures below don't need a
+// full Expense shape just to survive its date/paidBy serialization.
+vi.mock("../../transformers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../transformers")>();
+  return { ...actual, toSocketExpense: (expense: unknown) => expense };
+});
+
 const mockFindExpenseById = vi.fn();
 vi.mock("../../repository", () => ({
   findExpenseById: (...a: unknown[]) => mockFindExpenseById(...a),
@@ -72,6 +85,7 @@ beforeEach(() => {
   mockFindExpenseById.mockResolvedValue({ id: "e1", refreshed: true });
   mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
   mockCreateNotification.mockResolvedValue(undefined);
+  mockEmitUpdated.mockResolvedValue(undefined);
 });
 
 describe("markExpensePaidService", () => {
@@ -97,10 +111,11 @@ describe("markExpensePaidService", () => {
     expect(mockMarkPendingAndClearLog).not.toHaveBeenCalled();
   });
 
-  it("marks the share pending and clears any stale log in one step", async () => {
+  it("marks the share pending, clears any stale log in one step, and broadcasts the change", async () => {
     const result = await markExpensePaidService(token, "t1", "e1", paid);
 
     expect(mockMarkPendingAndClearLog).toHaveBeenCalledWith("e1", "u-bob");
+    expect(mockEmitUpdated).toHaveBeenCalledWith("g1", { id: "e1", refreshed: true }, { updatedBy: "bob@x.com" });
     expect(result).toEqual({ id: "e1", refreshed: true });
   });
 
@@ -205,7 +220,7 @@ describe("confirmPaymentService", () => {
     await expect(confirmPaymentService(token, "t1", "e1", confirm)).rejects.toThrow(NotFoundError);
   });
 
-  it("confirming records the status, logs the member's share to the payer and notifies them", async () => {
+  it("confirming records the status, logs the member's share to the payer, notifies them, and broadcasts the change", async () => {
     const result = await confirmPaymentService(token, "t1", "e1", confirm);
 
     expect(mockConfirmPaymentAndLog).toHaveBeenCalledWith("e1", "id-bob@x.com", {
@@ -215,6 +230,7 @@ describe("confirmPaymentService", () => {
       amount: 30,
       paymentMethod: "gcash",
     });
+    expect(mockEmitUpdated).toHaveBeenCalledWith("g1", { id: "e1", refreshed: true }, { updatedBy: "Alice" });
     expect(mockCreateNotification).toHaveBeenCalledWith(
       "id-bob@x.com",
       expect.objectContaining({

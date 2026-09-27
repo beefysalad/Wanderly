@@ -1,5 +1,6 @@
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { emitExpenseUpdated } from "@/lib/socket-events";
 import { fromCents } from "@/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
@@ -9,7 +10,7 @@ import { NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../../../notifications/services";
 import type { ConfirmPaymentBody } from "../../schemas";
 import { findExpenseById } from "../../repository";
-import { splitShareCents } from "../../transformers";
+import { splitShareCents, toSocketExpense } from "../../transformers";
 import {
   confirmPaymentAndLog,
   findExpenseForPayments,
@@ -61,11 +62,17 @@ function canRecordGuestPayment(expense: ExpenseForPayments, userId: string) {
   return expense.createdById === userId || expense.paidBy?.id === userId;
 }
 
-async function reloadExpense(expenseId: string) {
+/** Reloads the expense after a payment change and broadcasts it — every payment change reaches other clients this way. */
+async function reloadExpense(expenseId: string, groupId: string, updatedBy?: string) {
   const expense = await findExpenseById(expenseId);
   if (!expense) {
     throw new NotFoundError("Expense not found");
   }
+
+  emitExpenseUpdated(groupId, toSocketExpense(expense), { updatedBy }).catch((err) => {
+    logger.error("Failed to emit expense updated event", { error: err });
+  });
+
   return expense;
 }
 
@@ -113,7 +120,7 @@ export async function markExpensePaidService(
       logger.info("Guest payment reversed", { expenseId, tempName: data.memberEmail, tripId });
     }
 
-    return reloadExpense(expenseId);
+    return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
   }
 
   const memberUserId = splitEntry.user.id;
@@ -139,7 +146,7 @@ export async function markExpensePaidService(
     logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   }
 
-  return reloadExpense(expenseId);
+  return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
 }
 
 /**
@@ -207,5 +214,5 @@ export async function confirmPaymentService(
     tripId,
   });
 
-  return reloadExpense(expenseId);
+  return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
 }

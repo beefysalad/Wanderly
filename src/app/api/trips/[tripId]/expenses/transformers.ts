@@ -95,6 +95,18 @@ export function splitShareCents(expense: ShareSource): number[] {
   return computeShares(toCents(Number(expense.amount)), expense.splits.map(splitMemberKey), payerKey(expense));
 }
 
+// Socket clients expect plain numbers/strings and a paidBy object even for guest payers.
+export function toSocketExpense(expense: ExpenseWithRelations) {
+  return {
+    ...expense,
+    amount: Number(expense.amount),
+    date: expense.date.toISOString(),
+    paidBy: expense.paidBy
+      ? { id: expense.paidBy.id, email: expense.paidBy.email, name: expense.paidBy.name }
+      : { id: "guest", name: expense.tempPaidBy || "Guest", email: "" },
+  };
+}
+
 /**
  * Transforms Prisma Expense model to TypeScript Expense interface
  */
