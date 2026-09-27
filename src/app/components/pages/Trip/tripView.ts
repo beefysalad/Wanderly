@@ -60,6 +60,32 @@ export function dropDate(moved: Activity, overId: string, activities: Activity[]
   return target.date;
 }
 
+/**
+ * The `<input type="date">` value for a stored trip date. Trip dates are saved from that input as
+ * UTC midnight, so the UTC day is the one that was picked; the local day would be a day earlier
+ * west of UTC and move the trip back on every unchanged save.
+ */
+export function dateInputValue(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+/**
+ * The activities a trip running from `start` to `end` (date-input values) would leave off its
+ * itinerary, judged by the same local days `tripDays` and `activitiesOn` show. Empty while either
+ * date is missing.
+ */
+export function activitiesOutside(activities: Activity[], start: string, end: string): Activity[] {
+  const from = new Date(start);
+  const to = new Date(end);
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) return [];
+  const first = dayKey(from);
+  const last = dayKey(to);
+  return activities.filter((activity) => {
+    const day = dayKey(new Date(activity.date));
+    return day < first || day > last;
+  });
+}
+
 /** "6:30 AM" from the start time, falling back to the pickup time; null when there is neither. */
 export function activityTime(activity: Activity): string | null {
   const time = activity.startTime || activity.pickupTime;

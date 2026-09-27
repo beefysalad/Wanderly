@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { exportScheduleToICS, exportScheduleToPNG } from "@/lib/utils/exportSchedule";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
-import { useDeleteTrip } from "@/src/hooks/useTrips";
+import { useDeleteTrip, useUpdateTrip } from "@/src/hooks/useTrips";
 import type { Activity, Trip } from "@/src/shared/types";
 import { patchActivityInCache, patchTripInCache } from "./tripCache";
 
@@ -18,6 +18,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const router = useRouter();
   const queryClient = useQueryClient();
   const deleteTrip = useDeleteTrip(groupId, tripId);
+  const updateTrip = useUpdateTrip(groupId, tripId);
   const { isNavigating, withNavigation } = useNavigationLoading();
 
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -127,9 +128,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setIsEditingStatus(false);
 
     try {
-      await api.patch(`/groups/${groupId}/trips/${tripId}`, { status: newStatus });
-      // Silently refetch in the background to sync with server
-      queryClient.refetchQueries({ queryKey: ["groups", groupId], type: "active" });
+      await updateTrip.mutateAsync({ status: newStatus });
     } catch (err) {
       // Revert optimistic update on error
       patchTripInCache(queryClient, groupId, tripId, (t) => ({ ...t, status: previousStatus }));

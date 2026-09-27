@@ -1,6 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Activity } from "@/src/shared/types";
-import { activitiesOn, activitySubline, activityTime, dayKey, dayMeta, dropDate, monthGrids, tripDays } from "./tripView";
+import {
+  activitiesOn,
+  activitiesOutside,
+  activitySubline,
+  activityTime,
+  dateInputValue,
+  dayKey,
+  dayMeta,
+  dropDate,
+  monthGrids,
+  tripDays,
+} from "./tripView";
 
 const act = (over: Partial<Activity>): Activity => ({ id: "a", date: new Date(2026, 9, 8).toISOString(), title: "x", done: false, ...over });
 
@@ -144,5 +155,53 @@ describe("monthGrids", () => {
   it("pads the first row to the weekday of the 1st", () => {
     const grids = monthGrids(new Date(2026, 9, 8), new Date(2026, 9, 9), []);
     expect(grids[0].cells.filter((c) => c.day === null)).toHaveLength(new Date(2026, 9, 1).getDay());
+  });
+});
+
+// Trip and activity dates are saved from `<input type="date">` values, i.e. as UTC midnight.
+const saved = (ymd: string) => new Date(ymd).toISOString();
+
+describe("dateInputValue", () => {
+  it("gives back the day that was picked when the trip was saved", () => {
+    expect(dateInputValue(saved("2026-06-01"))).toBe("2026-06-01");
+  });
+
+  inZone("America/Los_Angeles", () => {
+    it("does not move the day back west of UTC, so saving an unchanged form keeps the dates", () => {
+      expect(dateInputValue(saved("2026-06-01"))).toBe("2026-06-01");
+    });
+  });
+});
+
+describe("activitiesOutside", () => {
+  const list = [
+    act({ id: "before", date: saved("2026-05-31") }),
+    act({ id: "first", date: saved("2026-06-01") }),
+    act({ id: "last", date: saved("2026-06-10") }),
+    act({ id: "after", date: saved("2026-06-11") }),
+  ];
+
+  it("lists the activities before the new start or after the new end, keeping the boundary days", () => {
+    expect(activitiesOutside(list, "2026-06-01", "2026-06-10").map((a) => a.id)).toEqual(["before", "after"]);
+  });
+
+  it("lists nothing while a date field is empty", () => {
+    expect(activitiesOutside(list, "", "2026-06-10")).toEqual([]);
+    expect(activitiesOutside(list, "2026-06-01", "")).toEqual([]);
+  });
+
+  for (const tz of ["America/Los_Angeles", "Asia/Manila"]) {
+    inZone(tz, () => {
+      it("matches the days the itinerary shows the trip and its activities on", () => {
+        expect(activitiesOutside(list, "2026-06-01", "2026-06-10").map((a) => a.id)).toEqual(["before", "after"]);
+      });
+    });
+  }
+
+  inZone("Asia/Manila", () => {
+    it("keeps an activity at local midnight of the first day, which is the previous day in UTC", () => {
+      const midnight = act({ id: "midnight", date: new Date(2026, 5, 1).toISOString() });
+      expect(activitiesOutside([midnight], "2026-06-01", "2026-06-10")).toEqual([]);
+    });
   });
 });
