@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import api from "@/lib/axios";
 import { exportScheduleToICS, exportScheduleToPNG } from "@/lib/utils/exportSchedule";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
@@ -10,8 +11,10 @@ import { patchActivityInCache, patchTripInCache } from "./tripCache";
 
 type TripStatus = "planning" | "finalized" | "ongoing" | "cancelled";
 
+// Prefer the API's own message (e.g. "Pick a date within the trip …" when a drag lands outside it).
 const errorMessage = (err: unknown, fallback: string) =>
-  err instanceof Error ? err.message : fallback;
+  (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) ||
+  (err instanceof Error ? err.message : fallback);
 
 /** All of the trip page's mutations (activities, status, export, delete) and their UI flags. */
 export function useTripActions(groupId: string, tripId: string, trip: Trip | null) {

@@ -6,6 +6,7 @@ import {
   TActivitySchema,
 } from "@/src/app/components/shared/Modal/ActivityModal/activityAddZod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
 import {
   Clock,
   Calendar,
@@ -99,6 +100,7 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
           : "",
       startTime: "",
       endTime: "",
+      location: "",
       notes: "",
       transportationMode: undefined,
       pickupTime: undefined,
@@ -147,6 +149,7 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
         date: values.date,
         startTime: values.startTime || undefined,
         endTime: values.endTime || undefined,
+        location: values.location || undefined,
         notes: values.notes || undefined,
         transportationMode: values.transportationMode
           ? (values.transportationMode as (typeof transportationModes)[number])
@@ -162,10 +165,8 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
       router.push(`/group/${groupId}/trip/${tripId}`);
     } catch (err) {
       const message =
-        err instanceof Error
-          ? err.message
-          : (err as { response?: { data?: { error?: string } } })?.response
-              ?.data?.error || "Failed to save activity";
+        (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) ||
+        "Failed to save activity";
       setError(message);
       setIsNavigating(false);
     }
@@ -369,6 +370,29 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                         )}
                       </div>
 
+                      <div>
+                        <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
+                          Location
+                        </label>
+                        <div className='relative'>
+                          <input
+                            type='text'
+                            {...form.register("location")}
+                            placeholder='e.g. Louvre Museum, Paris'
+                            maxLength={200}
+                            className='w-full px-4 py-3 border border-white/10 rounded-xl bg-slate-800/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-medium'
+                          />
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
+                            <MapPin className='w-4 h-4' />
+                          </div>
+                        </div>
+                        {form.formState.errors.location && (
+                          <p className='mt-1 text-xs text-red-400 ml-1'>
+                            {form.formState.errors.location.message}
+                          </p>
+                        )}
+                      </div>
+
                       <div className='grid grid-cols-2 gap-4'>
                         <div>
                           <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
@@ -449,6 +473,11 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                               <Clock className='w-4 h-4' />
                             </div>
                           </div>
+                          {form.formState.errors.startTime && (
+                            <p className='mt-1 text-xs text-red-400 ml-1'>
+                              {form.formState.errors.startTime.message}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className='block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 ml-1'>
@@ -466,6 +495,11 @@ const AddActivityPage = ({ params }: AddActivityPageProps) => {
                               <Clock className='w-4 h-4' />
                             </div>
                           </div>
+                          {form.formState.errors.endTime && (
+                            <p className='mt-1 text-xs text-red-400 ml-1'>
+                              {form.formState.errors.endTime.message}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
   emitActivityCreated,
   emitActivityDeleted,
@@ -15,7 +15,12 @@ import {
   findActivityById,
   updateActivityRow,
 } from "./repository";
-import type { CreateActivityBody, UpdateActivityBody } from "./schemas";
+import {
+  TIME_ORDER_MESSAGE,
+  timesInOrder,
+  type CreateActivityBody,
+  type UpdateActivityBody,
+} from "./schemas";
 
 async function findActivityInTrip(activityId: string, tripId: string) {
   const activity = await findActivityById(activityId);
@@ -25,12 +30,29 @@ async function findActivityInTrip(activityId: string, tripId: string) {
   return activity;
 }
 
+/**
+ * Trip and activity dates are picked as a calendar day and sent as "YYYY-MM-DD", which is stored as
+ * UTC midnight, so the UTC day is the day that was picked. Comparing those days (not instants)
+ * keeps the trip's last day inclusive and ignores any time a legacy row was saved with.
+ */
+const pickedDay = (date: Date) => date.toISOString().slice(0, 10);
+
+function assertWithinTrip(date: Date, trip: { startDate: Date; endDate: Date }) {
+  const day = pickedDay(date);
+  const first = pickedDay(trip.startDate);
+  const last = pickedDay(trip.endDate);
+  if (day < first || day > last) {
+    throw new ValidationError(`Pick a date within the trip (${first} to ${last})`);
+  }
+}
+
 export async function createActivityService(
   token: DecodedIdToken,
   tripId: string,
   data: CreateActivityBody,
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
+  assertWithinTrip(data.date, trip);
 
   const activity = await createActivityRow({
     tripId,
@@ -38,6 +60,7 @@ export async function createActivityService(
     date: data.date,
     startTime: data.startTime || null,
     endTime: data.endTime || null,
+    location: data.location || null,
     notes: data.notes || null,
     transportationMode: data.transportationMode || null,
     pickupTime: data.pickupTime || null,
@@ -72,11 +95,26 @@ export async function updateActivityService(
   const { trip, user } = await verifyTripAccess(token, tripId);
   const existing = await findActivityInTrip(activityId, tripId);
 
+  // Only a move is checked: an activity the trip's new dates left outside stays editable in place.
+  if (data.date !== undefined && pickedDay(data.date) !== pickedDay(existing.date)) {
+    assertWithinTrip(data.date, trip);
+  }
+  // Times are checked only when one is sent (a time sent alone against the stored other one), so
+  // legacy rows with out-of-order times can still be ticked done or renamed.
+  if (data.startTime !== undefined || data.endTime !== undefined) {
+    const startTime = data.startTime !== undefined ? data.startTime : existing.startTime;
+    const endTime = data.endTime !== undefined ? data.endTime : existing.endTime;
+    if (!timesInOrder(startTime, endTime)) {
+      throw new ValidationError(TIME_ORDER_MESSAGE);
+    }
+  }
+
   const activity = await updateActivityRow(activityId, {
     ...(data.title !== undefined && { title: data.title }),
     ...(data.date !== undefined && { date: data.date }),
     ...(data.startTime !== undefined && { startTime: data.startTime || null }),
     ...(data.endTime !== undefined && { endTime: data.endTime || null }),
+    ...(data.location !== undefined && { location: data.location || null }),
     ...(data.notes !== undefined && { notes: data.notes || null }),
     ...(data.done !== undefined && { done: data.done }),
     ...(data.transportationMode !== undefined && {
