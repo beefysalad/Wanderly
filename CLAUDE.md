@@ -52,7 +52,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 
 - Server Components by default; add `"use client"` only for state/effects/interactivity.
 - Forms: React Hook Form + Zod resolvers (see `AuthForm`, `ExpenseForm`, `Profile` for the pattern).
-- Server state: TanStack Query hooks in `src/hooks/`; components consuming them handle `isPending`/`isLoading`/`isError` explicitly rather than assuming data is present.
+- Server state: TanStack Query hooks in `src/hooks/`. Every query key comes from `src/hooks/queryKeys.ts` (queries, invalidations, socket handlers, optimistic `setQueryData`); never write a key array inline. Mutations go through a hook in `src/hooks/` that owns its invalidations, not raw `api.post`/`patch`/`delete` in components. Queries that depend on an id from the URL pass `enabled: !!id`. Components handle loading explicitly and check `blockingQuery(...)` (`shared/StateMessage/loadError.ts`) before their not-found branch, rendering `<StateMessage variant='error' query={failed} what='…' />` (or `StateCard` inside the app chrome) so a 500 or dropped connection offers a retry instead of "not found".
 - HTTP: shared Axios instance at `lib/axios.ts`.
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
 - Real-time: Socket.IO client via `lib/socket.ts` / `src/hooks/useSocket*`, supporting both Firebase-authenticated users and guest sessions (the socket server still receives the raw group code for guests; see the security spec).

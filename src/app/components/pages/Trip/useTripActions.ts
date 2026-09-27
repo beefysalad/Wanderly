@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { exportScheduleToICS, exportScheduleToPNG } from "@/lib/utils/exportSchedule";
+import { queryKeys } from "@/src/hooks/queryKeys";
+import { useDeleteActivity, useUpdateActivity } from "@/src/hooks/useActivities";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useDeleteTrip } from "@/src/hooks/useTrips";
 import type { Activity, Trip } from "@/src/shared/types";
@@ -18,6 +20,8 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const router = useRouter();
   const queryClient = useQueryClient();
   const deleteTrip = useDeleteTrip(groupId, tripId);
+  const updateActivity = useUpdateActivity(tripId, groupId);
+  const deleteActivity = useDeleteActivity(tripId, groupId);
   const { isNavigating, withNavigation } = useNavigationLoading();
 
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -26,7 +30,6 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
-  const [isDeletingActivity, setIsDeletingActivity] = useState<boolean>(false);
 
   const handleDeleteTrip = async () => {
     try {
@@ -63,10 +66,9 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, ...updates }));
 
     try {
-      await api.patch(`/trips/${tripId}/activities/${id}`, updates);
-      queryClient.refetchQueries({ queryKey: ["groups", groupId] });
+      await updateActivity.mutateAsync({ activityId: id, updates });
     } catch (err) {
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       alert(errorMessage(err, "Failed to update activity. Please try again."));
     }
   };
@@ -74,16 +76,12 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const handleDeleteActivity = async () => {
     if (!activityToDelete) return;
 
-    setIsDeletingActivity(true);
     try {
-      await api.delete(`/trips/${tripId}/activities/${activityToDelete}`);
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      await deleteActivity.mutateAsync(activityToDelete);
       setShowDeleteActivityModal(false);
       setActivityToDelete(null);
     } catch (err) {
       alert(errorMessage(err, "Failed to delete activity. Please try again."));
-    } finally {
-      setIsDeletingActivity(false);
     }
   };
 
@@ -108,8 +106,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, done: newDoneState }));
 
     try {
-      await api.patch(`/trips/${tripId}/activities/${id}`, { done: newDoneState });
-      queryClient.refetchQueries({ queryKey: ["groups", groupId], type: "active" });
+      await updateActivity.mutateAsync({ activityId: id, updates: { done: newDoneState } });
     } catch (err) {
       patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, done: previousState }));
       alert(errorMessage(err, "Failed to update activity. Please try again."));
@@ -129,7 +126,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     try {
       await api.patch(`/groups/${groupId}/trips/${tripId}`, { status: newStatus });
       // Silently refetch in the background to sync with server
-      queryClient.refetchQueries({ queryKey: ["groups", groupId], type: "active" });
+      queryClient.refetchQueries({ queryKey: queryKeys.groups.detail(groupId), type: "active" });
     } catch (err) {
       // Revert optimistic update on error
       patchTripInCache(queryClient, groupId, tripId, (t) => ({ ...t, status: previousStatus }));
@@ -144,7 +141,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     showDeleteModal,
     setShowDeleteModal,
     showDeleteActivityModal,
-    isDeletingActivity,
+    isDeletingActivity: deleteActivity.isPending,
     isEditingStatus,
     setIsEditingStatus,
     isExporting,
