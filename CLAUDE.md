@@ -18,7 +18,7 @@ Single Next.js 15 App Router app (Node 22.12+), not a monorepo. No workspaces, n
 - `components/` (repo root, **not** under `src/`) — shadcn/ui primitives (`components/ui/*`) and a couple of top-level shared components (`socket-provider.tsx`). Imported as `@/components/...`.
 - `lib/` (repo root, **not** under `src/`) — singletons and utilities: `prisma.ts`, `firebase.ts`, `firebase-admin.ts`, `axios.ts`, `socket.ts`, `logger.ts`, `rate-limit.ts`, `helper.ts`, `utils.ts`, `auth/with-auth.ts`. Imported as `@/lib/...`.
 - `prisma/` — `schema.prisma` and migrations.
-- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime.
+- `scripts/` — one-off maintenance scripts run with `tsx`, not part of the app runtime, plus `build.mjs` (the `npm run build` entry point).
 
 **Known layout quirk (planned restructure):** shared code is split between the repo root (`components/`, `lib/`) and `src/` (`app`, `hooks`, `shared`). This is intentional for now and everything below documents it as is; the maintainer plans to consolidate it under `src/` in a dedicated mechanical PR (move + codemod of `@/lib` and `@/components` imports + `tsconfig`/`components.json` updates) after in-flight work lands. Do not create `src/components/` or `src/lib/`, and do not move files between the two trees opportunistically.
 
@@ -28,8 +28,8 @@ Import aliasing: `tsconfig.json` maps `@/*` → repo root (`./*`), so `@/lib/...
 
 ```bash
 npm run dev              # next dev --turbopack
-npm run build            # prisma generate && prisma migrate deploy && next build
-npm run build:ci         # prisma generate && next build (no DB migration) — what CI runs
+npm run build            # scripts/build.mjs: prisma generate, prisma migrate deploy only when VERCEL_ENV=production, next build
+npm run build:ci         # prisma generate && next build (never migrates) — what CI runs
 npm run start
 npm run lint             # eslint
 npm run test             # vitest run (tests are colocated as *.test.ts next to the source)
