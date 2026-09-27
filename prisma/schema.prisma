@@ -79,7 +79,7 @@ enum TripStatus {
 model Trip {
   id          String     @id @default(cuid())
   groupId     String
-  createdById String
+  createdById String? // null once the creator's account is deleted
   name        String
   startDate   DateTime
   endDate     DateTime
@@ -89,7 +89,7 @@ model Trip {
   updatedAt   DateTime   @updatedAt
 
   // Relationships
-  creator       User           @relation("TripCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  creator       User?          @relation("TripCreator", fields: [createdById], references: [id], onDelete: SetNull)
   group         Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   activities    Activity[]
   expenses      Expense[]
@@ -170,7 +170,7 @@ model ExpenseSplit {
 
   // Relationships
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Combined unique constraint might need to be relaxed or changed if we want unique names per expense
   // @@unique([expenseId, userId]) 
@@ -188,7 +188,8 @@ enum PaymentStatus {
 model ExpensePayment {
   id        String        @id @default(cuid())
   expenseId String
-  userId    String
+  userId    String? // null once the member's account is deleted; tempName then keeps their name
+  tempName  String?
   amount    Decimal       @default(0)
   status    PaymentStatus @default(pending)
   paidAt    DateTime      @default(now())
@@ -196,7 +197,7 @@ model ExpensePayment {
 
   // Relationships
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([expenseId, userId])
 }
@@ -205,8 +206,10 @@ model PaymentLog {
   id            String         @id @default(cuid())
   tripId        String
   expenseId     String
-  payerId       String
-  payeeId       String
+  payerId       String? // null once that account is deleted; payerName/payeeName then keep the name
+  payeeId       String?
+  payerName     String?
+  payeeName     String?
   amount        Decimal
   paymentMethod PaymentMethod?
   timestamp     DateTime       @default(now())
@@ -215,8 +218,8 @@ model PaymentLog {
   // Relationships
   trip    Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  payer   User    @relation("PaymentLogPayer", fields: [payerId], references: [id], onDelete: Cascade)
-  payee   User    @relation("PaymentLogPayee", fields: [payeeId], references: [id], onDelete: Cascade)
+  payer   User?   @relation("PaymentLogPayer", fields: [payerId], references: [id], onDelete: SetNull)
+  payee   User?   @relation("PaymentLogPayee", fields: [payeeId], references: [id], onDelete: SetNull)
 }
 
 model Review {
