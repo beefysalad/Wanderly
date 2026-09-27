@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { formatPesoExact } from "@/lib/utils/money";
 import { UserAvatar } from "../../shared/UserAvatar";
 import { STATUS_STYLE, type MemberStatus } from "./expenseDetailView";
 
@@ -8,7 +8,8 @@ export interface OwesRow {
   name: string;
   imageUrl?: string;
   status: MemberStatus;
-  share: number;
+  /** null for a payer who isn't in the split. */
+  share: number | null;
   isYou: boolean;
 }
 
@@ -34,7 +35,7 @@ export function WhoOwesWhat({ rows, canConfirm, onConfirm }: WhoOwesWhatProps) {
               {row.name}
               {row.isYou ? " (you)" : ""}
             </span>
-            <span className='text-xs tabular-nums text-[#64748b]'>{formatPeso(row.share)} share</span>
+            <span className='text-xs tabular-nums text-[#64748b]'>{row.share === null ? "Not in split" : `${formatPesoExact(row.share)} share`}</span>
           </span>
           {canConfirm && onConfirm && row.status === "pending" ? (
             <span className='flex gap-[6px]'>

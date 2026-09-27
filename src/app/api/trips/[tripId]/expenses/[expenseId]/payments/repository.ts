@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { SPLIT_ORDER } from "../../repository";
 
 /** Expense plus who paid and who it was split with — what payment marking needs. */
 export function findExpenseForPayments(expenseId: string) {
@@ -6,7 +7,7 @@ export function findExpenseForPayments(expenseId: string) {
     where: { id: expenseId },
     include: {
       paidBy: { select: { id: true, email: true } },
-      splits: { include: { user: { select: { id: true, email: true } } } },
+      splits: { include: { user: { select: { id: true, email: true } } }, orderBy: SPLIT_ORDER },
     },
   });
 }

@@ -1,3 +1,4 @@
+import { computeShares, fromCents, toCents } from "@/lib/utils/money";
 import type { Expense, PaymentLog } from "@/src/shared/types";
 import type { Prisma } from "@prisma/client";
 import { FORMER_MEMBER } from "../../../groups/transformers";
@@ -69,6 +70,31 @@ type PaymentLogWithRelations = Prisma.PaymentLogGetPayload<{
   };
 }>;
 
+interface ShareSource {
+  amount: Prisma.Decimal | number;
+  paidBy: { email: string } | null;
+  tempPaidBy: string | null;
+  splits: Array<{ user: { email: string } | null; tempName: string | null }>;
+}
+
+/** How the API names a split member: their email, or the guest's name. */
+export function splitMemberKey(split: ShareSource["splits"][number]): string {
+  return split.user?.email || split.tempName || "Unknown";
+}
+
+/** How the API names the payer: their email, or the guest's name. */
+export function payerKey(expense: Pick<ShareSource, "paidBy" | "tempPaidBy">): string {
+  return expense.paidBy?.email || expense.tempPaidBy || "Unknown";
+}
+
+/**
+ * Each split's share in centavos, aligned with `expense.splits`. Callers must load splits in a stable order
+ * (the repositories order them by creation) so the leftover centavos land on the same people every time.
+ */
+export function splitShareCents(expense: ShareSource): number[] {
+  return computeShares(toCents(Number(expense.amount)), expense.splits.map(splitMemberKey), payerKey(expense));
+}
+
 /**
  * Transforms Prisma Expense model to TypeScript Expense interface
  */
@@ -92,12 +118,14 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     paymentStatusMap[member] = status;
   });
 
+  const splitWith = prismaExpense.splits.map(splitMemberKey);
+  const shareCents = splitShareCents(prismaExpense);
+
   return {
     id: prismaExpense.id,
     groupId: prismaExpense.groupId,
     tripId: prismaExpense.tripId,
-    paidBy:
-      prismaExpense.paidBy?.email || prismaExpense.tempPaidBy || "Unknown",
+    paidBy: payerKey(prismaExpense),
     createdById: prismaExpense.createdById || undefined,
     createdBy: prismaExpense.creator
       ? {
@@ -111,9 +139,8 @@ export function transformExpense(prismaExpense: ExpenseWithRelations): Expense {
     description: prismaExpense.description,
     date: prismaExpense.date.toISOString(),
     category: prismaExpense.category || undefined,
-    splitWith: prismaExpense.splits.map(
-      (split) => split.user?.email || split.tempName || "Unknown",
-    ),
+    splitWith,
+    splits: splitWith.map((member, index) => ({ member, shareAmount: fromCents(shareCents[index]) })),
     paymentMethod:
       prismaExpense.paymentMethod === null
         ? undefined

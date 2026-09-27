@@ -2,10 +2,13 @@ import prisma from "@/lib/prisma";
 import type { PaymentMethod, Prisma } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
+// Splits come back in the order they were added: leftover centavos are placed by position (see computeShares).
+export const SPLIT_ORDER = [{ createdAt: "asc" }, { id: "asc" }] satisfies Prisma.ExpenseSplitOrderByWithRelationInput[];
+
 const EXPENSE_INCLUDE = {
   paidBy: { select: { id: true, email: true, name: true } },
   creator: { select: { id: true, email: true, name: true, imageUrl: true } },
-  splits: { include: { user: { select: { id: true, email: true, name: true } } } },
+  splits: { include: { user: { select: { id: true, email: true, name: true } } }, orderBy: SPLIT_ORDER },
   payments: { include: { user: { select: { id: true, email: true } } } },
 } satisfies Prisma.ExpenseInclude;
 

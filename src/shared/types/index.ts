@@ -59,6 +59,12 @@ export interface Activity {
   dropoffLocation?: string;
 }
 
+/** One person's part of an expense, as the server computed it. */
+export interface ExpenseSplitShare {
+  member: string; // email, or a guest's name (same identifiers as splitWith)
+  shareAmount: number; // pesos, exact to the centavo; the shares add up to the expense amount
+}
+
 export interface Expense {
   id: string;
   groupId: string;
@@ -76,6 +82,7 @@ export interface Expense {
   date: string;
   category?: string;
   splitWith?: string[]; // members who should split this expense
+  splits: ExpenseSplitShare[]; // same people as splitWith, in the same order, with their shares; empty = nobody owes anything
   paymentMethod?: "cash" | "bank" | "maya" | "gcash";
   accountNumber?: string;
   bankName?: string; // for bank transfer
