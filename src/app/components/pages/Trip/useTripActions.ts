@@ -2,7 +2,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { exportScheduleToICS, exportScheduleToPNG } from "@/lib/utils/exportSchedule";
 import { queryKeys } from "@/src/hooks/queryKeys";
 import { useDeleteActivity, useUpdateActivity } from "@/src/hooks/useActivities";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
@@ -49,6 +48,8 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setIsExporting(true);
     setShowExportMenu(false);
     try {
+      // Dynamic import: code-splitting the ~900-line canvas/ICS exporter, only needed on click, out of the Trip bundle.
+      const { exportScheduleToICS, exportScheduleToPNG } = await import("@/lib/utils/exportSchedule");
       if (format === "png") {
         await exportScheduleToPNG({ trip, activities: trip.activities || [] });
       } else {
