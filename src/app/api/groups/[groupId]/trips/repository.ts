@@ -9,7 +9,7 @@ const TRIP_DETAIL_INCLUDE = {
 export function findTripById(tripId: string) {
   return prisma.trip.findUnique({
     where: { id: tripId },
-    select: { id: true, groupId: true, name: true, createdById: true },
+    select: { id: true, groupId: true, name: true, createdById: true, startDate: true, endDate: true },
   });
 }
 

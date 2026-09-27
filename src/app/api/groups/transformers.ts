@@ -130,6 +130,7 @@ export function transformActivity(
     title: prismaActivity.title,
     startTime: prismaActivity.startTime || undefined,
     endTime: prismaActivity.endTime || undefined,
+    location: prismaActivity.location || undefined,
     notes: prismaActivity.notes || undefined,
     done: prismaActivity.done,
     transportationMode: prismaActivity.transportationMode || undefined,

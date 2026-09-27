@@ -1,24 +1,27 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import { isAxiosError } from "axios";
 import { queryKeys } from "@/src/hooks/queryKeys";
 import { useDeleteActivity, useUpdateActivity } from "@/src/hooks/useActivities";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
-import { useDeleteTrip } from "@/src/hooks/useTrips";
+import { useDeleteTrip, useUpdateTrip } from "@/src/hooks/useTrips";
 import type { Activity, Trip } from "@/src/shared/types";
 import { patchActivityInCache, patchTripInCache } from "./tripCache";
 
 type TripStatus = "planning" | "finalized" | "ongoing" | "cancelled";
 
+// Prefer the API's own message (e.g. "Pick a date within the trip …" when a drag lands outside it).
 const errorMessage = (err: unknown, fallback: string) =>
-  err instanceof Error ? err.message : fallback;
+  (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) ||
+  (err instanceof Error ? err.message : fallback);
 
 /** All of the trip page's mutations (activities, status, export, delete) and their UI flags. */
 export function useTripActions(groupId: string, tripId: string, trip: Trip | null) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const deleteTrip = useDeleteTrip(groupId, tripId);
+  const updateTrip = useUpdateTrip(groupId, tripId);
   const updateActivity = useUpdateActivity(tripId, groupId);
   const deleteActivity = useDeleteActivity(tripId, groupId);
   const { isNavigating, withNavigation } = useNavigationLoading();
@@ -125,9 +128,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setIsEditingStatus(false);
 
     try {
-      await api.patch(`/groups/${groupId}/trips/${tripId}`, { status: newStatus });
-      // Silently refetch in the background to sync with server
-      queryClient.refetchQueries({ queryKey: queryKeys.groups.detail(groupId), type: "active" });
+      await updateTrip.mutateAsync({ status: newStatus });
     } catch (err) {
       // Revert optimistic update on error
       patchTripInCache(queryClient, groupId, tripId, (t) => ({ ...t, status: previousStatus }));

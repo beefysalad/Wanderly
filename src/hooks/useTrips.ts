@@ -15,6 +15,15 @@ interface CreateTripRequest {
   status: "planning" | "finalized" | "ongoing" | "cancelled";
 }
 
+/** Only the fields being changed; `location: null` clears it. */
+export interface UpdateTripRequest {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string | null;
+  status?: CreateTripRequest["status"];
+}
+
 /**
  * Mutation hook to create a new trip for a group
  */
@@ -45,6 +54,34 @@ export function useCreateTrip(groupId: string) {
       await queryClient.refetchQueries({ queryKey: queryKeys.groups.detail(groupId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
       // Toast will be shown via Socket.IO event to avoid duplicates
+    },
+  });
+}
+
+/**
+ * Mutation hook to edit a trip (name, dates, location, status)
+ */
+export function useUpdateTrip(groupId: string, tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<TripResponse, Error, UpdateTripRequest>({
+    mutationFn: async (data) => {
+      const response = await api.patch<TripResponse>(`/groups/${groupId}/trips/${tripId}`, data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Swap in the saved trip so the trip page shows it straight away, then refetch the group
+      // detail and the groups list (dashboard, calendar), which both carry trip dates.
+      queryClient.setQueryData<{ group: Group }>(queryKeys.groups.detail(groupId), (old) => {
+        if (!old) return old;
+        return {
+          group: {
+            ...old.group,
+            trips: old.group.trips?.map((trip) => (trip.id === tripId ? data.trip : trip)),
+          },
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     },
   });
 }

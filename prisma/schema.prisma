@@ -111,6 +111,8 @@ model Activity {
   title              String
   startTime          String?
   endTime            String?
+  /// Where it happens; the itinerary links it to Google Maps. Max length matches the API schema.
+  location           String?  @db.VarChar(200)
   notes              String?
   done               Boolean  @default(false)
   transportationMode String?

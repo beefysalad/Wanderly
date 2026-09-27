@@ -101,6 +101,7 @@ const TripComponent = ({ groupId, tripId }: ITripComponent) => {
             <TripExportMenu
               isExporting={actions.isExporting}
               onExport={actions.handleExportSchedule}
+              onEdit={() => router.push(`/group/${groupId}/trip/${tripId}/edit`)}
               canDelete={canDeleteTrip}
               onDelete={() => actions.setShowDeleteModal(true)}
             />

@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 vi.mock("../../access", () => ({
@@ -47,7 +47,25 @@ const { createActivityService, deleteActivityService, updateActivityService } = 
 
 const token = { uid: "firebase-1" } as DecodedIdToken;
 const user = { id: "user-1", name: "Alice", email: "alice@example.com" };
-const trip = { id: "trip-1", groupId: "group-1", name: "Japan" };
+// Stored like the app saves them: the picked day at UTC midnight.
+const trip = {
+  id: "trip-1",
+  groupId: "group-1",
+  name: "Japan",
+  startDate: new Date("2026-10-01T00:00:00.000Z"),
+  endDate: new Date("2026-10-05T00:00:00.000Z"),
+};
+const RANGE_ERROR = "Pick a date within the trip (2026-10-01 to 2026-10-05)";
+
+const existingActivity = (over: Record<string, unknown> = {}) => ({
+  id: "a",
+  tripId: "trip-1",
+  title: "Old",
+  date: new Date("2026-10-02T00:00:00.000Z"),
+  startTime: null,
+  endTime: null,
+  ...over,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -92,8 +110,52 @@ describe("createActivityService", () => {
     mockCreateNotification.mockRejectedValue(new Error("boom"));
 
     await expect(
-      createActivityService(token, "trip-1", { title: "x", date: new Date() }),
+      createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-01") }),
     ).resolves.toEqual({ id: "act-1" });
+  });
+
+  it("accepts the trip's first and last days", async () => {
+    mockCreateActivityRow.mockResolvedValue({ id: "act-1" });
+
+    await createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-01") });
+    await createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-05") });
+
+    expect(mockCreateActivityRow).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a date before or after the trip without saving", async () => {
+    for (const date of ["2026-09-30", "2026-10-06"]) {
+      await expect(
+        createActivityService(token, "trip-1", { title: "x", date: new Date(date) }),
+      ).rejects.toThrow(new ValidationError(RANGE_ERROR));
+    }
+    expect(mockCreateActivityRow).not.toHaveBeenCalled();
+  });
+
+  it("judges the range by the picked day even for a trip end saved with a time", async () => {
+    mockVerifyTripAccess.mockResolvedValue({
+      trip: { ...trip, endDate: new Date("2026-10-05T15:00:00.000Z") },
+      user,
+    });
+    mockCreateActivityRow.mockResolvedValue({ id: "act-1" });
+
+    await expect(
+      createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-05T20:00:00.000Z") }),
+    ).resolves.toEqual({ id: "act-1" });
+  });
+
+  it("saves the location and stores an empty one as null", async () => {
+    mockCreateActivityRow.mockResolvedValue({ id: "act-1" });
+
+    await createActivityService(token, "trip-1", {
+      title: "x",
+      date: new Date("2026-10-02"),
+      location: "Louvre, Paris",
+    });
+    await createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-02"), location: "" });
+
+    expect(mockCreateActivityRow.mock.calls[0][0]).toMatchObject({ location: "Louvre, Paris" });
+    expect(mockCreateActivityRow.mock.calls[1][0]).toMatchObject({ location: null });
   });
 });
 
@@ -130,6 +192,73 @@ describe("updateActivityService", () => {
       expect.objectContaining({ message: "Alice updated activity 'Old' in Japan" }),
     );
     expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects moving the activity outside the trip", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity());
+
+    await expect(
+      updateActivityService(token, "trip-1", "a", { date: new Date("2026-10-06") }),
+    ).rejects.toThrow(new ValidationError(RANGE_ERROR));
+    expect(mockUpdateActivityRow).not.toHaveBeenCalled();
+  });
+
+  it("still saves an activity the trip's new dates left outside when its date isn't changed", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity({ date: new Date("2026-10-09T00:00:00.000Z") }));
+    mockUpdateActivityRow.mockResolvedValue({ id: "a" });
+
+    await updateActivityService(token, "trip-1", "a", {
+      title: "Renamed",
+      date: new Date("2026-10-09"),
+    });
+
+    expect(mockUpdateActivityRow).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an end time before the stored start time", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity({ startTime: "14:00", endTime: "15:00" }));
+
+    await expect(updateActivityService(token, "trip-1", "a", { endTime: "13:00" })).rejects.toThrow(
+      new ValidationError("End time can't be before the start time"),
+    );
+    expect(mockUpdateActivityRow).not.toHaveBeenCalled();
+  });
+
+  it("rejects a start time after the stored end time", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity({ startTime: "09:00", endTime: "10:00" }));
+
+    await expect(updateActivityService(token, "trip-1", "a", { startTime: "10:30" })).rejects.toThrow(
+      ValidationError,
+    );
+  });
+
+  it("allows a new start time once the stored end time is cleared in the same update", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity({ startTime: "09:00", endTime: "10:00" }));
+    mockUpdateActivityRow.mockResolvedValue({ id: "a" });
+
+    await updateActivityService(token, "trip-1", "a", { startTime: "10:30", endTime: "" });
+
+    expect(mockUpdateActivityRow).toHaveBeenCalledWith("a", { startTime: "10:30", endTime: null });
+  });
+
+  it("doesn't re-check stored times that aren't being changed", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity({ startTime: "15:00", endTime: "09:00" }));
+    mockUpdateActivityRow.mockResolvedValue({ id: "a" });
+
+    await updateActivityService(token, "trip-1", "a", { done: true, title: "Renamed" });
+
+    expect(mockUpdateActivityRow).toHaveBeenCalledTimes(1);
+  });
+
+  it("updates and clears the location", async () => {
+    mockFindActivityById.mockResolvedValue(existingActivity());
+    mockUpdateActivityRow.mockResolvedValue({ id: "a" });
+
+    await updateActivityService(token, "trip-1", "a", { location: "Shibuya" });
+    await updateActivityService(token, "trip-1", "a", { location: "" });
+
+    expect(mockUpdateActivityRow.mock.calls[0][1]).toEqual({ location: "Shibuya" });
+    expect(mockUpdateActivityRow.mock.calls[1][1]).toEqual({ location: null });
   });
 });
 
