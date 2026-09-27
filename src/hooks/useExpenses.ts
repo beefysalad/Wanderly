@@ -196,6 +196,24 @@ export function useMarkPaid(tripId: string | null, expenseId: string, groupId: s
   });
 }
 
+/**
+ * Mutation hook for the creator or payer reversing a guest split member's recorded payment
+ * (a guest has no account, so this is the same endpoint `useMarkPaid` posts to, with isPaid false).
+ */
+export function useUndoGuestPayment(tripId: string | null, expenseId: string, groupId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: async (member) => {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: member,
+        isPaid: false,
+      });
+    },
+    onSuccess: () => invalidatePayment(queryClient, tripId, groupId),
+  });
+}
+
 /** Mutation hook for the payer confirming or rejecting a member's payment. */
 export function useConfirmPayment(tripId: string | null, expenseId: string, groupId: string) {
   const queryClient = useQueryClient();

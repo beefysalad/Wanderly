@@ -32,12 +32,16 @@ const mockMarkPendingAndClearLog = vi.fn();
 const mockUnmarkPayment = vi.fn();
 const mockConfirmPaymentAndLog = vi.fn();
 const mockRejectPaymentAndClearLog = vi.fn();
+const mockRecordGuestPayment = vi.fn();
+const mockUnrecordGuestPayment = vi.fn();
 vi.mock("./repository", () => ({
   findExpenseForPayments: (...a: unknown[]) => mockFindForPayments(...a),
   markPendingAndClearLog: (...a: unknown[]) => mockMarkPendingAndClearLog(...a),
   unmarkPayment: (...a: unknown[]) => mockUnmarkPayment(...a),
   confirmPaymentAndLog: (...a: unknown[]) => mockConfirmPaymentAndLog(...a),
   rejectPaymentAndClearLog: (...a: unknown[]) => mockRejectPaymentAndClearLog(...a),
+  recordGuestPayment: (...a: unknown[]) => mockRecordGuestPayment(...a),
+  unrecordGuestPayment: (...a: unknown[]) => mockUnrecordGuestPayment(...a),
 }));
 
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
@@ -55,6 +59,8 @@ const expense = {
   description: "Dinner",
   paidById: "u-alice",
   paidBy: alice,
+  tempPaidBy: null,
+  createdById: "u-creator",
   splits: [{ user: alice }, { user: bob }, { user: { id: "u-c", email: "c@x.com" } }],
 };
 
@@ -94,7 +100,7 @@ describe("markExpensePaidService", () => {
   it("marks the share pending and clears any stale log in one step", async () => {
     const result = await markExpensePaidService(token, "t1", "e1", paid);
 
-    expect(mockMarkPendingAndClearLog).toHaveBeenCalledWith("e1", "id-bob@x.com");
+    expect(mockMarkPendingAndClearLog).toHaveBeenCalledWith("e1", "u-bob");
     expect(result).toEqual({ id: "e1", refreshed: true });
   });
 
@@ -120,8 +126,60 @@ describe("markExpensePaidService", () => {
   it("unmarking removes the member's payment and any log left from a previous confirm in one step", async () => {
     await markExpensePaidService(token, "t1", "e1", { memberEmail: "bob@x.com", isPaid: false });
 
-    expect(mockUnmarkPayment).toHaveBeenCalledWith("e1", "id-bob@x.com");
+    expect(mockUnmarkPayment).toHaveBeenCalledWith("e1", "u-bob");
     expect(mockMarkPendingAndClearLog).not.toHaveBeenCalled();
+  });
+
+  describe("a guest split member", () => {
+    const guestExpense = {
+      ...expense,
+      splits: [...expense.splits, { user: null, tempName: "Guest Gary" }],
+    };
+    const paidGary = { memberEmail: "Guest Gary", isPaid: true };
+
+    beforeEach(() => {
+      mockFindForPayments.mockResolvedValue(guestExpense);
+    });
+
+    it("lets the payer record a guest's payment directly, as confirmed", async () => {
+      mockVerifyTripAccess.mockResolvedValue({ trip: { id: "t1", groupId: "g1" }, user: alice });
+
+      const result = await markExpensePaidService(token, "t1", "e1", paidGary);
+
+      expect(mockRecordGuestPayment).toHaveBeenCalledWith("e1", "Guest Gary", {
+        tripId: "t1",
+        payeeId: "u-alice",
+        payeeName: null,
+        amount: expect.any(Number),
+        paymentMethod: "gcash",
+      });
+      expect(result).toEqual({ id: "e1", refreshed: true });
+    });
+
+    it("lets the creator record a guest's payment directly", async () => {
+      mockVerifyTripAccess.mockResolvedValue({
+        trip: { id: "t1", groupId: "g1" },
+        user: { id: "u-creator", email: "creator@x.com" },
+      });
+
+      await markExpensePaidService(token, "t1", "e1", paidGary);
+
+      expect(mockRecordGuestPayment).toHaveBeenCalled();
+    });
+
+    it("does not let another split member record a guest's payment", async () => {
+      // bob (default caller) is neither the creator nor the payer
+      await expect(markExpensePaidService(token, "t1", "e1", paidGary)).rejects.toThrow(ForbiddenError);
+      expect(mockRecordGuestPayment).not.toHaveBeenCalled();
+    });
+
+    it("lets the payer reverse a recorded guest payment", async () => {
+      mockVerifyTripAccess.mockResolvedValue({ trip: { id: "t1", groupId: "g1" }, user: alice });
+
+      await markExpensePaidService(token, "t1", "e1", { memberEmail: "Guest Gary", isPaid: false });
+
+      expect(mockUnrecordGuestPayment).toHaveBeenCalledWith("e1", "Guest Gary");
+    });
   });
 });
 
@@ -153,6 +211,7 @@ describe("confirmPaymentService", () => {
     expect(mockConfirmPaymentAndLog).toHaveBeenCalledWith("e1", "id-bob@x.com", {
       tripId: "t1",
       payeeId: "u-alice",
+      payeeName: null,
       amount: 30,
       paymentMethod: "gcash",
     });
@@ -236,5 +295,37 @@ describe("confirmPaymentService", () => {
     await expect(
       confirmPaymentService(token, "t1", "e1", { memberEmail: "ghost@x.com", status: "confirmed" }),
     ).rejects.toThrow(NotFoundError);
+  });
+
+  describe("when the payer is a guest", () => {
+    const guestPayerExpense = {
+      ...expense,
+      paidById: null,
+      paidBy: null,
+      tempPaidBy: "Guest Payer",
+    };
+
+    beforeEach(() => {
+      mockFindForPayments.mockResolvedValue(guestPayerExpense);
+    });
+
+    it("lets the creator confirm on the guest payer's behalf", async () => {
+      mockVerifyTripAccess.mockResolvedValue({
+        trip: { id: "t1", groupId: "g1" },
+        user: { id: "u-creator", email: "creator@x.com", name: "Creator" },
+      });
+
+      await confirmPaymentService(token, "t1", "e1", confirm);
+
+      expect(mockConfirmPaymentAndLog).toHaveBeenCalledWith(
+        "e1",
+        "id-bob@x.com",
+        expect.objectContaining({ payeeId: null, payeeName: "Guest Payer" }),
+      );
+    });
+
+    it("does not let a non-creator confirm on the guest payer's behalf", async () => {
+      await expect(confirmPaymentService(token, "t1", "e1", confirm)).rejects.toThrow(ForbiddenError);
+    });
   });
 });
