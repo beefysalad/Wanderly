@@ -1,6 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Activity } from "@/src/shared/types";
-import { activitiesOn, activitySubline, activityTime, dayKey, dayMeta, monthGrids, tripDays } from "./tripView";
+import {
+  activitiesOn,
+  activitiesOutside,
+  activitySubline,
+  activityTime,
+  dateInputValue,
+  dayKey,
+  dayMeta,
+  dropDate,
+  mapsSearchUrl,
+  monthGrids,
+  overlappingActivityIds,
+  tripDays,
+} from "./tripView";
 
 const act = (over: Partial<Activity>): Activity => ({ id: "a", date: new Date(2026, 9, 8).toISOString(), title: "x", done: false, ...over });
 
@@ -15,9 +28,78 @@ describe("tripDays", () => {
   });
 });
 
+// Node re-reads TZ when it's assigned, so these run in zones far from UTC on every machine.
+const inZone = (tz: string, run: () => void) => {
+  describe(`in ${tz}`, () => {
+    const original = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = tz;
+    });
+    afterAll(() => {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    });
+    run();
+  });
+};
+
 describe("dayKey", () => {
-  it("is the ISO date, the id a day drops onto", () => {
-    expect(dayKey(new Date("2026-10-08T00:00:00.000Z"))).toBe("2026-10-08");
+  it("is the local Y-M-D, zero-padded", () => {
+    expect(dayKey(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+
+  inZone("Asia/Manila", () => {
+    it("keeps local midnight on its own day, not the previous UTC day", () => {
+      expect(dayKey(new Date(2026, 9, 8))).toBe("2026-10-08");
+    });
+  });
+
+  inZone("America/Los_Angeles", () => {
+    it("keeps a late-evening time on its own day, not the next UTC day", () => {
+      expect(dayKey(new Date(2026, 9, 8, 23, 30))).toBe("2026-10-08");
+    });
+
+    it("names the same day activitiesOn puts the activity under", () => {
+      const day = new Date(2026, 9, 8);
+      const late = act({ id: "late", date: new Date(2026, 9, 8, 23, 30).toISOString() });
+      expect(activitiesOn([late], day)).toHaveLength(1);
+      expect(dayKey(new Date(late.date))).toBe(dayKey(day));
+    });
+  });
+});
+
+describe("dropDate", () => {
+  const moved = act({ id: "m", date: new Date(2026, 9, 8).toISOString() });
+  const sameDayOther = act({ id: "s", date: new Date(2026, 9, 8, 9).toISOString() });
+  const nextDay = act({ id: "n", date: new Date(2026, 9, 9).toISOString() });
+  const all = [moved, sameDayOther, nextDay];
+
+  it("does nothing when an activity is dropped back on its own day", () => {
+    expect(dropDate(moved, dayKey(new Date(2026, 9, 8)), all)).toBeNull();
+  });
+
+  it("does nothing when dropped on another activity of the same day", () => {
+    expect(dropDate(moved, "s", all)).toBeNull();
+    expect(dropDate(moved, "m", all)).toBeNull();
+  });
+
+  it("moves it to another day it's dropped on", () => {
+    expect(dropDate(moved, "2026-10-09", all)).toBe("2026-10-09");
+  });
+
+  it("moves it to the day of another activity it's dropped on", () => {
+    expect(dropDate(moved, "n", all)).toBe(nextDay.date);
+  });
+
+  it("ignores an unknown drop target", () => {
+    expect(dropDate(moved, "ghost", all)).toBeNull();
+  });
+
+  inZone("Asia/Manila", () => {
+    it("does nothing on a same-day drop far from UTC", () => {
+      const local = act({ id: "m", date: new Date(2026, 9, 8).toISOString() });
+      expect(dropDate(local, dayKey(new Date(2026, 9, 8)), [local])).toBeNull();
+    });
   });
 });
 
@@ -75,5 +157,130 @@ describe("monthGrids", () => {
   it("pads the first row to the weekday of the 1st", () => {
     const grids = monthGrids(new Date(2026, 9, 8), new Date(2026, 9, 9), []);
     expect(grids[0].cells.filter((c) => c.day === null)).toHaveLength(new Date(2026, 9, 1).getDay());
+  });
+});
+
+// Trip and activity dates are saved from `<input type="date">` values, i.e. as UTC midnight.
+const saved = (ymd: string) => new Date(ymd).toISOString();
+
+describe("dateInputValue", () => {
+  it("gives back the day that was picked when the trip was saved", () => {
+    expect(dateInputValue(saved("2026-06-01"))).toBe("2026-06-01");
+  });
+
+  inZone("America/Los_Angeles", () => {
+    it("does not move the day back west of UTC, so saving an unchanged form keeps the dates", () => {
+      expect(dateInputValue(saved("2026-06-01"))).toBe("2026-06-01");
+    });
+  });
+});
+
+describe("activitiesOutside", () => {
+  const list = [
+    act({ id: "before", date: saved("2026-05-31") }),
+    act({ id: "first", date: saved("2026-06-01") }),
+    act({ id: "last", date: saved("2026-06-10") }),
+    act({ id: "after", date: saved("2026-06-11") }),
+  ];
+
+  it("lists the activities before the new start or after the new end, keeping the boundary days", () => {
+    expect(activitiesOutside(list, "2026-06-01", "2026-06-10").map((a) => a.id)).toEqual(["before", "after"]);
+  });
+
+  it("lists nothing while a date field is empty", () => {
+    expect(activitiesOutside(list, "", "2026-06-10")).toEqual([]);
+    expect(activitiesOutside(list, "2026-06-01", "")).toEqual([]);
+  });
+
+  for (const tz of ["America/Los_Angeles", "Asia/Manila"]) {
+    inZone(tz, () => {
+      it("matches the days the itinerary shows the trip and its activities on", () => {
+        expect(activitiesOutside(list, "2026-06-01", "2026-06-10").map((a) => a.id)).toEqual(["before", "after"]);
+      });
+    });
+  }
+
+  inZone("Asia/Manila", () => {
+    it("keeps an activity at local midnight of the first day, which is the previous day in UTC", () => {
+      const midnight = act({ id: "midnight", date: new Date(2026, 5, 1).toISOString() });
+      expect(activitiesOutside([midnight], "2026-06-01", "2026-06-10")).toEqual([]);
+    });
+  });
+});
+
+describe("overlappingActivityIds", () => {
+  const ids = (list: Activity[]) => [...overlappingActivityIds(list)].sort();
+
+  it("flags both activities when their time ranges cross", () => {
+    expect(
+      ids([
+        act({ id: "a", startTime: "09:00", endTime: "11:00" }),
+        act({ id: "b", startTime: "10:30", endTime: "12:00" }),
+        act({ id: "c", startTime: "13:00", endTime: "14:00" }),
+      ]),
+    ).toEqual(["a", "b"]);
+  });
+
+  it("flags every activity a long one covers, not just the first", () => {
+    expect(
+      ids([
+        act({ id: "long", startTime: "09:00", endTime: "17:00" }),
+        act({ id: "lunch", startTime: "12:00", endTime: "13:00" }),
+        act({ id: "tea", startTime: "15:00", endTime: "15:30" }),
+      ]),
+    ).toEqual(["long", "lunch", "tea"]);
+  });
+
+  it("doesn't flag back-to-back activities", () => {
+    expect(
+      ids([
+        act({ id: "a", startTime: "09:00", endTime: "10:00" }),
+        act({ id: "b", startTime: "10:00", endTime: "11:00" }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("treats an activity with only a start time as a moment", () => {
+    expect(
+      ids([
+        act({ id: "range", startTime: "09:00", endTime: "10:00" }),
+        act({ id: "inside", startTime: "09:30" }),
+        act({ id: "atEnd", startTime: "10:00" }),
+      ]),
+    ).toEqual(["inside", "range"]);
+  });
+
+  it("flags activities that start at the same time", () => {
+    expect(ids([act({ id: "a", startTime: "09:00" }), act({ id: "b", startTime: "09:00", endTime: "10:00" })])).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("ignores untimed activities and the same times on different days", () => {
+    expect(
+      ids([
+        act({ id: "untimed" }),
+        act({ id: "untimed2", endTime: "10:00" }),
+        act({ id: "a", startTime: "09:00", endTime: "11:00" }),
+        act({ id: "b", date: new Date(2026, 9, 9).toISOString(), startTime: "09:00", endTime: "11:00" }),
+      ]),
+    ).toEqual([]);
+  });
+
+  inZone("Asia/Manila", () => {
+    it("groups by the day the itinerary shows each activity on, not the UTC day", () => {
+      const morning = act({ id: "morning", date: new Date(2026, 9, 8, 12).toISOString(), startTime: "09:00", endTime: "11:00" });
+      const nextDay = act({ id: "next", date: new Date(2026, 9, 9).toISOString(), startTime: "09:00", endTime: "11:00" });
+      expect(ids([morning, nextDay])).toEqual([]);
+    });
+  });
+});
+
+describe("mapsSearchUrl", () => {
+  it("builds a Google Maps search link with the place encoded", () => {
+    expect(mapsSearchUrl("Café & Bar #2, Tokyo")).toBe(
+      "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20%26%20Bar%20%232%2C%20Tokyo",
+    );
   });
 });

@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 export function findActivityById(activityId: string) {
   return prisma.activity.findUnique({
     where: { id: activityId },
-    select: { id: true, tripId: true, title: true },
+    select: { id: true, tripId: true, title: true, date: true, startTime: true, endTime: true },
   });
 }
 
@@ -13,6 +13,7 @@ export interface CreateActivityRow {
   date: Date;
   startTime: string | null;
   endTime: string | null;
+  location: string | null;
   notes: string | null;
   transportationMode: string | null;
   pickupTime: string | null;
@@ -29,6 +30,7 @@ export interface UpdateActivityRow {
   date?: Date;
   startTime?: string | null;
   endTime?: string | null;
+  location?: string | null;
   notes?: string | null;
   done?: boolean;
   transportationMode?: string | null;

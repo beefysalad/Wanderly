@@ -8,7 +8,8 @@ import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { GuestShell } from "../../shared/AppShell/GuestShell";
 import LoadingState from "../../shared/LoadingState";
-import { PILL } from "../../shared/Pills";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 
 interface IGuestActivityDetailContainer {
   groupId: string;
@@ -22,7 +23,8 @@ const GuestActivityDetailContainer = ({
   activityId,
 }: IGuestActivityDetailContainer) => {
   const router = useRouter();
-  const { data: groupData, isLoading: loadingGroup } = useGroupAsGuest(groupId);
+  const groupQuery = useGroupAsGuest(groupId);
+  const { data: groupData, isLoading: loadingGroup } = groupQuery;
   const { data: expensesData } = useExpenses(tripId);
 
   const group = groupData;
@@ -43,16 +45,24 @@ const GuestActivityDetailContainer = ({
     );
   }
 
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
+    return (
+      <GuestShell group={group} back={back}>
+        <StateMessage variant='error' query={failed} what='this activity' signInHref='/guest/join' />
+      </GuestShell>
+    );
+  }
+
   if (!activity) {
     return (
       <GuestShell group={group} back={back}>
-        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-          <h2 className='mb-2 text-xl font-bold'>Activity not found</h2>
-          <p className='mb-6 text-[#94a3b8]'>It may have been deleted.</p>
-          <button type='button' onClick={() => router.back()} className={PILL.ghost}>
-            Go back
-          </button>
-        </div>
+        <StateMessage
+          title='Activity not found'
+          body='It may have been deleted.'
+          actionLabel='Go back'
+          onAction={() => router.back()}
+        />
       </GuestShell>
     );
   }

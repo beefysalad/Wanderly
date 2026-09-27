@@ -11,14 +11,22 @@ const transportationModes = [
   "other",
 ] as const;
 
+// Same rules as the API (activities/schemas.ts): 24-hour HH:mm, empty means no time.
+const time = z
+  .string()
+  .refine((value) => value === "" || /^([01]\d|2[0-3]):[0-5]\d$/.test(value), "Use a 24-hour time like 09:30")
+  .optional();
+
 export const activitySchema = z
   .object({
     title: z.string().trim().min(1, "Title is required"),
 
     date: z.string().min(1, "Date is required"), // expects "YYYY-MM-DD" string
 
-    startTime: z.string().optional(), // "HH:MM" string
-    endTime: z.string().optional(), // "HH:MM" string
+    startTime: time,
+    endTime: time,
+
+    location: z.string().trim().max(200, "Location must be 200 characters or fewer").optional(),
 
     notes: z.string().optional(), // optional notes
 
@@ -28,17 +36,11 @@ export const activitySchema = z
     pickupLocation: z.string().optional(),
     dropoffLocation: z.string().optional(),
   })
-  // Optional refinement to ensure startTime <= endTime
-  .refine(
-    (data) => {
-      if (!data.startTime || !data.endTime) return true; // skip if either is empty
-      return data.startTime <= data.endTime;
-    },
-    {
-      message: "Start time must be before end time",
-      path: ["startTime"],
-    },
-  )
+  // Either time alone is fine; an end equal to the start is allowed.
+  .refine((data) => !data.startTime || !data.endTime || data.endTime >= data.startTime, {
+    message: "End time can't be before the start time",
+    path: ["endTime"],
+  })
   // Validate pickupTime format if provided
   .refine(
     (data) => {

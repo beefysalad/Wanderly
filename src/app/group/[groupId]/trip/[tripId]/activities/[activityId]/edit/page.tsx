@@ -4,8 +4,9 @@ import { useForm } from "react-hook-form";
 import {
   activitySchema,
   TActivitySchema,
-} from "@/src/app/components/shared/Modal/ActivityModal/activityAddZod";
+} from "../../activityAddZod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
 import {
   Calendar,
   Clock,
@@ -79,6 +80,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
       date: "",
       startTime: "",
       endTime: "",
+      location: "",
       notes: "",
       transportationMode: undefined,
       pickupTime: undefined,
@@ -95,6 +97,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
         date: new Date(activity.date).toISOString().split("T")[0],
         startTime: activity.startTime || "",
         endTime: activity.endTime || "",
+        location: activity.location || "",
         notes: activity.notes || "",
         transportationMode:
           activity.transportationMode as TActivitySchema["transportationMode"],
@@ -120,6 +123,7 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
           date: values.date,
           startTime: values.startTime,
           endTime: values.endTime,
+          location: values.location || null,
           notes: values.notes,
           transportationMode: values.transportationMode
             ? (values.transportationMode as (typeof transportationModes)[number])
@@ -136,10 +140,8 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
       router.push(`/group/${groupId}/trip/${tripId}`);
     } catch (err) {
       const message =
-        err instanceof Error
-          ? err.message
-          : (err as { response?: { data?: { error?: string } } })?.response
-              ?.data?.error || "Failed to update activity";
+        (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) ||
+        "Failed to update activity";
       setError(message);
       setIsNavigating(false);
     }
@@ -255,6 +257,24 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                     </p>
                   )}
                 </div>
+
+                <div className='space-y-2'>
+                  <Label className='text-slate-300'>Location</Label>
+                  <div className='relative'>
+                    <MapPin className='absolute left-3 top-3 w-4 h-4 text-slate-500' />
+                    <Input
+                      {...form.register("location")}
+                      placeholder='e.g. Louvre Museum, Paris'
+                      maxLength={200}
+                      className='bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-orange-500 pl-9'
+                    />
+                  </div>
+                  {form.formState.errors.location && (
+                    <p className='text-sm text-red-400'>
+                      {form.formState.errors.location.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </section>
 
@@ -276,6 +296,11 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                       {...form.register("startTime")}
                       className='bg-slate-800 border-slate-700 text-white focus-visible:ring-orange-500 h-auto py-3'
                     />
+                    {form.formState.errors.startTime && (
+                      <p className='text-sm text-red-400'>
+                        {form.formState.errors.startTime.message}
+                      </p>
+                    )}
                   </div>
                   <div className='space-y-2'>
                     <Label className='text-slate-300'>End Time</Label>
@@ -284,6 +309,11 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
                       {...form.register("endTime")}
                       className='bg-slate-800 border-slate-700 text-white focus-visible:ring-orange-500 h-auto py-3'
                     />
+                    {form.formState.errors.endTime && (
+                      <p className='text-sm text-red-400'>
+                        {form.formState.errors.endTime.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 

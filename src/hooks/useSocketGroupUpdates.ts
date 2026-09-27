@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSocket } from "./useSocket";
 import { useCurrentUser } from "./useCurrentUser";
+import { queryKeys } from "./queryKeys";
+import type { Group } from "@/src/shared/types";
 
 /**
  * Hook to listen for real-time group/trip/activity/expense updates via Socket.IO
@@ -48,28 +50,30 @@ export function useSocketGroupUpdates(groupId?: string) {
       return isMatch;
     };
 
+    const invalidate = (queryKey: QueryKey) => queryClient.invalidateQueries({ queryKey });
+
     // Join the group room
     socket.emit("join:group", groupId);
 
     // Handle group updates
     const handleGroupUpdate = () => {
       console.log("Socket: Group updated, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
     };
 
     const handleGroupDeleted = () => {
       console.log("Socket: Group deleted, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.removeQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.removeQueries({ queryKey: queryKeys.groups.detail(groupId) });
     };
 
     // Handle trip events
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTripCreated = (trip: any) => {
       console.log("Socket: Trip created, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
 
       // Only show toast if not the current user
       const creatorEmail = trip?.creator?.email;
@@ -85,8 +89,8 @@ export function useSocketGroupUpdates(groupId?: string) {
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTripUpdated = (trip: any) => {
       console.log("Socket: Trip updated, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
 
       // Only show toast if not the current user
       const creatorEmail = trip?.creator?.email;
@@ -105,8 +109,8 @@ export function useSocketGroupUpdates(groupId?: string) {
       tripName?: string;
     }) => {
       console.log("Socket: Trip deleted, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
 
       // Only show toast if not the current user
       if (!isCurrentUser(data.deletedBy)) {
@@ -117,13 +121,17 @@ export function useSocketGroupUpdates(groupId?: string) {
       }
     };
 
-    // Handle activity events
+    // Handle activity events. Expenses can be linked to an activity, so the activity's trip's
+    // expenses are refreshed too (every trip's only when the event doesn't say which trip).
+    const refreshActivityTrip = (tripId?: string) => {
+      invalidate(queryKeys.groups.detail(groupId));
+      invalidate(tripId ? queryKeys.expenses.trip(tripId) : queryKeys.expenses.all);
+    };
+
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleActivityCreated = (activity: any) => {
       console.log("Socket: Activity created, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      // Invalidate all expenses queries since activities might be linked
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refreshActivityTrip(activity?.tripId);
 
       // Only show toast if not the current user
       const createdBy = activity?.createdBy;
@@ -138,8 +146,7 @@ export function useSocketGroupUpdates(groupId?: string) {
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleActivityUpdated = (activity: any) => {
       console.log("Socket: Activity updated, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refreshActivityTrip(activity?.tripId);
 
       // Only show toast if not the current user
       const updatedBy = activity?.updatedBy;
@@ -151,14 +158,22 @@ export function useSocketGroupUpdates(groupId?: string) {
       }
     };
 
+    // The deleted event carries only the activity's id, so its trip is looked up in the cached group
+    // (the member's or the guest's copy) before that is refetched.
+    const cachedTripOfActivity = (activityId: string) => {
+      const group =
+        queryClient.getQueryData<{ group: Group }>(queryKeys.groups.detail(groupId))?.group ??
+        queryClient.getQueryData<Group>(queryKeys.groups.guest(groupId));
+      return group?.trips?.find((trip) => trip.activities?.some((a) => a.id === activityId))?.id;
+    };
+
     const handleActivityDeleted = (data: {
       activityId: string;
       deletedBy?: string;
       activityTitle?: string;
     }) => {
       console.log("Socket: Activity deleted, invalidating queries");
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refreshActivityTrip(cachedTripOfActivity(data.activityId));
 
       // Only show toast if not the current user
       if (!isCurrentUser(data.deletedBy)) {
@@ -169,7 +184,14 @@ export function useSocketGroupUpdates(groupId?: string) {
       }
     };
 
-    // Handle expense events
+    // Handle expense events: refresh that trip's expenses and payment logs (every trip's when the
+    // event doesn't say which trip) and the group's balances.
+    const refreshExpenseTrip = (tripId?: string) => {
+      invalidate(tripId ? queryKeys.expenses.trip(tripId) : queryKeys.expenses.all);
+      invalidate(tripId ? queryKeys.paymentLogs.trip(tripId) : queryKeys.paymentLogs.all);
+      invalidate(queryKeys.groups.detail(groupId));
+    };
+
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleExpenseCreated = (data: any) => {
       const expense = data?.expense || data;
@@ -182,16 +204,7 @@ export function useSocketGroupUpdates(groupId?: string) {
         tripId,
       });
 
-      // Invalidate with tripId-specific keys if available
-      if (tripId) {
-        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      } else {
-        // Fallback to general invalidation if tripId not available
-        queryClient.invalidateQueries({ queryKey: ["expenses"] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
-      }
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      refreshExpenseTrip(tripId);
 
       // Only show toast if not the current user
       // Handle both object and string formats for paidBy
@@ -253,16 +266,7 @@ export function useSocketGroupUpdates(groupId?: string) {
         dataUpdatedBy: data?.updatedBy,
       });
 
-      // Invalidate with tripId-specific keys if available
-      if (tripId) {
-        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      } else {
-        // Fallback to general invalidation if tripId not available
-        queryClient.invalidateQueries({ queryKey: ["expenses"] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
-      }
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      refreshExpenseTrip(tripId);
 
       // Only show toast if not the current user
       // Use updatedBy from expense object or metadata instead of paidBy
@@ -290,16 +294,7 @@ export function useSocketGroupUpdates(groupId?: string) {
         tripId,
       });
 
-      // Invalidate with tripId-specific keys if available
-      if (tripId) {
-        queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
-      } else {
-        // Fallback to general invalidation if tripId not available
-        queryClient.invalidateQueries({ queryKey: ["expenses"] });
-        queryClient.invalidateQueries({ queryKey: ["paymentLogs"] });
-      }
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      refreshExpenseTrip(tripId);
 
       // Only show toast if not the current user
       if (!isCurrentUser(data.deletedBy)) {

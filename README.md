@@ -67,8 +67,8 @@ npm run dev            # http://localhost:3000
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start the dev server (Turbopack) |
-| `npm run build` | Production build: `prisma generate`, `prisma migrate deploy`, `next build` |
-| `npm run build:ci` | Same without the migration step (what CI runs) |
+| `npm run build` | Production build (`scripts/build.mjs`): `prisma generate`, then `prisma migrate deploy` only when `VERCEL_ENV=production`, then `next build` |
+| `npm run build:ci` | `prisma generate` and `next build`, never migrates (what CI runs) |
 | `npm start` | Start the production server |
 | `npm run lint` | ESLint |
 | `npm test` / `npm run test:watch` | Vitest (colocated `*.test.ts` files) |
@@ -87,7 +87,9 @@ Conventions and architecture rules for contributors (and coding agents) are in [
 
 ## Deployment
 
-The app is deployed on Vercel. The build runs `prisma migrate deploy`, so the deployment environment needs `DATABASE_URL` and the other variables above. Work merges into `dev`; a GitHub workflow keeps a `dev` to `prod` pull request open, and merging that one deploys to production.
+The app is deployed on Vercel, which runs `npm run build` (`scripts/build.mjs`) for every deployment. The script runs `prisma migrate deploy` only when `VERCEL_ENV` is `production`; preview deployments and local builds only generate the Prisma client and build, so a branch's migrations reach the database only once it is deployed to production. Pending migrations therefore apply on the production deploy after the `dev` to `prod` merge. The deployment environment needs `DATABASE_URL` and the other variables above. Work merges into `dev`; a GitHub workflow keeps a `dev` to `prod` pull request open, and merging that one deploys to production.
+
+To check it on Vercel: a preview deployment's build log shows `Skipping prisma migrate deploy (VERCEL_ENV=preview).`, and a production deployment's log shows `> prisma migrate deploy` followed by Prisma's migration output. Leave the project's Build Command at the default (`npm run build`); a custom command there would bypass this script.
 
 ## License
 

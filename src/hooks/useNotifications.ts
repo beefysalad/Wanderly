@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Notification } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface NotificationsResponse {
   notifications: Notification[];
@@ -29,7 +30,7 @@ export function useNotifications(options?: {
   read?: boolean;
 }) {
   return useQuery<NotificationsResponse>({
-    queryKey: ["notifications", options],
+    queryKey: queryKeys.notifications.list(options),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (options?.limit) params.append("limit", options.limit.toString());
@@ -51,7 +52,7 @@ export function useNotifications(options?: {
  */
 export function useUnreadCount() {
   return useQuery<UnreadCountResponse>({
-    queryKey: ["notifications", "unread-count"],
+    queryKey: queryKeys.notifications.unreadCount,
     queryFn: async () => {
       const response = await api.get<UnreadCountResponse>(
         "/notifications/unread-count"
@@ -76,11 +77,8 @@ export function useMarkNotificationRead() {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate notifications list and unread count
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", "unread-count"],
-      });
+      // Covers every notification list and the unread count
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 }
@@ -99,11 +97,8 @@ export function useMarkAllNotificationsRead() {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate notifications list and unread count
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", "unread-count"],
-      });
+      // Covers every notification list and the unread count
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 }

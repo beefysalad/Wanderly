@@ -50,6 +50,7 @@ export interface Activity {
   title: string;
   startTime?: string;
   endTime?: string;
+  location?: string;
   notes?: string;
   done: boolean;
   transportationMode?: string;

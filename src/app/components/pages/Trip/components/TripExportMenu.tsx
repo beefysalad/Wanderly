@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Download, ImageIcon, Trash2 } from "lucide-react";
+import { Calendar, Download, ImageIcon, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { PILL } from "../../../shared/Pills";
@@ -8,15 +8,17 @@ import { PILL } from "../../../shared/Pills";
 interface TripExportMenuProps {
   isExporting: boolean;
   onExport: (format: "png" | "ics") => void;
-  /** Deleting a trip is only offered to the person who created it. */
-  isTripCreator: boolean;
+  /** Opens the edit-trip page; any member can edit. */
+  onEdit: () => void;
+  /** Deleting is offered to the trip's creator, or the group owner once the creator's account is deleted. */
+  canDelete: boolean;
   onDelete: () => void;
 }
 
 const ITEM = "flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm text-[#cbd5e1] hover:bg-white/[.05] disabled:cursor-not-allowed disabled:opacity-60";
 
-/** "Export" pill: save the itinerary as an image or calendar file, and (for the creator) delete the trip. */
-export function TripExportMenu({ isExporting, onExport, isTripCreator, onDelete }: TripExportMenuProps) {
+/** "Export" pill: save the itinerary as an image or calendar file, edit the trip, and (when allowed) delete it. */
+export function TripExportMenu({ isExporting, onExport, onEdit, canDelete, onDelete }: TripExportMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
 
@@ -77,7 +79,16 @@ export function TripExportMenu({ isExporting, onExport, isTripCreator, onDelete 
             <Calendar className='size-4' />
             Calendar file (.ics)
           </button>
-          {isTripCreator ? (
+          <button
+            type='button'
+            role='menuitem'
+            onClick={choose(onEdit)}
+            className={cn(ITEM, "border-t border-white/[.05]")}
+          >
+            <Pencil className='size-4' />
+            Edit trip
+          </button>
+          {canDelete ? (
             <button
               type='button'
               role='menuitem'

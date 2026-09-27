@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { PILL } from "../../../shared/Pills";
-import { activitiesOn, activitySubline, activityTime, dayMeta, tripDays } from "../tripView";
-import { TickButton, TimeChip } from "./ActivityParts";
+import { activitiesOn, activitySubline, activityTime, dayMeta, overlappingActivityIds, tripDays } from "../tripView";
+import { ActivityExtras, TickButton, TimeChip } from "./ActivityParts";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAYS_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -44,6 +44,7 @@ export function DayView({ startDate, endDate, activities, initialDay = 0, onView
 
   const date = days[selected] ?? startDate;
   const dayActivities = activitiesOn(activities, date);
+  const clashing = overlappingActivityIds(dayActivities);
   const done = dayActivities.filter((activity) => activity.done).length;
 
   return (
@@ -115,21 +116,24 @@ export function DayView({ startDate, endDate, activities, initialDay = 0, onView
                 onToggle={onToggleDone ? () => onToggleDone(activity.id) : undefined}
               />
               {time ? <TimeChip time={time} /> : null}
-              <button
-                type='button'
-                onClick={() => onViewActivity?.(activity)}
-                className={cn("flex min-w-0 flex-col gap-[2px] text-left", onViewActivity && "cursor-pointer")}
-              >
-                <span
-                  className={cn(
-                    "truncate text-[15px] font-semibold",
-                    activity.done ? "text-[#64748b] line-through" : "text-[#e2e8f0]",
-                  )}
+              <div className='flex min-w-0 flex-col gap-[2px]'>
+                <button
+                  type='button'
+                  onClick={() => onViewActivity?.(activity)}
+                  className={cn("flex min-w-0 flex-col gap-[2px] text-left", onViewActivity && "cursor-pointer")}
                 >
-                  {activity.title}
-                </span>
-                {sub ? <span className='truncate text-xs text-[#64748b]'>{sub}</span> : null}
-              </button>
+                  <span
+                    className={cn(
+                      "truncate text-[15px] font-semibold",
+                      activity.done ? "text-[#64748b] line-through" : "text-[#e2e8f0]",
+                    )}
+                  >
+                    {activity.title}
+                  </span>
+                  {sub ? <span className='truncate text-xs text-[#64748b]'>{sub}</span> : null}
+                </button>
+                <ActivityExtras location={activity.location} overlaps={clashing.has(activity.id)} />
+              </div>
             </div>
           );
         })}

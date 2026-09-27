@@ -10,9 +10,10 @@ import { getVibeInfo } from "@/lib/utils/groupColors";
 import { useGroup } from "@/src/hooks/useGroups";
 import { useCreateTrip } from "@/src/hooks/useTrips";
 import { AppShell } from "../../shared/AppShell/AppShell";
-import { CHIP, CHIP_OFF, CHIP_ON, FIELD_ERROR, FIELD_LABEL, INPUT, SUBMIT_BUTTON } from "../../shared/formStyles";
-import { createTripSchema, type TCreateTripSchema } from "../../shared/Modal/CreateTripModal/createTripZod";
+import { CHIP, CHIP_OFF, CHIP_ON, FIELD_LABEL, SUBMIT_BUTTON } from "../../shared/formStyles";
+import { tripDetailsSchema, type TCreateTripSchema, type TTripDetailsSchema } from "./createTripZod";
 import NavigationLoader from "../../shared/NavigationLoader";
+import { TripDetailsFields } from "../../shared/TripForm/TripDetailsFields";
 
 const STATUS_OPTIONS: Array<{ value: TCreateTripSchema["status"]; label: string }> = [
   { value: "planning", label: "Planning" },
@@ -25,18 +26,18 @@ export default function CreateTrip({ groupId }: { groupId: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [status, setStatus] = useState<TCreateTripSchema["status"]>("planning");
   const createTrip = useCreateTrip(groupId);
   const { data } = useGroup(groupId);
   const group = data?.group;
 
-  const form = useForm<TCreateTripSchema>({
-    resolver: zodResolver(createTripSchema),
-    defaultValues: { tripName: "", location: "", startDate: "", endDate: "", status: "planning" },
+  const form = useForm<TTripDetailsSchema>({
+    resolver: zodResolver(tripDetailsSchema),
+    defaultValues: { tripName: "", location: "", startDate: "", endDate: "" },
   });
   const { errors } = form.formState;
-  const status = form.watch("status");
 
-  const onSubmit = async (values: TCreateTripSchema) => {
+  const onSubmit = async (values: TTripDetailsSchema) => {
     try {
       setError(null);
       const result = await createTrip.mutateAsync({
@@ -44,7 +45,7 @@ export default function CreateTrip({ groupId }: { groupId: string }) {
         startDate: values.startDate,
         endDate: values.endDate,
         location: values.location,
-        status: values.status,
+        status,
       });
       if (result.trip) {
         setIsNavigating(true);
@@ -72,29 +73,7 @@ export default function CreateTrip({ groupId }: { groupId: string }) {
           <h1 className='text-[clamp(28px,4.4cqw,40px)] font-extrabold leading-[1.05] tracking-[-.03em]'>New trip</h1>
         </div>
 
-        <label className='flex flex-col gap-[7px]'>
-          <span className={FIELD_LABEL}>Trip name</span>
-          <input {...form.register("tripName")} placeholder='e.g. Siargao' className={INPUT} />
-          {errors.tripName ? <span className={FIELD_ERROR}>{errors.tripName.message}</span> : null}
-        </label>
-
-        <label className='flex flex-col gap-[7px]'>
-          <span className={FIELD_LABEL}>Location (optional)</span>
-          <input {...form.register("location")} placeholder='e.g. General Luna, Siargao' className={INPUT} />
-        </label>
-
-        <div className='grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-3'>
-          <label className='flex flex-col gap-[7px]'>
-            <span className={FIELD_LABEL}>Starts</span>
-            <input type='date' {...form.register("startDate")} className={INPUT} />
-            {errors.startDate ? <span className={FIELD_ERROR}>{errors.startDate.message}</span> : null}
-          </label>
-          <label className='flex flex-col gap-[7px]'>
-            <span className={FIELD_LABEL}>Ends</span>
-            <input type='date' {...form.register("endDate")} className={INPUT} />
-            {errors.endDate ? <span className={FIELD_ERROR}>{errors.endDate.message}</span> : null}
-          </label>
-        </div>
+        <TripDetailsFields register={form.register} errors={errors} />
 
         <div className='flex flex-col gap-[9px]'>
           <span className={FIELD_LABEL}>Status</span>
@@ -103,7 +82,7 @@ export default function CreateTrip({ groupId }: { groupId: string }) {
               <button
                 key={option.value}
                 type='button'
-                onClick={() => form.setValue("status", option.value)}
+                onClick={() => setStatus(option.value)}
                 aria-pressed={status === option.value}
                 className={cn(CHIP, status === option.value ? CHIP_ON : CHIP_OFF)}
               >
