@@ -208,11 +208,11 @@ describe("updateExpenseService", () => {
     expect(mockUpdateRow.mock.calls[1][1]).not.toHaveProperty("splits");
   });
 
-  it("does not notify or emit for changes other than description/amount", async () => {
+  it("does not notify for changes other than description/amount, but still broadcasts them", async () => {
     await updateExpenseService(token, "t1", "e1", { category: "food" });
 
     expect(mockNotifyMembers).not.toHaveBeenCalled();
-    expect(mockEmitUpdated).not.toHaveBeenCalled();
+    expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 
   it("notifies with the post-update description and amount on a significant change", async () => {
@@ -254,6 +254,7 @@ describe("updateExpenseService", () => {
     await updateExpenseService(token, "t1", "e1", { description: "x" });
 
     expect(mockNotifyMembers).not.toHaveBeenCalled();
+    expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -4,7 +4,6 @@ import type { Trip } from "@/src/shared/types";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import { useGroup, useGroupAsGuest } from "@/src/hooks/useGroups";
-import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import LoadingState from "../../shared/LoadingState";
 import { StateMessage } from "../../shared/StateMessage";
 import { blockingQuery } from "../../shared/StateMessage/loadError";
@@ -34,8 +33,9 @@ const ExpensesComponent = ({ groupId, tripId, guest = false }: IExpensesComponen
   const { user } = useCurrentUser();
   const [view, setView] = useState<ExpensesView>("all");
 
-  // Enable real-time updates for this group via Socket.IO
-  useSocketGroupUpdates(groupId);
+  // Real-time updates for this group are subscribed once by the page container
+  // (Trip/GuestTrip) that renders this tab — see useSocketGroupUpdates for why a
+  // second subscription here would double every toast and churn the socket room.
 
   const group = (guest ? guestGroup : memberGroup?.group) || null;
   const loadingGroup = guest ? loadingGuestGroup : loadingMemberGroup;
