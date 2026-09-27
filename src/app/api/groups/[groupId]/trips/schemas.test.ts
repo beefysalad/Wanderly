@@ -91,4 +91,20 @@ describe("updateTripSchema", () => {
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.location).toBeNull();
   });
+
+  it("rejects a start date after the end date when both are sent", () => {
+    const result = updateTripSchema.safeParse({ startDate: "2026-07-01", endDate: "2026-06-01" });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a one-day trip (start equals end)", () => {
+    expect(updateTripSchema.safeParse({ startDate: "2026-06-01", endDate: "2026-06-01" }).success).toBe(
+      true,
+    );
+  });
+
+  it("accepts a lone start date; the service checks it against the stored end", () => {
+    expect(updateTripSchema.safeParse({ startDate: "2026-07-01" }).success).toBe(true);
+  });
 });
