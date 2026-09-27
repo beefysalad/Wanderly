@@ -7,19 +7,15 @@ import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
 import { NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../../../notifications/services";
-import {
-  createPaymentLogRow,
-  deletePaymentLogsForShare,
-  findPaymentLogForShare,
-} from "../../../payment-logs/repository";
 import type { ConfirmPaymentBody } from "../../schemas";
 import { findExpenseById } from "../../repository";
 import { splitShareCents } from "../../transformers";
 import {
-  deletePaymentsForMember,
+  confirmPaymentAndLog,
   findExpenseForPayments,
-  upsertPaymentStatus,
-  upsertPendingPayment,
+  markPendingAndClearLog,
+  rejectPaymentAndClearLog,
+  unmarkPayment,
 } from "./repository";
 import type { MarkPaidBody } from "./schemas";
 
@@ -41,27 +37,11 @@ async function requireMemberUserId(email: string) {
   return user.id;
 }
 
-// The payment log records the member's share of the expense (the same one the API shows), once it is confirmed.
-// A member whose share was already logged (e.g. before logging moved to confirmation) isn't logged twice.
-async function logPaymentShare(
-  tripId: string,
-  expense: ExpenseForPayments,
-  memberEmail: string,
-  payerId: string,
-  payeeId: string,
-) {
+/** The member's share of the expense (the same one the API shows), or null if they aren't in the split. */
+function shareAmountForMember(expense: ExpenseForPayments, memberEmail: string) {
   const splitIndex = expense.splits.findIndex((split) => split.user?.email === memberEmail);
-  if (splitIndex === -1) return;
-  if (await findPaymentLogForShare(expense.id, payerId)) return;
-
-  await createPaymentLogRow({
-    tripId,
-    expenseId: expense.id,
-    payerId,
-    payeeId,
-    amount: fromCents(splitShareCents(expense)[splitIndex]),
-    paymentMethod: expense.paymentMethod,
-  });
+  if (splitIndex === -1) return null;
+  return fromCents(splitShareCents(expense)[splitIndex]);
 }
 
 async function reloadExpense(expenseId: string) {
@@ -103,11 +83,11 @@ export async function markExpensePaidService(
   }
 
   if (data.isPaid) {
-    await upsertPendingPayment(expenseId, memberUserId);
+    await markPendingAndClearLog(expenseId, memberUserId);
 
     logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   } else {
-    await deletePaymentsForMember(expenseId, memberUserId);
+    await unmarkPayment(expenseId, memberUserId);
 
     logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   }
@@ -134,12 +114,17 @@ export async function confirmPaymentService(
 
   const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  await upsertPaymentStatus(expenseId, memberUserId, data.status);
-
   if (data.status === "confirmed") {
-    await logPaymentShare(tripId, expense, data.memberEmail, memberUserId, user.id);
+    const amount = shareAmountForMember(expense, data.memberEmail);
+    await confirmPaymentAndLog(
+      expenseId,
+      memberUserId,
+      amount === null
+        ? null
+        : { tripId, payeeId: user.id, amount, paymentMethod: expense.paymentMethod },
+    );
   } else {
-    await deletePaymentLogsForShare(expenseId, memberUserId);
+    await rejectPaymentAndClearLog(expenseId, memberUserId);
   }
 
   await createNotificationService(memberUserId, {

@@ -17,6 +17,7 @@ import {
   createExpenseRow,
   deleteExpenseRow,
   findExpenseById,
+  findExpenseSplitUserIds,
   findExpenseSummary,
   listExpensesByTrip,
   updateExpenseRow,
@@ -194,6 +195,17 @@ export async function updateExpenseService(
     ...(data.splitWith !== undefined && { splits: await resolveSplits(data.splitWith) }),
   };
 
+  // A member dropped from the split no longer owns a share of this expense; their stale
+  // payment status and log would otherwise keep showing up in payment history.
+  if (changes.splits) {
+    const keptUserIds = new Set(
+      changes.splits.map((split) => split.userId).filter((id): id is string => id !== null),
+    );
+    const previousUserIds = await findExpenseSplitUserIds(expenseId);
+    const removedMemberIds = previousUserIds.filter((id) => !keptUserIds.has(id));
+    if (removedMemberIds.length > 0) changes.removedMemberIds = removedMemberIds;
+  }
+
   const expense = await updateExpenseRow(expenseId, changes);
 
   // Only description/amount edits on an expense that had a non-zero amount are broadcast.
@@ -202,7 +214,7 @@ export async function updateExpenseService(
     await notifyGroupMembers(trip.groupId, user.id, {
       type: NotificationType.expense_edited,
       title: "Expense Updated",
-      message: `${user.name || user.email} updated expense '${before.description}' (₱${previousAmount.toFixed(2)}) in ${trip.name}`,
+      message: `${user.name || user.email} updated expense '${expense.description}' (₱${Number(expense.amount).toFixed(2)}) in ${trip.name}`,
       relatedTripId: tripId,
       relatedExpenseId: expense.id,
     });
