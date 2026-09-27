@@ -51,7 +51,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 ## Frontend Patterns
 
 - Server Components by default; add `"use client"` only for state/effects/interactivity.
-- Forms: React Hook Form + Zod resolvers (see `AuthForm`, `ExpenseForm`, `EditProfileModal` for the pattern).
+- Forms: React Hook Form + Zod resolvers (see `AuthForm`, `ExpenseForm`, `Profile` for the pattern).
 - Server state: TanStack Query hooks in `src/hooks/`; components consuming them handle `isPending`/`isLoading`/`isError` explicitly rather than assuming data is present.
 - HTTP: shared Axios instance at `lib/axios.ts`.
 - UI primitives: shadcn/ui components in `components/ui/`, style `new-york`, icons via `lucide-react`. Add new primitives with `npx shadcn@latest add <name>` only after user approval — don't hand-roll a primitive that shadcn already provides.
