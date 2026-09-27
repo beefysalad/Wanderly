@@ -9,7 +9,9 @@ import {
   dayKey,
   dayMeta,
   dropDate,
+  mapsSearchUrl,
   monthGrids,
+  overlappingActivityIds,
   tripDays,
 } from "./tripView";
 
@@ -203,5 +205,82 @@ describe("activitiesOutside", () => {
       const midnight = act({ id: "midnight", date: new Date(2026, 5, 1).toISOString() });
       expect(activitiesOutside([midnight], "2026-06-01", "2026-06-10")).toEqual([]);
     });
+  });
+});
+
+describe("overlappingActivityIds", () => {
+  const ids = (list: Activity[]) => [...overlappingActivityIds(list)].sort();
+
+  it("flags both activities when their time ranges cross", () => {
+    expect(
+      ids([
+        act({ id: "a", startTime: "09:00", endTime: "11:00" }),
+        act({ id: "b", startTime: "10:30", endTime: "12:00" }),
+        act({ id: "c", startTime: "13:00", endTime: "14:00" }),
+      ]),
+    ).toEqual(["a", "b"]);
+  });
+
+  it("flags every activity a long one covers, not just the first", () => {
+    expect(
+      ids([
+        act({ id: "long", startTime: "09:00", endTime: "17:00" }),
+        act({ id: "lunch", startTime: "12:00", endTime: "13:00" }),
+        act({ id: "tea", startTime: "15:00", endTime: "15:30" }),
+      ]),
+    ).toEqual(["long", "lunch", "tea"]);
+  });
+
+  it("doesn't flag back-to-back activities", () => {
+    expect(
+      ids([
+        act({ id: "a", startTime: "09:00", endTime: "10:00" }),
+        act({ id: "b", startTime: "10:00", endTime: "11:00" }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("treats an activity with only a start time as a moment", () => {
+    expect(
+      ids([
+        act({ id: "range", startTime: "09:00", endTime: "10:00" }),
+        act({ id: "inside", startTime: "09:30" }),
+        act({ id: "atEnd", startTime: "10:00" }),
+      ]),
+    ).toEqual(["inside", "range"]);
+  });
+
+  it("flags activities that start at the same time", () => {
+    expect(ids([act({ id: "a", startTime: "09:00" }), act({ id: "b", startTime: "09:00", endTime: "10:00" })])).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("ignores untimed activities and the same times on different days", () => {
+    expect(
+      ids([
+        act({ id: "untimed" }),
+        act({ id: "untimed2", endTime: "10:00" }),
+        act({ id: "a", startTime: "09:00", endTime: "11:00" }),
+        act({ id: "b", date: new Date(2026, 9, 9).toISOString(), startTime: "09:00", endTime: "11:00" }),
+      ]),
+    ).toEqual([]);
+  });
+
+  inZone("Asia/Manila", () => {
+    it("groups by the day the itinerary shows each activity on, not the UTC day", () => {
+      const morning = act({ id: "morning", date: new Date(2026, 9, 8, 12).toISOString(), startTime: "09:00", endTime: "11:00" });
+      const nextDay = act({ id: "next", date: new Date(2026, 9, 9).toISOString(), startTime: "09:00", endTime: "11:00" });
+      expect(ids([morning, nextDay])).toEqual([]);
+    });
+  });
+});
+
+describe("mapsSearchUrl", () => {
+  it("builds a Google Maps search link with the place encoded", () => {
+    expect(mapsSearchUrl("Café & Bar #2, Tokyo")).toBe(
+      "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20%26%20Bar%20%232%2C%20Tokyo",
+    );
   });
 });

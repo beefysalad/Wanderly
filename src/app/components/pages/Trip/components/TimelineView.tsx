@@ -22,8 +22,16 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { PILL } from "../../../shared/Pills";
-import { activitiesOn, activitySubline, activityTime, dayKey, dropDate, tripDays } from "../tripView";
-import { TickButton } from "./ActivityParts";
+import {
+  activitiesOn,
+  activitySubline,
+  activityTime,
+  dayKey,
+  dropDate,
+  overlappingActivityIds,
+  tripDays,
+} from "../tripView";
+import { ActivityExtras, TickButton } from "./ActivityParts";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -33,10 +41,12 @@ interface RowProps {
   readOnly: boolean;
   onToggleDone?: (id: string) => void;
   onViewActivity?: (activity: Activity) => void;
+  /** Its time clashes with another activity that day. */
+  overlaps: boolean;
 }
 
 /** One activity on the timeline; the grip drags it to another day. */
-function TimelineRow({ activity, readOnly, onToggleDone, onViewActivity }: RowProps) {
+function TimelineRow({ activity, readOnly, onToggleDone, onViewActivity, overlaps }: RowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: activity.id });
   const time = activityTime(activity);
   const sub = activitySubline(activity);
@@ -60,16 +70,19 @@ function TimelineRow({ activity, readOnly, onToggleDone, onViewActivity }: RowPr
         </button>
       ) : null}
       <span className='w-16 flex-none font-mono text-[11px] text-[#64748b]'>{time ?? "—"}</span>
-      <button
-        type='button'
-        onClick={() => onViewActivity?.(activity)}
-        className={cn("flex min-w-0 flex-1 flex-col gap-[2px] text-left", onViewActivity && "cursor-pointer")}
-      >
-        <span className={cn("text-sm font-semibold", activity.done ? "text-[#64748b] line-through" : "text-[#e2e8f0]")}>
-          {activity.title}
-        </span>
-        {sub ? <span className='text-xs text-[#64748b]'>{sub}</span> : null}
-      </button>
+      <div className='flex min-w-0 flex-1 flex-col gap-[2px]'>
+        <button
+          type='button'
+          onClick={() => onViewActivity?.(activity)}
+          className={cn("flex min-w-0 flex-col gap-[2px] text-left", onViewActivity && "cursor-pointer")}
+        >
+          <span className={cn("text-sm font-semibold", activity.done ? "text-[#64748b] line-through" : "text-[#e2e8f0]")}>
+            {activity.title}
+          </span>
+          {sub ? <span className='text-xs text-[#64748b]'>{sub}</span> : null}
+        </button>
+        <ActivityExtras location={activity.location} overlaps={overlaps} />
+      </div>
       <TickButton
         done={!!activity.done}
         label={activity.title}
@@ -121,6 +134,7 @@ export function TimelineView({
 }: TimelineViewProps) {
   const [dragging, setDragging] = useState<Activity | null>(null);
   const days = tripDays(startDate, endDate);
+  const clashing = overlappingActivityIds(activities);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -174,6 +188,7 @@ export function TimelineView({
                     readOnly={readOnly}
                     onToggleDone={onToggleDone}
                     onViewActivity={onViewActivity}
+                    overlaps={clashing.has(activity.id)}
                   />
                 ))}
                 {dayActivities.length === 0 ? <span className='text-[13px] text-[#475569]'>Free day</span> : null}

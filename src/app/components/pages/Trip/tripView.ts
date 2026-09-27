@@ -86,6 +86,44 @@ export function activitiesOutside(activities: Activity[], start: string, end: st
   });
 }
 
+/**
+ * Ids of the activities whose times clash with another on the same (local, as shown) day. An
+ * activity without an end time is a moment at its start; untimed ones never clash. Back-to-back
+ * ranges don't clash; two activities starting at the same time do.
+ */
+export function overlappingActivityIds(activities: Activity[]): Set<string> {
+  const byDay = new Map<string, { id: string; start: string; end: string }[]>();
+  for (const activity of activities) {
+    if (!activity.startTime) continue;
+    const key = dayKey(new Date(activity.date));
+    const slots = byDay.get(key) ?? [];
+    // Guard against a stored end before the start (older rows) so it still reads as a moment.
+    const end = activity.endTime && activity.endTime > activity.startTime ? activity.endTime : activity.startTime;
+    slots.push({ id: activity.id, start: activity.startTime, end });
+    byDay.set(key, slots);
+  }
+
+  const clashing = new Set<string>();
+  for (const slots of byDay.values()) {
+    for (let i = 0; i < slots.length; i++) {
+      for (let j = i + 1; j < slots.length; j++) {
+        const a = slots[i];
+        const b = slots[j];
+        if (a.start === b.start || (a.start < b.end && b.start < a.end)) {
+          clashing.add(a.id);
+          clashing.add(b.id);
+        }
+      }
+    }
+  }
+  return clashing;
+}
+
+/** A Google Maps search for a place, which opens the Maps app on phones. */
+export function mapsSearchUrl(location: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
 /** "6:30 AM" from the start time, falling back to the pickup time; null when there is neither. */
 export function activityTime(activity: Activity): string | null {
   const time = activity.startTime || activity.pickupTime;
