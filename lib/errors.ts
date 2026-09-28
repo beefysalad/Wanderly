@@ -26,6 +26,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class ConflictError extends AppError {
+  constructor(message = "Conflict", options?: ErrorOptions) {
+    super(message, 409, options);
+  }
+}
+
 export class UnauthorizedError extends AppError {
   constructor(message = "Unauthorized", options?: ErrorOptions) {
     super(message, 401, options);

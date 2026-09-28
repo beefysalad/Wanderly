@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Expense, PaymentLog } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface ExpensesResponse {
   expenses: Expense[];
@@ -47,15 +48,16 @@ interface UpdateExpenseRequest {
 /**
  * Query hook to fetch expenses for a trip
  */
-export function useExpenses(tripId: string) {
+export function useExpenses(tripId: string | null) {
   return useQuery<ExpensesResponse, Error>({
-    queryKey: ["expenses", tripId],
+    queryKey: queryKeys.expenses.trip(tripId),
     queryFn: async () => {
       const response = await api.get<ExpensesResponse>(
         `/trips/${tripId}/expenses`,
       );
       return response.data;
     },
+    enabled: !!tripId,
   });
 }
 
@@ -75,9 +77,9 @@ export function useCreateExpense(tripId: string, groupId: string) {
     },
     onSuccess: () => {
       // Invalidate expenses query
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.trip(tripId) });
       // Also invalidate group query to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
@@ -103,9 +105,9 @@ export function useUpdateExpense(
     },
     onSuccess: () => {
       // Invalidate expenses query
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.trip(tripId) });
       // Also invalidate group query to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
@@ -115,7 +117,7 @@ export function useUpdateExpense(
  * Mutation hook to delete an expense
  */
 export function useDeleteExpense(
-  tripId: string,
+  tripId: string | null,
   expenseId: string,
   groupId: string,
 ) {
@@ -127,11 +129,11 @@ export function useDeleteExpense(
     },
     onSuccess: () => {
       // Invalidate expenses query
-      queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.trip(tripId) });
       // Also invalidate payment logs since deleting expense removes its logs
-      queryClient.invalidateQueries({ queryKey: ["paymentLogs", tripId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.paymentLogs.trip(tripId) });
       // Also invalidate group query to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });
@@ -140,14 +142,89 @@ export function useDeleteExpense(
 /**
  * Query hook to fetch payment logs for a trip
  */
-export function usePaymentLogs(tripId: string) {
+export function usePaymentLogs(tripId: string | null) {
   return useQuery<PaymentLogsResponse, Error>({
-    queryKey: ["paymentLogs", tripId],
+    queryKey: queryKeys.paymentLogs.trip(tripId),
     queryFn: async () => {
       const response = await api.get<PaymentLogsResponse>(
         `/trips/${tripId}/payment-logs`,
       );
       return response.data;
     },
+    enabled: !!tripId,
+  });
+}
+
+type PaymentStatus = "confirmed" | "rejected";
+
+/** A payment changes the expense, adds to the payment log and moves the group's balances. */
+function invalidatePayment(queryClient: QueryClient, tripId: string | null, groupId: string) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.expenses.trip(tripId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.paymentLogs.trip(tripId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
+}
+
+/**
+ * Mutation hook for marking a member's share of an expense as paid (the variable is their email).
+ * The expense shows the member as paid straight away; the refetch afterwards corrects it either way.
+ */
+export function useMarkPaid(tripId: string | null, expenseId: string, groupId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: async (memberEmail) => {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail,
+        isPaid: true,
+      });
+    },
+    onMutate: async (memberEmail) => {
+      const key = queryKeys.expenses.trip(tripId);
+      await queryClient.cancelQueries({ queryKey: key });
+      queryClient.setQueryData<ExpensesResponse>(key, (old) =>
+        old
+          ? {
+              ...old,
+              expenses: old.expenses.map((e) =>
+                e.id === expenseId ? { ...e, paidMembers: [...(e.paidMembers || []), memberEmail] } : e,
+              ),
+            }
+          : old,
+      );
+    },
+    onSettled: () => invalidatePayment(queryClient, tripId, groupId),
+  });
+}
+
+/**
+ * Mutation hook for the creator or payer reversing a guest split member's recorded payment
+ * (a guest has no account, so this is the same endpoint `useMarkPaid` posts to, with isPaid false).
+ */
+export function useUndoGuestPayment(tripId: string | null, expenseId: string, groupId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: async (member) => {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments`, {
+        memberEmail: member,
+        isPaid: false,
+      });
+    },
+    onSuccess: () => invalidatePayment(queryClient, tripId, groupId),
+  });
+}
+
+/** Mutation hook for the payer confirming or rejecting a member's payment. */
+export function useConfirmPayment(tripId: string | null, expenseId: string, groupId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { memberEmail: string; status: PaymentStatus }>({
+    mutationFn: async ({ memberEmail, status }) => {
+      await api.post(`/trips/${tripId}/expenses/${expenseId}/payments/confirm`, {
+        memberEmail,
+        status,
+      });
+    },
+    onSuccess: () => invalidatePayment(queryClient, tripId, groupId),
   });
 }

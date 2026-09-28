@@ -4,8 +4,9 @@ import type { Trip } from "@/src/shared/types";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useExpenses, usePaymentLogs } from "@/src/hooks/useExpenses";
 import { useGroup, useGroupAsGuest } from "@/src/hooks/useGroups";
-import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import LoadingState from "../../shared/LoadingState";
+import { StateMessage } from "../../shared/StateMessage";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { CategoryBars } from "./CategoryBars";
 import { ExpenseFilters } from "./ExpenseFilters";
 import { ExpenseRow } from "./ExpenseRow";
@@ -22,15 +23,19 @@ interface IExpensesComponent {
 
 /** The Expenses tab of a trip: totals, filters, the list, a category breakdown and the payment history. */
 const ExpensesComponent = ({ groupId, tripId, guest = false }: IExpensesComponent) => {
-  const { data: memberGroup, isLoading: loadingMemberGroup } = useGroup(guest ? null : groupId);
-  const { data: guestGroup, isLoading: loadingGuestGroup } = useGroupAsGuest(guest ? groupId : null);
-  const { data: expensesData, isLoading: loadingExpenses } = useExpenses(tripId);
+  const memberGroupQuery = useGroup(guest ? null : groupId);
+  const guestGroupQuery = useGroupAsGuest(guest ? groupId : null);
+  const expensesQuery = useExpenses(tripId);
+  const { data: memberGroup, isLoading: loadingMemberGroup } = memberGroupQuery;
+  const { data: guestGroup, isLoading: loadingGuestGroup } = guestGroupQuery;
+  const { data: expensesData, isLoading: loadingExpenses } = expensesQuery;
   const { data: paymentLogsData, isLoading: loadingLogs } = usePaymentLogs(tripId);
   const { user } = useCurrentUser();
   const [view, setView] = useState<ExpensesView>("all");
 
-  // Enable real-time updates for this group via Socket.IO
-  useSocketGroupUpdates(groupId);
+  // Real-time updates for this group are subscribed once by the page container
+  // (Trip/GuestTrip) that renders this tab — see useSocketGroupUpdates for why a
+  // second subscription here would double every toast and churn the socket room.
 
   const group = (guest ? guestGroup : memberGroup?.group) || null;
   const loadingGroup = guest ? loadingGuestGroup : loadingMemberGroup;
@@ -39,6 +44,17 @@ const ExpensesComponent = ({ groupId, tripId, guest = false }: IExpensesComponen
   const email = user?.email || "";
 
   if (loadingGroup || loadingExpenses) return <LoadingState className='py-20' />;
+  const failed = blockingQuery(guest ? guestGroupQuery : memberGroupQuery, expensesQuery);
+  if (failed) {
+    return (
+      <StateMessage
+        variant='error'
+        query={failed}
+        what="this trip's expenses"
+        signInHref={guest ? "/guest/join" : undefined}
+      />
+    );
+  }
   if (!group || !trip) return <p className='py-16 text-center text-sm text-[#94a3b8]'>This trip couldn&apos;t be found.</p>;
 
   const partitions = partitionExpenses(expenses, email);

@@ -1,57 +1,48 @@
+import { fromCents, toCents } from "@/lib/utils/money";
 import type { Expense } from "@/src/shared/types";
 
 export type ExpensesView = "all" | "unsettled" | "settled" | "logs" | "analysis";
 
-/** An expense is settled once every member in the split has paid (or is the payer). */
+/** An expense is settled once every member in the split has paid (or is the payer). An empty split is settled. */
 export function isExpenseSettled(expense: Expense): boolean {
-  const splitWith = expense.splitWith || [];
   const paidMembers = expense.paidMembers || [];
-  return splitWith.every(
-    (member) => member === expense.paidBy || paidMembers.includes(member),
+  return expense.splits.every(
+    ({ member }) => member === expense.paidBy || paidMembers.includes(member),
   );
 }
 
 export function isUserInvolved(expense: Expense, userEmail: string): boolean {
-  return expense.splitWith?.includes(userEmail) || false;
+  return expense.splits.some(({ member }) => member === userEmail);
 }
 
-/** How much the user still owes, and how much others still owe the user. */
+/** A member's share of the expense, as the server computed it; 0 when they aren't in the split. */
+export function shareOf(expense: Expense, member: string): number {
+  return expense.splits.find((split) => split.member === member)?.shareAmount ?? 0;
+}
+
+/** What the payer is still owed: the shares of everyone else in the split whose payment isn't confirmed. */
+export function stillOwedToPayer(expense: Expense): number {
+  const paidMembers = expense.paidMembers || [];
+  const cents = expense.splits
+    .filter(({ member }) => member !== expense.paidBy && !paidMembers.includes(member))
+    .reduce((sum, split) => sum + toCents(split.shareAmount), 0);
+  return fromCents(cents);
+}
+
+/** How much the user still owes, and how much others still owe the user (summed in centavos, so no float drift). */
 export function calculateUnsettledStats(unsettledExpenses: Expense[], userEmail: string) {
-  let youOwe = 0;
-  let youAreOwed = 0;
+  let oweCents = 0;
+  let owedCents = 0;
 
-  unsettledExpenses.forEach((expense) => {
-    const splitWith = expense.splitWith || [];
-    const splitCount = splitWith.length || 1;
-    const shareAmount = expense.amount / splitCount;
-    const paidMembers = expense.paidMembers || [];
-
+  for (const expense of unsettledExpenses) {
     if (expense.paidBy === userEmail) {
-      // User paid, calculate what others owe
-      const unpaidCount = splitWith.filter(
-        (member) => member !== userEmail && !paidMembers.includes(member),
-      ).length;
-      youAreOwed += shareAmount * unpaidCount;
-    } else if (splitWith.includes(userEmail)) {
-      // User is in split but didn't pay, check if they've paid
-      if (!paidMembers.includes(userEmail)) {
-        youOwe += shareAmount;
-      }
+      owedCents += toCents(stillOwedToPayer(expense));
+    } else if (!expense.paidMembers?.includes(userEmail)) {
+      oweCents += toCents(shareOf(expense, userEmail));
     }
-  });
+  }
 
-  return { youOwe, youAreOwed };
-}
-
-export function calculateSettledStats(settledExpenses: Expense[]) {
-  let totalSettled = 0;
-
-  settledExpenses.forEach((expense) => {
-    const splitCount = (expense.splitWith || []).length || 1;
-    totalSettled += expense.amount / splitCount;
-  });
-
-  return { totalSettled };
+  return { youOwe: fromCents(oweCents), youAreOwed: fromCents(owedCents) };
 }
 
 /** Splits expenses into the lists shown on each tab (settled/unsettled only include the user's own). */

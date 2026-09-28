@@ -1,30 +1,13 @@
-import type { ReactNode } from "react";
 import { AppShell } from "./AppShell";
-import { PILL } from "../Pills";
+import { StateMessage, type StateMessageProps } from "../StateMessage";
 
-interface StateCardProps {
-  back: { href: string; crumb: string };
-  title: string;
-  body?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  children?: ReactNode;
-}
+type StateCardProps = StateMessageProps & { back: { href: string; crumb: string } };
 
-/** A centred "not found" / "missing" message inside the app chrome. */
-export function StateCard({ back, title, body, actionLabel, onAction, children }: StateCardProps) {
+/** A `StateMessage` ("not found", "couldn't load", ...) inside the signed-in detail chrome. */
+export function StateCard({ back, ...message }: StateCardProps) {
   return (
     <AppShell level='detail' back={back}>
-      <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-        <h2 className='mb-2 text-xl font-bold'>{title}</h2>
-        {body ? <p className='mb-6 text-[#94a3b8]'>{body}</p> : null}
-        {children}
-        {actionLabel && onAction ? (
-          <button type='button' onClick={onAction} className={PILL.ghost}>
-            {actionLabel}
-          </button>
-        ) : null}
-      </div>
+      <StateMessage {...message} />
     </AppShell>
   );
 }

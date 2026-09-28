@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { NotificationType, type PaymentMethod } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
@@ -57,12 +57,15 @@ export async function createPaymentLogService(
     amount: data.amount,
     paymentMethod: explicitMethod ?? expense.paymentMethod,
   });
+  if (!paymentLog) {
+    throw new ConflictError("A payment is already logged for this share");
+  }
 
   try {
     await createNotificationService(payeeId, {
       type: NotificationType.payment,
       title: "Payment Received",
-      message: `${paymentLog.payer.name || paymentLog.payer.email} paid you ₱${data.amount.toFixed(2)} for ${paymentLog.expense.description}`,
+      message: `${paymentLog.payer?.name || data.payerEmail} paid you ₱${data.amount.toFixed(2)} for ${paymentLog.expense.description}`,
       relatedGroupId: trip.groupId,
       relatedTripId: tripId,
       relatedExpenseId: data.expenseId,

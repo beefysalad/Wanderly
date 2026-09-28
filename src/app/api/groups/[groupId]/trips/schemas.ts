@@ -22,11 +22,17 @@ export const createTripSchema = z
   });
 export type CreateTripBody = z.infer<typeof createTripSchema>;
 
-export const updateTripSchema = z.object({
-  name: z.string().trim().min(1, "Trip name cannot be empty").optional(),
-  startDate: dateInputSchema.optional(),
-  endDate: dateInputSchema.optional(),
-  location: z.string().trim().nullish(),
-  status: tripStatusSchema.optional(),
-});
+export const updateTripSchema = z
+  .object({
+    name: z.string().trim().min(1, "Trip name cannot be empty").optional(),
+    startDate: dateInputSchema.optional(),
+    endDate: dateInputSchema.optional(),
+    location: z.string().trim().nullish(),
+    status: tripStatusSchema.optional(),
+  })
+  // Only checkable when both dates are sent; the service checks a lone date against the stored one.
+  .refine((data) => !data.startDate || !data.endDate || data.startDate <= data.endDate, {
+    message: "Start date must be before end date",
+    path: ["endDate"],
+  });
 export type UpdateTripBody = z.infer<typeof updateTripSchema>;

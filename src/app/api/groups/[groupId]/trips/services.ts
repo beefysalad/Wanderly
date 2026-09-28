@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType, type TripStatus } from "@prisma/client";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
@@ -94,7 +94,15 @@ export async function updateTripService(
   updates: UpdateTripBody,
 ) {
   await verifyGroupMembership(token, groupId);
-  await verifyTripInGroup(groupId, tripId);
+  const existing = await verifyTripInGroup(groupId, tripId);
+
+  // The schema only compares the two dates when both are sent; a lone date must also fit
+  // the stored one it pairs with.
+  const startDate = updates.startDate ?? existing.startDate;
+  const endDate = updates.endDate ?? existing.endDate;
+  if (startDate > endDate) {
+    throw new ValidationError("Start date must be before end date");
+  }
 
   const trip = await updateTripRow(tripId, {
     ...(updates.name !== undefined && { name: updates.name }),
@@ -120,7 +128,8 @@ export async function deleteTripService(
   const { user, group } = await verifyGroupMembership(token, groupId);
   const trip = await verifyTripInGroup(groupId, tripId);
 
-  if (trip.createdById !== user.id) {
+  // Once the creator's account is deleted, the trip is the group owner's to delete.
+  if ((trip.createdById ?? group.createdById) !== user.id) {
     throw new ForbiddenError("Only the trip creator can delete this trip");
   }
 

@@ -1,10 +1,11 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { formatPesoExact } from "@/lib/utils/money";
 import { FIELD_ERROR, INPUT } from "../../formStyles";
 import { UserAvatar } from "../../UserAvatar";
 import type { TExpenseSchema } from "../expenseSchema";
+import { previewShares } from "../splitPreview";
 
 interface ISplitStepProps {
   form: UseFormReturn<TExpenseSchema>;
@@ -19,8 +20,10 @@ interface ISplitStepProps {
 /** Step 2: tick who is in on it; each ticked person's share updates as you go. Guests can be added by name. */
 export const SplitStep = ({ form, members, getDisplayName, toggleMember, toggleSelectAll, guestName, setGuestName }: ISplitStepProps) => {
   const splitWith = form.watch("splitWith");
-  const amount = Number(form.watch("amount")) || 0;
-  const per = splitWith.length ? amount / splitWith.length : 0;
+  const shares = previewShares(form.watch("amount"), splitWith, form.watch("paidBy"));
+  const lowest = shares.length ? Math.min(...shares) : 0;
+  const highest = shares.length ? Math.max(...shares) : 0;
+  const each = lowest === highest ? formatPesoExact(lowest) : `${formatPesoExact(lowest)}–${formatPesoExact(highest)}`;
   const guests = splitWith.filter((member) => !members.includes(member));
 
   const addGuest = () => {
@@ -52,7 +55,7 @@ export const SplitStep = ({ form, members, getDisplayName, toggleMember, toggleS
         {note ? <span className='text-[10px] text-[#fbbf24]'>{note}</span> : null}
       </span>
       <span className={cn("text-sm font-bold tabular-nums", selected ? "text-[#e2e8f0]" : "text-[#475569]")}>
-        {selected ? formatPeso(per) : "—"}
+        {selected ? formatPesoExact(shares[splitWith.indexOf(key)]) : "—"}
       </span>
     </button>
   );
@@ -62,7 +65,7 @@ export const SplitStep = ({ form, members, getDisplayName, toggleMember, toggleS
       <div className='flex flex-wrap items-baseline justify-between gap-[10px]'>
         <span className='text-[15px] font-bold'>Who&apos;s in on this?</span>
         <span className='font-mono text-xs text-[#fbbf24]'>
-          {formatPeso(per)} each · {splitWith.length} {splitWith.length === 1 ? "person" : "people"}
+          {each} each · {splitWith.length} {splitWith.length === 1 ? "person" : "people"}
         </span>
       </div>
 

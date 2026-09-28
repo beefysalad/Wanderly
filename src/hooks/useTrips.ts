@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Trip, Group } from "@/src/shared/types";
+import { queryKeys } from "./queryKeys";
 
 interface TripResponse {
   trip: Trip;
@@ -12,6 +13,15 @@ interface CreateTripRequest {
   endDate: string;
   location?: string;
   status: "planning" | "finalized" | "ongoing" | "cancelled";
+}
+
+/** Only the fields being changed; `location: null` clears it. */
+export interface UpdateTripRequest {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string | null;
+  status?: CreateTripRequest["status"];
 }
 
 /**
@@ -30,7 +40,7 @@ export function useCreateTrip(groupId: string) {
     },
     onSuccess: async (data) => {
       // Optimistically update the group cache with the new trip
-      queryClient.setQueryData<{ group: Group }>(["groups", groupId], (old) => {
+      queryClient.setQueryData<{ group: Group }>(queryKeys.groups.detail(groupId), (old) => {
         if (!old) return old;
         return {
           group: {
@@ -41,9 +51,37 @@ export function useCreateTrip(groupId: string) {
       });
 
       // Also invalidate to ensure fresh data
-      await queryClient.refetchQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      await queryClient.refetchQueries({ queryKey: queryKeys.groups.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
       // Toast will be shown via Socket.IO event to avoid duplicates
+    },
+  });
+}
+
+/**
+ * Mutation hook to edit a trip (name, dates, location, status)
+ */
+export function useUpdateTrip(groupId: string, tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<TripResponse, Error, UpdateTripRequest>({
+    mutationFn: async (data) => {
+      const response = await api.patch<TripResponse>(`/groups/${groupId}/trips/${tripId}`, data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Swap in the saved trip so the trip page shows it straight away, then refetch the group
+      // detail and the groups list (dashboard, calendar), which both carry trip dates.
+      queryClient.setQueryData<{ group: Group }>(queryKeys.groups.detail(groupId), (old) => {
+        if (!old) return old;
+        return {
+          group: {
+            ...old.group,
+            trips: old.group.trips?.map((trip) => (trip.id === tripId ? data.trip : trip)),
+          },
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     },
   });
 }
@@ -60,8 +98,8 @@ export function useDeleteTrip(groupId: string, tripId: string) {
     },
     onSuccess: () => {
       // Invalidate group query to refetch without deleted trip
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
       // Toast will be shown via Socket.IO event to avoid duplicates
     },
   });

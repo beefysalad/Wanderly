@@ -1,23 +1,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
-import { exportScheduleToICS, exportScheduleToPNG } from "@/lib/utils/exportSchedule";
+import { isAxiosError } from "axios";
+import { queryKeys } from "@/src/hooks/queryKeys";
+import { useDeleteActivity, useUpdateActivity } from "@/src/hooks/useActivities";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
-import { useDeleteTrip } from "@/src/hooks/useTrips";
+import { useDeleteTrip, useUpdateTrip } from "@/src/hooks/useTrips";
 import type { Activity, Trip } from "@/src/shared/types";
 import { patchActivityInCache, patchTripInCache } from "./tripCache";
 
 type TripStatus = "planning" | "finalized" | "ongoing" | "cancelled";
 
+// Prefer the API's own message (e.g. "Pick a date within the trip …" when a drag lands outside it).
 const errorMessage = (err: unknown, fallback: string) =>
-  err instanceof Error ? err.message : fallback;
+  (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) ||
+  (err instanceof Error ? err.message : fallback);
 
 /** All of the trip page's mutations (activities, status, export, delete) and their UI flags. */
 export function useTripActions(groupId: string, tripId: string, trip: Trip | null) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const deleteTrip = useDeleteTrip(groupId, tripId);
+  const updateTrip = useUpdateTrip(groupId, tripId);
+  const updateActivity = useUpdateActivity(tripId, groupId);
+  const deleteActivity = useDeleteActivity(tripId, groupId);
   const { isNavigating, withNavigation } = useNavigationLoading();
 
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
@@ -26,7 +32,6 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const [isEditingStatus, setIsEditingStatus] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
-  const [isDeletingActivity, setIsDeletingActivity] = useState<boolean>(false);
 
   const handleDeleteTrip = async () => {
     try {
@@ -46,6 +51,8 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setIsExporting(true);
     setShowExportMenu(false);
     try {
+      // Dynamic import: code-splitting the ~900-line canvas/ICS exporter, only needed on click, out of the Trip bundle.
+      const { exportScheduleToICS, exportScheduleToPNG } = await import("@/lib/utils/exportSchedule");
       if (format === "png") {
         await exportScheduleToPNG({ trip, activities: trip.activities || [] });
       } else {
@@ -63,10 +70,9 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, ...updates }));
 
     try {
-      await api.patch(`/trips/${tripId}/activities/${id}`, updates);
-      queryClient.refetchQueries({ queryKey: ["groups", groupId] });
+      await updateActivity.mutateAsync({ activityId: id, updates });
     } catch (err) {
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
       alert(errorMessage(err, "Failed to update activity. Please try again."));
     }
   };
@@ -74,16 +80,12 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
   const handleDeleteActivity = async () => {
     if (!activityToDelete) return;
 
-    setIsDeletingActivity(true);
     try {
-      await api.delete(`/trips/${tripId}/activities/${activityToDelete}`);
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      await deleteActivity.mutateAsync(activityToDelete);
       setShowDeleteActivityModal(false);
       setActivityToDelete(null);
     } catch (err) {
       alert(errorMessage(err, "Failed to delete activity. Please try again."));
-    } finally {
-      setIsDeletingActivity(false);
     }
   };
 
@@ -108,8 +110,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, done: newDoneState }));
 
     try {
-      await api.patch(`/trips/${tripId}/activities/${id}`, { done: newDoneState });
-      queryClient.refetchQueries({ queryKey: ["groups", groupId], type: "active" });
+      await updateActivity.mutateAsync({ activityId: id, updates: { done: newDoneState } });
     } catch (err) {
       patchActivityInCache(queryClient, groupId, tripId, id, (a) => ({ ...a, done: previousState }));
       alert(errorMessage(err, "Failed to update activity. Please try again."));
@@ -127,9 +128,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setIsEditingStatus(false);
 
     try {
-      await api.patch(`/groups/${groupId}/trips/${tripId}`, { status: newStatus });
-      // Silently refetch in the background to sync with server
-      queryClient.refetchQueries({ queryKey: ["groups", groupId], type: "active" });
+      await updateTrip.mutateAsync({ status: newStatus });
     } catch (err) {
       // Revert optimistic update on error
       patchTripInCache(queryClient, groupId, tripId, (t) => ({ ...t, status: previousStatus }));
@@ -144,7 +143,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     showDeleteModal,
     setShowDeleteModal,
     showDeleteActivityModal,
-    isDeletingActivity,
+    isDeletingActivity: deleteActivity.isPending,
     isEditingStatus,
     setIsEditingStatus,
     isExporting,

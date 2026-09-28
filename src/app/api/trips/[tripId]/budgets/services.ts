@@ -1,5 +1,7 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+import { emitBudgetCreated, emitBudgetDeleted, emitBudgetUpdated } from "@/lib/socket-events";
 import { verifyTripAccess } from "../../access";
 import {
   createBudgetRow,
@@ -10,6 +12,12 @@ import {
   updateBudgetRow,
 } from "./repository";
 import type { CreateBudgetBody, UpdateBudgetBody } from "./schemas";
+
+// Socket clients expect a plain number, not a Decimal.
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toSocketBudget(budget: any) {
+  return { ...budget, amount: Number(budget.amount) };
+}
 
 async function assertActivityInTrip(activityId: string, tripId: string) {
   const activity = await findActivityTripId(activityId);
@@ -35,13 +43,13 @@ export async function createBudgetService(
   tripId: string,
   data: CreateBudgetBody,
 ) {
-  await verifyTripAccess(token, tripId);
+  const { trip } = await verifyTripAccess(token, tripId);
 
   if (data.activityId) {
     await assertActivityInTrip(data.activityId, tripId);
   }
 
-  return createBudgetRow({
+  const budget = await createBudgetRow({
     tripId,
     amount: data.amount,
     description: data.description || null,
@@ -49,6 +57,12 @@ export async function createBudgetService(
     activityId: data.activityId || null,
     isBooked: data.isBooked ?? false,
   });
+
+  emitBudgetCreated(trip.groupId, toSocketBudget(budget)).catch((err) => {
+    logger.error("Failed to emit budget created event", { error: err });
+  });
+
+  return budget;
 }
 
 export async function updateBudgetService(
@@ -57,20 +71,26 @@ export async function updateBudgetService(
   budgetId: string,
   updates: UpdateBudgetBody,
 ) {
-  await verifyTripAccess(token, tripId);
+  const { trip } = await verifyTripAccess(token, tripId);
   await assertBudgetInTrip(budgetId, tripId);
 
   if (updates.activityId) {
     await assertActivityInTrip(updates.activityId, tripId);
   }
 
-  return updateBudgetRow(budgetId, {
+  const budget = await updateBudgetRow(budgetId, {
     ...(updates.amount !== undefined && { amount: updates.amount }),
     ...(updates.description !== undefined && { description: updates.description }),
     ...(updates.category !== undefined && { category: updates.category }),
     ...(updates.activityId !== undefined && { activityId: updates.activityId || null }),
     ...(updates.isBooked !== undefined && { isBooked: updates.isBooked }),
   });
+
+  emitBudgetUpdated(trip.groupId, toSocketBudget(budget)).catch((err) => {
+    logger.error("Failed to emit budget updated event", { error: err });
+  });
+
+  return budget;
 }
 
 export async function deleteBudgetService(
@@ -78,7 +98,11 @@ export async function deleteBudgetService(
   tripId: string,
   budgetId: string,
 ) {
-  await verifyTripAccess(token, tripId);
+  const { trip } = await verifyTripAccess(token, tripId);
   await assertBudgetInTrip(budgetId, tripId);
   await deleteBudgetRow(budgetId);
+
+  emitBudgetDeleted(trip.groupId, budgetId, tripId).catch((err) => {
+    logger.error("Failed to emit budget deleted event", { error: err });
+  });
 }

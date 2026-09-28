@@ -5,6 +5,7 @@ import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
+import { queryKeys } from "@/src/hooks/queryKeys";
 import { Reveal } from "../../shared/Site/Reveal";
 import { EASE, useCountUp } from "../../shared/Site/motion";
 
@@ -12,7 +13,7 @@ const GOAL = 1000;
 
 export function PromiseSection() {
   const { data: userCount } = useQuery({
-    queryKey: ["userCount"],
+    queryKey: queryKeys.userCount,
     queryFn: async () => {
       const res = await fetch("/api/stats/user-count");
       if (!res.ok) throw new Error("Failed to fetch user count");

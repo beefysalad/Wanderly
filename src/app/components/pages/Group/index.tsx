@@ -10,11 +10,12 @@ import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";
 import { useNotifications } from "@/src/hooks/useNotifications";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { AppShell } from "../../shared/AppShell/AppShell";
+import { StateCard } from "../../shared/AppShell/StateCard";
 import LoadingState from "../../shared/LoadingState";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import EditGroupModal from "../../shared/Modal/EditGroupModal";
 import NavigationLoader from "../../shared/NavigationLoader";
-import { PILL } from "../../shared/Pills";
+import { blockingQuery } from "../../shared/StateMessage/loadError";
 import { upcomingTrips, allTrips } from "../../shared/tripDates";
 import { GroupActivity } from "./GroupActivity";
 import { GroupHero } from "./GroupHero";
@@ -31,7 +32,8 @@ const GroupComponent = ({ param }: IGroupComponent) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const router = useRouter();
-  const { data: groupData, isLoading, error } = useGroup(param);
+  const groupQuery = useGroup(param);
+  const { data: groupData, isLoading } = groupQuery;
   const { data: notificationsData } = useNotifications({ limit: 80 });
   const group = groupData?.group || null;
   const leaveGroup = useLeaveGroup();
@@ -97,17 +99,20 @@ const GroupComponent = ({ param }: IGroupComponent) => {
     );
   }
 
-  if (!group || error) {
+  const failed = blockingQuery(groupQuery);
+  if (failed) {
+    return <StateCard back={back} variant='error' query={failed} what='this group' />;
+  }
+
+  if (!group) {
     return (
-      <AppShell level='detail' back={back}>
-        <div className='mx-auto max-w-md rounded-[22px] border border-white/[.08] bg-[rgba(15,23,42,.6)] p-10 text-center'>
-          <h2 className='mb-2 text-xl font-bold'>Group not found</h2>
-          <p className='mb-6 text-[#94a3b8]'>This group doesn&apos;t exist or has been removed.</p>
-          <button type='button' onClick={() => router.push("/groups")} className={PILL.ghost}>
-            Go to Groups
-          </button>
-        </div>
-      </AppShell>
+      <StateCard
+        back={back}
+        title='Group not found'
+        body="This group doesn't exist or has been removed."
+        actionLabel='Go to Groups'
+        onAction={() => router.push("/groups")}
+      />
     );
   }
 

@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 
 const mockFindGroupMembership = vi.fn();
 const mockFindGroupOwnership = vi.fn();
@@ -129,6 +129,53 @@ describe("updateTripService", () => {
 
     expect(mockUpdateTripRow).toHaveBeenCalledWith("trip-1", { status: "ongoing" });
   });
+
+  describe("date range", () => {
+    const storedTrip = {
+      id: "trip-1",
+      groupId: "group-1",
+      name: "Summer Trip",
+      createdById: "user-1",
+      startDate: new Date("2026-06-01"),
+      endDate: new Date("2026-06-10"),
+    };
+
+    beforeEach(() => {
+      mockFindGroupMembership.mockResolvedValue(membership);
+      mockFindGroupOwnership.mockResolvedValue(ownership);
+      mockFindTripById.mockResolvedValue(storedTrip);
+      mockUpdateTripRow.mockResolvedValue({ id: "trip-1" });
+    });
+
+    it("rejects a new start date after the stored end date", async () => {
+      await expect(
+        updateTripService(token, "group-1", "trip-1", { startDate: new Date("2026-06-11") }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockUpdateTripRow).not.toHaveBeenCalled();
+    });
+
+    it("rejects a new end date before the stored start date", async () => {
+      await expect(
+        updateTripService(token, "group-1", "trip-1", { endDate: new Date("2026-05-31") }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockUpdateTripRow).not.toHaveBeenCalled();
+    });
+
+    it("accepts moving only the start date up to the stored end date", async () => {
+      const startDate = new Date("2026-06-10");
+      await updateTripService(token, "group-1", "trip-1", { startDate });
+
+      expect(mockUpdateTripRow).toHaveBeenCalledWith("trip-1", { startDate });
+    });
+
+    it("accepts moving both dates past the stored range together", async () => {
+      const startDate = new Date("2026-08-01");
+      const endDate = new Date("2026-08-05");
+      await updateTripService(token, "group-1", "trip-1", { startDate, endDate });
+
+      expect(mockUpdateTripRow).toHaveBeenCalledWith("trip-1", { startDate, endDate });
+    });
+  });
 });
 
 describe("deleteTripService", () => {
@@ -173,5 +220,25 @@ describe("deleteTripService", () => {
     expect(mockDeleteTripRow).toHaveBeenCalledWith("trip-1");
     expect(mockCreateNotificationService).toHaveBeenCalledTimes(1);
     expect(callOrder).toEqual(["notify", "delete"]);
+  });
+
+  it("lets the group owner delete a trip whose creator's account was deleted", async () => {
+    mockFindGroupMembership.mockResolvedValue(membership);
+    mockFindGroupOwnership.mockResolvedValue(ownership);
+    mockFindTripById.mockResolvedValue({ id: "trip-1", groupId: "group-1", name: "Summer Trip", createdById: null });
+    mockListGroupMembersForNotify.mockResolvedValue([]);
+
+    await deleteTripService(token, "group-1", "trip-1");
+
+    expect(mockDeleteTripRow).toHaveBeenCalledWith("trip-1");
+  });
+
+  it("does not let other members delete a trip whose creator's account was deleted", async () => {
+    mockFindGroupMembership.mockResolvedValue(membership);
+    mockFindGroupOwnership.mockResolvedValue({ ...ownership, createdById: "owner-9" });
+    mockFindTripById.mockResolvedValue({ id: "trip-1", groupId: "group-1", name: "Summer Trip", createdById: null });
+
+    await expect(deleteTripService(token, "group-1", "trip-1")).rejects.toThrow(ForbiddenError);
+    expect(mockDeleteTripRow).not.toHaveBeenCalled();
   });
 });

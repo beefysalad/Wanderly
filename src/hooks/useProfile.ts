@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { queryKeys } from "./queryKeys";
 
 interface UpdateProfileRequest {
   name?: string;
@@ -38,10 +39,9 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       // Invalidate user-related queries to refetch updated data
-      queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      queryClient.invalidateQueries({ queryKey: ["current-user-db"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
       // Also invalidate groups since user name might be displayed there
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     },
   });
 }
@@ -62,7 +62,7 @@ export function useUpdatePassword() {
  */
 export function useCurrentUserDB() {
   return useQuery({
-    queryKey: ["current-user-db"],
+    queryKey: queryKeys.currentUser,
     queryFn: async () => {
       const response = await api.get("/profile");
       return response.data.user;

@@ -5,6 +5,10 @@ export function listAppConfigs() {
   return prisma.appConfig.findMany({ orderBy: { key: "asc" } });
 }
 
+export function findAppConfig(key: string) {
+  return prisma.appConfig.findUnique({ where: { key } });
+}
+
 export function upsertAppConfig(key: string, value: Prisma.InputJsonValue) {
   return prisma.appConfig.upsert({
     where: { key },

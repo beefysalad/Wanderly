@@ -27,6 +27,7 @@ vi.mock("../activities/repository", () => ({
 const mockList = vi.fn();
 const mockFindById = vi.fn();
 const mockFindSummary = vi.fn();
+const mockFindSplitUserIds = vi.fn();
 const mockCreateRow = vi.fn();
 const mockUpdateRow = vi.fn();
 const mockDeleteRow = vi.fn();
@@ -34,6 +35,7 @@ vi.mock("./repository", () => ({
   listExpensesByTrip: (...a: unknown[]) => mockList(...a),
   findExpenseById: (...a: unknown[]) => mockFindById(...a),
   findExpenseSummary: (...a: unknown[]) => mockFindSummary(...a),
+  findExpenseSplitUserIds: (...a: unknown[]) => mockFindSplitUserIds(...a),
   createExpenseRow: (...a: unknown[]) => mockCreateRow(...a),
   updateExpenseRow: (...a: unknown[]) => mockUpdateRow(...a),
   deleteExpenseRow: (...a: unknown[]) => mockDeleteRow(...a),
@@ -76,6 +78,7 @@ const createBody = {
 const expenseRow = {
   id: "e1",
   amount: 100,
+  description: "Old",
   date: new Date("2026-10-01"),
   paidBy: { id: "u1", email: "alice@x.com", name: "Alice" },
   tempPaidBy: null,
@@ -88,6 +91,7 @@ beforeEach(() => {
   mockFindUserIdByEmail.mockImplementation(async (email: string) =>
     email === "ghost@x.com" ? null : { id: `id-${email}` },
   );
+  mockFindSplitUserIds.mockResolvedValue([]);
   mockNotifyMembers.mockResolvedValue(undefined);
   mockEmitCreated.mockResolvedValue(undefined);
   mockEmitUpdated.mockResolvedValue(undefined);
@@ -204,22 +208,44 @@ describe("updateExpenseService", () => {
     expect(mockUpdateRow.mock.calls[1][1]).not.toHaveProperty("splits");
   });
 
-  it("does not notify or emit for changes other than description/amount", async () => {
+  it("does not notify for changes other than description/amount, but still broadcasts them", async () => {
     await updateExpenseService(token, "t1", "e1", { category: "food" });
 
     expect(mockNotifyMembers).not.toHaveBeenCalled();
-    expect(mockEmitUpdated).not.toHaveBeenCalled();
+    expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 
-  it("notifies with the pre-update description and amount on a significant change", async () => {
+  it("notifies with the post-update description and amount on a significant change", async () => {
     await updateExpenseService(token, "t1", "e1", { amount: 75 });
 
+    // expenseRow (the row updateExpenseRow returns) has amount 100 — the notification
+    // must quote that, not the pre-update amount of 50 or the request's 75.
     expect(mockNotifyMembers).toHaveBeenCalledWith(
       "g1",
       "u1",
-      expect.objectContaining({ message: "Alice updated expense 'Old' (₱50.00) in Japan" }),
+      expect.objectContaining({ message: "Alice updated expense 'Old' (₱100.00) in Japan" }),
     );
     expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it("removes payment status and log for members dropped from the split", async () => {
+    mockFindSplitUserIds.mockResolvedValue(["id-bob@x.com", "id-cara@x.com"]);
+
+    await updateExpenseService(token, "t1", "e1", { splitWith: ["bob@x.com"] });
+
+    expect(mockUpdateRow).toHaveBeenCalledWith(
+      "e1",
+      expect.objectContaining({ removedMemberIds: ["id-cara@x.com"] }),
+    );
+  });
+
+  it("does not diff splits when splitWith isn't part of the update", async () => {
+    mockFindSplitUserIds.mockResolvedValue(["id-bob@x.com"]);
+
+    await updateExpenseService(token, "t1", "e1", { category: "food" });
+
+    expect(mockFindSplitUserIds).not.toHaveBeenCalled();
+    expect(mockUpdateRow.mock.calls[0][1]).not.toHaveProperty("removedMemberIds");
   });
 
   it("stays silent when the previous amount was zero", async () => {
@@ -228,6 +254,7 @@ describe("updateExpenseService", () => {
     await updateExpenseService(token, "t1", "e1", { description: "x" });
 
     expect(mockNotifyMembers).not.toHaveBeenCalled();
+    expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 });
 

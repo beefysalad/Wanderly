@@ -50,6 +50,7 @@ export interface Activity {
   title: string;
   startTime?: string;
   endTime?: string;
+  location?: string;
   notes?: string;
   done: boolean;
   transportationMode?: string;
@@ -58,11 +59,19 @@ export interface Activity {
   dropoffLocation?: string;
 }
 
+/** One person's part of an expense, as the server computed it. */
+export interface ExpenseSplitShare {
+  member: string; // email, or a guest's name (same identifiers as splitWith)
+  shareAmount: number; // pesos, exact to the centavo; the shares add up to the expense amount
+  isGuest?: boolean; // true when member is a free-text name with no account, not a registered member's email
+}
+
 export interface Expense {
   id: string;
   groupId: string;
   tripId: string;
   paidBy: string;
+  paidByIsGuest?: boolean; // true when paidBy is a free-text name with no account
   createdById?: string;
   createdBy?: {
     id: string;
@@ -75,6 +84,7 @@ export interface Expense {
   date: string;
   category?: string;
   splitWith?: string[]; // members who should split this expense
+  splits: ExpenseSplitShare[]; // same people as splitWith, in the same order, with their shares; empty = nobody owes anything
   paymentMethod?: "cash" | "bank" | "maya" | "gcash";
   accountNumber?: string;
   bankName?: string; // for bank transfer

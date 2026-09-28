@@ -1,27 +1,29 @@
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { emitExpenseUpdated } from "@/lib/socket-events";
+import { fromCents } from "@/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
 import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
 import { NotificationType } from "@prisma/client";
 import { createNotificationService } from "../../../../../notifications/services";
-import {
-  createPaymentLogRow,
-  deletePaymentLogsForShare,
-  findPaymentLogForShare,
-} from "../../../payment-logs/repository";
 import type { ConfirmPaymentBody } from "../../schemas";
 import { findExpenseById } from "../../repository";
+import { splitShareCents, toSocketExpense } from "../../transformers";
 import {
-  deletePaymentsForMember,
+  confirmPaymentAndLog,
   findExpenseForPayments,
-  upsertPaymentStatus,
-  upsertPendingPayment,
+  markPendingAndClearLog,
+  recordGuestPayment,
+  rejectPaymentAndClearLog,
+  unmarkPayment,
+  unrecordGuestPayment,
 } from "./repository";
 import type { MarkPaidBody } from "./schemas";
 
 type ExpenseForPayments = NonNullable<Awaited<ReturnType<typeof findExpenseForPayments>>>;
+type SplitEntry = ExpenseForPayments["splits"][number];
 
 async function findExpenseInTrip(expenseId: string, tripId: string) {
   const expense = await findExpenseForPayments(expenseId);
@@ -39,39 +41,48 @@ async function requireMemberUserId(email: string) {
   return user.id;
 }
 
-// The payment log records the member's equal share of the expense, once it is confirmed.
-// A member whose share was already logged (e.g. before logging moved to confirmation) isn't logged twice.
-async function logPaymentShare(
-  tripId: string,
-  expense: ExpenseForPayments,
-  payerId: string,
-  payeeId: string,
-) {
-  const splitCount = expense.splits.length;
-  if (splitCount === 0) return;
-  if (await findPaymentLogForShare(expense.id, payerId)) return;
-
-  await createPaymentLogRow({
-    tripId,
-    expenseId: expense.id,
-    payerId,
-    payeeId,
-    amount: Number(expense.amount) / splitCount,
-    paymentMethod: expense.paymentMethod,
-  });
+/** The split entry for a member key (their email, or a guest's tempName). */
+function findSplitEntry(expense: ExpenseForPayments, memberKey: string): SplitEntry | undefined {
+  return expense.splits.find((split) =>
+    split.user ? split.user.email === memberKey : split.tempName === memberKey,
+  );
 }
 
-async function reloadExpense(expenseId: string) {
+/** The member's share of the expense (the same one the API shows), or null if they aren't in the split. */
+function shareAmountForMember(expense: ExpenseForPayments, memberKey: string) {
+  const splitIndex = expense.splits.findIndex((split) =>
+    split.user ? split.user.email === memberKey : split.tempName === memberKey,
+  );
+  if (splitIndex === -1) return null;
+  return fromCents(splitShareCents(expense)[splitIndex]);
+}
+
+/** The creator or the payer may record a guest split member's payment — a guest has no account to do it themselves. */
+function canRecordGuestPayment(expense: ExpenseForPayments, userId: string) {
+  return expense.createdById === userId || expense.paidBy?.id === userId;
+}
+
+/** Reloads the expense after a payment change and broadcasts it — every payment change reaches other clients this way. */
+async function reloadExpense(expenseId: string, groupId: string, updatedBy?: string) {
   const expense = await findExpenseById(expenseId);
   if (!expense) {
     throw new NotFoundError("Expense not found");
   }
+
+  emitExpenseUpdated(groupId, toSocketExpense(expense), { updatedBy }).catch((err) => {
+    logger.error("Failed to emit expense updated event", { error: err });
+  });
+
   return expense;
 }
 
 /**
  * Marks a member as paid (a pending payment awaiting the payer's confirmation) or unpaid.
  * Marking paid is self-service only. The payment log is written when the payer confirms.
+ *
+ * A guest split member (no account) can't self-mark or be confirmed afterwards, so for
+ * them this records (or reverses) a confirmed payment directly, and only the expense's
+ * creator or payer may call it.
  */
 export async function markExpensePaidService(
   token: DecodedIdToken,
@@ -81,12 +92,38 @@ export async function markExpensePaidService(
 ) {
   const { trip, user } = await verifyTripAccess(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
-  const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  const isInSplit = expense.splits.some((split) => split.user?.email === data.memberEmail);
-  if (!isInSplit) {
+  const splitEntry = findSplitEntry(expense, data.memberEmail);
+  if (!splitEntry) {
     throw new NotFoundError("Member is not part of this expense split");
   }
+
+  if (!splitEntry.user) {
+    if (!canRecordGuestPayment(expense, user.id)) {
+      throw new ForbiddenError("Only the expense creator or payer can record a guest's payment");
+    }
+
+    if (data.isPaid) {
+      const amount = shareAmountForMember(expense, data.memberEmail) ?? 0;
+      await recordGuestPayment(expenseId, data.memberEmail, {
+        tripId,
+        payeeId: expense.paidBy?.id ?? null,
+        payeeName: expense.paidBy ? null : expense.tempPaidBy,
+        amount,
+        paymentMethod: expense.paymentMethod,
+      });
+
+      logger.info("Guest payment recorded", { expenseId, tempName: data.memberEmail, tripId });
+    } else {
+      await unrecordGuestPayment(expenseId, data.memberEmail);
+
+      logger.info("Guest payment reversed", { expenseId, tempName: data.memberEmail, tripId });
+    }
+
+    return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
+  }
+
+  const memberUserId = splitEntry.user.id;
 
   if (data.isPaid && user.email !== data.memberEmail) {
     throw new ForbiddenError("You can only mark yourself as paid");
@@ -100,20 +137,22 @@ export async function markExpensePaidService(
   }
 
   if (data.isPaid) {
-    await upsertPendingPayment(expenseId, memberUserId);
+    await markPendingAndClearLog(expenseId, memberUserId);
 
     logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   } else {
-    await deletePaymentsForMember(expenseId, memberUserId);
+    await unmarkPayment(expenseId, memberUserId);
 
     logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
   }
 
-  return reloadExpense(expenseId);
+  return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
 }
 
 /**
- * Confirms or rejects a member's payment and notifies them. Only the expense's payer may do this.
+ * Confirms or rejects a member's payment and notifies them. Only the expense's payer may do
+ * this — except when the payer is a guest (no account), in which case the expense's creator
+ * confirms on their behalf.
  * Confirming records the payment log; rejecting removes any log left over for that share.
  */
 export async function confirmPaymentService(
@@ -125,18 +164,33 @@ export async function confirmPaymentService(
   const { trip, user } = await verifyTripAccess(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
-  if (expense.paidById !== user.id) {
+  const isPayer = expense.paidById === user.id;
+  const isCreatorForGuestPayer = expense.paidById === null && expense.createdById === user.id;
+  if (!isPayer && !isCreatorForGuestPayer) {
     throw new ForbiddenError("Only the payer can confirm or reject payments");
   }
 
   const memberUserId = await requireMemberUserId(data.memberEmail);
 
-  await upsertPaymentStatus(expenseId, memberUserId, data.status);
-
   if (data.status === "confirmed") {
-    await logPaymentShare(tripId, expense, memberUserId, user.id);
+    const amount = shareAmountForMember(expense, data.memberEmail);
+    await confirmPaymentAndLog(
+      expenseId,
+      memberUserId,
+      amount === null
+        ? null
+        : {
+            tripId,
+            // The payee is the expense's payer, not the confirming user — they differ when
+            // the creator is confirming on behalf of a guest payer.
+            payeeId: expense.paidBy?.id ?? null,
+            payeeName: expense.paidBy ? null : expense.tempPaidBy,
+            amount,
+            paymentMethod: expense.paymentMethod,
+          },
+    );
   } else {
-    await deletePaymentLogsForShare(expenseId, memberUserId);
+    await rejectPaymentAndClearLog(expenseId, memberUserId);
   }
 
   await createNotificationService(memberUserId, {
@@ -160,5 +214,5 @@ export async function confirmPaymentService(
     tripId,
   });
 
-  return reloadExpense(expenseId);
+  return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
 }

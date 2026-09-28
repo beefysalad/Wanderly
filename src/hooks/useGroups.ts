@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { Group } from "@/src/shared/types";
 import { getGuestSession } from "@/lib/guest-session";
+import { queryKeys } from "./queryKeys";
 
 interface GroupsResponse {
   groups: Group[];
@@ -33,7 +34,7 @@ interface JoinGroupRequest {
  */
 export function useGroups(enabled: boolean = true) {
   return useQuery<GroupsResponse>({
-    queryKey: ["groups"],
+    queryKey: queryKeys.groups.all,
     queryFn: async () => {
       const response = await api.get<GroupsResponse>("/groups");
       return response.data;
@@ -47,7 +48,7 @@ export function useGroups(enabled: boolean = true) {
  */
 export function useGroup(groupId: string | null) {
   return useQuery<GroupResponse>({
-    queryKey: ["groups", groupId],
+    queryKey: queryKeys.groups.detail(groupId),
     queryFn: async () => {
       if (!groupId) throw new Error("Group ID is required");
       const response = await api.get<GroupResponse>(`/groups/${groupId}`);
@@ -64,7 +65,7 @@ export function useGroupAsGuest(groupId: string | null) {
   const guestSession = getGuestSession();
 
   return useQuery<Group>({
-    queryKey: ["groups", groupId, "guest"],
+    queryKey: queryKeys.groups.guest(groupId),
     queryFn: async () => {
       if (!groupId) throw new Error("Group ID is required");
       const response = await api.get<Group>(`/groups/${groupId}/guest`);
@@ -88,7 +89,7 @@ export function useCreateGroup() {
     },
     onSuccess: () => {
       // Invalidate and refetch groups list
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     },
   });
 }
@@ -106,7 +107,7 @@ export function useJoinGroup() {
     },
     onSuccess: () => {
       // Invalidate and refetch groups list
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
     },
   });
 }
@@ -123,8 +124,8 @@ export function useLeaveGroup() {
     },
     onSuccess: (_, groupId) => {
       // Invalidate groups list and specific group
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
     },
   });
 }
@@ -141,8 +142,8 @@ export function useDeleteGroup() {
     },
     onSuccess: (_, groupId) => {
       // Invalidate groups list and remove specific group from cache
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.removeQueries({ queryKey: ["groups", groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.removeQueries({ queryKey: queryKeys.groups.detail(groupId) });
     },
   });
 }
@@ -161,8 +162,8 @@ export function useUpdateGroup() {
     },
     onSuccess: (_, variables) => {
       // Invalidate groups list and specific group
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.detail(variables.groupId) });
     },
   });
 }

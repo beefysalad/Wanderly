@@ -4,20 +4,21 @@ import { useState } from "react";
 import type { Activity, Expense } from "@/src/shared/types";
 import ConfirmDeleteModal from "../../shared/Modal/ConfirmDeleteModal";
 import { payerIdentity } from "../Expenses/expenseView";
+import { isUserInvolved, shareOf } from "../Expenses/expenseStats";
 import { ExpenseHero } from "./ExpenseHero";
 import { ItemMenu } from "../../shared/ItemMenu";
 import { PayWithCard, YourShareCard } from "./PaymentSide";
 import { WhoOwesWhat, type OwesRow } from "./WhoOwesWhat";
-import { memberStatus, paidBack, shareBox, shareOf, splitMembers } from "./expenseDetailView";
+import { memberStatus, paidBack, shareBox, splitMembers } from "./expenseDetailView";
 
 interface IExpenseDetailProps {
   expense: Expense;
-  members: string[];
   memberNames?: Record<string, string>; // email -> name mapping
   memberMetadata?: Record<string, { joinedAt: string; name?: string; imageUrl?: string }>; // email -> metadata with imageUrl
   activities?: Activity[]; // activities from the trip
   onMarkPaid?: (memberId: string) => void;
   onConfirmPayment?: (memberEmail: string, status: "confirmed" | "rejected") => void;
+  onRecordGuestPayment?: (member: string, isPaid: boolean) => void;
   onEdit?: () => void;
   onDelete?: () => void;
   currentUser?: string;
@@ -30,7 +31,6 @@ interface IExpenseDetailProps {
  */
 const ExpenseDetail = ({
   expense,
-  members,
   memberNames,
   memberMetadata,
   activities = [],
@@ -38,6 +38,7 @@ const ExpenseDetail = ({
   onEdit,
   onMarkPaid,
   onConfirmPayment,
+  onRecordGuestPayment,
   currentUser = "",
   readOnly = false,
 }: IExpenseDetailProps) => {
@@ -47,16 +48,18 @@ const ExpenseDetail = ({
   const identityMaps = { memberNames, memberMetadata };
   const payer = payerIdentity(identityMaps, expense.paidBy, currentUser);
   const linkedActivity = expense.activityId ? activities.find((activity) => activity.id === expense.activityId) : undefined;
-  const everyone = splitMembers(expense, members);
-  const share = shareOf(expense, members);
-
-  const rows: OwesRow[] = everyone.map((email) => {
+  const rows: OwesRow[] = splitMembers(expense).map((email) => {
     const person = payerIdentity(identityMaps, email, currentUser);
-    return { email, name: person.name, imageUrl: person.imageUrl, status: memberStatus(expense, email), share, isYou: person.isYou };
+    const share = isUserInvolved(expense, email) ? shareOf(expense, email) : null;
+    const isGuest = expense.splits.find((split) => split.member === email)?.isGuest ?? false;
+    return { email, name: person.name, imageUrl: person.imageUrl, status: memberStatus(expense, email), share, isYou: person.isYou, isGuest };
   });
 
-  const box = shareBox(expense, members, currentUser, payer.short);
+  const box = shareBox(expense, currentUser, payer.short);
   const canManage = !readOnly && (onEdit || onDelete);
+  // Mirrors the server rule: only the expense's creator or payer may record a guest's payment.
+  const canRecordGuestPayments =
+    !readOnly && !!currentUser && (currentUser === expense.createdBy?.email || currentUser === expense.paidBy);
 
   return (
     <div className='flex flex-wrap items-start gap-6'>
@@ -68,14 +71,16 @@ const ExpenseDetail = ({
           onOpenActivity={
             readOnly ? undefined : (activity) => router.push(`/group/${expense.groupId}/trip/${expense.tripId}/activities/${activity.id}`)
           }
-          ways={everyone.length}
-          paidBack={paidBack(expense, members)}
+          ways={expense.splits.length}
+          paidBack={paidBack(expense)}
           menu={canManage ? <ItemMenu noun='expense' onEdit={onEdit} onDelete={onDelete ? () => setShowDeleteConfirm(true) : undefined} /> : undefined}
         />
         <WhoOwesWhat
           rows={rows}
-          canConfirm={!readOnly && currentUser === expense.paidBy}
+          canConfirm={!readOnly && (currentUser === expense.paidBy || (!!expense.paidByIsGuest && canRecordGuestPayments))}
           onConfirm={onConfirmPayment}
+          canRecordGuestPayments={canRecordGuestPayments}
+          onRecordGuestPayment={onRecordGuestPayment}
         />
       </div>
 
