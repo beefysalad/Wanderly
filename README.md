@@ -8,7 +8,7 @@
 - **Trips**: multiple trips per group with dates, location and a status (planning, finalized, ongoing, cancelled).
 - **Itinerary**: activities with times, notes and transport details, shown as a day overview, a timeline and a calendar. Mark activities done; export the schedule as a PNG or an `.ics` calendar file.
 - **Budgets**: plan spending per trip and per activity and mark what is already booked.
-- **Expenses**: record who paid, split costs across members (including non-registered guests), attach a payment method and QR code, and track who has paid and who still owes. Charts summarise spending.
+- **Expenses**: record who paid, split costs across members (including non-registered guests), attach a payment method and QR code, and track who has paid and who still owes.
 - **Payments**: members mark themselves paid, the payer confirms, and every settlement lands in a payment history.
 - **Guest view**: share a group code to give someone read-only access without an account.
 - **Notifications**: in-app notifications plus real-time updates over Socket.IO.
@@ -20,7 +20,7 @@
 | Area | Tools |
 |---|---|
 | Framework | Next.js 15 (App Router, Turbopack), React 19, TypeScript |
-| UI | Tailwind CSS 4, shadcn/ui (Radix), Framer Motion, Lucide icons, Recharts, Sonner toasts |
+| UI | Tailwind CSS 4, shadcn/ui (Radix), Framer Motion, Lucide icons, Sonner toasts |
 | Data | PostgreSQL with Prisma 6 |
 | Client state | TanStack Query, React Hook Form, Zod |
 | Auth | Firebase Authentication (client) and Firebase Admin (server token verification) |
@@ -57,7 +57,7 @@ npm run dev            # http://localhost:3000
 | Firebase (client) | `NEXT_PUBLIC_FIREBASE_API_KEY`, `..._AUTH_DOMAIN`, `..._PROJECT_ID`, `..._STORAGE_BUCKET`, `..._MESSAGING_SENDER_ID`, `..._APP_ID`, `..._MEASUREMENT_ID` |
 | Firebase Admin (server) | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
 | Cloudinary | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
-| Realtime | `NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY` |
+| Realtime | `NEXT_PUBLIC_SOCKET_URL`, `SOCKET_API_KEY`, `SOCKET_SERVER_URL` (optional, private URL for server-to-server emits) |
 | Admin and guests | `ADMIN_EMAILS` (verified admin emails) and/or `ADMIN_UIDS` (Firebase UIDs), `GUEST_TOKEN_SECRET` |
 | Rate limiting | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional locally) |
 | App flags | `NEXT_PUBLIC_ENVIRONMENT`, `NEXT_PUBLIC_MAINTENANCE_MODE` |
@@ -67,8 +67,8 @@ npm run dev            # http://localhost:3000
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start the dev server (Turbopack) |
-| `npm run build` | Production build (`scripts/build.mjs`): `prisma generate`, then `prisma migrate deploy` only when `VERCEL_ENV=production`, then `next build` |
-| `npm run build:ci` | `prisma generate` and `next build`, never migrates (what CI runs) |
+| `npm run build` | Production build (`scripts/build.mjs`): `prisma generate`, then `prisma migrate deploy` only when `VERCEL_ENV=production`, then `next build --turbopack` |
+| `npm run build:ci` | `prisma generate` and `next build --turbopack`, never migrates (what CI runs) |
 | `npm start` | Start the production server |
 | `npm run lint` | ESLint |
 | `npm test` / `npm run test:watch` | Vitest (colocated `*.test.ts` files) |

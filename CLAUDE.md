@@ -72,7 +72,7 @@ Do not run `prisma migrate dev`/`deploy` or `npm install` unless the user explic
 ## Backend / API Patterns
 
 - Route handlers live at `src/app/api/**/route.ts`; larger features split business logic into a sibling `services.ts` (e.g. `expenses/services.ts`, `groups/services.ts`) — keep that split, don't inline heavy logic back into the route handler.
-- Use Next's dynamic route params (`context.params`) for path segments — do not parse `req.nextUrl.pathname` manually to extract IDs (existing code in `expenses/route.ts` does this; it's fragile and shouldn't be the template for new routes).
+- Use Next's dynamic route params (`context.params`) for path segments — do not parse `req.nextUrl.pathname` manually to extract IDs.
 
 ### Service / Repository Layering (target pattern)
 
@@ -83,7 +83,7 @@ Existing `services.ts` files call Prisma directly and mix business logic with da
 - **Repository** (new — e.g. `repository.ts` or `<feature>.repository.ts` next to `services.ts`) — the only place that imports `@/lib/prisma` and issues Prisma calls for that feature. One function per query/mutation (`findTripById`, `createExpense`, `listExpensesByGroup`, ...), typed inputs/outputs, no business rules.
 
 Migrate a feature to this shape when you're already making a non-trivial change to it — don't do a drive-by refactor of unrelated `services.ts` files just to add the repository layer.
-- **Validate every request body with Zod before using it.** Migrated features (Profile, Reviews, Groups) validate with a colocated `schemas.ts` and `.parse()` in the route, with `handleApiError` mapping failures to a 400. Routes not yet migrated (Trips/Activities/Budget/Expenses/admin/etc.) still destructure `req.json()` directly with only compile-time types. New/edited routes must define a schema and `.parse()` the body before touching Prisma. Note `z.coerce.date()` turns `null` into 1970-01-01 — guard date fields with a non-empty string/number check first (see `groups/[groupId]/trips/schemas.ts`).
+- **Validate every request body with Zod before using it.** Migrated features (Profile, Reviews, Groups, Expenses, Payments, Activities, Budgets, Admin config) validate with a colocated `schemas.ts` and `.parse()` in the route, with `handleApiError` mapping failures to a 400. Don't assume every route is migrated just because most are — check the feature's `schemas.ts` before treating an unfamiliar route as a template. New/edited routes must define a schema and `.parse()` the body before touching Prisma. Note `z.coerce.date()` turns `null` into 1970-01-01 — guard date fields with a non-empty string/number check first (see `groups/[groupId]/trips/schemas.ts`).
 - Auth: wrap protected routes with `withAuth` (Firebase ID token required, revocation checked) or `withOptionalAuth` (`lib/auth/with-auth.ts`) for routes that also serve guests. Guests present a server-signed `X-Guest-Token` (issued by `POST /api/groups/validate-code`, 24h); the wrapper verifies it and exposes `context.guestGroupId`, but services must still compare that id with the group/trip actually being accessed (see `verifyGuestTripAccess`). The raw group code is never sent on data requests and never logged.
 - Admin routes call `assertAdmin(req)` (`src/app/api/admin/guard.ts`): a Firebase account whose uid is in `ADMIN_UIDS` or whose verified email is in `ADMIN_EMAILS`. Destructive admin actions must call `auditAdminAction`. There is no shared password anymore.
 - Rate limiting: wrap public or guessable routes with `withRateLimit(name, handler)` (`lib/rate-limit.ts`, Upstash Redis; fails open if Redis is unset). Add a new limiter to the `LIMITERS` table there.
@@ -93,14 +93,13 @@ Migrate a feature to this shape when you're already making a non-trivial change 
 
 ## Data Model
 
-Core Prisma models: `User` → `Group` (via `GroupMember`) → `Trip` → `Activity`/`Expense`. Expenses split via `ExpenseSplit`, settlements via `ExpensePayment`/`PaymentLog`. Admin/system config lives in `AppConfig` (key/value), including the admin password fallback and "what's new" content. Check `prisma/schema.prisma` directly for current fields/relations rather than relying on this summary for anything non-trivial.
+Core Prisma models: `User` → `Group` (via `GroupMember`) → `Trip` → `Activity`/`Expense`. Expenses split via `ExpenseSplit`, settlements via `ExpensePayment`/`PaymentLog`. Admin/system config lives in `AppConfig` (key/value), including maintenance mode and "what's new" content. Check `prisma/schema.prisma` directly for current fields/relations rather than relying on this summary for anything non-trivial.
 
 Deleting a user must not change what other members see. Relations from shared rows to `User` (trip creator, expense payer/creator, split, payment, payment-log payer/payee) are nullable with `onDelete: SetNull`, and the admin delete (`admin/users/repository.ts`) copies the user's name onto them first (`ExpenseSplit.tempName`, `ExpensePayment.tempName`, `Expense.tempPaidBy`, `PaymentLog.payerName`/`payeeName`) in the same transaction. A trip without a creator reads "Former member" and the group owner may delete it. Groups the user owns pass to the longest-standing other member, and only groups nobody else is in are deleted. Only the user's own rows (memberships, notifications) cascade. New relations to `User` on shared data should follow the same pattern.
 
 ## Things Not to Propagate
 
 These exist in the codebase today — don't use them as the template for new code:
-- Manual `pathname.split("/")` parsing instead of `context.params`.
 - API routes with no Zod validation.
 - `services.ts` files calling Prisma directly instead of going through a repository (see **Service / Repository Layering** above).
 - One-off debug/repro scripts committed at the repo root — put throwaway scripts in `scripts/` or don't commit them.
