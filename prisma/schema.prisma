@@ -209,7 +209,6 @@ model ExpensePayment {
   expenseId String
   userId    String? // null once the member's account is deleted; tempName then keeps their name
   tempName  String?
-  amount    Decimal       @default(0) @db.Decimal(12, 2)
   status    PaymentStatus @default(pending)
   paidAt    DateTime      @default(now())
   createdAt DateTime      @default(now())
@@ -241,6 +240,8 @@ model PaymentLog {
   payer   User?   @relation("PaymentLogPayer", fields: [payerId], references: [id], onDelete: SetNull)
   payee   User?   @relation("PaymentLogPayee", fields: [payeeId], references: [id], onDelete: SetNull)
 
+  // One log per member's share of an expense; a concurrent double-confirm relies on this to no-op instead of duplicating.
+  @@unique([expenseId, payerId])
   @@index([tripId, timestamp])
   @@index([payerId])
   @@index([payeeId])

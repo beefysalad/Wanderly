@@ -29,6 +29,15 @@ export function findExpenseById(expenseId: string) {
   return prisma.expense.findUnique({ where: { id: expenseId }, include: EXPENSE_INCLUDE });
 }
 
+/** Registered-user ids currently in the expense's split, for diffing against a replacement split. */
+export async function findExpenseSplitUserIds(expenseId: string): Promise<string[]> {
+  const rows = await prisma.expenseSplit.findMany({
+    where: { expenseId, userId: { not: null } },
+    select: { userId: true },
+  });
+  return rows.map((row) => row.userId as string);
+}
+
 /** Lightweight lookup for ownership checks and notification text. */
 export function findExpenseSummary(expenseId: string) {
   return prisma.expense.findUnique({
@@ -84,10 +93,12 @@ export interface UpdateExpenseRow {
   activityId?: string | null;
   /** When present, replaces all existing splits (an empty array clears them). */
   splits?: SplitRow[];
+  /** Registered-user ids dropped from the split; their payment status and log for this expense are cleared. */
+  removedMemberIds?: string[];
 }
 
 export function updateExpenseRow(expenseId: string, changes: UpdateExpenseRow) {
-  const { payer, amount, splits, activityId, ...plain } = changes;
+  const { payer, amount, splits, activityId, removedMemberIds, ...plain } = changes;
 
   const data: Prisma.ExpenseUpdateInput = { ...plain };
   if (payer) {
@@ -100,9 +111,14 @@ export function updateExpenseRow(expenseId: string, changes: UpdateExpenseRow) {
   }
   if (splits && splits.length > 0) data.splits = { create: splits };
 
-  // Replacing splits is delete + recreate, so do both or neither.
+  // Replacing splits is delete + recreate, so do both or neither; members dropped from the
+  // split have their stale payment status and log cleared in the same transaction.
   return prisma.$transaction(async (tx) => {
     if (splits) await tx.expenseSplit.deleteMany({ where: { expenseId } });
+    if (removedMemberIds && removedMemberIds.length > 0) {
+      await tx.expensePayment.deleteMany({ where: { expenseId, userId: { in: removedMemberIds } } });
+      await tx.paymentLog.deleteMany({ where: { expenseId, payerId: { in: removedMemberIds } } });
+    }
     return tx.expense.update({ where: { id: expenseId }, data, include: EXPENSE_INCLUDE });
   });
 }
