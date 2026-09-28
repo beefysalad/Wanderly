@@ -1,6 +1,7 @@
 import { getAuth } from "firebase/auth";
+import packageJson from "@/package.json";
 
-const APP_VERSION = "2.9.0";
+const APP_VERSION = packageJson.version;
 
 export function getEnvironment() {
   const environment = process.env.NEXT_PUBLIC_ENVIRONMENT;
