@@ -2,42 +2,48 @@
  * Helper functions to emit Socket.IO events via HTTP API
  */
 
-const SOCKET_SERVER_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080";
-const API_KEY = process.env.SOCKET_API_KEY || "your-secret-api-key";
+import { after } from "next/server";
+import { logger } from "./logger";
+
+// A private, server-only URL takes priority when set; otherwise the same URL the
+// browser uses to connect is reused for these server-to-server calls.
+const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || process.env.NEXT_PUBLIC_SOCKET_URL;
+const API_KEY = process.env.SOCKET_API_KEY;
+const EMIT_TIMEOUT_MS = 5000;
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function emitEvent(endpoint: string, data: any) {
-  try {
-    console.log(`Emitting Socket.IO event: ${endpoint}`, {
-      groupId: data.groupId,
+  if (!API_KEY || !SOCKET_SERVER_URL) {
+    logger.error("Socket emit skipped: SOCKET_API_KEY/SOCKET_SERVER_URL is not configured", {
+      endpoint,
     });
-    const response = await fetch(
-      `${SOCKET_SERVER_URL}/api/events/${endpoint}`,
-      {
+    return;
+  }
+
+  // Deferred via after() so the response isn't held up waiting on the socket server, and so
+  // the request isn't torn down (on a serverless runtime) before this fire-and-forget call lands.
+  after(async () => {
+    try {
+      const response = await fetch(`${SOCKET_SERVER_URL}/api/events/${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": API_KEY,
         },
         body: JSON.stringify(data),
-      },
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Failed to emit event: ${endpoint}`, {
-        status: response.status,
-        error: errorText,
+        signal: AbortSignal.timeout(EMIT_TIMEOUT_MS),
       });
-    } else {
-      console.log(`Successfully emitted event: ${endpoint}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error("Socket emit failed", { endpoint, status: response.status, error: errorText });
+      }
+    } catch (error) {
+      logger.error("Socket emit errored", { endpoint, error });
     }
-  } catch (error) {
-    console.error(`Error emitting event: ${endpoint}`, error);
-  }
+  });
 }
-//
+
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function emitTripCreated(groupId: string, trip: any) {
   await emitEvent("trip/created", { groupId, trip });
@@ -179,10 +185,7 @@ export async function emitNotificationToUser(
   await emitEvent("notification/user", { userId, notification });
 }
 
-export async function emitNotificationToGroup(
-  groupId: string,
-  //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  notification: any,
-) {
-  await emitEvent("notification/group", { groupId, notification });
+/** A bodyless ping: tells the group's room to refetch, without broadcasting one member's private notification text to everyone in it. */
+export async function emitNotificationChangedToGroup(groupId: string) {
+  await emitEvent("notification/group", { groupId });
 }

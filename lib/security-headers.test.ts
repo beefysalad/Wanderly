@@ -30,6 +30,12 @@ describe("securityHeaders", () => {
     expect(csp).toContain("object-src 'none'");
   });
 
+  it("reports violations to the CSP report endpoint", () => {
+    const csp = byKey(securityHeaders())["Content-Security-Policy-Report-Only"];
+
+    expect(csp).toContain("report-uri /api/csp-report");
+  });
+
   it("adds the socket origin to connect-src when configured", () => {
     const csp = byKey(securityHeaders({ socketUrl: "https://socket.example.com" }))[
       "Content-Security-Policy-Report-Only"

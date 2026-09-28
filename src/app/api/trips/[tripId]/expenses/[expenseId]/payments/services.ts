@@ -113,11 +113,11 @@ export async function markExpensePaidService(
         paymentMethod: expense.paymentMethod,
       });
 
-      logger.info("Guest payment recorded", { expenseId, tempName: data.memberEmail, tripId });
+      logger.info("Guest payment recorded", { expenseId, tripId });
     } else {
       await unrecordGuestPayment(expenseId, data.memberEmail);
 
-      logger.info("Guest payment reversed", { expenseId, tempName: data.memberEmail, tripId });
+      logger.info("Guest payment reversed", { expenseId, tripId });
     }
 
     return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
@@ -139,11 +139,11 @@ export async function markExpensePaidService(
   if (data.isPaid) {
     await markPendingAndClearLog(expenseId, memberUserId);
 
-    logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
+    logger.info("Expense marked as paid", { expenseId, memberUserId, tripId });
   } else {
     await unmarkPayment(expenseId, memberUserId);
 
-    logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
+    logger.info("Expense unmarked as paid", { expenseId, memberUserId, tripId });
   }
 
   return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
@@ -209,7 +209,7 @@ export async function confirmPaymentService(
 
   logger.info("Payment status updated", {
     expenseId,
-    memberEmail: data.memberEmail,
+    memberUserId,
     status: data.status,
     tripId,
   });
