@@ -1,15 +1,8 @@
 import { z } from "zod";
 
-const transportationModes = [
-  "commute",
-  "car",
-  "plane",
-  "bus",
-  "train",
-  "taxi",
-  "walking",
-  "other",
-] as const;
+export const TRANSPORTATION_MODES = ["commute", "car", "plane", "bus", "train", "taxi", "walking", "other"] as const;
+
+export type TTransportationMode = (typeof TRANSPORTATION_MODES)[number];
 
 // Same rules as the API (activities/schemas.ts): 24-hour HH:mm, empty means no time.
 const time = z
@@ -31,7 +24,7 @@ export const activitySchema = z
     notes: z.string().optional(), // optional notes
 
     // Transportation fields (all optional)
-    transportationMode: z.enum(transportationModes).optional(),
+    transportationMode: z.enum(TRANSPORTATION_MODES).optional(),
     pickupTime: z.string().optional(), // "HH:MM" string
     pickupLocation: z.string().optional(),
     dropoffLocation: z.string().optional(),

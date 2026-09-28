@@ -149,6 +149,21 @@ export interface Notification {
   relatedActivityId?: string;
   createdAt: string;
 }
+/** A row in the admin "User Management" table — the `/admin/users` list response, not the full `User` model. */
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  imageUrl: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+  authCreationTime: string | null;
+  stats: {
+    trips: number;
+    groups: number;
+  };
+}
+
 export interface Budget {
   id: string;
   tripId: string;
