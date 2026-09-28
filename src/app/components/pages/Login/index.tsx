@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
+import { safeRedirectPath } from "@/lib/utils";
 import { AuthItem } from "../../shared/AuthForm/AuthParts";
 import SignInForm from "../../shared/AuthForm/SignInForm";
 import { EASE } from "../../shared/Site/motion";
@@ -40,7 +41,7 @@ const UPDATES: { icon: ReactNode; text: ReactNode }[] = [
 const LoginPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect") || "/dashboard";
+  const redirectUrl = safeRedirectPath(searchParams.get("redirect"));
   const signUpHref = redirectUrl !== "/dashboard" ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : "/register";
 
   return (

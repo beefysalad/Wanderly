@@ -21,3 +21,15 @@ export function formatTime12Hour(time24: string): string {
   
   return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
+
+/**
+ * Guards a `?redirect=` query value against an open redirect: only a same-origin path
+ * (starting with a single `/`, never `//host` which browsers treat as scheme-relative)
+ * is accepted, so `router.push`/`window.location` can't be sent off-site. Anything else
+ * falls back to `fallback`.
+ */
+export function safeRedirectPath(value: string | null | undefined, fallback = "/dashboard"): string {
+  if (!value) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
+  return value;
+}

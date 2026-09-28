@@ -130,4 +130,18 @@ describe("withRateLimit", () => {
     expect(response.status).toBe(200);
     expect(handler).toHaveBeenCalledWith(expect.anything(), extra);
   });
+
+  it("keys by the custom function instead of IP when one is given", async () => {
+    mockLimit.mockResolvedValue({ success: true, remaining: 5, reset: Date.now() + 1000 });
+    const { withRateLimit } = await importFresh();
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+    const context = { user: { id: "user-42" } };
+
+    await withRateLimit("upload", handler, { key: (_req, ctx: typeof context) => ctx.user.id })(
+      req({ "x-forwarded-for": "1.1.1.1" }),
+      context,
+    );
+
+    expect(mockLimit).toHaveBeenCalledWith("user-42");
+  });
 });

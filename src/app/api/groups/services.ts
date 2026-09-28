@@ -42,7 +42,7 @@ export async function createGroupService(token: DecodedIdToken, input: CreateGro
     logger.error("Failed to emit group created event", { error: err });
   });
 
-  logger.info("Group created", { groupId: group.id, code: group.code });
+  logger.info("Group created", { groupId: group.id });
   return group;
 }
 
@@ -85,7 +85,7 @@ export async function joinGroupService(token: DecodedIdToken, groupCode: string)
     });
   }
 
-  logger.info("User joined group", { userId: user.id, groupId: group.id, code: groupCode });
+  logger.info("User joined group", { userId: user.id, groupId: group.id });
 
   return updatedGroup!;
 }

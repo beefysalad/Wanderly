@@ -9,6 +9,8 @@ const LIMITERS = {
   reviews: { requests: 10, window: "1 h" },
   "admin-signin": { requests: 10, window: "10 m" },
   health: { requests: 30, window: "1 m" },
+  upload: { requests: 20, window: "1 h" },
+  "csp-report": { requests: 20, window: "1 m" },
 } as const;
 
 export type LimiterName = keyof typeof LIMITERS;
@@ -89,17 +91,22 @@ export function getClientIP(request: Request): string {
   return "unknown";
 }
 
-/** Wraps a route handler so requests over the named limit get a 429 before the handler runs. */
+/**
+ * Wraps a route handler so requests over the named limit get a 429 before the handler runs.
+ * Keyed by client IP by default; pass `key` to limit per-user (or any other identity) instead —
+ * useful when the handler is already behind `withAuth` and a signed-in uid is available.
+ */
 export function withRateLimit<A extends unknown[]>(
   name: LimiterName,
   handler: (req: NextRequest, ...rest: A) => Promise<NextResponse>,
+  options?: { key?: (req: NextRequest, ...rest: A) => string },
 ) {
   return async (req: NextRequest, ...rest: A): Promise<NextResponse> => {
-    const ip = getClientIP(req);
-    const result = await limit(name, ip);
+    const key = options?.key ? options.key(req, ...rest) : getClientIP(req);
+    const result = await limit(name, key);
 
     if (!result.allowed) {
-      logger.warn("Rate limit exceeded", { name, ip });
+      logger.warn("Rate limit exceeded", { name, key });
       const retryAfter = Math.max(1, Math.ceil((result.resetTime - Date.now()) / 1000));
       return NextResponse.json(
         {
