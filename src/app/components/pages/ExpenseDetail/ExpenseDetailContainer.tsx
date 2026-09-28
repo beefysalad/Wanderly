@@ -5,7 +5,7 @@ import ExpenseDetail from "./index";
 import { Trip } from "@/src/shared/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
-import { useConfirmPayment, useDeleteExpense, useExpenses, useMarkPaid } from "@/src/hooks/useExpenses";
+import { useConfirmPayment, useDeleteExpense, useExpenses, useMarkPaid, useUndoGuestPayment } from "@/src/hooks/useExpenses";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { toast } from "sonner";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
@@ -40,6 +40,7 @@ const ExpenseDetailContainer = ({ groupId, expenseId }: IExpenseDetailContainer)
   const { data: expensesData, isLoading: loadingExpenses } = expensesQuery;
   const deleteExpense = useDeleteExpense(tripId, expenseId, groupId);
   const markPaid = useMarkPaid(tripId, expenseId, groupId);
+  const undoGuestPayment = useUndoGuestPayment(tripId, expenseId, groupId);
   const confirmPayment = useConfirmPayment(tripId, expenseId, groupId);
 
   useSocketGroupUpdates(groupId);
@@ -103,6 +104,21 @@ const ExpenseDetailContainer = ({ groupId, expenseId }: IExpenseDetailContainer)
     });
   };
 
+  const handleRecordGuestPayment = (member: string, isPaid: boolean) => {
+    if (!tripId) return;
+    if (isPaid) {
+      markPaid.mutate(member, {
+        onSuccess: () => toast.success("Payment recorded"),
+        onError: () => toast.error("Failed to record payment"),
+      });
+    } else {
+      undoGuestPayment.mutate(member, {
+        onSuccess: () => toast.success("Payment reversed"),
+        onError: () => toast.error("Failed to reverse payment"),
+      });
+    }
+  };
+
   const handleConfirmPayment = (memberEmail: string, status: "confirmed" | "rejected") => {
     if (!tripId) return;
     confirmPayment.mutate(
@@ -134,6 +150,7 @@ const ExpenseDetailContainer = ({ groupId, expenseId }: IExpenseDetailContainer)
         onDelete={canChangeExpense ? handleDelete : undefined}
         onMarkPaid={handleMarkPaid}
         onConfirmPayment={handleConfirmPayment}
+        onRecordGuestPayment={handleRecordGuestPayment}
         currentUser={user?.email || ""}
       />
     </AppShell>

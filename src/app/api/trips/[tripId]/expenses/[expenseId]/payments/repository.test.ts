@@ -17,7 +17,7 @@ vi.mock("@/lib/prisma", () => ({
 
 const { confirmPaymentAndLog, markPendingAndClearLog } = await import("./repository");
 
-const log = { tripId: "t1", payeeId: "u-alice", amount: 30, paymentMethod: null };
+const log = { tripId: "t1", payeeId: "u-alice", payeeName: null, amount: 30, paymentMethod: null };
 
 beforeEach(() => vi.clearAllMocks());
 

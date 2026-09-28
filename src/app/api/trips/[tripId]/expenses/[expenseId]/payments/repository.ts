@@ -47,7 +47,9 @@ export function unmarkPayment(expenseId: string, userId: string) {
 
 export interface ConfirmLogData {
   tripId: string;
-  payeeId: string;
+  /** Both null-able: the expense's payer may be a guest with no account. */
+  payeeId: string | null;
+  payeeName: string | null;
   amount: number;
   paymentMethod: PaymentMethod | null;
 }
@@ -82,6 +84,7 @@ export async function confirmPaymentAndLog(
         expenseId,
         payerId: userId,
         payeeId: log.payeeId,
+        payeeName: log.payeeName,
         amount: new Decimal(log.amount),
         paymentMethod: log.paymentMethod,
       },
@@ -99,5 +102,48 @@ export function rejectPaymentAndClearLog(expenseId: string, userId: string) {
       create: { expenseId, userId, status: "rejected" },
     }),
     prisma.paymentLog.deleteMany({ where: { expenseId, payerId: userId } }),
+  ]);
+}
+
+export interface GuestPaymentLogData {
+  tripId: string;
+  payeeId: string | null;
+  payeeName: string | null;
+  amount: number;
+  paymentMethod: PaymentMethod | null;
+}
+
+/**
+ * Records a guest (tempName) split member's payment as confirmed and logs it, both in one
+ * step. A guest has no account to self-mark pending or to be confirmed through afterwards,
+ * so the creator or payer records the payment directly.
+ */
+export function recordGuestPayment(expenseId: string, tempName: string, log: GuestPaymentLogData) {
+  return prisma.$transaction([
+    prisma.expensePayment.upsert({
+      where: { expenseId_tempName: { expenseId, tempName } },
+      update: { status: "confirmed" },
+      create: { expenseId, tempName, status: "confirmed" },
+    }),
+    prisma.paymentLog.create({
+      data: {
+        tripId: log.tripId,
+        expenseId,
+        payerId: null,
+        payerName: tempName,
+        payeeId: log.payeeId,
+        payeeName: log.payeeName,
+        amount: new Decimal(log.amount),
+        paymentMethod: log.paymentMethod,
+      },
+    }),
+  ]);
+}
+
+/** Reverses a recorded guest payment and removes the log entry it created. */
+export function unrecordGuestPayment(expenseId: string, tempName: string) {
+  return prisma.$transaction([
+    prisma.expensePayment.deleteMany({ where: { expenseId, tempName } }),
+    prisma.paymentLog.deleteMany({ where: { expenseId, payerId: null, payerName: tempName } }),
   ]);
 }

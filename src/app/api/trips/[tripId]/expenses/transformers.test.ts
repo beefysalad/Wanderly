@@ -44,9 +44,9 @@ const row = (over: Partial<ExpenseWithRelations>): ExpenseWithRelations => ({
 describe("transformExpense shares", () => {
   it("returns each split's share to the centavo, with the leftover centavo on the payer", () => {
     expect(transformExpense(row({})).splits).toEqual([
-      { member: "alice@x.com", shareAmount: 33.34 },
-      { member: "bob@x.com", shareAmount: 33.33 },
-      { member: "cara@x.com", shareAmount: 33.33 },
+      { member: "alice@x.com", shareAmount: 33.34, isGuest: false },
+      { member: "bob@x.com", shareAmount: 33.33, isGuest: false },
+      { member: "cara@x.com", shareAmount: 33.33, isGuest: false },
     ]);
   });
 
@@ -62,10 +62,19 @@ describe("transformExpense shares", () => {
     );
 
     expect(expense.splits).toEqual([
-      { member: "bob@x.com", shareAmount: 33.33 },
-      { member: "Guest Gary", shareAmount: 33.34 },
-      { member: "cara@x.com", shareAmount: 33.33 },
+      { member: "bob@x.com", shareAmount: 33.33, isGuest: false },
+      { member: "Guest Gary", shareAmount: 33.34, isGuest: true },
+      { member: "cara@x.com", shareAmount: 33.33, isGuest: false },
     ]);
+  });
+
+  it("flags a paidByIsGuest expense when the payer has no account", () => {
+    const expense = transformExpense(
+      row({ paidById: null, paidBy: null, tempPaidBy: "Guest Gary", splits: [split(bob), split(null, "Guest Gary")] }),
+    );
+
+    expect(expense.paidByIsGuest).toBe(true);
+    expect(transformExpense(row({})).paidByIsGuest).toBe(false);
   });
 
   it("gives nobody a share when the expense isn't split", () => {

@@ -207,7 +207,7 @@ enum PaymentStatus {
 model ExpensePayment {
   id        String        @id @default(cuid())
   expenseId String
-  userId    String? // null once the member's account is deleted; tempName then keeps their name
+  userId    String? // null for a guest split member (tempName identifies them) or once the member's account is deleted
   tempName  String?
   status    PaymentStatus @default(pending)
   paidAt    DateTime      @default(now())
@@ -217,7 +217,9 @@ model ExpensePayment {
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  // userId addresses a registered member's row; tempName addresses a guest's (userId stays null for guests, so it never collides here).
   @@unique([expenseId, userId])
+  @@unique([expenseId, tempName])
   @@index([userId])
 }
 
