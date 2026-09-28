@@ -9,3 +9,11 @@ export const upsertConfigSchema = z.object({
   value: z.json().refine((value) => value !== null, "Value is required"),
 });
 export type UpsertConfigBody = z.infer<typeof upsertConfigSchema>;
+
+// The "maintenance-mode" config value has shipped as either a raw boolean or an object;
+// both are accepted when reading it back.
+export const maintenanceConfigValueSchema = z.union([
+  z.boolean(),
+  z.object({ enabled: z.boolean().optional(), estimate: z.string().optional() }),
+]);
+export type MaintenanceConfigValue = z.infer<typeof maintenanceConfigValueSchema>;

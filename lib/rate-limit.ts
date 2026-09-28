@@ -8,6 +8,7 @@ const LIMITERS = {
   "guest-join": { requests: 20, window: "1 m" },
   reviews: { requests: 10, window: "1 h" },
   "admin-signin": { requests: 10, window: "10 m" },
+  health: { requests: 30, window: "1 m" },
 } as const;
 
 export type LimiterName = keyof typeof LIMITERS;

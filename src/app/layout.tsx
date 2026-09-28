@@ -43,37 +43,14 @@ export const viewport: Viewport = {
 };
 
 import { MaintenanceProvider } from "./components/shared/maintenance-provider";
-import prisma from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import { getMaintenanceConfigService } from "./api/admin/config/services";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch maintenance mode from DB
-  const maintenanceConfig = await prisma.appConfig.findUnique({
-    where: { key: "maintenance-mode" },
-  });
-
-  let isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
-  let maintenanceEstimate = "30-60 Minutes";
-
-  if (maintenanceConfig) {
-    if (typeof maintenanceConfig.value === "boolean") {
-      isMaintenanceMode = maintenanceConfig.value;
-    } else if (
-      typeof maintenanceConfig.value === "object" &&
-      maintenanceConfig.value !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const val = maintenanceConfig.value as any;
-      isMaintenanceMode = val.enabled ?? isMaintenanceMode;
-      maintenanceEstimate = val.estimate || maintenanceEstimate;
-    }
-  }
+  const { isMaintenanceMode, maintenanceEstimate } = await getMaintenanceConfigService();
 
   return (
     <html
