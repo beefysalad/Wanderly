@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSocket } from "./useSocket";
@@ -14,12 +14,18 @@ export function useSocketGroupUpdates(groupId?: string) {
   const { socket } = useSocket();
   const queryClient = useQueryClient();
   const { user: currentUser } = useCurrentUser();
+  // Read via ref inside the effect instead of depending on currentUser directly: that
+  // object gets a new reference most renders, which would otherwise leave:group/rejoin
+  // the socket room on every one of them.
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
 
   useEffect(() => {
     if (!socket || !groupId) return;
 
     // Helper function to check if action was performed by current user
     const isCurrentUser = (emailOrName?: string | null) => {
+      const currentUser = currentUserRef.current;
       // If no current user or no identifier provided, assume not current user
       if (!currentUser || !emailOrName) return false;
 
@@ -200,7 +206,7 @@ export function useSocketGroupUpdates(groupId?: string) {
       console.log("Socket: Expense created, invalidating queries", {
         expense: expense,
         paidBy: expense?.paidBy,
-        currentUser: currentUser?.email,
+        currentUser: currentUserRef.current?.email,
         tripId,
       });
 
@@ -230,7 +236,7 @@ export function useSocketGroupUpdates(groupId?: string) {
       console.log("Socket: Expense created check", {
         creatorEmail,
         creatorName,
-        currentUserEmail: currentUser?.email,
+        currentUserEmail: currentUserRef.current?.email,
         isCreator,
         canIdentifyCreator,
         willShowToast: !isCreator,
@@ -305,6 +311,14 @@ export function useSocketGroupUpdates(groupId?: string) {
       }
     };
 
+    // Handle budget events: no toast (budgets are open to all members, edited often), just
+    // refresh that trip's budgets.
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleBudgetChanged = (data: any) => {
+      const tripId = data?.budget?.tripId || data?.tripId;
+      if (tripId) invalidate(queryKeys.budgets.trip(tripId));
+    };
+
     // Register event listeners
     socket.on("group:updated", handleGroupUpdate);
     socket.on("group:deleted", handleGroupDeleted);
@@ -317,6 +331,9 @@ export function useSocketGroupUpdates(groupId?: string) {
     socket.on("expense:created", handleExpenseCreated);
     socket.on("expense:updated", handleExpenseUpdated);
     socket.on("expense:deleted", handleExpenseDeleted);
+    socket.on("budget:created", handleBudgetChanged);
+    socket.on("budget:updated", handleBudgetChanged);
+    socket.on("budget:deleted", handleBudgetChanged);
 
     // Cleanup on unmount or when groupId changes
     return () => {
@@ -329,9 +346,12 @@ export function useSocketGroupUpdates(groupId?: string) {
       socket.off("activity:created", handleActivityCreated);
       socket.off("activity:updated", handleActivityUpdated);
       socket.off("activity:deleted", handleActivityDeleted);
+      socket.off("budget:created", handleBudgetChanged);
+      socket.off("budget:updated", handleBudgetChanged);
+      socket.off("budget:deleted", handleBudgetChanged);
       socket.off("expense:created", handleExpenseCreated);
       socket.off("expense:updated", handleExpenseUpdated);
       socket.off("expense:deleted", handleExpenseDeleted);
     };
-  }, [socket, groupId, queryClient, currentUser]);
+  }, [socket, groupId, queryClient]);
 }

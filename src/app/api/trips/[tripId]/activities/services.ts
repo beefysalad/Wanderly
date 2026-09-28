@@ -125,7 +125,8 @@ export async function updateActivityService(
     ...(data.dropoffLocation !== undefined && { dropoffLocation: data.dropoffLocation || null }),
   });
 
-  // Only title/date changes are considered significant enough to notify or broadcast.
+  // Only title/date changes are considered significant enough to notify; every change is
+  // still broadcast so other clients stay in sync (split/date/time/notes edits included).
   if (data.title !== undefined || data.date !== undefined) {
     await notifyGroupMembers(trip.groupId, user.id, {
       type: NotificationType.activity_edited,
@@ -134,13 +135,13 @@ export async function updateActivityService(
       relatedTripId: tripId,
       relatedActivityId: activity.id,
     });
-
-    emitActivityUpdated(trip.groupId, activity, {
-      updatedBy: user.email || user.name || undefined,
-    }).catch((err) => {
-      logger.error("Failed to emit activity updated event", { error: err });
-    });
   }
+
+  emitActivityUpdated(trip.groupId, activity, {
+    updatedBy: user.email || user.name || undefined,
+  }).catch((err) => {
+    logger.error("Failed to emit activity updated event", { error: err });
+  });
 
   logger.info("Activity updated", { activityId: activity.id, tripId });
   return activity;
