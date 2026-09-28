@@ -4,7 +4,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType } from "@prisma/client";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
-import { createNotificationService } from "../notifications/services";
+import { notifyGroupMembers } from "../notifications/notifyMembers";
 import {
   addGroupMember,
   createGroupRow,
@@ -14,7 +14,6 @@ import {
   findGroupMembership,
   findGroupOwnership,
   findGroupWithMembership,
-  listGroupMembersForNotify,
   listGroupMembershipsForUser,
   removeGroupMember,
   updateGroupRow,
@@ -63,20 +62,11 @@ export async function joinGroupService(token: DecodedIdToken, groupCode: string)
 
   const updatedGroup = await findGroupById(group.id);
 
-  const allMembers = await listGroupMembersForNotify(group.id);
-  const notificationPromises = allMembers
-    .filter((member) => member.userId !== user.id)
-    .map((member) =>
-      createNotificationService(member.userId, {
-        type: NotificationType.group_join,
-        title: "New Member Joined",
-        message: `${user.name || user.email} joined ${group.name}`,
-        relatedGroupId: group.id,
-      }).catch((err) => {
-        logger.error("Failed to create notification", { userId: member.userId, error: err });
-      }),
-    );
-  await Promise.all(notificationPromises);
+  await notifyGroupMembers(group.id, user.id, {
+    type: NotificationType.group_join,
+    title: "New Member Joined",
+    message: `${user.name || user.email} joined ${group.name}`,
+  });
 
   if (updatedGroup) {
     const { emitGroupUpdated } = await import("@/lib/socket-events");
@@ -128,23 +118,13 @@ export async function leaveGroupService(token: DecodedIdToken, groupId: string) 
     throw new ValidationError("Group creator cannot leave the group");
   }
 
-  const allMembers = await listGroupMembersForNotify(groupId);
-
   await removeGroupMember(groupId, user.id);
 
-  const notificationPromises = allMembers
-    .filter((member) => member.userId !== user.id)
-    .map((member) =>
-      createNotificationService(member.userId, {
-        type: NotificationType.group_leave,
-        title: "Member Left Group",
-        message: `${user.name || user.email} left ${ownership.name}`,
-        relatedGroupId: groupId,
-      }).catch((err) => {
-        logger.error("Failed to create notification", { userId: member.userId, error: err });
-      }),
-    );
-  await Promise.all(notificationPromises);
+  await notifyGroupMembers(groupId, user.id, {
+    type: NotificationType.group_leave,
+    title: "Member Left Group",
+    message: `${user.name || user.email} left ${ownership.name}`,
+  });
 
   const updatedGroup = await findGroupById(groupId);
   if (updatedGroup) {

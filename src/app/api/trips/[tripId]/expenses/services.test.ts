@@ -6,6 +6,10 @@ const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
 vi.mock("../../access", () => ({
   verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
+  // The list/getById handlers use the lean check; create/update/delete use the profile one for
+  // notification text. Both resolve through the same mock here since the tests don't need to
+  // tell them apart.
+  verifyTripAccessWithProfile: (...a: unknown[]) => mockVerifyTripAccess(...a),
   verifyGuestTripAccess: (...a: unknown[]) => mockVerifyGuestTripAccess(...a),
 }));
 

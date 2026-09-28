@@ -4,7 +4,7 @@ import { ForbiddenError, NotFoundError } from "@/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 vi.mock("../../../../access", () => ({
-  verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
+  verifyTripAccessWithProfile: (...a: unknown[]) => mockVerifyTripAccess(...a),
 }));
 
 const mockFindUserIdByEmail = vi.fn();

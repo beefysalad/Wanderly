@@ -4,6 +4,11 @@ export function findUserByFirebaseId(firebaseId: string) {
   return prisma.user.findUnique({ where: { firebaseId } });
 }
 
+/** Id-only lookup for hot paths (e.g. the trip-access check) that only need the caller's id. */
+export function findUserIdByFirebaseId(firebaseId: string) {
+  return prisma.user.findUnique({ where: { firebaseId }, select: { id: true } });
+}
+
 export interface FirebaseProfile {
   email: string;
   name: string;
