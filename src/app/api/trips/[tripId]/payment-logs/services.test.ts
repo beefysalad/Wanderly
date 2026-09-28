@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
@@ -113,5 +113,12 @@ describe("createPaymentLogService", () => {
     mockNotify.mockRejectedValue(new Error("boom"));
 
     await expect(createPaymentLogService(token, "t1", body)).resolves.toBe(log);
+  });
+
+  it("returns a 409 conflict, without notifying, when the share already has a log", async () => {
+    mockCreateRow.mockResolvedValue(null);
+
+    await expect(createPaymentLogService(token, "t1", body)).rejects.toThrow(ConflictError);
+    expect(mockNotify).not.toHaveBeenCalled();
   });
 });

@@ -14,16 +14,27 @@ export function findExpenseForPayments(expenseId: string) {
   });
 }
 
-/** Self-marks a share pending (awaiting the payer's confirmation), clearing any log left over from a previous confirm/reject cycle so status and payment history stay in sync. */
-export function markPendingAndClearLog(expenseId: string, userId: string) {
-  return prisma.$transaction([
-    prisma.expensePayment.upsert({
+/**
+ * Self-marks a share pending (awaiting the payer's confirmation), clearing any log left over
+ * from a previous confirm/reject cycle so status and payment history stay in sync. A share the
+ * payer has already confirmed is left as is: a stale page, retry or double submit must not
+ * drop it back to pending and delete its log.
+ */
+export async function markPendingAndClearLog(expenseId: string, userId: string) {
+  await prisma.$transaction(async (tx) => {
+    const current = await tx.expensePayment.findUnique({
+      where: { expenseId_userId: { expenseId, userId } },
+      select: { status: true },
+    });
+    if (current?.status === "confirmed") return;
+
+    await tx.expensePayment.upsert({
       where: { expenseId_userId: { expenseId, userId } },
       create: { expenseId, userId, status: "pending" },
       update: { status: "pending" },
-    }),
-    prisma.paymentLog.deleteMany({ where: { expenseId, payerId: userId } }),
-  ]);
+    });
+    await tx.paymentLog.deleteMany({ where: { expenseId, payerId: userId } });
+  });
 }
 
 /** Removes a member's payment row and any log left for their share. */
@@ -32,10 +43,6 @@ export function unmarkPayment(expenseId: string, userId: string) {
     prisma.expensePayment.deleteMany({ where: { expenseId, userId } }),
     prisma.paymentLog.deleteMany({ where: { expenseId, payerId: userId } }),
   ]);
-}
-
-function isUniqueConstraintViolation(err: unknown): boolean {
-  return typeof err === "object" && err !== null && (err as { code?: unknown }).code === "P2002";
 }
 
 export interface ConfirmLogData {
@@ -50,9 +57,10 @@ export interface ConfirmLogData {
  * themselves paid, so this creates the payment row if needed. `log` is null when the
  * member isn't part of the split, in which case only the status is recorded.
  *
- * The PaymentLog `[expenseId, payerId]` unique constraint is what actually prevents a
- * duplicate under a concurrent double-confirm; the `findFirst` below is just an
- * idempotent-retry short-circuit, not the source of truth for uniqueness.
+ * The PaymentLog `[expenseId, payerId]` unique constraint prevents a duplicate under a
+ * concurrent double-confirm. The insert uses `skipDuplicates` (ON CONFLICT DO NOTHING) rather
+ * than catching P2002: in Postgres a failed statement aborts the whole transaction, so a
+ * caught unique violation would roll back the status update too.
  */
 export async function confirmPaymentAndLog(
   expenseId: string,
@@ -68,27 +76,17 @@ export async function confirmPaymentAndLog(
 
     if (!log) return;
 
-    const existing = await tx.paymentLog.findFirst({
-      where: { expenseId, payerId: userId },
-      select: { id: true },
+    await tx.paymentLog.createMany({
+      data: {
+        tripId: log.tripId,
+        expenseId,
+        payerId: userId,
+        payeeId: log.payeeId,
+        amount: new Decimal(log.amount),
+        paymentMethod: log.paymentMethod,
+      },
+      skipDuplicates: true,
     });
-    if (existing) return;
-
-    try {
-      await tx.paymentLog.create({
-        data: {
-          tripId: log.tripId,
-          expenseId,
-          payerId: userId,
-          payeeId: log.payeeId,
-          amount: new Decimal(log.amount),
-          paymentMethod: log.paymentMethod,
-        },
-      });
-    } catch (err) {
-      if (isUniqueConstraintViolation(err)) return;
-      throw err;
-    }
   });
 }
 

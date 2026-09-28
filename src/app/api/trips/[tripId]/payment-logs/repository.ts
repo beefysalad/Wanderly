@@ -32,11 +32,21 @@ export interface CreatePaymentLogRow {
   paymentMethod: PaymentMethod | null;
 }
 
-export function createPaymentLogRow(data: CreatePaymentLogRow) {
-  return prisma.paymentLog.create({
-    data: { ...data, amount: new Decimal(data.amount) },
-    include: PAYMENT_LOG_INCLUDE,
-  });
+function isUniqueConstraintViolation(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { code?: unknown }).code === "P2002";
+}
+
+/** Creates the log for a member's share, or returns null if that share already has one. */
+export async function createPaymentLogRow(data: CreatePaymentLogRow) {
+  try {
+    return await prisma.paymentLog.create({
+      data: { ...data, amount: new Decimal(data.amount) },
+      include: PAYMENT_LOG_INCLUDE,
+    });
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) return null;
+    throw err;
+  }
 }
 
 export function findPaymentLogForShare(expenseId: string, payerId: string) {

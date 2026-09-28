@@ -1,28 +1,28 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockFindUnique = vi.fn();
 const mockUpsert = vi.fn();
-const mockFindFirst = vi.fn();
-const mockCreate = vi.fn();
+const mockCreateMany = vi.fn();
+const mockDeleteMany = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   default: {
     $transaction: (fn: (tx: unknown) => unknown) =>
       fn({
-        expensePayment: { upsert: mockUpsert },
-        paymentLog: { findFirst: mockFindFirst, create: mockCreate },
+        expensePayment: { findUnique: mockFindUnique, upsert: mockUpsert },
+        paymentLog: { createMany: mockCreateMany, deleteMany: mockDeleteMany },
       }),
   },
 }));
 
-const { confirmPaymentAndLog } = await import("./repository");
+const { confirmPaymentAndLog, markPendingAndClearLog } = await import("./repository");
 
 const log = { tripId: "t1", payeeId: "u-alice", amount: 30, paymentMethod: null };
 
+beforeEach(() => vi.clearAllMocks());
+
 describe("confirmPaymentAndLog", () => {
   it("always records the confirmed status", async () => {
-    mockFindFirst.mockResolvedValue(null);
-    mockCreate.mockResolvedValue({});
-
     await confirmPaymentAndLog("e1", "u-bob", log);
 
     expect(mockUpsert).toHaveBeenCalledWith({
@@ -32,33 +32,20 @@ describe("confirmPaymentAndLog", () => {
     });
   });
 
-  it("creates the log when none exists yet", async () => {
-    mockFindFirst.mockResolvedValue(null);
-    mockCreate.mockResolvedValue({});
-
+  it("inserts the log with skipDuplicates so a concurrent confirm can't abort the transaction", async () => {
     await confirmPaymentAndLog("e1", "u-bob", log);
 
-    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreateMany).toHaveBeenCalledTimes(1);
+    expect(mockCreateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ expenseId: "e1", payerId: "u-bob", payeeId: "u-alice" }),
+        skipDuplicates: true,
+      }),
+    );
   });
 
-  it("does not create a second log when one already exists", async () => {
-    mockFindFirst.mockResolvedValue({ id: "log-1" });
-
-    await confirmPaymentAndLog("e1", "u-bob", log);
-
-    expect(mockCreate).not.toHaveBeenCalled();
-  });
-
-  it("swallows a unique-constraint violation from a concurrent confirm", async () => {
-    mockFindFirst.mockResolvedValue(null);
-    mockCreate.mockRejectedValue(Object.assign(new Error("duplicate"), { code: "P2002" }));
-
-    await expect(confirmPaymentAndLog("e1", "u-bob", log)).resolves.toBeUndefined();
-  });
-
-  it("re-throws an error that isn't a unique-constraint violation", async () => {
-    mockFindFirst.mockResolvedValue(null);
-    mockCreate.mockRejectedValue(new Error("connection reset"));
+  it("propagates a failed insert", async () => {
+    mockCreateMany.mockRejectedValue(new Error("connection reset"));
 
     await expect(confirmPaymentAndLog("e1", "u-bob", log)).rejects.toThrow("connection reset");
   });
@@ -66,7 +53,38 @@ describe("confirmPaymentAndLog", () => {
   it("skips the log entirely when the member isn't in the split", async () => {
     await confirmPaymentAndLog("e1", "u-bob", null);
 
-    expect(mockFindFirst).not.toHaveBeenCalled();
-    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockCreateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("markPendingAndClearLog", () => {
+  it("marks the share pending and clears any leftover log", async () => {
+    mockFindUnique.mockResolvedValue({ status: "rejected" });
+
+    await markPendingAndClearLog("e1", "u-bob");
+
+    expect(mockUpsert).toHaveBeenCalledWith({
+      where: { expenseId_userId: { expenseId: "e1", userId: "u-bob" } },
+      create: { expenseId: "e1", userId: "u-bob", status: "pending" },
+      update: { status: "pending" },
+    });
+    expect(mockDeleteMany).toHaveBeenCalledWith({ where: { expenseId: "e1", payerId: "u-bob" } });
+  });
+
+  it("creates the pending row when the share has none yet", async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    await markPendingAndClearLog("e1", "u-bob");
+
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves an already-confirmed share and its log untouched", async () => {
+    mockFindUnique.mockResolvedValue({ status: "confirmed" });
+
+    await markPendingAndClearLog("e1", "u-bob");
+
+    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockDeleteMany).not.toHaveBeenCalled();
   });
 });
