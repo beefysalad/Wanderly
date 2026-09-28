@@ -10,11 +10,15 @@ vi.mock("./repository", () => ({
 }));
 
 const mockRevalidateTag = vi.fn();
+const cachedFns: Array<(...a: unknown[]) => unknown> = [];
 vi.mock("next/cache", () => ({
   revalidateTag: (...a: unknown[]) => mockRevalidateTag(...a),
   // The real unstable_cache requires a Next.js request/static-generation scope that
   // doesn't exist under Vitest; tests only need the wrapped function's own logic.
-  unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
+  unstable_cache: (fn: (...a: unknown[]) => unknown) => {
+    cachedFns.push(fn);
+    return fn;
+  },
 }));
 
 const mockLoggerError = vi.fn();
@@ -119,5 +123,12 @@ describe("getMaintenanceConfigService", () => {
       maintenanceEstimate: "30-60 Minutes",
     });
     expect(mockLoggerError).toHaveBeenCalled();
+  });
+
+  it("lets a failed read throw out of the cached function so it is not cached", async () => {
+    mockFindAppConfig.mockRejectedValue(new Error("connection reset"));
+
+    expect(cachedFns).toHaveLength(1);
+    await expect(cachedFns[0]()).rejects.toThrow("connection reset");
   });
 });
