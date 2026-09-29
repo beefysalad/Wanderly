@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // The route's own logic (schema parsing, guest gating, service wiring) is what's under test
 // here, not the auth wrapper itself (covered by lib/auth/with-auth.test.ts) — so it's replaced
 // with identity, and the handler is called directly with a hand-built context.
-vi.mock("@/lib/auth/with-auth", () => ({
+vi.mock("@/src/lib/auth/with-auth", () => ({
   withOptionalAuth: (handler: unknown) => handler,
 }));
 

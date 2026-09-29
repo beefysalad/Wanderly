@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { safeRedirectPath } from "@/lib/utils";
+import { safeRedirectPath } from "@/src/lib/utils";
 import { AuthItem } from "../../shared/AuthForm/AuthParts";
 import SignUpForm from "../../shared/AuthForm/SignUpForm";
 import { EASE, useRevealDistance } from "../../shared/Site/motion";

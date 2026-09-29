@@ -1,5 +1,5 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
 import { findGroupMembership } from "../groups/repository";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { findTripAccessInfo } from "./repository";

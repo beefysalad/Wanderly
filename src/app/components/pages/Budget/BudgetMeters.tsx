@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Budget, Expense } from "@/src/shared/types";
-import { formatPeso } from "@/lib/utils/money";
+import { formatPeso } from "@/src/lib/utils/money";
 import { meterWidth } from "../../shared/meterWidth";
 import { budgetMeters } from "./budgetView";
 

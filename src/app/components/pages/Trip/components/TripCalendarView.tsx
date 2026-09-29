@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { monthGrids } from "../tripView";
 

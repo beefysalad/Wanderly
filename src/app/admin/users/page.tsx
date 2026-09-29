@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { format } from "date-fns";
 import {
   Activity,

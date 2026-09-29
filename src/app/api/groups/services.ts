@@ -1,9 +1,9 @@
-import { logger } from "@/lib/logger";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType } from "@prisma/client";
 import { syncUserToDatabaseService } from "../sync/syncService";
-import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
+import { generateUniqueGroupCode } from "@/src/lib/utils/groupCode";
 import { createNotificationService } from "../notifications/services";
 import {
   addGroupMember,
@@ -37,7 +37,7 @@ export async function createGroupService(token: DecodedIdToken, input: CreateGro
     createdById: user.id,
   });
 
-  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  const { emitGroupUpdated } = await import("@/src/lib/socket-events");
   emitGroupUpdated(group.id, group).catch((err) => {
     logger.error("Failed to emit group created event", { error: err });
   });
@@ -79,7 +79,7 @@ export async function joinGroupService(token: DecodedIdToken, groupCode: string)
   await Promise.all(notificationPromises);
 
   if (updatedGroup) {
-    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    const { emitGroupUpdated } = await import("@/src/lib/socket-events");
     emitGroupUpdated(group.id, updatedGroup).catch((err) => {
       logger.error("Failed to emit group updated event on join", { error: err });
     });
@@ -148,7 +148,7 @@ export async function leaveGroupService(token: DecodedIdToken, groupId: string) 
 
   const updatedGroup = await findGroupById(groupId);
   if (updatedGroup) {
-    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    const { emitGroupUpdated } = await import("@/src/lib/socket-events");
     emitGroupUpdated(groupId, updatedGroup).catch((err) => {
       logger.error("Failed to emit group updated event on leave", { error: err });
     });
@@ -170,7 +170,7 @@ export async function deleteGroupService(token: DecodedIdToken, groupId: string)
 
   await deleteGroupRow(groupId);
 
-  const { emitGroupDeleted } = await import("@/lib/socket-events");
+  const { emitGroupDeleted } = await import("@/src/lib/socket-events");
   emitGroupDeleted(groupId).catch((err) => {
     logger.error("Failed to emit group deleted event", { error: err });
   });
@@ -203,7 +203,7 @@ export async function updateGroupService(
 
   const updatedGroup = await updateGroupRow(groupId, updates);
 
-  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  const { emitGroupUpdated } = await import("@/src/lib/socket-events");
   emitGroupUpdated(groupId, updatedGroup).catch((err) => {
     logger.error("Failed to emit group updated event", { error: err });
   });

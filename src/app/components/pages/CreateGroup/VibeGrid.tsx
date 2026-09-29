@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
-import { VIBES } from "@/lib/utils/groupColors";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
+import { VIBES } from "@/src/lib/utils/groupColors";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 import { FIELD_LABEL } from "../../shared/formStyles";
 
 interface VibeGridProps {

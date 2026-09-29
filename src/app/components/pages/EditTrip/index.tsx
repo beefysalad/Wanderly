@@ -1,6 +1,6 @@
 "use client";
 
-import { getVibeInfo } from "@/lib/utils/groupColors";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
 import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
 import { AppShell } from "../../shared/AppShell/AppShell";

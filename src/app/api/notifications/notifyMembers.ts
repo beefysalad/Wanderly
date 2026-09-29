@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import { listGroupMembersForNotify } from "../groups/repository";
 import { createNotificationService } from "./services";
 

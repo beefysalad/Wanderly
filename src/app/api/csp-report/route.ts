@@ -1,5 +1,5 @@
-import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/src/lib/logger";
+import { withRateLimit } from "@/src/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 
 // Browsers can send fairly large reports; anything past this is dropped rather than parsed.

@@ -3,9 +3,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, useEffect } from "react";
-// import { auth } from "@/lib/firebase/admin/firebase";
+// import { auth } from "@/src/lib/firebase/admin/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/src/lib/firebase";
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(

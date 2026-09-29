@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPeso } from "@/src/lib/utils/money";
 import type { Expense } from "@/src/shared/types";
 import { meterWidth } from "../../shared/meterWidth";
 import { CATEGORY_STYLE, spendingByCategory } from "./expenseView";

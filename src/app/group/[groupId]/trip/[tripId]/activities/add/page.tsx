@@ -24,7 +24,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/src/components/ui/select";
 import { useCreateActivity } from "@/src/hooks/useActivities";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
@@ -33,7 +33,7 @@ import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
 import { StateCard } from "@/src/app/components/shared/AppShell/StateCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import LoadingState from "@/src/app/components/shared/LoadingState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,7 +1,7 @@
-import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
-import { ValidationError } from "@/lib/errors";
-import { handleApiError } from "@/lib/handle-api-error";
-import { withRateLimit } from "@/lib/rate-limit";
+import { withAuth, type AuthContext } from "@/src/lib/auth/with-auth";
+import { ValidationError } from "@/src/lib/errors";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { withRateLimit } from "@/src/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { MAX_IMAGE_BYTES, uploadFolderSchema } from "./schemas";
 import { uploadImageService } from "./services";

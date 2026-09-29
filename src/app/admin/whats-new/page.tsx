@@ -62,7 +62,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 
 interface WhatsNewFeature {
   icon: string;

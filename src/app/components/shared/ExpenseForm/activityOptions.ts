@@ -1,5 +1,5 @@
 import type { Activity } from "@/src/shared/types";
-import { formatTime12Hour } from "@/lib/utils";
+import { formatTime12Hour } from "@/src/lib/utils";
 
 export function sortActivities(activities: Activity[]): Activity[] {
   return [...activities].sort((a, b) => {

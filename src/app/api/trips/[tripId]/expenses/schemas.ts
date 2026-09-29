@@ -1,5 +1,5 @@
-import { imageUrlSchema } from "@/lib/utils/imageUrl";
-import { pesoAmountSchema } from "@/lib/utils/money";
+import { imageUrlSchema } from "@/src/lib/utils/imageUrl";
+import { pesoAmountSchema } from "@/src/lib/utils/money";
 import { z } from "zod";
 
 // Guard against z.coerce.date() turning null/"" into a valid (1970) date.

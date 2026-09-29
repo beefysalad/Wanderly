@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
 
 const mockFindTripAccessInfo = vi.fn();
 vi.mock("./repository", () => ({

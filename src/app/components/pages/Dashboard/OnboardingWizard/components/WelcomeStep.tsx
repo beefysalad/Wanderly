@@ -1,5 +1,5 @@
 import { ArrowRight, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 const ASKS = [
   "A photo and your bucket-list pick",

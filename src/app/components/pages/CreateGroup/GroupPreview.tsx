@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 
 interface GroupPreviewProps {
   name: string;

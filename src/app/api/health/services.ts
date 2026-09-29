@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import packageJson from "@/package.json";
 import { pingDatabase } from "./repository";
 

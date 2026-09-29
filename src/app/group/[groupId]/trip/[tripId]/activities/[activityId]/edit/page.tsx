@@ -16,14 +16,14 @@ import {
   MapPin,
   Trash2,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/src/components/ui/select";
 import { useUpdateActivity } from "@/src/hooks/useActivities";
 import { useRouter } from "next/navigation";
 import { useGroup } from "@/src/hooks/useGroups";
@@ -31,8 +31,8 @@ import { Trip, Activity } from "@/src/shared/types";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import { AppShell } from "@/src/app/components/shared/AppShell/AppShell";
 import { StateCard } from "@/src/app/components/shared/AppShell/StateCard";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/src/components/ui/button";
+import { Label } from "@/src/components/ui/label";
 import LoadingState from "@/src/app/components/shared/LoadingState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

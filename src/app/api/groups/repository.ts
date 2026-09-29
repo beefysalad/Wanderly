@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
 export const GROUP_DETAIL_INCLUDE = {

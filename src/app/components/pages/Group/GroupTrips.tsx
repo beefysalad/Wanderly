@@ -1,7 +1,7 @@
 import { Calendar, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { getTripStatus } from "@/lib/utils/tripStatus";
+import { cn } from "@/src/lib/utils";
+import { getTripStatus } from "@/src/lib/utils/tripStatus";
 import type { Trip } from "@/src/shared/types";
 import { PILL } from "../../shared/Pills";
 import { fullRange, tripWhen } from "../../shared/tripDates";

@@ -1,7 +1,7 @@
 import type { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/src/lib/errors";
 
 const mockSync = vi.fn();
 vi.mock("../sync/syncService", () => ({
@@ -27,12 +27,12 @@ vi.mock("./repository", () => ({
 
 const mockEmitUser = vi.fn();
 const mockEmitGroup = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitNotificationToUser: (...a: unknown[]) => mockEmitUser(...a),
   emitNotificationChangedToGroup: (...a: unknown[]) => mockEmitGroup(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const {
   createNotificationService,

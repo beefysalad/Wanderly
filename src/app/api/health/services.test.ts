@@ -5,7 +5,7 @@ vi.mock("./repository", () => ({
   pingDatabase: (...a: unknown[]) => mockPingDatabase(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { getHealthService } = await import("./services");
 

@@ -1,7 +1,7 @@
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
-import { emitExpenseUpdated } from "@/lib/socket-events";
-import { fromCents } from "@/lib/utils/money";
+import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { emitExpenseUpdated } from "@/src/lib/socket-events";
+import { fromCents } from "@/src/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../../access";
 import { findGroupOwnership } from "../../../../../groups/repository";

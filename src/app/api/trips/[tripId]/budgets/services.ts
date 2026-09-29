@@ -1,7 +1,7 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { NotFoundError, ValidationError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
-import { emitBudgetCreated, emitBudgetDeleted, emitBudgetUpdated } from "@/lib/socket-events";
+import { NotFoundError, ValidationError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { emitBudgetCreated, emitBudgetDeleted, emitBudgetUpdated } from "@/src/lib/socket-events";
 import { verifyTripAccess } from "../../access";
 import {
   createBudgetRow,

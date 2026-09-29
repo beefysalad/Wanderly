@@ -1,4 +1,4 @@
-import { formatPeso, formatPesoExact } from "@/lib/utils/money";
+import { formatPeso, formatPesoExact } from "@/src/lib/utils/money";
 
 const TILE = "flex flex-col gap-1 rounded-[18px] border p-4";
 const LABEL = "font-mono text-[10px] uppercase tracking-[.16em]";

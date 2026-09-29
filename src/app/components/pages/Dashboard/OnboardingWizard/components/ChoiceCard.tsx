@@ -1,5 +1,5 @@
 import { Check, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 interface ChoiceCardProps {
   icon: LucideIcon;

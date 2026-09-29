@@ -4,7 +4,7 @@ import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/src/lib/firebase";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups } from "@/src/hooks/useGroups";
 import { useProfileImageUpload } from "@/src/hooks/useProfileImageUpload";

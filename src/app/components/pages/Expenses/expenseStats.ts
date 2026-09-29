@@ -1,4 +1,4 @@
-import { fromCents, toCents } from "@/lib/utils/money";
+import { fromCents, toCents } from "@/src/lib/utils/money";
 import type { Expense } from "@/src/shared/types";
 
 export type ExpensesView = "all" | "unsettled" | "settled" | "logs" | "analysis";

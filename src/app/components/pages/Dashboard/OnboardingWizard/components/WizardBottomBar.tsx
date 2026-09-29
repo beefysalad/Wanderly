@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { continueLabel } from "../onboardingSteps";
 import type { Step } from "../onboardingOptions";
 

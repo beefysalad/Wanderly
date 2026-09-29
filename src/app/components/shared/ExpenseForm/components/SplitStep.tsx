@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { formatPesoExact } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPesoExact } from "@/src/lib/utils/money";
 import { FIELD_ERROR, INPUT } from "../../formStyles";
 import { UserAvatar } from "../../UserAvatar";
 import type { TExpenseSchema } from "../expenseSchema";

@@ -3,7 +3,7 @@
 import { Copy, Download, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { copyToClipboard } from "@/lib/utils/clipboard";
+import { copyToClipboard } from "@/src/lib/utils/clipboard";
 import type { Expense } from "@/src/shared/types";
 import { PILL } from "../../shared/Pills";
 import { METHOD_LABEL, type ShareBox } from "./expenseDetailView";

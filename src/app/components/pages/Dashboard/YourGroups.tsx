@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { getVibeInfo } from "@/lib/utils/groupColors";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
-import { cn } from "@/lib/utils";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
 import type { Group } from "@/src/shared/types";
 
 function HomeGroupCard({ group }: { group: Group }) {

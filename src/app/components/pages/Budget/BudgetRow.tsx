@@ -2,8 +2,8 @@
 
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPeso } from "@/src/lib/utils/money";
 import { useUpdateBudget } from "@/src/hooks/useBudgets";
 import type { Budget } from "@/src/shared/types";
 import { budgetMeta } from "./budgetView";

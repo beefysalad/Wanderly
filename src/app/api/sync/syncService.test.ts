@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGetUser = vi.hoisted(() => vi.fn());
 const firebase = vi.hoisted(() => ({ userAuth: { getUser: undefined as unknown } as { getUser: unknown } | null }));
-vi.mock("@/lib/firebase-admin", () => ({
+vi.mock("@/src/lib/firebase-admin", () => ({
   get userAuth() {
     return firebase.userAuth;
   },
@@ -23,7 +23,7 @@ vi.mock("./repository", () => ({
 
 const mockSeed = vi.fn();
 vi.mock("./testDataService", () => ({ seedTestData: (...a: unknown[]) => mockSeed(...a) }));
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { syncUserToDatabaseService } = await import("./syncService");
 

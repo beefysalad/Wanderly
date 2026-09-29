@@ -1,4 +1,4 @@
-import { useSocketContext } from "@/components/socket-provider";
+import { useSocketContext } from "@/src/components/socket-provider";
 
 /**
  * Hook to access the Socket.IO instance

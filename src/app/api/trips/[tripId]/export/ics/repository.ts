@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 
 export function findTripWithActivities(tripId: string) {
   return prisma.trip.findUnique({

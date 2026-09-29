@@ -1,4 +1,4 @@
-import { getAppVersion } from "@/lib/helper";
+import { getAppVersion } from "@/src/lib/helper";
 import Image from "next/image";
 import Link from "next/link";
 

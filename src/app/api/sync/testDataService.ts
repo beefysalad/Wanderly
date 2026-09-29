@@ -1,5 +1,5 @@
-import { logger } from "@/lib/logger";
-import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
+import { logger } from "@/src/lib/logger";
+import { generateUniqueGroupCode } from "@/src/lib/utils/groupCode";
 import { TripStatus } from "@prisma/client";
 import {
   ACTIVITIES_BY_DAY,

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { getVibeInfo } from "@/lib/utils/groupColors";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 import type { Group } from "@/src/shared/types";
 
 /** The first few groups as small cards, each linking to the group. */

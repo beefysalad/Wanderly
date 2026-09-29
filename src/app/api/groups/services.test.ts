@@ -1,9 +1,9 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockLoggerInfo = vi.fn();
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { info: (...a: unknown[]) => mockLoggerInfo(...a), warn: vi.fn(), error: vi.fn() },
 }));
 
@@ -46,11 +46,11 @@ vi.mock("../notifications/services", () => ({
 }));
 
 const mockGenerateUniqueGroupCode = vi.fn();
-vi.mock("@/lib/utils/groupCode", () => ({
+vi.mock("@/src/lib/utils/groupCode", () => ({
   generateUniqueGroupCode: (...a: unknown[]) => mockGenerateUniqueGroupCode(...a),
 }));
 
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitGroupUpdated: vi.fn().mockResolvedValue(undefined),
   emitGroupDeleted: vi.fn().mockResolvedValue(undefined),
 }));

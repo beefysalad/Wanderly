@@ -1,5 +1,5 @@
 import type { Activity, Trip } from "@/src/shared/types";
-import { formatTime12Hour } from "@/lib/utils";
+import { formatTime12Hour } from "@/src/lib/utils";
 
 interface ExportScheduleOptions {
   trip: Trip;

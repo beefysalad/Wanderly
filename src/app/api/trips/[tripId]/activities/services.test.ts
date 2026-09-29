@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 vi.mock("../../access", () => ({
@@ -31,13 +31,13 @@ vi.mock("../../../notifications/services", () => ({
 const mockEmitCreated = vi.fn();
 const mockEmitUpdated = vi.fn();
 const mockEmitDeleted = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitActivityCreated: (...a: unknown[]) => mockEmitCreated(...a),
   emitActivityUpdated: (...a: unknown[]) => mockEmitUpdated(...a),
   emitActivityDeleted: (...a: unknown[]) => mockEmitDeleted(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 

@@ -8,10 +8,10 @@ import {
   ReactNode,
 } from "react";
 import { Socket } from "socket.io-client";
-import { disconnectSocket, reconnectSocket } from "@/lib/socket";
+import { disconnectSocket, reconnectSocket } from "@/src/lib/socket";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { getGuestSession } from "@/lib/guest-session";
+import { auth } from "@/src/lib/firebase";
+import { getGuestSession } from "@/src/lib/guest-session";
 
 interface SocketContextType {
   socket: Socket | null;

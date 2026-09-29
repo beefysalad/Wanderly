@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { formatPesoExact } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPesoExact } from "@/src/lib/utils/money";
 import { UserAvatar } from "../../shared/UserAvatar";
 import { STATUS_STYLE, type MemberStatus } from "./expenseDetailView";
 

@@ -2,7 +2,7 @@
 
 import { createContext, useEffect, useState, type ReactNode } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/src/lib/firebase";
 
 export interface AuthState {
   user: User | null;

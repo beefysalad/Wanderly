@@ -1,7 +1,7 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { userAuth } from "@/lib/firebase-admin";
-import { NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
+import { userAuth } from "@/src/lib/firebase-admin";
+import { NotFoundError, UnauthorizedError, ValidationError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { updateUserMetadataByFirebaseId } from "./repository";
 import type { UpdatePasswordBody, UpdateProfileBody } from "./schemas";

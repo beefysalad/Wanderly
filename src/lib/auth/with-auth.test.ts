@@ -16,7 +16,7 @@ vi.mock("./guest-token", () => ({
   verifyGuestToken: (...a: unknown[]) => mockVerifyGuestToken(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 

@@ -1,7 +1,7 @@
-import { isAdminEmail, isAdminUid } from "@/lib/auth/admin";
-import { UnauthorizedError } from "@/lib/errors";
-import { userAuth } from "@/lib/firebase-admin";
-import { logger } from "@/lib/logger";
+import { isAdminEmail, isAdminUid } from "@/src/lib/auth/admin";
+import { UnauthorizedError } from "@/src/lib/errors";
+import { userAuth } from "@/src/lib/firebase-admin";
+import { logger } from "@/src/lib/logger";
 import type { NextRequest } from "next/server";
 
 async function adminEmailFromToken(req: NextRequest): Promise<string | null> {

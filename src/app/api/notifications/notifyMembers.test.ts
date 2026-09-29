@@ -10,7 +10,7 @@ vi.mock("./services", () => ({
   createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
 
 const { notifyGroupMembers } = await import("./notifyMembers");
 

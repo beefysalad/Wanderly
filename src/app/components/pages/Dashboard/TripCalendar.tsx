@@ -3,8 +3,8 @@
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 import { buildMonthCells, dateTile, monthLabel, tripWhen, type TripWithGroup } from "../../shared/tripDates";
 
 const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];

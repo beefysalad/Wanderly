@@ -6,8 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from "react";
-import api from "@/lib/axios";
-import { setGuestSession } from "@/lib/guest-session";
+import api from "@/src/lib/axios";
+import { setGuestSession } from "@/src/lib/guest-session";
 import { AuthItem, FIELD_LABEL, FormError, INPUT, SUBMIT_BUTTON } from "../../shared/AuthForm/AuthParts";
 import { EASE, useRevealDistance } from "../../shared/Site/motion";
 

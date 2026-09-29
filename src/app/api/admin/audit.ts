@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 
 /** Structured trail for destructive admin actions (visible in the hosting log stream). */
 export function auditAdminAction(

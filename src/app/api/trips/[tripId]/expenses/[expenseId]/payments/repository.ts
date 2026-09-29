@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 import { SPLIT_ORDER } from "../../repository";
 import type { PaymentMethod } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";

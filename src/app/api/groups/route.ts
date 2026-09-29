@@ -1,6 +1,6 @@
-import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
-import { handleApiError } from "@/lib/handle-api-error";
-import { logger } from "@/lib/logger";
+import { withAuth, type AuthContext } from "@/src/lib/auth/with-auth";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { logger } from "@/src/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createGroupSchema } from "./schemas";
 import { createGroupService, listGroupsService } from "./services";
