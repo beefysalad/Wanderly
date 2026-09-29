@@ -43,11 +43,11 @@ const EditActivityPage = ({ params }: EditActivityPageProps) => {
   }
 
   return (
-    <FormPage back={{ href: `/group/${groupId}/trip/${tripId}`, crumb: trip!.name }} title='Edit activity' width='lg'>
+    <FormPage back={{ href: `/group/${groupId}/trip/${tripId}`, crumb: loadState.trip.name }} title='Edit activity' width='lg'>
       <ActivityForm
         mode='edit'
-        trip={trip!}
-        activity={activity!}
+        trip={loadState.trip}
+        activity={loadState.activity}
         tripId={tripId}
         groupId={groupId}
         onSuccess={() => router.push(`/group/${groupId}/trip/${tripId}`)}

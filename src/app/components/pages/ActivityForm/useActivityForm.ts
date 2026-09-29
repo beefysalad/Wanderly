@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
@@ -31,20 +31,36 @@ export function useActivityForm({ mode, tripId, groupId, trip, activity, preSele
   const createActivity = useCreateActivity(tripId, groupId);
   const updateActivity = useUpdateActivity(tripId, groupId);
 
+  // Computed once for the initial render so edit mode paints with the activity's own values
+  // straight away, instead of a blank/wrong-default flash while the reset effect below runs.
   const form = useForm<TActivitySchema>({
     resolver: zodResolver(activitySchema),
-    defaultValues: {
-      title: "",
-      date: preSelectedDate ? preSelectedDate.toISOString().split("T")[0] : trip?.startDate ? new Date(trip.startDate).toISOString().split("T")[0] : "",
-      startTime: "",
-      endTime: "",
-      location: "",
-      notes: "",
-      transportationMode: undefined,
-      pickupTime: undefined,
-      pickupLocation: undefined,
-      dropoffLocation: undefined,
-    },
+    defaultValues:
+      mode === "edit" && activity
+        ? {
+            title: activity.title,
+            date: new Date(activity.date).toISOString().split("T")[0],
+            startTime: activity.startTime || "",
+            endTime: activity.endTime || "",
+            location: activity.location || "",
+            notes: activity.notes || "",
+            transportationMode: activity.transportationMode as TActivitySchema["transportationMode"],
+            pickupTime: activity.pickupTime || undefined,
+            pickupLocation: activity.pickupLocation || undefined,
+            dropoffLocation: activity.dropoffLocation || undefined,
+          }
+        : {
+            title: "",
+            date: preSelectedDate ? preSelectedDate.toISOString().split("T")[0] : trip?.startDate ? new Date(trip.startDate).toISOString().split("T")[0] : "",
+            startTime: "",
+            endTime: "",
+            location: "",
+            notes: "",
+            transportationMode: undefined,
+            pickupTime: undefined,
+            pickupLocation: undefined,
+            dropoffLocation: undefined,
+          },
   });
 
   // Add mode: fill in the trip's start date once it loads, if the user hasn't picked one already.
@@ -72,7 +88,7 @@ export function useActivityForm({ mode, tripId, groupId, trip, activity, preSele
     }
   }, [mode, activity, form]);
 
-  const availableDates = getAvailableDates(trip);
+  const availableDates = useMemo(() => getAvailableDates(trip), [trip]);
 
   const handleTypeSelect = (type: ActivityType) => {
     setSelectedType(type);
@@ -107,8 +123,11 @@ export function useActivityForm({ mode, tripId, groupId, trip, activity, preSele
       } else {
         await createActivity.mutateAsync(buildCreatePayload(values));
       }
-      // The mutation succeeded; onSuccess navigates away. No artificial delay needed first.
+      // The mutation succeeded. Give the invalidated group query (invalidateQueries isn't
+      // awaited in useCreateActivity/useUpdateActivity) a brief head start on its refetch
+      // before navigating, so the trip page doesn't flash without the new/updated activity.
       setIsNavigating(true);
+      await new Promise((resolve) => setTimeout(resolve, 300));
       onSuccess();
     } catch (err) {
       const message = (isAxiosError<{ error?: string }>(err) && err.response?.data?.error) || `Failed to ${mode === "edit" ? "update" : "save"} activity`;

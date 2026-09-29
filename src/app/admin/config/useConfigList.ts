@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
+import { logger } from "@/lib/logger";
 import type { ConfigItem } from "./configHelpers";
 
 /** Loads and edits the admin `AppConfig` key/value rows (maintenance mode plus anything else stored there). */
@@ -14,7 +15,7 @@ export function useConfigList() {
       const response = await api.get("/admin/config");
       setConfigs(response.data.configs);
     } catch (error) {
-      console.error("Failed to fetch configs", error);
+      logger.error("Failed to fetch configs", { error });
       toast.error("Failed to load configurations");
     } finally {
       setLoading(false);
@@ -32,7 +33,7 @@ export function useConfigList() {
       toast.success(`${key} updated successfully`);
       fetchConfigs();
     } catch (error) {
-      console.error("Failed to update config", error);
+      logger.error("Failed to update config", { error });
       toast.error(`Failed to update ${key}`);
     } finally {
       setSavingKey(null);

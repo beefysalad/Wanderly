@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
+import { logger } from "@/lib/logger";
 import type { WhatsNewFeature } from "@/src/app/config/whats-new";
 import type { ColorPreset } from "./colorPresets";
 import { addFeature, removeFeature, setFeatureColors, updateFeature } from "./whatsNewFeatureOps";
@@ -20,7 +21,7 @@ export function useWhatsNewConfig() {
         setFeatures(res.data.features);
         setError("");
       } catch (err) {
-        console.error(err);
+        logger.error("Failed to load whats-new config", { error: err });
         setError("Failed to load configuration. Make sure you are logged in.");
       } finally {
         setLoading(false);
@@ -36,7 +37,7 @@ export function useWhatsNewConfig() {
       await api.post("/config/whats-new", { version, features });
       alert("Configuration saved successfully!");
     } catch (err) {
-      console.error(err);
+      logger.error("Failed to save whats-new config", { error: err });
       alert("Failed to save configuration.");
     } finally {
       setSaving(false);

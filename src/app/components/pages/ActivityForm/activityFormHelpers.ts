@@ -1,3 +1,4 @@
+import { tripDays } from "@/src/app/components/pages/Trip/tripView";
 import type { TActivitySchema, TTransportationMode } from "./activitySchema";
 
 export interface TripDateRange {
@@ -8,16 +9,7 @@ export interface TripDateRange {
 /** Every calendar day of the trip, inclusive, for the date picker. Empty when there's no trip yet. */
 export function getAvailableDates(trip: TripDateRange | null | undefined): Date[] {
   if (!trip) return [];
-
-  const dates: Date[] = [];
-  const start = new Date(trip.startDate);
-  const end = new Date(trip.endDate);
-  const current = new Date(start);
-  while (current <= end) {
-    dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
+  return tripDays(new Date(trip.startDate), new Date(trip.endDate));
 }
 
 export interface CreateActivityPayload {

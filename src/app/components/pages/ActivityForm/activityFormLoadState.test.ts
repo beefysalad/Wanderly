@@ -44,6 +44,8 @@ describe("getActivityFormLoadState", () => {
     });
     expect(getActivityFormLoadState({ isLoading: false, groupQuery: okQuery(), trip, activity: undefined, requireActivity: false })).toEqual({
       status: "ready",
+      trip,
+      activity: undefined,
     });
   });
 
@@ -52,6 +54,8 @@ describe("getActivityFormLoadState", () => {
     const activity = { id: "a1" };
     expect(getActivityFormLoadState({ isLoading: false, groupQuery: okQuery(), trip, activity, requireActivity: true })).toEqual({
       status: "ready",
+      trip,
+      activity,
     });
   });
 });

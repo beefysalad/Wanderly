@@ -1,4 +1,4 @@
-import { meterWidth } from "../meterWidth";
+import { clampPercent } from "../clampPercent";
 
 interface IUsageMeterProps {
   label: string;
@@ -20,7 +20,7 @@ export const UsageMeter = ({ label, used, limit, percent, format }: IUsageMeterP
     <div className='h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5'>
       <div
         className={`h-full transition-all duration-500 rounded-full ${percent > 90 ? "bg-rose-500" : percent > 70 ? "bg-amber-500" : "bg-blue-500"}`}
-        style={{ width: `${meterWidth(percent)}%` }}
+        style={{ width: `${clampPercent(percent)}%` }}
       />
     </div>
     <div className='flex justify-end'>

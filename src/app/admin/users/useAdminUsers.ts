@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
+import { logger } from "@/lib/logger";
 import type { AdminUserSummary } from "@/src/shared/types";
 
 /** Loads the admin user list/stats and deletes a user. */
@@ -17,7 +18,7 @@ export function useAdminUsers() {
         setUsers(response.data.users);
         if (response.data.stats) setStats(response.data.stats);
       } catch (error) {
-        console.error("Failed to fetch users", error);
+        logger.error("Failed to fetch users", { error });
         toast.error("Failed to load users");
       } finally {
         setLoading(false);
@@ -43,7 +44,7 @@ export function useAdminUsers() {
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       setStats((prev) => ({ ...prev, total: prev.total - 1 }));
     } catch (error) {
-      console.error("Failed to delete user", error);
+      logger.error("Failed to delete user", { error });
       toast.error("Failed to delete user");
     } finally {
       setDeletingId(null);

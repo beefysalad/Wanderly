@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
+import { logger } from "@/lib/logger";
 
 export interface DBStats {
   users: number;
@@ -45,7 +46,7 @@ export function useDbStats() {
       setStats(response.data.stats);
       setUsage(response.data.usage);
     } catch (error) {
-      console.error("Failed to fetch stats", error);
+      logger.error("Failed to fetch stats", { error });
       toast.error("Failed to load database statistics");
     } finally {
       setLoading(false);
@@ -67,7 +68,7 @@ export function useDbStats() {
       toast.success(response.data.message || `Successfully cleaned ${response.data.count} test users`);
       fetchStats();
     } catch (error) {
-      console.error("Maintenance failed", error);
+      logger.error("Maintenance failed", { error });
       toast.error("Database maintenance failed");
     } finally {
       setMaintaining(false);
