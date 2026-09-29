@@ -26,9 +26,9 @@ async function resolveUserId(token: DecodedIdToken): Promise<string> {
  * (e.g. to compose a notification message or compare identities).
  */
 export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
-  const userId = await resolveUserId(token);
-
-  const trip = await findTripAccessInfo(tripId);
+  // Independent lookups (the caller's id doesn't depend on the trip, and vice versa) — run them
+  // together rather than adding a second sequential round trip to this hot path.
+  const [userId, trip] = await Promise.all([resolveUserId(token), findTripAccessInfo(tripId)]);
   if (!trip) {
     throw new NotFoundError("Trip not found");
   }
@@ -47,9 +47,8 @@ export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
  * (write paths that notify other members or compare identities), not for read-only trip access.
  */
 export async function verifyTripAccessWithProfile(token: DecodedIdToken, tripId: string) {
-  const user = await syncUserToDatabaseService(token);
-
-  const trip = await findTripAccessInfo(tripId);
+  // Independent lookups — see verifyTripAccess.
+  const [user, trip] = await Promise.all([syncUserToDatabaseService(token), findTripAccessInfo(tripId)]);
   if (!trip) {
     throw new NotFoundError("Trip not found");
   }

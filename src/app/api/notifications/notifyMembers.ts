@@ -54,21 +54,28 @@ export async function notifyGroupMembers(
     return;
   }
 
-  // One batched lookup for every recipient's Firebase id, instead of one per member.
-  const recipients = await findUsersFirebaseIds(recipientIds);
-  const firebaseIdByUserId = new Map(recipients.map((recipient) => [recipient.id, recipient.firebaseId]));
+  // The rows are already committed at this point, so a failure looking up recipients or
+  // delivering the real-time emit must not propagate — it would otherwise surface as a 500 to
+  // the caller (e.g. the expense/activity that was just created) even though that write succeeded.
+  try {
+    // One batched lookup for every recipient's Firebase id, instead of one per member.
+    const recipients = await findUsersFirebaseIds(recipientIds);
+    const firebaseIdByUserId = new Map(recipients.map((recipient) => [recipient.id, recipient.firebaseId]));
 
-  await Promise.all(
-    created.map((row) => {
-      const firebaseId = firebaseIdByUserId.get(row.userId);
-      if (!firebaseId) {
-        return undefined;
-      }
-      return emitNotificationToUser(firebaseId, row).catch((err) => {
-        logger.error("Failed to emit notification to user", { userId: row.userId, error: err });
-      });
-    }),
-  );
+    await Promise.all(
+      created.map((row) => {
+        const firebaseId = firebaseIdByUserId.get(row.userId);
+        if (!firebaseId) {
+          return undefined;
+        }
+        return emitNotificationToUser(firebaseId, row).catch((err) => {
+          logger.error("Failed to emit notification to user", { userId: row.userId, error: err });
+        });
+      }),
+    );
+  } catch (err) {
+    logger.error("Failed to look up recipients for real-time delivery", { groupId, error: err });
+  }
 
   // One ping for the group's room, not one per member.
   emitNotificationChangedToGroup(groupId).catch((err) => {

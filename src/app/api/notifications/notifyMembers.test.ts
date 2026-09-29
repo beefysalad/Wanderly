@@ -120,4 +120,13 @@ describe("notifyGroupMembers", () => {
 
     expect(mockEmitGroup).toHaveBeenCalledTimes(1);
   });
+
+  it("still pings the group room and does not throw when the Firebase id lookup fails", async () => {
+    mockFindUsersFirebaseIds.mockRejectedValue(new Error("db down"));
+
+    await expect(notifyGroupMembers("g1", "u1", notification)).resolves.toBeUndefined();
+
+    expect(mockEmitUser).not.toHaveBeenCalled();
+    expect(mockEmitGroup).toHaveBeenCalledTimes(1);
+  });
 });
