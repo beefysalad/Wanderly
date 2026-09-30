@@ -3,7 +3,7 @@ import { logger } from "@/src/lib/logger";
 import { emitExpenseUpdated } from "@/src/lib/socket-events";
 import { fromCents } from "@/src/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { verifyTripAccess } from "../../../../access";
+import { verifyTripAccessWithProfile } from "../../../../access";
 import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
 import { NotificationType } from "@prisma/client";
@@ -90,7 +90,7 @@ export async function markExpensePaidService(
   expenseId: string,
   data: MarkPaidBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
   const splitEntry = findSplitEntry(expense, data.memberEmail);
@@ -161,7 +161,7 @@ export async function confirmPaymentService(
   expenseId: string,
   data: ConfirmPaymentBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
   const isPayer = expense.paidById === user.id;

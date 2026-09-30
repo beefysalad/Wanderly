@@ -21,6 +21,40 @@ export type GroupWithDetail = Prisma.GroupGetPayload<{
   include: typeof GROUP_DETAIL_INCLUDE;
 }>;
 
+/**
+ * Trip shape for the groups LIST endpoint: enough for the Sidebar/Dashboard/Groups/Trips/Profile
+ * pages (id, dates, status, location for the "next trip" card) plus an activity count, but not
+ * the full activities array — that stays on the single-group detail include above.
+ */
+export const GROUP_LIST_TRIP_SELECT = {
+  id: true,
+  groupId: true,
+  name: true,
+  startDate: true,
+  endDate: true,
+  location: true,
+  status: true,
+  createdAt: true,
+  _count: { select: { activities: true } },
+} satisfies Prisma.TripSelect;
+
+export const GROUP_LIST_INCLUDE = {
+  creator: { select: { id: true, name: true, email: true } },
+  members: {
+    include: {
+      user: { select: { id: true, name: true, email: true, imageUrl: true } },
+    },
+  },
+  trips: {
+    select: GROUP_LIST_TRIP_SELECT,
+    orderBy: { createdAt: "desc" as const },
+  },
+} satisfies Prisma.GroupInclude;
+
+export type GroupWithListDetail = Prisma.GroupGetPayload<{
+  include: typeof GROUP_LIST_INCLUDE;
+}>;
+
 export function findGroupById(groupId: string) {
   return prisma.group.findUnique({
     where: { id: groupId },
@@ -65,7 +99,7 @@ export function listGroupMembersForNotify(groupId: string) {
 export function listGroupMembershipsForUser(userId: string) {
   return prisma.groupMember.findMany({
     where: { userId },
-    include: { group: { include: GROUP_DETAIL_INCLUDE } },
+    include: { group: { include: GROUP_LIST_INCLUDE } },
     orderBy: { group: { createdAt: "desc" } },
   });
 }

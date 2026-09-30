@@ -10,7 +10,7 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";
 import { findGroupOwnership } from "../../../groups/repository";
 import { assertCanModify } from "../../../groups/permissions";
-import { verifyGuestTripAccess, verifyTripAccess } from "../../access";
+import { verifyGuestTripAccess, verifyTripAccess, verifyTripAccessWithProfile } from "../../access";
 import { findUserIdByEmail } from "../../repository";
 import { findActivityById } from "../activities/repository";
 import {
@@ -109,7 +109,7 @@ export async function createExpenseService(
   tripId: string,
   data: CreateExpenseBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
 
   if (data.activityId) {
     await assertActivityInTrip(data.activityId, tripId);
@@ -158,7 +158,7 @@ export async function updateExpenseService(
   expenseId: string,
   data: UpdateExpenseBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const before = await findExpenseInTrip(expenseId, tripId);
   await assertCanChangeExpense(before, user.id, trip.groupId);
 
@@ -224,7 +224,7 @@ export async function deleteExpenseService(
   tripId: string,
   expenseId: string,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const existing = await findExpenseInTrip(expenseId, tripId);
   await assertCanChangeExpense(existing, user.id, trip.groupId);
 

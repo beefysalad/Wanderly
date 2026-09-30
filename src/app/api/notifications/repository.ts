@@ -16,8 +16,21 @@ export function createNotificationRow(data: CreateNotificationRow) {
   return prisma.notification.create({ data });
 }
 
+/** Batched insert for a group-notification fan-out: one round trip for every recipient. */
+export function createNotificationRows(data: CreateNotificationRow[]) {
+  return prisma.notification.createManyAndReturn({ data });
+}
+
 export function findUserFirebaseId(userId: string) {
   return prisma.user.findUnique({ where: { id: userId }, select: { firebaseId: true } });
+}
+
+/** Batched lookup for a group-notification fan-out: one round trip instead of one per recipient. */
+export function findUsersFirebaseIds(userIds: string[]) {
+  return prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, firebaseId: true },
+  });
 }
 
 export async function listNotificationsByUser(

@@ -1,13 +1,54 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
 import { findGroupMembership } from "../groups/repository";
+import { findUserIdByFirebaseId } from "../sync/repository";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { findTripAccessInfo } from "./repository";
 
-export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
+/**
+ * Resolves just the caller's user id, without running the full profile sync (Firebase refresh,
+ * new-account seeding, etc.) that `syncUserToDatabaseService` does. Falls back to the full sync
+ * only when no row exists yet for this Firebase uid — the caller's very first request.
+ */
+async function resolveUserId(token: DecodedIdToken): Promise<string> {
+  const existing = await findUserIdByFirebaseId(token.uid);
+  if (existing) {
+    return existing.id;
+  }
   const user = await syncUserToDatabaseService(token);
+  return user.id;
+}
 
-  const trip = await findTripAccessInfo(tripId);
+/**
+ * Verifies the caller belongs to the trip's group. This is the hot path used by every
+ * trip-scoped request (most of them reads), so it only resolves the caller's id and skips the
+ * full user sync. Use `verifyTripAccessWithProfile` when the caller's name/email is also needed
+ * (e.g. to compose a notification message or compare identities).
+ */
+export async function verifyTripAccess(token: DecodedIdToken, tripId: string) {
+  // Independent lookups (the caller's id doesn't depend on the trip, and vice versa) — run them
+  // together rather than adding a second sequential round trip to this hot path.
+  const [userId, trip] = await Promise.all([resolveUserId(token), findTripAccessInfo(tripId)]);
+  if (!trip) {
+    throw new NotFoundError("Trip not found");
+  }
+
+  const membership = await findGroupMembership(trip.groupId, userId);
+  if (!membership) {
+    throw new ForbiddenError("User does not have access to this trip");
+  }
+
+  return { trip, user: { id: userId } };
+}
+
+/**
+ * Same access check as `verifyTripAccess`, but runs the full user sync and returns the caller's
+ * full profile. Use this instead of `verifyTripAccess` when the caller's name/email is needed
+ * (write paths that notify other members or compare identities), not for read-only trip access.
+ */
+export async function verifyTripAccessWithProfile(token: DecodedIdToken, tripId: string) {
+  // Independent lookups — see verifyTripAccess.
+  const [user, trip] = await Promise.all([syncUserToDatabaseService(token), findTripAccessInfo(tripId)]);
   if (!trip) {
     throw new NotFoundError("Trip not found");
   }

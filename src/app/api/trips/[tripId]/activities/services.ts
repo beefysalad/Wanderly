@@ -8,7 +8,7 @@ import {
 import { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";
-import { verifyTripAccess } from "../../access";
+import { verifyTripAccessWithProfile } from "../../access";
 import {
   createActivityRow,
   deleteActivityRow,
@@ -51,7 +51,7 @@ export async function createActivityService(
   tripId: string,
   data: CreateActivityBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   assertWithinTrip(data.date, trip);
 
   const activity = await createActivityRow({
@@ -92,7 +92,7 @@ export async function updateActivityService(
   activityId: string,
   data: UpdateActivityBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const existing = await findActivityInTrip(activityId, tripId);
 
   // Only a move is checked: an activity the trip's new dates left outside stays editable in place.
@@ -152,7 +152,7 @@ export async function deleteActivityService(
   tripId: string,
   activityId: string,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const existing = await findActivityInTrip(activityId, tripId);
 
   // Notify BEFORE deleting; no relatedActivityId since the row is about to go.

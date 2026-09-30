@@ -1,5 +1,6 @@
 import type { Group, Trip, Activity } from "@/src/shared/types";
 import type { Prisma } from "@prisma/client";
+import type { GROUP_LIST_INCLUDE } from "./repository";
 
 type GroupWithRelations = Prisma.GroupGetPayload<{
   include: {
@@ -52,20 +53,20 @@ type TripWithRelations =
       };
     }>;
 
-/**
- * Transforms Prisma Group model to TypeScript Group interface
- */
-export function transformGroup(prismaGroup: GroupWithRelations): Group {
-  // Create email -> name mapping
+type GroupWithListRelations = Prisma.GroupGetPayload<{ include: typeof GROUP_LIST_INCLUDE }>;
+type TripListItemRelations = GroupWithListRelations["trips"][number];
+type MemberRelations = GroupWithRelations["members"] | GroupWithListRelations["members"];
+
+/** Email-keyed member maps shared by the detail and list group transforms. */
+function buildMemberMaps(members: MemberRelations) {
   const memberNames: Record<string, string> = {};
   const memberIds: Record<string, string> = {};
-  // Create email -> metadata mapping with joinedAt dates and imageUrl
   const memberMetadata: Record<
     string,
     { joinedAt: string; name?: string; imageUrl?: string }
   > = {};
 
-  prismaGroup.members.forEach((m) => {
+  members.forEach((m) => {
     const email = m.user.email;
     const name = m.user.name || m.user.email.split("@")[0];
     memberNames[email] = name;
@@ -76,6 +77,15 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
       imageUrl: m.user.imageUrl || undefined,
     };
   });
+
+  return { memberNames, memberIds, memberMetadata };
+}
+
+/**
+ * Transforms Prisma Group model to TypeScript Group interface
+ */
+export function transformGroup(prismaGroup: GroupWithRelations): Group {
+  const { memberNames, memberIds, memberMetadata } = buildMemberMaps(prismaGroup.members);
 
   return {
     id: prismaGroup.id,
@@ -91,6 +101,30 @@ export function transformGroup(prismaGroup: GroupWithRelations): Group {
     memberNames,
     memberMetadata,
     trips: prismaGroup.trips.map(transformTrip),
+  };
+}
+
+/**
+ * Transforms a Prisma Group for the groups LIST endpoint: same group/member shape as
+ * `transformGroup`, but each trip carries an activity count instead of the full activities array.
+ */
+export function transformGroupListItem(prismaGroup: GroupWithListRelations): Group {
+  const { memberNames, memberIds, memberMetadata } = buildMemberMaps(prismaGroup.members);
+
+  return {
+    id: prismaGroup.id,
+    name: prismaGroup.name,
+    code: prismaGroup.code,
+    colorScheme: prismaGroup.colorScheme || undefined,
+    emoji: prismaGroup.emoji || undefined,
+    createdAt: prismaGroup.createdAt.toISOString(),
+    createdBy: prismaGroup.creator.name || prismaGroup.creator.email,
+    createdByEmail: prismaGroup.creator.email,
+    memberEmails: prismaGroup.members.map((m) => m.user.email),
+    memberIds,
+    memberNames,
+    memberMetadata,
+    trips: prismaGroup.trips.map(transformTripListItem),
   };
 }
 
@@ -115,6 +149,24 @@ export function transformTrip(prismaTrip: TripWithRelations): Trip {
     createdBy: creator ? creator.name || creator.email : FORMER_MEMBER,
     createdById: creator?.id,
     activities: prismaTrip.activities.map(transformActivity),
+  };
+}
+
+/**
+ * Transforms a slim (list-select) Prisma Trip into the TypeScript Trip interface, using
+ * `_count.activities` in place of the full activities array.
+ */
+export function transformTripListItem(prismaTrip: TripListItemRelations): Trip {
+  return {
+    id: prismaTrip.id,
+    groupId: prismaTrip.groupId,
+    name: prismaTrip.name,
+    startDate: prismaTrip.startDate.toISOString(),
+    endDate: prismaTrip.endDate.toISOString(),
+    location: prismaTrip.location || undefined,
+    status: prismaTrip.status || undefined,
+    createdAt: prismaTrip.createdAt.toISOString(),
+    activityCount: prismaTrip._count.activities,
   };
 }
 
