@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { FORMER_MEMBER, transformActivity, transformGroup, transformTrip } from "./transformers";
+import {
+  FORMER_MEMBER,
+  transformActivity,
+  transformGroup,
+  transformGroupListItem,
+  transformTrip,
+  transformTripListItem,
+} from "./transformers";
 
 const alice = { id: "u-alice", name: "Alice", email: "alice@x.com" };
 const bob = { id: "u-bob", name: null as string | null, email: "bob@x.com" };
@@ -95,7 +102,7 @@ describe("transformTrip", () => {
       createdById: "u-alice",
     });
     expect(result.activities).toHaveLength(1);
-    expect(result.activities[0].id).toBe("a1");
+    expect(result.activities?.[0].id).toBe("a1");
   });
 
   it("shows the former-member placeholder and no id when the creator's account was deleted", () => {
@@ -104,6 +111,73 @@ describe("transformTrip", () => {
 
     expect(result.createdBy).toBe(FORMER_MEMBER);
     expect(result.createdById).toBeUndefined();
+  });
+});
+
+const listTripRow = {
+  id: "t1",
+  groupId: "g1",
+  name: "Japan",
+  startDate: new Date("2026-10-01"),
+  endDate: new Date("2026-10-10"),
+  location: "Tokyo",
+  status: "planning" as const,
+  createdAt: new Date("2026-09-01"),
+  _count: { activities: 3 },
+};
+
+const listGroupRow = {
+  ...groupRow,
+  trips: [listTripRow],
+};
+
+describe("transformGroupListItem", () => {
+  it("builds the same member maps and identity fields as transformGroup", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = transformGroupListItem(listGroupRow as any);
+
+    expect(result.memberEmails).toEqual(["alice@x.com", "bob@x.com"]);
+    expect(result.memberIds).toEqual({ "alice@x.com": "u-alice", "bob@x.com": "u-bob" });
+    expect(result.createdBy).toBe("Alice");
+    expect(result.createdByEmail).toBe("alice@x.com");
+  });
+
+  it("maps trips via transformTripListItem, with an activity count instead of the full array", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = transformGroupListItem(listGroupRow as any);
+
+    expect(result.trips).toHaveLength(1);
+    expect(result.trips?.[0]).toMatchObject({ id: "t1", activityCount: 3 });
+    expect(result.trips?.[0].activities).toBeUndefined();
+  });
+});
+
+describe("transformTripListItem", () => {
+  it("maps trip fields and turns the activities _count into activityCount", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = transformTripListItem(listTripRow as any);
+
+    expect(result).toEqual({
+      id: "t1",
+      groupId: "g1",
+      name: "Japan",
+      startDate: "2026-10-01T00:00:00.000Z",
+      endDate: "2026-10-10T00:00:00.000Z",
+      location: "Tokyo",
+      status: "planning",
+      createdAt: "2026-09-01T00:00:00.000Z",
+      activityCount: 3,
+    });
+    expect(result.activities).toBeUndefined();
+  });
+
+  it("never touches an activities array (the list select doesn't fetch one)", () => {
+    // A trip with zero activities should still just report a count of 0, not an empty array.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = transformTripListItem({ ...listTripRow, _count: { activities: 0 } } as any);
+
+    expect(result.activityCount).toBe(0);
+    expect(result.activities).toBeUndefined();
   });
 });
 

@@ -8,7 +8,10 @@ export function profileStats(groups: Group[]) {
   return [
     { label: "Groups", value: groups.length },
     { label: "Destinations", value: destinations.size },
-    { label: "Activities", value: trips.reduce((sum, trip) => sum + (trip.activities?.length ?? 0), 0) },
+    {
+      label: "Activities",
+      value: trips.reduce((sum, trip) => sum + (trip.activityCount ?? trip.activities?.length ?? 0), 0),
+    },
     { label: "Trips", value: trips.length },
   ];
 }

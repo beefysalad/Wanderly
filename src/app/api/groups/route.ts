@@ -4,12 +4,12 @@ import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createGroupSchema } from "./schemas";
 import { createGroupService, listGroupsService } from "./services";
-import { transformGroup } from "./transformers";
+import { transformGroup, transformGroupListItem } from "./transformers";
 
 async function getHandler(_req: NextRequest, auth: AuthContext) {
   try {
     const groups = await listGroupsService(auth.decodedToken);
-    return NextResponse.json({ groups: groups.map(transformGroup) });
+    return NextResponse.json({ groups: groups.map(transformGroupListItem) });
   } catch (error) {
     return handleApiError(error);
   }

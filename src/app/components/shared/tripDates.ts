@@ -74,7 +74,7 @@ export function fullRange(trip: Trip): string {
 /** "5 days · 15 activities". */
 export function tripMeta(trip: Trip): string {
   const days = dayDiff(startOf(trip), endOf(trip)) + 1;
-  const activities = trip.activities?.length ?? 0;
+  const activities = trip.activityCount ?? trip.activities?.length ?? 0;
   return `${days} ${days === 1 ? "day" : "days"} · ${activities} ${activities === 1 ? "activity" : "activities"}`;
 }
 

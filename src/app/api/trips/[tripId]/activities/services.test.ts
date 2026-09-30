@@ -4,7 +4,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 vi.mock("../../access", () => ({
-  verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
+  verifyTripAccessWithProfile: (...a: unknown[]) => mockVerifyTripAccess(...a),
 }));
 
 const mockFindActivityById = vi.fn();
@@ -18,14 +18,9 @@ vi.mock("./repository", () => ({
   deleteActivityRow: (...a: unknown[]) => mockDeleteActivityRow(...a),
 }));
 
-const mockListMembers = vi.fn();
-vi.mock("../../../groups/repository", () => ({
-  listGroupMembersForNotify: (...a: unknown[]) => mockListMembers(...a),
-}));
-
-const mockCreateNotification = vi.fn();
-vi.mock("../../../notifications/services", () => ({
-  createNotificationService: (...a: unknown[]) => mockCreateNotification(...a),
+const mockNotifyMembers = vi.fn();
+vi.mock("../../../notifications/notifyMembers", () => ({
+  notifyGroupMembers: (...a: unknown[]) => mockNotifyMembers(...a),
 }));
 
 const mockEmitCreated = vi.fn();
@@ -70,8 +65,7 @@ const existingActivity = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip, user });
-  mockListMembers.mockResolvedValue([{ userId: "user-1" }, { userId: "user-2" }]);
-  mockCreateNotification.mockResolvedValue(undefined);
+  mockNotifyMembers.mockResolvedValue(undefined);
   mockEmitCreated.mockResolvedValue(undefined);
   mockEmitUpdated.mockResolvedValue(undefined);
   mockEmitDeleted.mockResolvedValue(undefined);
@@ -91,11 +85,11 @@ describe("createActivityService", () => {
     expect(mockCreateActivityRow).toHaveBeenCalledWith(
       expect.objectContaining({ tripId: "trip-1", title: "Museum", startTime: null, notes: null }),
     );
-    expect(mockCreateNotification).toHaveBeenCalledTimes(1);
-    expect(mockCreateNotification).toHaveBeenCalledWith(
-      "user-2",
+    expect(mockNotifyMembers).toHaveBeenCalledTimes(1);
+    expect(mockNotifyMembers).toHaveBeenCalledWith(
+      "group-1",
+      "user-1",
       expect.objectContaining({
-        relatedGroupId: "group-1",
         relatedActivityId: "act-1",
         message: "Alice added activity 'Museum' to Japan",
       }),
@@ -103,15 +97,6 @@ describe("createActivityService", () => {
     expect(mockEmitCreated).toHaveBeenCalledWith("group-1", { id: "act-1" }, {
       createdBy: "alice@example.com",
     });
-  });
-
-  it("still succeeds when a notification fails", async () => {
-    mockCreateActivityRow.mockResolvedValue({ id: "act-1" });
-    mockCreateNotification.mockRejectedValue(new Error("boom"));
-
-    await expect(
-      createActivityService(token, "trip-1", { title: "x", date: new Date("2026-10-01") }),
-    ).resolves.toEqual({ id: "act-1" });
   });
 
   it("accepts the trip's first and last days", async () => {
@@ -176,7 +161,7 @@ describe("updateActivityService", () => {
     await updateActivityService(token, "trip-1", "a", { done: true });
 
     expect(mockUpdateActivityRow).toHaveBeenCalledWith("a", { done: true });
-    expect(mockCreateNotification).not.toHaveBeenCalled();
+    expect(mockNotifyMembers).not.toHaveBeenCalled();
     expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
   });
 
@@ -187,8 +172,9 @@ describe("updateActivityService", () => {
     await updateActivityService(token, "trip-1", "a", { title: "New", pickupTime: "" });
 
     expect(mockUpdateActivityRow).toHaveBeenCalledWith("a", { title: "New", pickupTime: null });
-    expect(mockCreateNotification).toHaveBeenCalledWith(
-      "user-2",
+    expect(mockNotifyMembers).toHaveBeenCalledWith(
+      "group-1",
+      "user-1",
       expect.objectContaining({ message: "Alice updated activity 'Old' in Japan" }),
     );
     expect(mockEmitUpdated).toHaveBeenCalledTimes(1);
@@ -273,13 +259,13 @@ describe("deleteActivityService", () => {
   it("notifies before deleting, without relatedActivityId, then emits", async () => {
     mockFindActivityById.mockResolvedValue({ id: "a", tripId: "trip-1", title: "Museum" });
     const order: string[] = [];
-    mockCreateNotification.mockImplementation(async () => void order.push("notify"));
+    mockNotifyMembers.mockImplementation(async () => void order.push("notify"));
     mockDeleteActivityRow.mockImplementation(async () => void order.push("delete"));
 
     await deleteActivityService(token, "trip-1", "a");
 
     expect(order).toEqual(["notify", "delete"]);
-    expect(mockCreateNotification.mock.calls[0][1]).not.toHaveProperty("relatedActivityId");
+    expect(mockNotifyMembers.mock.calls[0][2]).not.toHaveProperty("relatedActivityId");
     expect(mockEmitDeleted).toHaveBeenCalledWith("group-1", "a", {
       deletedBy: "Alice",
       activityTitle: "Museum",

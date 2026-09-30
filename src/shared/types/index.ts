@@ -23,7 +23,11 @@ export interface Trip {
   name: string;
   startDate: string;
   endDate: string;
-  activities: Activity[];
+  // Present on trip/group-detail responses; list responses (groups list) send activityCount instead.
+  activities?: Activity[];
+  // Present on list responses in place of the full activities array; undefined on detail responses
+  // (fall back to activities?.length there).
+  activityCount?: number;
   createdAt: string;
   location?: string; // Added optional location field
   status?: "planning" | "finalized" | "ongoing" | "cancelled"; // Trip status
