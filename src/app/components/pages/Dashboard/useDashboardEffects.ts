@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { useJoinGroup } from "@/src/hooks/useGroups";
 import { queryKeys } from "@/src/hooks/queryKeys";
 import { useSocket } from "@/src/hooks/useSocket";

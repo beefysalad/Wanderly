@@ -1,6 +1,6 @@
-import { userAuth } from "@/lib/firebase-admin";
-import { AppError, ForbiddenError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
+import { userAuth } from "@/src/lib/firebase-admin";
+import { AppError, ForbiddenError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
 import { Prisma } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import {

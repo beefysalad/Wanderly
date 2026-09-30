@@ -1,4 +1,4 @@
-import { formatPeso } from "@/lib/utils/money";
+import { formatPeso } from "@/src/lib/utils/money";
 import type { Budget, Expense } from "@/src/shared/types";
 
 export interface Meter {

@@ -1,4 +1,4 @@
-import { handleApiError } from "@/lib/handle-api-error";
+import { handleApiError } from "@/src/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { assertAdmin } from "../guard";
 import { listUsersService } from "./services";

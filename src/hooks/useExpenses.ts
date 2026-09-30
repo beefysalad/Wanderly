@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import type { Expense, PaymentLog } from "@/src/shared/types";
 import { queryKeys } from "./queryKeys";
 

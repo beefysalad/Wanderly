@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import type { Prisma } from "@prisma/client";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { findAppConfig, listAppConfigs, upsertAppConfig } from "./repository";

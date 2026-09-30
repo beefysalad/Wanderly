@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockWarn = vi.fn();
-vi.mock("@/lib/logger", () => ({ logger: { warn: (...a: unknown[]) => mockWarn(...a) } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { warn: (...a: unknown[]) => mockWarn(...a) } }));
 
 const { auditAdminAction } = await import("./audit");
 

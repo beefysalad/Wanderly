@@ -1,6 +1,6 @@
 import type { NotificationType } from "@prisma/client";
-import { logger } from "@/lib/logger";
-import { emitNotificationChangedToGroup, emitNotificationToUser } from "@/lib/socket-events";
+import { logger } from "@/src/lib/logger";
+import { emitNotificationChangedToGroup, emitNotificationToUser } from "@/src/lib/socket-events";
 import { listGroupMembersForNotify } from "../groups/repository";
 import { createNotificationRows, findUsersFirebaseIds } from "./repository";
 

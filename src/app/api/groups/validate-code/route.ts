@@ -1,7 +1,7 @@
-import { signGuestToken } from "@/lib/auth/guest-token";
-import { AppError } from "@/lib/errors";
-import { handleApiError } from "@/lib/handle-api-error";
-import { withRateLimit } from "@/lib/rate-limit";
+import { signGuestToken } from "@/src/lib/auth/guest-token";
+import { AppError } from "@/src/lib/errors";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { withRateLimit } from "@/src/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { validateCodeSchema } from "../schemas";
 import { validateGroupCodeService } from "../services";

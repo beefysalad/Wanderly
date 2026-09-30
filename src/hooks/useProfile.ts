@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { queryKeys } from "./queryKeys";
 
 interface UpdateProfileRequest {

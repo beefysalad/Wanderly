@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { safeRedirectPath } from "@/lib/utils";
+import { safeRedirectPath } from "@/src/lib/utils";
 import { AuthItem } from "../../shared/AuthForm/AuthParts";
 import SignInForm from "../../shared/AuthForm/SignInForm";
 import { EASE } from "../../shared/Site/motion";

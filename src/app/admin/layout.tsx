@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { Lock } from "lucide-react";
 import Link from "next/link";

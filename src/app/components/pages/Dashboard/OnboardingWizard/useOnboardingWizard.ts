@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { queryKeys } from "@/src/hooks/queryKeys";
 import type { User } from "@/src/shared/types";
 import type { Step } from "./onboardingOptions";

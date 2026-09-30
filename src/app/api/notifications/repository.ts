@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 import type { NotificationType } from "@prisma/client";
 
 export interface CreateNotificationRow {

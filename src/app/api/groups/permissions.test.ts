@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ForbiddenError } from "@/lib/errors";
+import { ForbiddenError } from "@/src/lib/errors";
 import { assertCanModify, canModify } from "./permissions";
 
 describe("canModify", () => {

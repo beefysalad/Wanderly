@@ -80,7 +80,7 @@ Every pull request runs lint, tests and a CI build (`.github/workflows/checks.ym
 
 - `src/app`: routes and API routes (`src/app/api/**/route.ts`). Each API feature follows the same layering: a thin `route.ts`, a `services.ts` with the business rules, a `repository.ts` that is the only file talking to Prisma, and a `schemas.ts` with the Zod request schemas.
 - `src/app/components`: page-level and shared React components. `src/hooks`: TanStack Query hooks. `src/shared/types`: shared types.
-- `components/ui` and `lib/` at the repo root: shadcn/ui primitives and shared singletons and utilities (Prisma client, Firebase, Axios, logger, auth wrappers).
+- `src/components/ui` and `src/lib`: shadcn/ui primitives and shared singletons and utilities (Prisma client, Firebase, Axios, logger, auth wrappers).
 - `prisma`: schema and migrations. `docs/superpowers`: design specs and implementation plans.
 
 Conventions and architecture rules for contributors (and coding agents) are in [`CLAUDE.md`](./CLAUDE.md).

@@ -1,4 +1,4 @@
-import { userAuth } from "@/lib/firebase-admin";
+import { userAuth } from "@/src/lib/firebase-admin";
 
 export interface FirebaseUserInfo {
   lastSignInTime?: string;

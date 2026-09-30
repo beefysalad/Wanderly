@@ -1,5 +1,5 @@
-import { logger } from "@/lib/logger";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType, type TripStatus } from "@prisma/client";
 import { syncUserToDatabaseService } from "../../../sync/syncService";
@@ -10,7 +10,7 @@ import {
   listGroupMembersForNotify,
 } from "../../repository";
 import { createTripRow, deleteTripRow, findTripById, updateTripRow } from "./repository";
-import { emitTripCreated, emitTripDeleted, emitTripUpdated } from "@/lib/socket-events";
+import { emitTripCreated, emitTripDeleted, emitTripUpdated } from "@/src/lib/socket-events";
 import type { CreateTripBody, UpdateTripBody } from "./schemas";
 
 async function getOrCreateUser(token: DecodedIdToken) {

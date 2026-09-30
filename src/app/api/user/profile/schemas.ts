@@ -1,4 +1,4 @@
-import { imageUrlSchema } from "@/lib/utils/imageUrl";
+import { imageUrlSchema } from "@/src/lib/utils/imageUrl";
 import { z } from "zod";
 
 // Unknown fields are ignored.

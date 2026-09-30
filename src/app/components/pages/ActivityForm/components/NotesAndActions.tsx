@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { UseFormReturn } from "react-hook-form";
 import { FIELD_LABEL, INPUT, SUBMIT_BUTTON } from "@/src/app/components/shared/formStyles";
 import type { TActivitySchema } from "../activitySchema";

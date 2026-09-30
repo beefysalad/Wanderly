@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 
 /**
  * Generates a random 6-character alphanumeric code (uppercase letters and numbers)

@@ -1,7 +1,7 @@
 import { MapPin, Navigation, Trash2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/src/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { FIELD_LABEL, INPUT } from "@/src/app/components/shared/formStyles";
 import type { TActivitySchema } from "../activitySchema";
 import type { ActivityType } from "../useActivityForm";

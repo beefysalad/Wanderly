@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 
 export function findUserByFirebaseId(firebaseId: string) {
   return prisma.user.findUnique({ where: { firebaseId } });

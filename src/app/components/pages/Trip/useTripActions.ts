@@ -52,7 +52,7 @@ export function useTripActions(groupId: string, tripId: string, trip: Trip | nul
     setShowExportMenu(false);
     try {
       // Dynamic import: code-splitting the ~900-line canvas/ICS exporter, only needed on click, out of the Trip bundle.
-      const { exportScheduleToICS, exportScheduleToPNG } = await import("@/lib/utils/exportSchedule");
+      const { exportScheduleToICS, exportScheduleToPNG } = await import("@/src/lib/utils/exportSchedule");
       if (format === "png") {
         await exportScheduleToPNG({ trip, activities: trip.activities || [] });
       } else {

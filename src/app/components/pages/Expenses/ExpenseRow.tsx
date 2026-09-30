@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPeso } from "@/src/lib/utils/money";
 import type { Expense, Group } from "@/src/shared/types";
 import { UserAvatar } from "../../shared/UserAvatar";
 import { CATEGORY_STYLE, TONE_CLASS, categoryKey, expenseStatusLine, payerIdentity } from "./expenseView";

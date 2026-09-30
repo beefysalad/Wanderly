@@ -19,7 +19,7 @@ import { GripVertical, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { PILL } from "../../../shared/Pills";
 import {

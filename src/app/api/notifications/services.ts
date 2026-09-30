@@ -1,6 +1,6 @@
-import { NotFoundError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
-import { emitNotificationChangedToGroup, emitNotificationToUser } from "@/lib/socket-events";
+import { NotFoundError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { emitNotificationChangedToGroup, emitNotificationToUser } from "@/src/lib/socket-events";
 import type { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { syncUserToDatabaseService } from "../sync/syncService";

@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Activity } from "@/src/shared/types";
 import { PILL } from "../../../shared/Pills";
 import { activitiesOn, activitySubline, activityTime, dayMeta, overlappingActivityIds, tripDays } from "../tripView";

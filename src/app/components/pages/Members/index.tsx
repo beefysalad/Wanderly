@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { copyToClipboard } from "@/lib/utils/clipboard";
-import { getVibeInfo } from "@/lib/utils/groupColors";
-import { cn } from "@/lib/utils";
+import { copyToClipboard } from "@/src/lib/utils/clipboard";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
+import { cn } from "@/src/lib/utils";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroup, useGroupAsGuest } from "@/src/hooks/useGroups";
 import { AppShell } from "../../shared/AppShell/AppShell";

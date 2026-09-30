@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "@/lib/axios";
-import { logger } from "@/lib/logger";
+import api from "@/src/lib/axios";
+import { logger } from "@/src/lib/logger";
 import type { WhatsNewFeature } from "@/src/app/config/whats-new";
 import type { ColorPreset } from "./colorPresets";
 import { addFeature, removeFeature, setFeatureColors, updateFeature } from "./whatsNewFeatureOps";

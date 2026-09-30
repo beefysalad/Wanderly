@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import { CURRENT_WHATS_NEW_VERSION, WHATS_NEW_FEATURES } from "@/src/app/config/whats-new";
 import { findWhatsNewConfig, upsertWhatsNewConfig } from "./repository";
 import type { WhatsNewConfigBody } from "./schemas";

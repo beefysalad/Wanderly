@@ -1,7 +1,7 @@
-import { withAuth, type AuthContext } from "@/lib/auth/with-auth";
-import { handleApiError } from "@/lib/handle-api-error";
-import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import { withAuth, type AuthContext } from "@/src/lib/auth/with-auth";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { logger } from "@/src/lib/logger";
+import { withRateLimit } from "@/src/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { joinGroupSchema } from "../schemas";
 import { joinGroupService } from "../services";

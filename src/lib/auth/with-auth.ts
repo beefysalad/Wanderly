@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { handleApiError } from "@/lib/handle-api-error";
+import { logger } from "@/src/lib/logger";
+import { handleApiError } from "@/src/lib/handle-api-error";
 import { verifyGuestToken } from "./guest-token";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { User } from "@prisma/client";

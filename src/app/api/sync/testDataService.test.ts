@@ -11,8 +11,8 @@ vi.mock("./seedRepository", () => ({
   findUserForSeeding: (...a: unknown[]) => mockFindUser(...a),
   runSeedTransaction: (...a: unknown[]) => mockRun(...a),
 }));
-vi.mock("@/lib/utils/groupCode", () => ({ generateUniqueGroupCode: async () => "CODE1" }));
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/utils/groupCode", () => ({ generateUniqueGroupCode: async () => "CODE1" }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { seedTestData } = await import("./testDataService");
 

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import type { Trip, Group } from "@/src/shared/types";
 import { queryKeys } from "./queryKeys";
 

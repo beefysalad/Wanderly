@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import type { TExpenseSchema } from "./expenseSchema";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB

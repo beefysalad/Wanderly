@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { CHIP, CHIP_OFF, CHIP_ON, FIELD_ERROR, FIELD_LABEL, INPUT } from "../../formStyles";
 import type { UseFormReturn } from "react-hook-form";
 import type { Activity } from "@/src/shared/types";

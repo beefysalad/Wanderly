@@ -1,7 +1,7 @@
 import { Loader2, Upload } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { cn } from "@/src/lib/utils";
+import { formatPeso } from "@/src/lib/utils/money";
 import { CHIP, CHIP_OFF, CHIP_ON, FIELD_ERROR, FIELD_LABEL, INPUT } from "../../formStyles";
 import type { TExpenseSchema } from "../expenseSchema";
 

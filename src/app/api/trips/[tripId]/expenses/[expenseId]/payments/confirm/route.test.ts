@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The auth wrapper is covered by lib/auth/with-auth.test.ts; here the route's own schema
 // parsing and service wiring is under test, with a hand-built auth context.
-vi.mock("@/lib/auth/with-auth", () => ({
+vi.mock("@/src/lib/auth/with-auth", () => ({
   withAuth: (handler: unknown) => handler,
 }));
 
@@ -67,7 +67,7 @@ describe("POST .../payments/confirm", () => {
   });
 
   it("maps a rejected confirmation to the error's own status (e.g. 403 from the payer-only check)", async () => {
-    const { ForbiddenError } = await import("@/lib/errors");
+    const { ForbiddenError } = await import("@/src/lib/errors");
     mockConfirmPaymentService.mockRejectedValue(new ForbiddenError("Only the payer can confirm or reject payments"));
 
     const res = await POST(

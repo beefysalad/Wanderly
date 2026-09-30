@@ -14,7 +14,7 @@ vi.mock("./repository", () => ({
   deleteSampleData: (...a: unknown[]) => mockDeleteSample(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { cleanTestDataService, getDbStatsService, toCloudinaryStats, toUsageMetric } = await import("./services");
 

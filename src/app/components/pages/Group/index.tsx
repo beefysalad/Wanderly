@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { copyToClipboard } from "@/lib/utils/clipboard";
+import { copyToClipboard } from "@/src/lib/utils/clipboard";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useDeleteGroup, useGroup, useLeaveGroup } from "@/src/hooks/useGroups";
 import { useNavigationLoading } from "@/src/hooks/useNavigationLoading";

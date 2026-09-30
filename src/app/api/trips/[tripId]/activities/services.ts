@@ -1,10 +1,10 @@
-import { logger } from "@/lib/logger";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { NotFoundError, ValidationError } from "@/src/lib/errors";
 import {
   emitActivityCreated,
   emitActivityDeleted,
   emitActivityUpdated,
-} from "@/lib/socket-events";
+} from "@/src/lib/socket-events";
 import { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";

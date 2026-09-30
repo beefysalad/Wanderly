@@ -1,6 +1,6 @@
 import { Camera, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { StepHeader } from "./StepHeader";
 
 interface IdentityStepProps {

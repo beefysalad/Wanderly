@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Notification } from "@/src/shared/types";
 import { NOTIFICATION_DOT, notificationKind, timeAgo } from "../../shared/AppShell/notificationMeta";
 

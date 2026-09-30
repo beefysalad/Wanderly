@@ -14,12 +14,12 @@ vi.mock("./repository", () => ({
 
 const mockEmitUser = vi.fn();
 const mockEmitGroup = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitNotificationToUser: (...a: unknown[]) => mockEmitUser(...a),
   emitNotificationChangedToGroup: (...a: unknown[]) => mockEmitGroup(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
 
 const { notifyGroupMembers } = await import("./notifyMembers");
 

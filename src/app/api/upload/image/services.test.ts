@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/src/lib/errors";
 
 const mockUpload = vi.fn();
 vi.mock("./cloudinary", () => ({ uploadImageBuffer: (...a: unknown[]) => mockUpload(...a) }));
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { uploadImageService } = await import("./services");
 

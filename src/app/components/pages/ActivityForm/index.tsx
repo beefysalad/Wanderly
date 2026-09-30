@@ -3,8 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Car, Hotel, Loader2, Plane, Save, Ticket, Utensils } from "lucide-react";
 import type { Activity, Trip } from "@/src/shared/types";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@/src/components/ui/button";
+import { cn } from "@/src/lib/utils";
 import NavigationLoader from "@/src/app/components/shared/NavigationLoader";
 import { DetailsFields } from "./components/DetailsFields";
 import { NotesAndActions } from "./components/NotesAndActions";

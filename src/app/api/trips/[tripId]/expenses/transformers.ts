@@ -1,4 +1,4 @@
-import { computeShares, fromCents, toCents } from "@/lib/utils/money";
+import { computeShares, fromCents, toCents } from "@/src/lib/utils/money";
 import type { Expense, PaymentLog } from "@/src/shared/types";
 import type { Prisma } from "@prisma/client";
 import { FORMER_MEMBER } from "../../../groups/transformers";

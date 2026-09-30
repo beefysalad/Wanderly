@@ -1,4 +1,4 @@
-import { ForbiddenError } from "@/lib/errors";
+import { ForbiddenError } from "@/src/lib/errors";
 
 interface ModifyCheck {
   actorId: string;

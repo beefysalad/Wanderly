@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockFindGroupMembership = vi.fn();
 const mockFindGroupOwnership = vi.fn();
@@ -32,7 +32,7 @@ vi.mock("../../../notifications/services", () => ({
   createNotificationService: (...a: unknown[]) => mockCreateNotificationService(...a),
 }));
 
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitTripCreated: vi.fn().mockResolvedValue(undefined),
   emitTripUpdated: vi.fn().mockResolvedValue(undefined),
   emitTripDeleted: vi.fn().mockResolvedValue(undefined),

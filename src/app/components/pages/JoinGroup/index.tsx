@@ -3,7 +3,7 @@
 import { Loader2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { useJoinGroup } from "@/src/hooks/useGroups";
 import { AppShell } from "../../shared/AppShell/AppShell";
 import NavigationLoader from "../../shared/NavigationLoader";

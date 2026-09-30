@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import api from "@/lib/axios";
-import { logger } from "@/lib/logger";
+import api from "@/src/lib/axios";
+import { logger } from "@/src/lib/logger";
 import type { ConfigItem } from "./configHelpers";
 
 /** Loads and edits the admin `AppConfig` key/value rows (maintenance mode plus anything else stored there). */

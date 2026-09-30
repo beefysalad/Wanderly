@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import { upsertUserProfile, type UserProfileChanges } from "./repository";
 import type { UpdateUserProfileBody } from "./schemas";
 
