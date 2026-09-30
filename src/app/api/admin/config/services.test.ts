@@ -64,7 +64,7 @@ describe("config services", () => {
 
     await upsertConfigService({ key: "maintenance-mode", value: true });
 
-    expect(mockRevalidateTag).toHaveBeenCalledWith("maintenance-config");
+    expect(mockRevalidateTag).toHaveBeenCalledWith("maintenance-config", { expire: 0 });
   });
 });
 
