@@ -17,7 +17,8 @@ export async function upsertConfigService(data: UpsertConfigBody) {
   const config = await upsertAppConfig(data.key, data.value as Prisma.InputJsonValue);
 
   if (data.key === "maintenance-mode") {
-    revalidateTag(MAINTENANCE_CONFIG_TAG);
+    // { expire: 0 } matches Next 15's implicit immediate-purge behavior for the removed single-arg form.
+    revalidateTag(MAINTENANCE_CONFIG_TAG, { expire: 0 });
   }
 
   logger.info("Admin: Updated app config", { key: data.key });
