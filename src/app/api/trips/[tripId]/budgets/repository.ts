@@ -1,6 +1,5 @@
 import prisma from "@/src/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
 
 const BUDGET_INCLUDE = {
   activity: { select: { id: true, title: true, date: true } },
@@ -36,7 +35,7 @@ export interface CreateBudgetRow {
 
 export function createBudgetRow(data: CreateBudgetRow) {
   return prisma.budget.create({
-    data: { ...data, amount: new Decimal(data.amount) },
+    data: { ...data, amount: new Prisma.Decimal(data.amount) },
     include: BUDGET_INCLUDE,
   });
 }
@@ -54,7 +53,7 @@ export function updateBudgetRow(budgetId: string, data: UpdateBudgetRow) {
     where: { id: budgetId },
     data: {
       ...data,
-      amount: data.amount !== undefined ? new Decimal(data.amount) : undefined,
+      amount: data.amount !== undefined ? new Prisma.Decimal(data.amount) : undefined,
     },
     include: BUDGET_INCLUDE,
   });

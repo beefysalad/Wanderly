@@ -1,6 +1,5 @@
 import prisma from "@/src/lib/prisma";
-import type { PaymentMethod, Prisma } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma, type PaymentMethod } from "@prisma/client";
 
 // Splits come back in the order they were added: leftover centavos are placed by position (see computeShares).
 export const SPLIT_ORDER = [{ createdAt: "asc" }, { id: "asc" }] satisfies Prisma.ExpenseSplitOrderByWithRelationInput[];
@@ -74,7 +73,7 @@ export interface CreateExpenseRow {
 
 export function createExpenseRow({ splits, amount, ...data }: CreateExpenseRow) {
   return prisma.expense.create({
-    data: { ...data, amount: new Decimal(amount), splits: { create: splits } },
+    data: { ...data, amount: new Prisma.Decimal(amount), splits: { create: splits } },
     include: EXPENSE_INCLUDE,
   });
 }
@@ -105,7 +104,7 @@ export function updateExpenseRow(expenseId: string, changes: UpdateExpenseRow) {
     data.paidBy = payer.userId ? { connect: { id: payer.userId } } : { disconnect: true };
     data.tempPaidBy = payer.userId ? null : payer.name;
   }
-  if (amount !== undefined) data.amount = new Decimal(amount);
+  if (amount !== undefined) data.amount = new Prisma.Decimal(amount);
   if (activityId !== undefined) {
     data.activity = activityId ? { connect: { id: activityId } } : { disconnect: true };
   }

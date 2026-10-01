@@ -1,6 +1,5 @@
 import prisma from "@/src/lib/prisma";
-import type { PaymentMethod, Prisma } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma, type PaymentMethod } from "@prisma/client";
 
 const PAYMENT_LOG_INCLUDE = {
   payer: { select: { id: true, email: true, name: true, imageUrl: true } },
@@ -40,7 +39,7 @@ function isUniqueConstraintViolation(err: unknown): boolean {
 export async function createPaymentLogRow(data: CreatePaymentLogRow) {
   try {
     return await prisma.paymentLog.create({
-      data: { ...data, amount: new Decimal(data.amount) },
+      data: { ...data, amount: new Prisma.Decimal(data.amount) },
       include: PAYMENT_LOG_INCLUDE,
     });
   } catch (err) {

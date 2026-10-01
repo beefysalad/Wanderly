@@ -1,4 +1,4 @@
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockAfter = vi.fn((cb: () => unknown) => cb());
@@ -137,7 +137,7 @@ describe("expense event serialization", () => {
 
     await emitExpenseCreated("g1", {
       id: "e1",
-      amount: new Decimal("42.50"),
+      amount: new Prisma.Decimal("42.50"),
       date: new Date("2026-10-01"),
       paidBy: { id: "u1", email: "a@x.com", name: "Alice", passwordHash: "should-not-leak" },
     });
