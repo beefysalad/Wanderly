@@ -69,9 +69,8 @@ jobs:
       - name: Check for schema/migration drift
         run: |
           npx prisma migrate diff \
-            --shadow-database-url "$DATABASE_URL" \
             --from-migrations ./prisma/migrations \
-            --to-schema-datamodel ./prisma/schema.prisma \
+            --to-schema ./prisma/schema.prisma \
             --exit-code
 
       - run: npm run test
