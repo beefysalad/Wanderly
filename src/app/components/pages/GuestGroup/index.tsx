@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { copyToClipboard } from "@/lib/utils/clipboard";
+import { copyToClipboard } from "@/src/lib/utils/clipboard";
 import { useGroupAsGuest } from "@/src/hooks/useGroups";
 import { useSocketGroupUpdates } from "@/src/hooks/useSocketGroupUpdates";
 import { GuestShell } from "../../shared/AppShell/GuestShell";

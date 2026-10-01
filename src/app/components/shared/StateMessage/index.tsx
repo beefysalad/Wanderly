@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { PILL, PillLink } from "../Pills";
 import { loadErrorCopy, loadFailure, type QueryLike } from "./loadError";
 

@@ -1,9 +1,9 @@
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
-import { emitExpenseUpdated } from "@/lib/socket-events";
-import { fromCents } from "@/lib/utils/money";
+import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { emitExpenseUpdated } from "@/src/lib/socket-events";
+import { fromCents } from "@/src/lib/utils/money";
 import type { DecodedIdToken } from "firebase-admin/auth";
-import { verifyTripAccess } from "../../../../access";
+import { verifyTripAccessWithProfile } from "../../../../access";
 import { findGroupOwnership } from "../../../../../groups/repository";
 import { findUserIdByEmail } from "../../../../repository";
 import { NotificationType } from "@prisma/client";
@@ -90,7 +90,7 @@ export async function markExpensePaidService(
   expenseId: string,
   data: MarkPaidBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
   const splitEntry = findSplitEntry(expense, data.memberEmail);
@@ -113,11 +113,11 @@ export async function markExpensePaidService(
         paymentMethod: expense.paymentMethod,
       });
 
-      logger.info("Guest payment recorded", { expenseId, tempName: data.memberEmail, tripId });
+      logger.info("Guest payment recorded", { expenseId, tripId });
     } else {
       await unrecordGuestPayment(expenseId, data.memberEmail);
 
-      logger.info("Guest payment reversed", { expenseId, tempName: data.memberEmail, tripId });
+      logger.info("Guest payment reversed", { expenseId, tripId });
     }
 
     return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
@@ -139,11 +139,11 @@ export async function markExpensePaidService(
   if (data.isPaid) {
     await markPendingAndClearLog(expenseId, memberUserId);
 
-    logger.info("Expense marked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
+    logger.info("Expense marked as paid", { expenseId, memberUserId, tripId });
   } else {
     await unmarkPayment(expenseId, memberUserId);
 
-    logger.info("Expense unmarked as paid", { expenseId, memberEmail: data.memberEmail, tripId });
+    logger.info("Expense unmarked as paid", { expenseId, memberUserId, tripId });
   }
 
   return reloadExpense(expenseId, trip.groupId, user.name || user.email || undefined);
@@ -161,7 +161,7 @@ export async function confirmPaymentService(
   expenseId: string,
   data: ConfirmPaymentBody,
 ) {
-  const { trip, user } = await verifyTripAccess(token, tripId);
+  const { trip, user } = await verifyTripAccessWithProfile(token, tripId);
   const expense = await findExpenseInTrip(expenseId, tripId);
 
   const isPayer = expense.paidById === user.id;
@@ -209,7 +209,7 @@ export async function confirmPaymentService(
 
   logger.info("Payment status updated", {
     expenseId,
-    memberEmail: data.memberEmail,
+    memberUserId,
     status: data.status,
     tripId,
   });

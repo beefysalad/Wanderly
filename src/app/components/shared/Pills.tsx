@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 /** Class strings for the app's pill buttons, for places that need a <button> instead of a link. */
 export const PILL = {

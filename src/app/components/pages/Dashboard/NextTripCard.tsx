@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatPeso, formatPesoExact } from "@/lib/utils/money";
+import { formatPeso, formatPesoExact } from "@/src/lib/utils/money";
 import { calculateUnsettledStats, partitionExpenses } from "@/src/app/components/pages/Expenses/expenseStats";
 import { useExpenses } from "@/src/hooks/useExpenses";
 import { AvatarStack } from "../../shared/UserAvatar";

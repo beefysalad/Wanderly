@@ -1,18 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import { useJoinGroup } from "@/src/hooks/useGroups";
 import { queryKeys } from "@/src/hooks/queryKeys";
 import { useSocket } from "@/src/hooks/useSocket";
-
-export interface WhatsNewFeature {
-  icon: string;
-  title: string;
-  description: string;
-  color: string;
-  bg: string;
-}
+import type { WhatsNewFeature } from "@/src/app/config/whats-new";
 
 /** Joins the group a visitor was invited to (the invite page parks the code in localStorage). */
 function useInviteAutoJoin() {

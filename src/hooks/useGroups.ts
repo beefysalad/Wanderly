@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
+import api from "@/src/lib/axios";
 import type { Group } from "@/src/shared/types";
-import { getGuestSession } from "@/lib/guest-session";
+import { getGuestSession } from "@/src/lib/guest-session";
 import { queryKeys } from "./queryKeys";
 
 interface GroupsResponse {

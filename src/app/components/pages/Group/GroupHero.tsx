@@ -1,9 +1,9 @@
 import { ChevronRight, Copy, UserPlus } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import { getVibeInfo } from "@/lib/utils/groupColors";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 import type { Group } from "@/src/shared/types";
 import { AvatarStack } from "../../shared/UserAvatar";
 import { PILL } from "../../shared/Pills";

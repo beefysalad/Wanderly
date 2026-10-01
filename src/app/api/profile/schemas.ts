@@ -1,9 +1,10 @@
+import { imageUrlSchema } from "@/src/lib/utils/imageUrl";
 import { z } from "zod";
 
 export const updateProfileSchema = z
   .object({
-    name: z.string().min(1).optional(),
-    photoURL: z.string().url().optional(),
+    name: z.string().min(1).max(200).optional(),
+    photoURL: imageUrlSchema.optional(),
     bio: z.string().max(500).optional(),
     travelStyle: z.string().max(50).optional(),
   })

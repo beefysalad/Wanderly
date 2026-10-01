@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/src/lib/errors";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { verifyTripAccess } from "../../../access";
 import { generateICSContent } from "./ics";

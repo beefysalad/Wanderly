@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
 import type { Group } from "@/src/shared/types";
 import { GridBackdrop } from "../Site/GridBackdrop";
 import { PILL, PillLink } from "../Pills";
 import { DetailHeader } from "./DetailHeader";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 type GuestGroup = Pick<Group, "id" | "name" | "emoji" | "colorScheme">;
 

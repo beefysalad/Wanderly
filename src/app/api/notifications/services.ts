@@ -1,6 +1,6 @@
-import { NotFoundError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
-import { emitNotificationToGroup, emitNotificationToUser } from "@/lib/socket-events";
+import { NotFoundError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { emitNotificationChangedToGroup, emitNotificationToUser } from "@/src/lib/socket-events";
 import type { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { syncUserToDatabaseService } from "../sync/syncService";
@@ -47,7 +47,8 @@ export async function createNotificationService(
   }
 
   if (data.relatedGroupId) {
-    emitNotificationToGroup(data.relatedGroupId, notification).catch((err) => {
+    // Bodyless: the room is told to refetch, not handed this member's private notification text.
+    emitNotificationChangedToGroup(data.relatedGroupId).catch((err) => {
       logger.error("Failed to emit notification to group", { error: err });
     });
   }

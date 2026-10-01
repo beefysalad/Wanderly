@@ -1,5 +1,5 @@
-import { withAuth, type AuthContext, type RouteContext } from "@/lib/auth/with-auth";
-import { handleApiError } from "@/lib/handle-api-error";
+import { withAuth, type AuthContext, type RouteContext } from "@/src/lib/auth/with-auth";
+import { handleApiError } from "@/src/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { updateExpenseSchema } from "../schemas";
 import { deleteExpenseService, getExpenseByIdService, updateExpenseService } from "../services";

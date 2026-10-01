@@ -6,12 +6,32 @@ on:
       - dev
       - prod
 
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-      DATABASE_URL_UNPOOLED: "postgresql://ci:ci@localhost:5432/ci"
       FIREBASE_PROJECT_ID: "ci-project"
       FIREBASE_CLIENT_EMAIL: "ci@ci-project.iam.gserviceaccount.com"
       FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nci\n-----END PRIVATE KEY-----\n"
@@ -24,20 +44,44 @@ jobs:
       CLOUDINARY_API_KEY: "ci"
       CLOUDINARY_API_SECRET: "ci"
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "ci"
-      ADMIN_PASSWORD: "ci-placeholder"
       NEXT_PUBLIC_SOCKET_URL: "http://localhost:8080"
+      SOCKET_API_KEY: "ci-placeholder"
+      GUEST_TOKEN_SECRET: "ci-placeholder-guest-token-secret-32-bytes-min"
+      ADMIN_EMAILS: "admin@ci-project.test"
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: ".nvmrc"
           cache: npm
 
       - run: npm ci
 
       - run: npm run lint
 
+      - run: npm run typecheck
+
+      - run: npx prisma validate
+
+      - run: npx prisma format --check
+
+      - name: Check for schema/migration drift
+        run: |
+          npx prisma migrate diff \
+            --shadow-database-url "$DATABASE_URL" \
+            --from-migrations ./prisma/migrations \
+            --to-schema-datamodel ./prisma/schema.prisma \
+            --exit-code
+
       - run: npm run test
 
       - run: npm run build:ci
+
+      - name: Dependency audit (informational)
+        # Non-blocking: firebase-admin's transitive deps and the current Next.js
+        # patch line both have open advisories with no in-range fix yet. Surfaced
+        # here for visibility rather than turned into a merge-blocking gate until
+        # those are deliberately addressed.
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high

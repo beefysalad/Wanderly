@@ -1,7 +1,7 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { getClientIP, limit } from "@/lib/rate-limit";
-import { handleApiError } from "@/lib/handle-api-error";
+import { getClientIP, limit } from "@/src/lib/rate-limit";
+import { handleApiError } from "@/src/lib/handle-api-error";
 import { createReviewService, listReviewsService } from "./services";
 import { listReviewsQuerySchema } from "./schemas";
 import { reviewsSchema } from "@/src/app/components/pages/Reviews/reviewsZod";

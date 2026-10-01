@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { VIBES, getVibeInfo } from "@/lib/utils/groupColors";
+import { VIBES, getVibeInfo } from "@/src/lib/utils/groupColors";
 import { useCreateGroup } from "@/src/hooks/useGroups";
 import { createGroupSchema, type TCreateGroupSchema } from "@/src/app/group/create/createGroupZod";
 import { AppShell } from "../../shared/AppShell/AppShell";

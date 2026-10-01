@@ -1,4 +1,4 @@
-import { withRateLimit } from "@/lib/rate-limit";
+import { withRateLimit } from "@/src/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { getHealthService } from "./services";
 

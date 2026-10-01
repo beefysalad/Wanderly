@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 import type { Prisma, TripStatus } from "@prisma/client";
 
 const TRIP_DETAIL_INCLUDE = {

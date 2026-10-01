@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { editGroupSchema, TEditGroupSchema } from "./editGroupZod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/src/components/ui/label";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
 import { useUpdateGroup } from "@/src/hooks/useGroups";
 import { Group } from "@/src/shared/types";
-import { VIBES, getVibeInfo } from "@/lib/utils/groupColors";
-import { getGroupTheme } from "@/lib/utils/groupTheme";
-import { cn } from "@/lib/utils";
+import { VIBES, getVibeInfo } from "@/src/lib/utils/groupColors";
+import { getGroupTheme } from "@/src/lib/utils/groupTheme";
+import { cn } from "@/src/lib/utils";
 
 interface IEditGroupModalProps {
   group: Group;

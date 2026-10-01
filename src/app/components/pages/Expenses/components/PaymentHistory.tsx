@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { formatPesoExact } from "@/lib/utils/money";
+import { formatPesoExact } from "@/src/lib/utils/money";
 import type { Group, PaymentLog } from "@/src/shared/types";
 import { UserAvatar } from "../../../shared/UserAvatar";
 import { getMemberAvatarFromLog } from "../paymentLogMembers";

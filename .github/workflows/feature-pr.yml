@@ -11,7 +11,7 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
     steps:
       - name: Checkout code
@@ -20,8 +20,10 @@ jobs:
       - name: Create PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          BRANCH_NAME="${{ github.ref_name }}"
+          # BRANCH_NAME comes in via env (not interpolated into the script) so a branch name
+          # with shell metacharacters can't inject commands here.
           # Extract issue number (supports feature/89, feat/89, bug/89, fix/89)
           ISSUE_NUM=$(echo "$BRANCH_NAME" | sed -E 's|^(feature\|feat\|bug\|fix)/([0-9]+).*|\2|')
 

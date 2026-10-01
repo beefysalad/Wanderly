@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { STEP_ORDER, stepNumber } from "../onboardingSteps";
 import type { Step } from "../onboardingOptions";
 

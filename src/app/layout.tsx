@@ -1,12 +1,12 @@
-import { isDev } from "@/lib/helper";
+import { isDev } from "@/src/lib/helper";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "./components/shared/query-provider";
-import { SocketProvider } from "@/components/socket-provider";
+import { SocketProvider } from "@/src/components/socket-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 import AuthLayout from "./components/shared/auth-layout";
-import { AuthProvider } from "@/components/auth-provider";
+import { AuthProvider } from "@/src/components/auth-provider";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({

@@ -1,5 +1,5 @@
 import { Clock, MapPin, TriangleAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import { mapsSearchUrl } from "../tripView";
 
 /** The round tick beside an activity; green once it's done. Read-only viewers get a plain circle. */

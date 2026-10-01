@@ -1,11 +1,11 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError, UnauthorizedError, ValidationError } from "@/lib/errors";
+import { NotFoundError, UnauthorizedError, ValidationError } from "@/src/lib/errors";
 
 const mockUpdateUser = vi.fn();
 const mockGetUser = vi.fn();
 
-vi.mock("@/lib/firebase-admin", () => ({
+vi.mock("@/src/lib/firebase-admin", () => ({
   userAuth: {
     updateUser: (...args: unknown[]) => mockUpdateUser(...args),
     getUser: (...args: unknown[]) => mockGetUser(...args),

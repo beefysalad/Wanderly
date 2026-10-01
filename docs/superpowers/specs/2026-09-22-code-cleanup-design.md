@@ -36,14 +36,14 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 | Profile | 2 | 0 | page.tsx 601 lines | 1 | Done |
 | Reviews | 1 | 1 | page.tsx 546 lines | 1 | Done |
 | Groups → core | 6 | 1 (services.ts 697 lines, 8 functions, heavy duplicated Prisma `include` blocks — real DRY payoff from a repository layer) | services.ts 697 lines | 1 | Done |
-| Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Done |
+| Groups → Member Tasks | 2 | 1 | member-tasks/services.ts 221 lines | 1 | Removed — the whole feature was dropped (`20260926120000_drop_member_tasks`), not just deprecated |
 | Groups → Trips (nested `/api/groups/[groupId]/trips`) | 2 | 2 | trips/services.ts 118, trips/[tripId]/services.ts 204 | 1 | Done (two services.ts consolidated into one) |
 | Trips → shared `verifyTripAccess` (`src/app/api/trips/access.ts`) | — | 7 private copies across 6 services | — | 1 | Done (Budgets adopts it; each remaining unit swaps its copy on migration) |
 | Trips → Budgets | 2 | 1 | budgets/services.ts 200 | 1 | Done |
 | Trips → Activities | subset | 1 | activities/services.ts 373 | 1 | Done |
 | Trips → Payment-logs | subset | 1 | payment-logs/services.ts 278 | 1 | Done |
 | Trips → ICS export | 1 | 0 | export/ics/route.ts 324 | 1 | Done |
-| Trips → Expenses | subset | 1 | expenses/services.ts 1028, transformers 158, ExpenseForm 1002, Expenses page 1275 | 1 | API Done; ExpenseForm split Done (1002 → 175-line index + steps/hooks/components); Expenses page (1275 lines) split still outstanding |
+| Trips → Expenses | subset | 1 | expenses/services.ts (now split into services.ts + repository.ts), transformers, ExpenseForm, Expenses page | 1 | Done — ExpenseForm split (1002 → 117-line index + steps/hooks/components) and the Expenses page split (1275 → 103 lines) both landed |
 | Trips → Expense Payments | subset | 1 | payments/services.ts 358 (`confirm-payment` was merged into `payments/confirm`, PR #157) | 1 | Done |
 | Dashboard | — | 0 | 1853 across 10 files; only OnboardingWizard (651) and index (330) exceed the ceiling | 2 | Verified — see Component backlog |
 | Admin | 6 | 0 | 484 lines | 2 | Done in 3 PRs (config + verify-password + shared `assertAdmin` guard; users; db stats/maintenance). The shared-password gate itself is untouched: security pass |
@@ -57,7 +57,17 @@ Update the "Status" column as PRs land. This table is the source of truth for wh
 
 **Groups decomposition note:** the original single "Groups" row (10 routes, 4 services) turned out, once actually read, to bundle three independently-migratable sub-units — split above into Groups → core, Groups → Member Tasks, and Groups → Trips (a nested `/api/groups/[groupId]/trips` resource, distinct from the top-level `/api/trips` used by the standalone Trip pages — the two look similar and are easy to conflate; check the route path, not just the word "trips"). Row counts still sum to the original 10 routes / 4 services. All three Groups sub-units (core, Member Tasks, nested Trips) are done; top-level `/api/trips` has no standalone "core" unit (it was a phantom row); the real remaining units are the trip-scoped features under `/api/trips/[tripId]/` listed above.
 
-**Component backlog (files still over the ~300-line ceiling, found by a repo-wide scan).** Pass 1 only covered ExpenseForm and the Expenses page. **Done: Trip/index (817 → ~150; hooks + components + tested cache helpers) and Modal/ActivityModal + Modal/ActivityDetailModal, which turned out to be unreachable dead code (only referenced by modal blocks in Trip that could never open) and were deleted; `activityAddZod.ts` stays because the add/edit pages use it (#172 moved it to `src/app/group/[groupId]/trip/[tripId]/activities/`).** **Done (#172): Modal/ExpenseDetailModal (518) and Modal/CreateTripModal were also unreachable (zero importers) and were deleted, not split; `createTripZod.ts` moved next to `pages/CreateTrip` and `editProfileZod.ts` next to `pages/Profile`.** **Done: Dashboard/OnboardingWizard (651 → ~75; six step components, hook, tested bio/profile builders).** Remaining, in descending size: Trip/TravelSchedule 612, admin/whats-new page 605, activities/add page 584, ExpenseDetail 480, activities/[id]/edit page 483, FAQ 443, Group 402, ActivityDetail 372, admin/database 367, ExpenseList 365, HowTo 356, ActivityDetailModal 346, admin/config 332, admin/users 328, TravelDayOverview 305. The admin pages fall under the security pass; FAQ/HowTo are mostly static content.
+**Component backlog (files still over the ~300-line ceiling).** Pass 1 covered ExpenseForm and the Expenses page (both now split). **Done: Trip/index (817 → ~150; hooks + components + tested cache helpers) and Modal/ActivityModal + Modal/ActivityDetailModal, which turned out to be unreachable dead code (only referenced by modal blocks in Trip that could never open) and were deleted; `activityAddZod.ts` stays because the add/edit pages use it (#172 moved it to `src/app/group/[groupId]/trip/[tripId]/activities/`).** **Done (#172): Modal/ExpenseDetailModal (518) and Modal/CreateTripModal were also unreachable (zero importers) and were deleted, not split; `createTripZod.ts` moved next to `pages/CreateTrip` and `editProfileZod.ts` next to `pages/Profile`.** **Done: Dashboard/OnboardingWizard (651 → ~75; six step components, hook, tested bio/profile builders).**
+
+A fresh repo-wide scan (line counts, current as of this edit) found only these files still over ~300 lines — every file in the previous backlog not listed here has since been split, deleted as dead code, or the claim was simply stale:
+- `group/[groupId]/trip/[tripId]/activities/add/page.tsx` — 608
+- `admin/whats-new/page.tsx` — 592 (security pass)
+- `group/[groupId]/trip/[tripId]/activities/[activityId]/edit/page.tsx` — 502
+- `admin/database/page.tsx` — 355 (security pass)
+- `admin/config/page.tsx` — 316 (security pass)
+- `admin/users/page.tsx` — 312 (security pass)
+
+The admin pages fall under the security pass; the two activities pages (add/edit) are the real remaining Pass 2+ candidates.
 
 Pass 1 order (confirmed): **Profile → Reviews → Groups (core → Member Tasks → nested Trips) → Trips-core → Activities → Budget → Expenses/Payments.**
 
@@ -80,7 +90,6 @@ Repo hygiene (dead `src/components`/`src/lib` dirs, stray root files, doc consol
 
 **Open follow-ups (not blocking, not yet done):**
 - (Fixed in PR #133, once merged: a non-JSON request body now returns 400 instead of 500 for every migrated route, handled once in `lib/handle-api-error.ts`.)
-- Any group member can PATCH/DELETE any Member Task (no creator/assignee restriction) — preserved as-is from the old code; decide whether that is intended.
 - Expense payments: `expenses/[expenseId]/confirm-payment` (detail page) and `.../payments/confirm` (list hook) are two live, *different* flows — the first upserts the status and notifies the member; the second only updates an existing record and writes a payment log. Marking paid (default) also writes a payment log, and confirming writes another, so a confirmed payment can have two logs. Any member can also un-mark another member's payment. **Resolved in #157:** one route (`payments/confirm`) now upserts the status, notifies the member, and writes the payment log on confirm only (rejecting removes it); marking paid no longer logs. Any member un-marking another's payment was fixed earlier in the security pass.
 - Security pass (admin password, gateway proxy, guest-code trust boundary): implemented on branch `security/revamp` (see `2026-09-25-security-pass-design.md`). Residual risk: the external socket server still authenticates guests by raw group code.
 

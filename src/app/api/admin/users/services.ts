@@ -1,5 +1,5 @@
-import { NotFoundError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
+import { NotFoundError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
 import { deleteFirebaseUser, getFirebaseUserInfo } from "./firebase";
 import {
   countUsers,

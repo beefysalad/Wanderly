@@ -2,9 +2,9 @@ import {
   withOptionalAuth,
   type OptionalAuthContext,
   type RouteContext,
-} from "@/lib/auth/with-auth";
-import { ForbiddenError } from "@/lib/errors";
-import { handleApiError } from "@/lib/handle-api-error";
+} from "@/src/lib/auth/with-auth";
+import { ForbiddenError } from "@/src/lib/errors";
+import { handleApiError } from "@/src/lib/handle-api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createExpenseSchema } from "./schemas";
 import {

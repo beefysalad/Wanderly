@@ -1,6 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
@@ -28,7 +28,7 @@ vi.mock("../../../notifications/services", () => ({
   createNotificationService: (...a: unknown[]) => mockNotify(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { createPaymentLogService, listPaymentLogsForGuestService, listPaymentLogsService } =
   await import("./services");

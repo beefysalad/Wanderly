@@ -1,4 +1,4 @@
-import { isDev } from "@/lib/helper";
+import { isDev } from "@/src/lib/helper";
 import type { Metadata } from "next";
 import LandingPage from "./components/pages/LandingPage";
 

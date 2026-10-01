@@ -1,4 +1,4 @@
-import { formatTime12Hour } from "@/lib/utils";
+import { formatTime12Hour } from "@/src/lib/utils";
 import type { Activity } from "@/src/shared/types";
 
 const TRANSPORT_ICON: Record<string, string> = {

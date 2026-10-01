@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { Group } from "@/src/shared/types";
 import { profileStats } from "../profileView";
 

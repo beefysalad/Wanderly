@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/src/lib/errors";
 
 const mockGetInfo = vi.fn();
 const mockDeleteFirebase = vi.fn();
@@ -21,7 +21,7 @@ vi.mock("./repository", () => ({
   deleteUserKeepingSharedData: (...a: unknown[]) => mockDeleteUser(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { deleteUserService, listUsersService } = await import("./services");
 

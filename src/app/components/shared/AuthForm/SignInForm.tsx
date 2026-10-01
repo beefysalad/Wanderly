@@ -6,7 +6,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/src/lib/firebase";
 import { AuthItem, FIELD_LABEL, FieldError, FormError, GoogleButton, INPUT, OrDivider, PasswordField, SUBMIT_BUTTON } from "./AuthParts";
 import { signInSchema, type TSignInSchema } from "./authSchema";
 

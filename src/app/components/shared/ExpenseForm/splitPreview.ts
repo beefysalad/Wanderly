@@ -1,4 +1,4 @@
-import { computeShares, fromCents, toCents } from "@/lib/utils/money";
+import { computeShares, fromCents, toCents } from "@/src/lib/utils/money";
 
 /**
  * Each ticked person's share (pesos, aligned with `splitWith`) while the form is being filled in. The server

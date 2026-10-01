@@ -22,7 +22,7 @@ vi.mock("next/cache", () => ({
 }));
 
 const mockLoggerError = vi.fn();
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { info: vi.fn(), error: (...a: unknown[]) => mockLoggerError(...a), warn: vi.fn() },
 }));
 
@@ -64,7 +64,7 @@ describe("config services", () => {
 
     await upsertConfigService({ key: "maintenance-mode", value: true });
 
-    expect(mockRevalidateTag).toHaveBeenCalledWith("maintenance-config");
+    expect(mockRevalidateTag).toHaveBeenCalledWith("maintenance-config", { expire: 0 });
   });
 });
 

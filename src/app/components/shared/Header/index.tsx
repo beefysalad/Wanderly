@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/src/components/ui/button";
 import {
   Sheet,
   SheetClose,
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { getAppVersion } from "@/lib/helper";
+} from "@/src/components/ui/sheet";
+import { getAppVersion } from "@/src/lib/helper";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

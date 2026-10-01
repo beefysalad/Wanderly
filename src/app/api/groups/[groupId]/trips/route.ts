@@ -1,6 +1,6 @@
-import { withAuth, type AuthContext, type RouteContext } from "@/lib/auth/with-auth";
-import { handleApiError } from "@/lib/handle-api-error";
-import { logger } from "@/lib/logger";
+import { withAuth, type AuthContext, type RouteContext } from "@/src/lib/auth/with-auth";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { logger } from "@/src/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createTripSchema } from "./schemas";
 import { createTripService } from "./services";

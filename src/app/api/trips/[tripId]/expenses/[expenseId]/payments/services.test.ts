@@ -1,10 +1,10 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 vi.mock("../../../../access", () => ({
-  verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
+  verifyTripAccessWithProfile: (...a: unknown[]) => mockVerifyTripAccess(...a),
 }));
 
 const mockFindUserIdByEmail = vi.fn();
@@ -23,7 +23,7 @@ vi.mock("../../../../../notifications/services", () => ({
 }));
 
 const mockEmitUpdated = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitExpenseUpdated: (...a: unknown[]) => mockEmitUpdated(...a),
 }));
 
@@ -57,7 +57,7 @@ vi.mock("./repository", () => ({
   unrecordGuestPayment: (...a: unknown[]) => mockUnrecordGuestPayment(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { confirmPaymentService, markExpensePaidService } = await import("./services");
 

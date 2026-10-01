@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowRight, Calendar, FileText, Navigation2, Wallet } from "lucide-react";
-import { cn, formatTime12Hour } from "@/lib/utils";
-import { formatPeso } from "@/lib/utils/money";
+import { cn, formatTime12Hour } from "@/src/lib/utils";
+import { formatPeso } from "@/src/lib/utils/money";
 import type { Activity, Expense } from "@/src/shared/types";
 import { ItemMenu } from "../../shared/ItemMenu";
 import { TickButton } from "../Trip/components/ActivityParts";

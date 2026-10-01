@@ -1,125 +1,8 @@
-import {
-  X,
-  Sparkles,
-  Smartphone,
-  Beaker,
-  Layout,
-  MessageSquare,
-  Globe,
-  Calendar,
-  Zap,
-  Map,
-  Heart,
-  Target,
-  Award,
-  Coffee,
-  Rocket,
-  Gift,
-  Bell,
-  Shield,
-  Activity,
-  Camera,
-  Music,
-  Video,
-  ShoppingBag,
-  CreditCard,
-  Wallet,
-  Key,
-  Lock,
-  Unlock,
-  Settings,
-  Command,
-  Terminal,
-  Code,
-  Cloud,
-  Database,
-  Server,
-  HardDrive,
-  Monitor,
-  Image,
-  Send,
-  Share,
-  Trophy,
-  Flag,
-  Anchor,
-  Sun,
-  Moon,
-  CloudRain,
-  Wind,
-  Thermometer,
-  Paperclip,
-  Link,
-  MapPin,
-  User,
-  Users,
-  Flame,
-  LucideIcon,
-} from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import React from "react";
+import { WHATS_NEW_ICON_MAP, type WhatsNewFeature } from "@/src/app/config/whats-new";
 
-const ICON_MAP: Record<string, LucideIcon> = {
-  Sparkles,
-  Smartphone,
-  Beaker,
-  Layout,
-  MessageSquare,
-  Globe,
-  Calendar,
-  Zap,
-  Map,
-  Heart,
-  Target,
-  Award,
-  Coffee,
-  Rocket,
-  Gift,
-  Bell,
-  Shield,
-  Activity,
-  Camera,
-  Music,
-  Video,
-  ShoppingBag,
-  CreditCard,
-  Wallet,
-  Key,
-  Lock,
-  Unlock,
-  Settings,
-  Command,
-  Terminal,
-  Code,
-  Cloud,
-  Database,
-  Server,
-  HardDrive,
-  Monitor,
-  Image,
-  Send,
-  Share,
-  Trophy,
-  Flag,
-  Anchor,
-  Sun,
-  Moon,
-  CloudRain,
-  Wind,
-  Thermometer,
-  Paperclip,
-  Link,
-  MapPin,
-  User,
-  Users,
-  Flame,
-};
-
-export interface WhatsNewFeature {
-  icon: string;
-  title: string;
-  description: string;
-  color: string;
-  bg: string;
-}
+export type { WhatsNewFeature };
 
 interface IWhatsNewModalProps {
   onClose: () => void;
@@ -165,7 +48,7 @@ const WhatsNewModal = ({ onClose, features }: IWhatsNewModalProps) => {
         <div className='relative flex-1 overflow-y-auto px-6 py-6 md:px-8'>
           <div className='space-y-3'>
             {features.map((feature, index) => {
-              const Icon = ICON_MAP[feature.icon] || Sparkles;
+              const Icon = WHATS_NEW_ICON_MAP[feature.icon] || Sparkles;
               return (
                 <article
                   key={index}

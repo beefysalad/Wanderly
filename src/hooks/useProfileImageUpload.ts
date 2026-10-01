@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
-import api from "@/lib/axios";
-import { logger } from "@/lib/logger";
+import api from "@/src/lib/axios";
+import { logger } from "@/src/lib/logger";
 
 export function useProfileImageUpload() {
   const [uploadingImage, setUploadingImage] = useState(false);

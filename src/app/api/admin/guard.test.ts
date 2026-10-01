@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UnauthorizedError } from "@/lib/errors";
+import { UnauthorizedError } from "@/src/lib/errors";
 
 const mockVerifyIdToken = vi.fn();
-vi.mock("@/lib/firebase-admin", () => ({
+vi.mock("@/src/lib/firebase-admin", () => ({
   userAuth: { verifyIdToken: (...a: unknown[]) => mockVerifyIdToken(...a) },
 }));
 
 const mockWarn = vi.fn();
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { warn: (...a: unknown[]) => mockWarn(...a), info: vi.fn(), error: vi.fn() },
 }));
 

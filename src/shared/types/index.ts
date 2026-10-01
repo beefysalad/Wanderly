@@ -23,7 +23,11 @@ export interface Trip {
   name: string;
   startDate: string;
   endDate: string;
-  activities: Activity[];
+  // Present on trip/group-detail responses; list responses (groups list) send activityCount instead.
+  activities?: Activity[];
+  // Present on list responses in place of the full activities array; undefined on detail responses
+  // (fall back to activities?.length there).
+  activityCount?: number;
   createdAt: string;
   location?: string; // Added optional location field
   status?: "planning" | "finalized" | "ongoing" | "cancelled"; // Trip status
@@ -149,6 +153,21 @@ export interface Notification {
   relatedActivityId?: string;
   createdAt: string;
 }
+/** A row in the admin "User Management" table — the `/admin/users` list response, not the full `User` model. */
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  imageUrl: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+  authCreationTime: string | null;
+  stats: {
+    trips: number;
+    groups: number;
+  };
+}
+
 export interface Budget {
   id: string;
   tripId: string;

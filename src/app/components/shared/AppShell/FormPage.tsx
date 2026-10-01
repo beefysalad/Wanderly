@@ -8,10 +8,10 @@ interface FormPageProps {
   title: string;
   children: ReactNode;
   /** Max width of the form column, in px (a form reads best narrow). */
-  width?: "sm" | "md";
+  width?: "sm" | "md" | "lg";
 }
 
-const WIDTH = { sm: "max-w-[560px]", md: "max-w-[640px]" };
+const WIDTH = { sm: "max-w-[560px]", md: "max-w-[640px]", lg: "max-w-[768px]" };
 
 /** A signed-in form page: back button, title, and a centred form column. */
 export function FormPage({ back, eyebrow, title, children, width = "md" }: FormPageProps) {

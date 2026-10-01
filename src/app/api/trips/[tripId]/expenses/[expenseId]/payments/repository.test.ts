@@ -5,7 +5,7 @@ const mockUpsert = vi.fn();
 const mockCreateMany = vi.fn();
 const mockDeleteMany = vi.fn();
 
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/src/lib/prisma", () => ({
   default: {
     $transaction: (fn: (tx: unknown) => unknown) =>
       fn({

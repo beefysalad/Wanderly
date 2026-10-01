@@ -1,10 +1,10 @@
-import { logger } from "@/lib/logger";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/src/lib/logger";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { NotificationType } from "@prisma/client";
 import { syncUserToDatabaseService } from "../sync/syncService";
-import { generateUniqueGroupCode } from "@/lib/utils/groupCode";
-import { createNotificationService } from "../notifications/services";
+import { generateUniqueGroupCode } from "@/src/lib/utils/groupCode";
+import { notifyGroupMembers } from "../notifications/notifyMembers";
 import {
   addGroupMember,
   createGroupRow,
@@ -14,7 +14,6 @@ import {
   findGroupMembership,
   findGroupOwnership,
   findGroupWithMembership,
-  listGroupMembersForNotify,
   listGroupMembershipsForUser,
   removeGroupMember,
   updateGroupRow,
@@ -37,12 +36,12 @@ export async function createGroupService(token: DecodedIdToken, input: CreateGro
     createdById: user.id,
   });
 
-  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  const { emitGroupUpdated } = await import("@/src/lib/socket-events");
   emitGroupUpdated(group.id, group).catch((err) => {
     logger.error("Failed to emit group created event", { error: err });
   });
 
-  logger.info("Group created", { groupId: group.id, code: group.code });
+  logger.info("Group created", { groupId: group.id });
   return group;
 }
 
@@ -63,29 +62,20 @@ export async function joinGroupService(token: DecodedIdToken, groupCode: string)
 
   const updatedGroup = await findGroupById(group.id);
 
-  const allMembers = await listGroupMembersForNotify(group.id);
-  const notificationPromises = allMembers
-    .filter((member) => member.userId !== user.id)
-    .map((member) =>
-      createNotificationService(member.userId, {
-        type: NotificationType.group_join,
-        title: "New Member Joined",
-        message: `${user.name || user.email} joined ${group.name}`,
-        relatedGroupId: group.id,
-      }).catch((err) => {
-        logger.error("Failed to create notification", { userId: member.userId, error: err });
-      }),
-    );
-  await Promise.all(notificationPromises);
+  await notifyGroupMembers(group.id, user.id, {
+    type: NotificationType.group_join,
+    title: "New Member Joined",
+    message: `${user.name || user.email} joined ${group.name}`,
+  });
 
   if (updatedGroup) {
-    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    const { emitGroupUpdated } = await import("@/src/lib/socket-events");
     emitGroupUpdated(group.id, updatedGroup).catch((err) => {
       logger.error("Failed to emit group updated event on join", { error: err });
     });
   }
 
-  logger.info("User joined group", { userId: user.id, groupId: group.id, code: groupCode });
+  logger.info("User joined group", { userId: user.id, groupId: group.id });
 
   return updatedGroup!;
 }
@@ -128,27 +118,17 @@ export async function leaveGroupService(token: DecodedIdToken, groupId: string) 
     throw new ValidationError("Group creator cannot leave the group");
   }
 
-  const allMembers = await listGroupMembersForNotify(groupId);
-
   await removeGroupMember(groupId, user.id);
 
-  const notificationPromises = allMembers
-    .filter((member) => member.userId !== user.id)
-    .map((member) =>
-      createNotificationService(member.userId, {
-        type: NotificationType.group_leave,
-        title: "Member Left Group",
-        message: `${user.name || user.email} left ${ownership.name}`,
-        relatedGroupId: groupId,
-      }).catch((err) => {
-        logger.error("Failed to create notification", { userId: member.userId, error: err });
-      }),
-    );
-  await Promise.all(notificationPromises);
+  await notifyGroupMembers(groupId, user.id, {
+    type: NotificationType.group_leave,
+    title: "Member Left Group",
+    message: `${user.name || user.email} left ${ownership.name}`,
+  });
 
   const updatedGroup = await findGroupById(groupId);
   if (updatedGroup) {
-    const { emitGroupUpdated } = await import("@/lib/socket-events");
+    const { emitGroupUpdated } = await import("@/src/lib/socket-events");
     emitGroupUpdated(groupId, updatedGroup).catch((err) => {
       logger.error("Failed to emit group updated event on leave", { error: err });
     });
@@ -170,7 +150,7 @@ export async function deleteGroupService(token: DecodedIdToken, groupId: string)
 
   await deleteGroupRow(groupId);
 
-  const { emitGroupDeleted } = await import("@/lib/socket-events");
+  const { emitGroupDeleted } = await import("@/src/lib/socket-events");
   emitGroupDeleted(groupId).catch((err) => {
     logger.error("Failed to emit group deleted event", { error: err });
   });
@@ -203,7 +183,7 @@ export async function updateGroupService(
 
   const updatedGroup = await updateGroupRow(groupId, updates);
 
-  const { emitGroupUpdated } = await import("@/lib/socket-events");
+  const { emitGroupUpdated } = await import("@/src/lib/socket-events");
   emitGroupUpdated(groupId, updatedGroup).catch((err) => {
     logger.error("Failed to emit group updated event", { error: err });
   });

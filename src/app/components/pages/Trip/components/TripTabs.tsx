@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 import type { TabType } from "../tripTabs";
 
 // The order and names on the tab row; "daily" and "schedule" are the ids the ?tab= link uses.

@@ -24,4 +24,10 @@ describe("updateUserProfileSchema", () => {
     expect(updateUserProfileSchema.safeParse({ name: null }).success).toBe(false);
     expect(updateUserProfileSchema.safeParse({ hasCompletedOnboarding: "yes" }).success).toBe(false);
   });
+
+  it("only accepts an image URL hosted on Cloudinary or Google", () => {
+    expect(updateUserProfileSchema.safeParse({ imageUrl: "https://res.cloudinary.com/demo/x.jpg" }).success).toBe(true);
+    expect(updateUserProfileSchema.safeParse({ imageUrl: "" }).success).toBe(true);
+    expect(updateUserProfileSchema.safeParse({ imageUrl: "https://evil.com/x.jpg" }).success).toBe(false);
+  });
 });

@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger";
+import { logger } from "@/src/lib/logger";
 import { fetchCloudinaryUsage, type CloudinaryUsage } from "./cloudinary";
 import {
   countAllEntities,

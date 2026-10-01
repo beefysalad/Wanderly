@@ -1,11 +1,15 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
 vi.mock("../../access", () => ({
   verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
+  // The list/getById handlers use the lean check; create/update/delete use the profile one for
+  // notification text. Both resolve through the same mock here since the tests don't need to
+  // tell them apart.
+  verifyTripAccessWithProfile: (...a: unknown[]) => mockVerifyTripAccess(...a),
   verifyGuestTripAccess: (...a: unknown[]) => mockVerifyGuestTripAccess(...a),
 }));
 
@@ -49,13 +53,13 @@ vi.mock("../../../notifications/notifyMembers", () => ({
 const mockEmitCreated = vi.fn();
 const mockEmitUpdated = vi.fn();
 const mockEmitDeleted = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitExpenseCreated: (...a: unknown[]) => mockEmitCreated(...a),
   emitExpenseUpdated: (...a: unknown[]) => mockEmitUpdated(...a),
   emitExpenseDeleted: (...a: unknown[]) => mockEmitDeleted(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const {
   createExpenseService,

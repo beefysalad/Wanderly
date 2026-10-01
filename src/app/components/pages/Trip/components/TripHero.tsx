@@ -1,7 +1,7 @@
 import { Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getVibeInfo } from "@/lib/utils/groupColors";
-import { getTripStatus, type TripStatus } from "@/lib/utils/tripStatus";
+import { cn } from "@/src/lib/utils";
+import { getVibeInfo } from "@/src/lib/utils/groupColors";
+import { getTripStatus, type TripStatus } from "@/src/lib/utils/tripStatus";
 import type { Group, Trip } from "@/src/shared/types";
 import { AvatarStack } from "../../../shared/UserAvatar";
 import { fullRange } from "../../../shared/tripDates";

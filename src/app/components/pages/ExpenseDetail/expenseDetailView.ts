@@ -1,4 +1,4 @@
-import { formatPeso, formatPesoExact } from "@/lib/utils/money";
+import { formatPeso, formatPesoExact } from "@/src/lib/utils/money";
 import type { Expense } from "@/src/shared/types";
 import { shareOf, stillOwedToPayer } from "../Expenses/expenseStats";
 

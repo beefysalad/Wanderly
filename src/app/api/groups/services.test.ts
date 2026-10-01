@@ -1,9 +1,9 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors";
 
 const mockLoggerInfo = vi.fn();
-vi.mock("@/lib/logger", () => ({
+vi.mock("@/src/lib/logger", () => ({
   logger: { info: (...a: unknown[]) => mockLoggerInfo(...a), warn: vi.fn(), error: vi.fn() },
 }));
 
@@ -12,7 +12,6 @@ const mockFindGroupCodeLookup = vi.fn();
 const mockFindGroupOwnership = vi.fn();
 const mockFindGroupMembership = vi.fn();
 const mockFindGroupWithMembership = vi.fn();
-const mockListGroupMembersForNotify = vi.fn();
 const mockListGroupMembershipsForUser = vi.fn();
 const mockCreateGroupRow = vi.fn();
 const mockAddGroupMember = vi.fn();
@@ -26,7 +25,6 @@ vi.mock("./repository", () => ({
   findGroupOwnership: (...a: unknown[]) => mockFindGroupOwnership(...a),
   findGroupMembership: (...a: unknown[]) => mockFindGroupMembership(...a),
   findGroupWithMembership: (...a: unknown[]) => mockFindGroupWithMembership(...a),
-  listGroupMembersForNotify: (...a: unknown[]) => mockListGroupMembersForNotify(...a),
   listGroupMembershipsForUser: (...a: unknown[]) => mockListGroupMembershipsForUser(...a),
   createGroupRow: (...a: unknown[]) => mockCreateGroupRow(...a),
   addGroupMember: (...a: unknown[]) => mockAddGroupMember(...a),
@@ -40,17 +38,17 @@ vi.mock("../sync/syncService", () => ({
   syncUserToDatabaseService: (...a: unknown[]) => mockSyncUserToDatabaseService(...a),
 }));
 
-const mockCreateNotificationService = vi.fn();
-vi.mock("../notifications/services", () => ({
-  createNotificationService: (...a: unknown[]) => mockCreateNotificationService(...a),
+const mockNotifyGroupMembers = vi.fn();
+vi.mock("../notifications/notifyMembers", () => ({
+  notifyGroupMembers: (...a: unknown[]) => mockNotifyGroupMembers(...a),
 }));
 
 const mockGenerateUniqueGroupCode = vi.fn();
-vi.mock("@/lib/utils/groupCode", () => ({
+vi.mock("@/src/lib/utils/groupCode", () => ({
   generateUniqueGroupCode: (...a: unknown[]) => mockGenerateUniqueGroupCode(...a),
 }));
 
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitGroupUpdated: vi.fn().mockResolvedValue(undefined),
   emitGroupDeleted: vi.fn().mockResolvedValue(undefined),
 }));
@@ -73,7 +71,7 @@ const user = { id: "user-1", name: "Alice", email: "alice@example.com" };
 beforeEach(() => {
   vi.clearAllMocks();
   mockSyncUserToDatabaseService.mockResolvedValue(user);
-  mockCreateNotificationService.mockResolvedValue(undefined);
+  mockNotifyGroupMembers.mockResolvedValue(undefined);
 });
 
 describe("createGroupService", () => {
@@ -113,22 +111,19 @@ describe("joinGroupService", () => {
     expect(mockAddGroupMember).not.toHaveBeenCalled();
   });
 
-  it("adds the member and notifies existing members, excluding the joiner", async () => {
+  it("adds the member and notifies the rest of the group, excluding the joiner", async () => {
     mockFindGroupCodeLookup.mockResolvedValue({ id: "group-1", name: "Trip Squad", code: "ABC123" });
     mockFindGroupMembership.mockResolvedValue(null);
     mockFindGroupById.mockResolvedValue({ id: "group-1", name: "Trip Squad" });
-    mockListGroupMembersForNotify.mockResolvedValue([
-      { userId: "user-1", user: { id: "user-1", email: "alice@example.com" } },
-      { userId: "user-2", user: { id: "user-2", email: "bob@example.com" } },
-    ]);
 
     await joinGroupService(token, "ABC123");
 
     expect(mockAddGroupMember).toHaveBeenCalledWith("group-1", "user-1", "member");
-    expect(mockCreateNotificationService).toHaveBeenCalledTimes(1);
-    expect(mockCreateNotificationService).toHaveBeenCalledWith(
-      "user-2",
-      expect.objectContaining({ relatedGroupId: "group-1" }),
+    expect(mockNotifyGroupMembers).toHaveBeenCalledTimes(1);
+    expect(mockNotifyGroupMembers).toHaveBeenCalledWith(
+      "group-1",
+      "user-1",
+      expect.objectContaining({ message: expect.stringContaining("Trip Squad") }),
     );
   });
 });
@@ -186,22 +181,19 @@ describe("leaveGroupService", () => {
     expect(mockRemoveGroupMember).not.toHaveBeenCalled();
   });
 
-  it("removes the membership and notifies remaining members when a non-creator leaves", async () => {
+  it("removes the membership and notifies the rest of the group when a non-creator leaves", async () => {
     mockFindGroupMembership.mockResolvedValue({ groupId: "group-1", userId: "user-1" });
     mockFindGroupOwnership.mockResolvedValue({ createdById: "someone-else", name: "Trip Squad" });
-    mockListGroupMembersForNotify.mockResolvedValue([
-      { userId: "user-1", user: { id: "user-1", email: "alice@example.com" } },
-      { userId: "someone-else", user: { id: "someone-else", email: "owner@example.com" } },
-    ]);
     mockFindGroupById.mockResolvedValue({ id: "group-1" });
 
     await leaveGroupService(token, "group-1");
 
     expect(mockRemoveGroupMember).toHaveBeenCalledWith("group-1", "user-1");
-    expect(mockCreateNotificationService).toHaveBeenCalledTimes(1);
-    expect(mockCreateNotificationService).toHaveBeenCalledWith(
-      "someone-else",
-      expect.objectContaining({ relatedGroupId: "group-1" }),
+    expect(mockNotifyGroupMembers).toHaveBeenCalledTimes(1);
+    expect(mockNotifyGroupMembers).toHaveBeenCalledWith(
+      "group-1",
+      "user-1",
+      expect.objectContaining({ message: expect.stringContaining("Trip Squad") }),
     );
   });
 });

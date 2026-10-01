@@ -1,5 +1,5 @@
-import { ValidationError } from "@/lib/errors";
-import { logger } from "@/lib/logger";
+import { ValidationError } from "@/src/lib/errors";
+import { logger } from "@/src/lib/logger";
 import { uploadImageBuffer } from "./cloudinary";
 import { MAX_IMAGE_BYTES } from "./schemas";
 

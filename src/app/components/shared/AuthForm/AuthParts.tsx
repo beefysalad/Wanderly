@@ -5,7 +5,7 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/src/lib/firebase";
 import { EASE, useRevealDistance } from "../Site/motion";
 
 import { FIELD_LABEL, INPUT, SUBMIT_BUTTON } from "../formStyles";

@@ -1,4 +1,4 @@
-import { formatPesoExact } from "@/lib/utils/money";
+import { formatPesoExact } from "@/src/lib/utils/money";
 import type { Expense, Group } from "@/src/shared/types";
 import { isExpenseSettled, isUserInvolved, shareOf, stillOwedToPayer } from "./expenseStats";
 

@@ -1,4 +1,4 @@
-import { pesoAmountSchema } from "@/lib/utils/money";
+import { pesoAmountSchema } from "@/src/lib/utils/money";
 import { z } from "zod";
 
 export const createPaymentLogSchema = z.object({

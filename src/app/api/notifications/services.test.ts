@@ -1,7 +1,7 @@
 import type { NotificationType } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/src/lib/errors";
 
 const mockSync = vi.fn();
 vi.mock("../sync/syncService", () => ({
@@ -27,12 +27,12 @@ vi.mock("./repository", () => ({
 
 const mockEmitUser = vi.fn();
 const mockEmitGroup = vi.fn();
-vi.mock("@/lib/socket-events", () => ({
+vi.mock("@/src/lib/socket-events", () => ({
   emitNotificationToUser: (...a: unknown[]) => mockEmitUser(...a),
-  emitNotificationToGroup: (...a: unknown[]) => mockEmitGroup(...a),
+  emitNotificationChangedToGroup: (...a: unknown[]) => mockEmitGroup(...a),
 }));
 
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
+vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const {
   createNotificationService,
@@ -71,10 +71,10 @@ describe("createNotificationService", () => {
     expect(mockEmitGroup).not.toHaveBeenCalled();
   });
 
-  it("also emits to the group room for group-related notifications", async () => {
+  it("pings the group room (no notification body) for group-related notifications", async () => {
     await createNotificationService("u2", { ...base, relatedGroupId: "g1" });
 
-    expect(mockEmitGroup).toHaveBeenCalledWith("g1", { id: "n1" });
+    expect(mockEmitGroup).toHaveBeenCalledWith("g1");
   });
 
   it("skips the user emit when the user has no firebase id, and survives emit failures", async () => {

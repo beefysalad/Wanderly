@@ -2,9 +2,9 @@ import {
   withOptionalAuth,
   type OptionalAuthContext,
   type RouteContext,
-} from "@/lib/auth/with-auth";
-import { handleApiError } from "@/lib/handle-api-error";
-import { ForbiddenError } from "@/lib/errors";
+} from "@/src/lib/auth/with-auth";
+import { handleApiError } from "@/src/lib/handle-api-error";
+import { ForbiddenError } from "@/src/lib/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getGroupByIdForGuestService } from "../../services";
 import { transformGroup } from "../../transformers";
