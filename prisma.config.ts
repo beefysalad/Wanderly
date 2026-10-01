@@ -7,7 +7,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: process.env.DATABASE_URL,
     // CI's Postgres is a fresh disposable container each run, so reusing DATABASE_URL as its own
     // shadow database there is safe (this matches what the old `--shadow-database-url` CI flag did).
     // Locally, leave it unset — migrate diff isn't run outside CI, and this keeps prisma migrate dev's
