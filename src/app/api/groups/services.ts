@@ -5,6 +5,7 @@ import { NotificationType } from "@prisma/client";
 import { syncUserToDatabaseService } from "../sync/syncService";
 import { generateUniqueGroupCode } from "@/src/lib/utils/groupCode";
 import { notifyGroupMembers } from "../notifications/notifyMembers";
+import { DEMO_GROUP_CODE } from "./demoTrip";
 import {
   addGroupMember,
   createGroupRow,
@@ -46,6 +47,10 @@ export async function createGroupService(token: DecodedIdToken, input: CreateGro
 }
 
 export async function joinGroupService(token: DecodedIdToken, groupCode: string) {
+  if (groupCode.toUpperCase() === DEMO_GROUP_CODE) {
+    throw new ForbiddenError("This demo trip is read-only and can't be joined.");
+  }
+
   const user = await getOrCreateUser(token);
 
   const group = await findGroupCodeLookup(groupCode);
@@ -192,14 +197,14 @@ export async function updateGroupService(
   return updatedGroup;
 }
 
-export async function getGroupByIdForGuestService(guestGroupId: string, groupId: string) {
-  if (guestGroupId !== groupId) {
-    throw new ForbiddenError("Invalid guest access");
-  }
-
+export async function getGroupByIdForGuestService(guestGroupId: string | undefined, groupId: string) {
   const group = await findGroupById(groupId);
   if (!group) {
     throw new NotFoundError("Group not found");
+  }
+
+  if (group.code !== DEMO_GROUP_CODE && guestGroupId !== groupId) {
+    throw new ForbiddenError("Invalid guest access");
   }
 
   logger.info("Guest accessed group", { groupId: group.id });

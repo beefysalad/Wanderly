@@ -4,7 +4,9 @@ import { ConflictError, NotFoundError, ValidationError } from "@/src/lib/errors"
 
 const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
+const mockIsPublicDemoTrip = vi.fn();
 vi.mock("../../access", () => ({
+  isPublicDemoTrip: (...a: unknown[]) => mockIsPublicDemoTrip(...a),
   verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
   verifyGuestTripAccess: (...a: unknown[]) => mockVerifyGuestTripAccess(...a),
 }));
@@ -44,6 +46,7 @@ const log = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip: { id: "t1", groupId: "g1" }, user: { id: "u1" } });
+  mockIsPublicDemoTrip.mockResolvedValue(false);
   mockFindExpense.mockResolvedValue({ id: "e1", tripId: "t1", paymentMethod: "gcash" });
   mockFindUserId.mockImplementation(async (email: string) => ({ id: `id-${email}` }));
   mockCreateRow.mockResolvedValue(log);
@@ -56,6 +59,14 @@ describe("list services", () => {
 
     expect(await listPaymentLogsService(token, "t1")).toEqual([{ id: "l" }]);
     expect(mockVerifyTripAccess).toHaveBeenCalledWith(token, "t1");
+  });
+
+  it("member list skips the membership check for the public demo trip", async () => {
+    mockIsPublicDemoTrip.mockResolvedValue(true);
+    mockList.mockResolvedValue([{ id: "l" }]);
+
+    expect(await listPaymentLogsService(token, "t1")).toEqual([{ id: "l" }]);
+    expect(mockVerifyTripAccess).not.toHaveBeenCalled();
   });
 
   it("guest list re-verifies the group code against the trip", async () => {

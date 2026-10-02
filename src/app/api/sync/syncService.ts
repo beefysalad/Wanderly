@@ -10,6 +10,7 @@ import {
   updateUserFromFirebase,
   type FirebaseProfile,
 } from "./repository";
+import { DEMO_OWNER_EMAIL } from "../groups/demoTrip";
 
 // Shared across every account seeded before this feature was removed (see issue #237). Kept as a
 // guard until scripts/cleanup-legacy-seeded-data.ts has actually been run against production and
@@ -18,6 +19,7 @@ const LEGACY_SEEDED_EMAILS = new Set([
   "eleven.dummy@example.com",
   "mike.dummy@example.com",
   "steve.dummy@example.com",
+  DEMO_OWNER_EMAIL,
 ]);
 
 /**

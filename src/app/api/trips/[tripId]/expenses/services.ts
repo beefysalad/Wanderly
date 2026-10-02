@@ -10,7 +10,12 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { notifyGroupMembers } from "../../../notifications/notifyMembers";
 import { findGroupOwnership } from "../../../groups/repository";
 import { assertCanModify } from "../../../groups/permissions";
-import { verifyGuestTripAccess, verifyTripAccess, verifyTripAccessWithProfile } from "../../access";
+import {
+  isPublicDemoTrip,
+  verifyGuestTripAccess,
+  verifyTripAccess,
+  verifyTripAccessWithProfile,
+} from "../../access";
 import { findUserIdByEmail } from "../../repository";
 import { findActivityById } from "../activities/repository";
 import {
@@ -81,7 +86,9 @@ async function assertCanChangeExpense(
 }
 
 export async function listExpensesService(token: DecodedIdToken, tripId: string) {
-  await verifyTripAccess(token, tripId);
+  if (!(await isPublicDemoTrip(tripId))) {
+    await verifyTripAccess(token, tripId);
+  }
   return listExpensesByTrip(tripId);
 }
 

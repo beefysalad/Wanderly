@@ -3,7 +3,7 @@ import { logger } from "@/src/lib/logger";
 import { NotificationType, type PaymentMethod } from "@prisma/client";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { createNotificationService } from "../../../notifications/services";
-import { verifyGuestTripAccess, verifyTripAccess } from "../../access";
+import { isPublicDemoTrip, verifyGuestTripAccess, verifyTripAccess } from "../../access";
 import { findUserIdByEmail } from "../../repository";
 import {
   createPaymentLogRow,
@@ -21,7 +21,9 @@ async function requireUserIdByEmail(email: string) {
 }
 
 export async function listPaymentLogsService(token: DecodedIdToken, tripId: string) {
-  await verifyTripAccess(token, tripId);
+  if (!(await isPublicDemoTrip(tripId))) {
+    await verifyTripAccess(token, tripId);
+  }
   return listPaymentLogsByTrip(tripId);
 }
 

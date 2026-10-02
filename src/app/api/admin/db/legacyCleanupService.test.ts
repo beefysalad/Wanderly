@@ -24,7 +24,7 @@ const { runCleanup } = await import("./legacyCleanupService");
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mockFindGroups.mockResolvedValue([{ id: "g1", name: "Singapore Adventure 2024 (sample)" }]);
+  mockFindGroups.mockResolvedValue([{ id: "g1", name: "Singapore Adventure 2024 (sample)", createdById: "u1" }]);
   mockFindTrips.mockResolvedValue([]);
   mockFindDummyUsers.mockResolvedValue([
     { id: "u-eleven", email: "eleven.dummy@example.com", name: "Eleven" },

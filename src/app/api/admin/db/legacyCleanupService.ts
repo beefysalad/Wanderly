@@ -17,11 +17,11 @@ interface CleanupResult {
 export async function runCleanup(execute: boolean): Promise<CleanupResult> {
   const groups = await prisma.group.findMany({
     where: { name: { contains: "(sample)" } },
-    select: { id: true, name: true },
+    select: { id: true, name: true, createdById: true },
   });
   const trips = await prisma.trip.findMany({
     where: { name: { contains: "(sample)" } },
-    select: { id: true, name: true },
+    select: { id: true, name: true, createdById: true },
   });
   const dummyUsers = await prisma.user.findMany({
     where: { email: { in: LEGACY_DUMMY_EMAILS } },
@@ -31,6 +31,9 @@ export async function runCleanup(execute: boolean): Promise<CleanupResult> {
   console.log(
     `Found ${groups.length} sample group(s), ${trips.length} orphaned sample trip(s), ${dummyUsers.length} legacy dummy user(s).`,
   );
+  for (const g of groups) console.log(`  group: ${g.id} "${g.name}" (created by ${g.createdById})`);
+  for (const t of trips) console.log(`  trip: ${t.id} "${t.name}" (created by ${t.createdById})`);
+  for (const u of dummyUsers) console.log(`  dummy user: ${u.id} ${u.email}`);
 
   if (!execute) {
     console.log("Dry run only — pass --execute to actually delete. Nothing was changed.");

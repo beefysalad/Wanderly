@@ -22,9 +22,8 @@ vi.mock("../sync/repository", () => ({
   findUserIdByFirebaseId: (...a: unknown[]) => mockFindUserIdByFirebaseId(...a),
 }));
 
-const { verifyGuestTripAccess, verifyTripAccess, verifyTripAccessWithProfile } = await import(
-  "./access"
-);
+const { isPublicDemoTrip, verifyGuestTripAccess, verifyTripAccess, verifyTripAccessWithProfile } =
+  await import("./access");
 
 const token = { uid: "firebase-1" } as DecodedIdToken;
 const user = { id: "user-1", name: "Alice", email: "alice@example.com" };
@@ -136,5 +135,18 @@ describe("verifyGuestTripAccess", () => {
     expect(await verifyGuestTripAccess("group-1", "trip-1")).toEqual({
       trip: { id: "trip-1", groupId: "group-1" },
     });
+  });
+});
+
+describe("isPublicDemoTrip", () => {
+  it("is true only for a trip whose group has the demo code", async () => {
+    mockFindTripAccessInfo.mockResolvedValue({ id: "t1", groupId: "g1", group: { code: "SAMPLE" } });
+    expect(await isPublicDemoTrip("t1")).toBe(true);
+
+    mockFindTripAccessInfo.mockResolvedValue({ id: "t2", groupId: "g2", group: { code: "ABC123" } });
+    expect(await isPublicDemoTrip("t2")).toBe(false);
+
+    mockFindTripAccessInfo.mockResolvedValue(null);
+    expect(await isPublicDemoTrip("missing")).toBe(false);
   });
 });

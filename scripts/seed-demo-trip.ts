@@ -15,13 +15,21 @@ async function main() {
     where: { code: DEMO_GROUP_CODE },
     include: { trips: { include: { _count: { select: { activities: true } } } } },
   });
-  const isComplete = existing?.trips.some((t) => t._count.activities > 0) ?? false;
-  if (isComplete) {
+  const hasActivities = existing?.trips.some((t) => t._count.activities > 0) ?? false;
+  const isStale = existing?.trips.some((t) => t.endDate < new Date()) ?? false;
+  if (hasActivities && !isStale) {
     console.log(`Demo group already exists (id ${existing!.id}, code ${DEMO_GROUP_CODE}). Nothing to do.`);
     return;
   }
   if (existing) {
-    console.log(`Demo group ${existing.id} exists but is incomplete (likely a prior failed run) — recreating.`);
+    const existingOwner = await prisma.user.findUnique({ where: { email: DEMO_OWNER_EMAIL } });
+    if (existing.createdById !== existingOwner?.id) {
+      throw new Error(
+        `Refusing to delete group ${existing.id} (code ${DEMO_GROUP_CODE}): it was not created by the demo owner account. A real group may have collided with this code.`,
+      );
+    }
+    const reason = isStale ? "has drifted into the past" : "exists but is incomplete (likely a prior failed run)";
+    console.log(`Demo group ${existing.id} ${reason} — recreating with fresh dates.`);
     await prisma.group.delete({ where: { id: existing.id } });
   }
 
