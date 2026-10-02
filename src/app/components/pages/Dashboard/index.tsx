@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { useMemo } from "react";
+import { DEMO_GROUP_CODE } from "@/src/app/api/groups/demoTrip";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { useGroups } from "@/src/hooks/useGroups";
 import { useCurrentUserDB } from "@/src/hooks/useProfile";
@@ -73,6 +75,12 @@ const DashboardComponent = () => {
                     You haven&apos;t joined any groups yet. Create one to start planning, or ask a friend for their
                     invite code.
                   </p>
+                  <Link
+                    href={`/guest/join?code=${DEMO_GROUP_CODE}`}
+                    className='mt-4 inline-block text-sm font-semibold text-[#fbbf24] hover:text-[#fcd34d]'
+                  >
+                    Not ready yet? Look at a demo trip first.
+                  </Link>
                 </div>
               )}
             </div>
