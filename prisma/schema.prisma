@@ -20,7 +20,6 @@ model User {
   travelStyle            String?
   hasCompletedOnboarding Boolean  @default(false)
   referralSource         String?
-  hasSeededTestData      Boolean  @default(false)
 
   // Relationships
   createdGroups      Group[]          @relation("GroupCreator")
