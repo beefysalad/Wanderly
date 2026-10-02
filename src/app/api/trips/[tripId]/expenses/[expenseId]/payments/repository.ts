@@ -1,7 +1,6 @@
 import prisma from "@/src/lib/prisma";
 import { SPLIT_ORDER } from "../../repository";
-import type { PaymentMethod } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma, type PaymentMethod } from "@prisma/client";
 
 /** Expense plus who paid and who it was split with — what payment marking needs. */
 export function findExpenseForPayments(expenseId: string) {
@@ -85,7 +84,7 @@ export async function confirmPaymentAndLog(
         payerId: userId,
         payeeId: log.payeeId,
         payeeName: log.payeeName,
-        amount: new Decimal(log.amount),
+        amount: new Prisma.Decimal(log.amount),
         paymentMethod: log.paymentMethod,
       },
       skipDuplicates: true,
@@ -133,7 +132,7 @@ export function recordGuestPayment(expenseId: string, tempName: string, log: Gue
         payerName: tempName,
         payeeId: log.payeeId,
         payeeName: log.payeeName,
-        amount: new Decimal(log.amount),
+        amount: new Prisma.Decimal(log.amount),
         paymentMethod: log.paymentMethod,
       },
     }),
