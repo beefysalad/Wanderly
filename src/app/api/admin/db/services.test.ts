@@ -5,18 +5,14 @@ vi.mock("./cloudinary", () => ({ fetchCloudinaryUsage: (...a: unknown[]) => mock
 
 const mockCountAll = vi.fn();
 const mockDbSize = vi.fn();
-const mockFindTestUsers = vi.fn();
-const mockDeleteSample = vi.fn();
 vi.mock("./repository", () => ({
   countAllEntities: (...a: unknown[]) => mockCountAll(...a),
   getDatabaseSizeBytes: (...a: unknown[]) => mockDbSize(...a),
-  findSeededTestUserIds: (...a: unknown[]) => mockFindTestUsers(...a),
-  deleteSampleData: (...a: unknown[]) => mockDeleteSample(...a),
 }));
 
 vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
-const { cleanTestDataService, getDbStatsService, toCloudinaryStats, toUsageMetric } = await import("./services");
+const { getDbStatsService, toCloudinaryStats, toUsageMetric } = await import("./services");
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -67,28 +63,5 @@ describe("getDbStatsService", () => {
     const result = await getDbStatsService();
 
     expect(result.usage).toEqual({ database: { sizeBytes: 0 }, cloudinary: null });
-  });
-});
-
-describe("cleanTestDataService", () => {
-  it("does nothing when no users have seeded test data", async () => {
-    mockFindTestUsers.mockResolvedValue([]);
-
-    expect(await cleanTestDataService()).toEqual({ message: "No test data found to clean" });
-    expect(mockDeleteSample).not.toHaveBeenCalled();
-  });
-
-  it("deletes sample data for the seeded users and reports the counts", async () => {
-    mockFindTestUsers.mockResolvedValue(["u1", "u2"]);
-    mockDeleteSample.mockResolvedValue({ groups: 3, trips: 1 });
-
-    const result = await cleanTestDataService();
-
-    expect(mockDeleteSample).toHaveBeenCalledWith(["u1", "u2"]);
-    expect(result).toEqual({
-      success: true,
-      message: "Cleaned 3 sample groups and 1 sample trips for 2 users.",
-      count: 4,
-    });
   });
 });

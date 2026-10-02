@@ -1,11 +1,6 @@
 import { logger } from "@/src/lib/logger";
 import { fetchCloudinaryUsage, type CloudinaryUsage } from "./cloudinary";
-import {
-  countAllEntities,
-  deleteSampleData,
-  findSeededTestUserIds,
-  getDatabaseSizeBytes,
-} from "./repository";
+import { countAllEntities, getDatabaseSizeBytes } from "./repository";
 
 /** used / limit as a percentage; 0 when the limit is missing or zero. */
 export function toUsageMetric(resource?: { usage?: number; limit?: number }) {
@@ -49,27 +44,5 @@ export async function getDbStatsService() {
       database: { sizeBytes: dbSize },
       cloudinary: toCloudinaryStats(cloudinaryUsage),
     },
-  };
-}
-
-export async function cleanTestDataService() {
-  const testUserIds = await findSeededTestUserIds();
-
-  if (testUserIds.length === 0) {
-    return { message: "No test data found to clean" };
-  }
-
-  const result = await deleteSampleData(testUserIds);
-
-  logger.info("Admin: Cleaned test data", {
-    usersAffected: testUserIds.length,
-    groupsDeleted: result.groups,
-    tripsDeleted: result.trips,
-  });
-
-  return {
-    success: true,
-    message: `Cleaned ${result.groups} sample groups and ${result.trips} sample trips for ${testUserIds.length} users.`,
-    count: result.groups + result.trips,
   };
 }

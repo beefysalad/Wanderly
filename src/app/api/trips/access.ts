@@ -1,5 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { ForbiddenError, NotFoundError } from "@/src/lib/errors";
+import { DEMO_GROUP_CODE } from "../groups/demoTrip";
 import { findGroupMembership } from "../groups/repository";
 import { findUserIdByFirebaseId } from "../sync/repository";
 import { syncUserToDatabaseService } from "../sync/syncService";
@@ -71,4 +72,15 @@ export async function verifyGuestTripAccess(guestGroupId: string, tripId: string
     throw new ForbiddenError("Invalid guest access");
   }
   return { trip: { id: trip.id, groupId: trip.groupId } };
+}
+
+/**
+ * The one public demo trip (see issue #237) is readable by anyone, signed in or not — used only
+ * by read-only list/get services. Never use this to gate a write path; those must keep going
+ * through verifyTripAccess/verifyTripAccessWithProfile's real membership check unchanged, or any
+ * signed-in user could write to the demo trip.
+ */
+export async function isPublicDemoTrip(tripId: string): Promise<boolean> {
+  const trip = await findTripAccessInfo(tripId);
+  return trip?.group.code === DEMO_GROUP_CODE;
 }

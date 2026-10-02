@@ -1,4 +1,6 @@
 import { ArrowRight, Plane, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { DEMO_GROUP_CODE } from "@/src/app/api/groups/demoTrip";
 
 interface ActionStepProps {
   handleCompleteOnboarding: (nextAction?: "CREATE_GROUP" | "JOIN_GROUP") => void;
@@ -8,6 +10,8 @@ interface ActionStepProps {
 const CODE_PREVIEW = ["7", "X", "K", "", "", ""];
 
 export function ActionStep({ handleCompleteOnboarding, isSubmitting }: ActionStepProps) {
+  const router = useRouter();
+
   return (
     <div className='mx-auto flex w-full max-w-[960px] flex-col gap-7'>
       <div>
@@ -75,7 +79,7 @@ export function ActionStep({ handleCompleteOnboarding, isSubmitting }: ActionSte
       <button
         type='button'
         disabled={isSubmitting}
-        onClick={() => handleCompleteOnboarding()}
+        onClick={() => router.push(`/guest/join?code=${DEMO_GROUP_CODE}`)}
         className='cursor-pointer self-center text-sm font-semibold text-[#94a3b8] hover:text-[#e2e8f0] disabled:cursor-not-allowed disabled:opacity-60'
       >
         Look around the sample trip first

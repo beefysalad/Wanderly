@@ -97,6 +97,13 @@ describe("createGroupService", () => {
 });
 
 describe("joinGroupService", () => {
+  it("refuses to join the read-only demo trip", async () => {
+    await expect(joinGroupService(token, "SAMPLE")).rejects.toMatchObject({ status: 403 });
+    expect(mockSyncUserToDatabaseService).not.toHaveBeenCalled();
+    expect(mockFindGroupCodeLookup).not.toHaveBeenCalled();
+    expect(mockAddGroupMember).not.toHaveBeenCalled();
+  });
+
   it("throws NotFoundError when the code doesn't match a group", async () => {
     mockFindGroupCodeLookup.mockResolvedValue(null);
 
@@ -243,10 +250,32 @@ describe("updateGroupService", () => {
 
 describe("getGroupByIdForGuestService", () => {
   it("throws ForbiddenError when the guest's token is for a different group", async () => {
+    mockFindGroupById.mockResolvedValue({ id: "group-1", code: "ABC123" });
+
     await expect(getGroupByIdForGuestService("other-group", "group-1")).rejects.toThrow(
       ForbiddenError,
     );
-    expect(mockFindGroupById).not.toHaveBeenCalled();
+  });
+
+  it("throws ForbiddenError when there is no guest token and the group is not the demo", async () => {
+    mockFindGroupById.mockResolvedValue({ id: "group-1", code: "ABC123" });
+
+    await expect(getGroupByIdForGuestService(undefined, "group-1")).rejects.toThrow(
+      ForbiddenError,
+    );
+  });
+
+  it("returns the public demo group to any caller, with or without a guest token", async () => {
+    mockFindGroupById.mockResolvedValue({ id: "demo-group", code: "SAMPLE" });
+
+    await expect(getGroupByIdForGuestService(undefined, "demo-group")).resolves.toEqual({
+      id: "demo-group",
+      code: "SAMPLE",
+    });
+    await expect(getGroupByIdForGuestService("other-group", "demo-group")).resolves.toEqual({
+      id: "demo-group",
+      code: "SAMPLE",
+    });
   });
 
   it("throws NotFoundError when the group doesn't exist", async () => {

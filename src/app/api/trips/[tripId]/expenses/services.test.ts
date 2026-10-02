@@ -4,7 +4,9 @@ import { ForbiddenError, NotFoundError, ValidationError } from "@/src/lib/errors
 
 const mockVerifyTripAccess = vi.fn();
 const mockVerifyGuestTripAccess = vi.fn();
+const mockIsPublicDemoTrip = vi.fn();
 vi.mock("../../access", () => ({
+  isPublicDemoTrip: (...a: unknown[]) => mockIsPublicDemoTrip(...a),
   verifyTripAccess: (...a: unknown[]) => mockVerifyTripAccess(...a),
   // The list/getById handlers use the lean check; create/update/delete use the profile one for
   // notification text. Both resolve through the same mock here since the tests don't need to
@@ -66,6 +68,7 @@ const {
   deleteExpenseService,
   getExpenseByIdService,
   listExpensesForGuestService,
+  listExpensesService,
   updateExpenseService,
 } = await import("./services");
 
@@ -91,6 +94,7 @@ const expenseRow = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTripAccess.mockResolvedValue({ trip, user });
+  mockIsPublicDemoTrip.mockResolvedValue(false);
   mockFindGroupOwnership.mockResolvedValue({ createdById: "owner-1", name: "Crew" });
   mockFindUserIdByEmail.mockImplementation(async (email: string) =>
     email === "ghost@x.com" ? null : { id: `id-${email}` },
@@ -100,6 +104,30 @@ beforeEach(() => {
   mockEmitCreated.mockResolvedValue(undefined);
   mockEmitUpdated.mockResolvedValue(undefined);
   mockEmitDeleted.mockResolvedValue(undefined);
+});
+
+describe("member list", () => {
+  it("checks trip membership for a regular trip", async () => {
+    mockList.mockResolvedValue([{ id: "e" }]);
+
+    expect(await listExpensesService(token, "t1")).toEqual([{ id: "e" }]);
+    expect(mockVerifyTripAccess).toHaveBeenCalledWith(token, "t1");
+  });
+
+  it("skips the membership check for the public demo trip", async () => {
+    mockIsPublicDemoTrip.mockResolvedValue(true);
+    mockList.mockResolvedValue([{ id: "e" }]);
+
+    expect(await listExpensesService(token, "t1")).toEqual([{ id: "e" }]);
+    expect(mockVerifyTripAccess).not.toHaveBeenCalled();
+  });
+
+  it("does not list when the membership check fails", async () => {
+    mockVerifyTripAccess.mockRejectedValue(new ForbiddenError("nope"));
+
+    await expect(listExpensesService(token, "t1")).rejects.toThrow(ForbiddenError);
+    expect(mockList).not.toHaveBeenCalled();
+  });
 });
 
 describe("guest list", () => {

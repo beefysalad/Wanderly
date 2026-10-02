@@ -4,7 +4,6 @@ import {
   type RouteContext,
 } from "@/src/lib/auth/with-auth";
 import { handleApiError } from "@/src/lib/handle-api-error";
-import { ForbiddenError } from "@/src/lib/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getGroupByIdForGuestService } from "../../services";
 import { transformGroup } from "../../transformers";
@@ -21,10 +20,6 @@ async function handler(
   { params }: Params,
 ) {
   try {
-    if (!context.isGuest || !context.guestGroupId) {
-      throw new ForbiddenError("Guest access required");
-    }
-
     const { groupId } = await params;
     const group = await getGroupByIdForGuestService(context.guestGroupId, groupId);
 

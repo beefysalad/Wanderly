@@ -4,8 +4,8 @@ import { motion, useAnimationControls } from "framer-motion";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useRef, useState, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState, type ChangeEvent, type ClipboardEvent, type KeyboardEvent } from "react";
 import api from "@/src/lib/axios";
 import { setGuestSession } from "@/src/lib/guest-session";
 import { AuthItem, FIELD_LABEL, FormError, INPUT, SUBMIT_BUTTON } from "../../shared/AuthForm/AuthParts";
@@ -23,6 +23,8 @@ const clean = (value: string) => value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase(
 
 const GuestJoin = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoCode = clean(searchParams.get("code") ?? "").slice(0, CODE_LENGTH);
   const [chars, setChars] = useState<string[]>(() => Array(CODE_LENGTH).fill(""));
   const [found, setFound] = useState<FoundTrip | null>(null);
   const [name, setName] = useState("");
@@ -33,7 +35,6 @@ const GuestJoin = () => {
   const distance = useRevealDistance(18);
 
   const code = chars.join("");
-  const complete = code.length === CODE_LENGTH;
 
   const edit = (next: string[]) => {
     setChars(next);
@@ -63,8 +64,9 @@ const GuestJoin = () => {
     boxes.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
   };
 
-  const lookUp = async () => {
-    if (!complete) {
+  const lookUp = async (overrideCode?: string) => {
+    const codeToCheck = overrideCode ?? code;
+    if (codeToCheck.length !== CODE_LENGTH) {
       boxes.current[chars.findIndex((c) => !c)]?.focus();
       shake.start({ x: [0, -6, 6, 0], transition: { duration: 0.3 } });
       return;
@@ -73,7 +75,7 @@ const GuestJoin = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post("/groups/validate-code", { code });
+      const response = await api.post("/groups/validate-code", { code: codeToCheck });
       const { groupId, groupName, guestToken } = response.data ?? {};
       if (!groupId) throw new Error("Invalid response from server");
       setFound({ groupId, groupName: groupName ?? "this trip", guestToken });
@@ -85,6 +87,11 @@ const GuestJoin = () => {
     }
   };
 
+  const completeJoin = (guestName: string, trip: FoundTrip) => {
+    setGuestSession(code, guestName, trip.groupId, trip.guestToken);
+    router.push(`/guest/group/${trip.groupId}`);
+  };
+
   const join = (event: React.FormEvent) => {
     event.preventDefault();
     if (!found) return;
@@ -93,9 +100,27 @@ const GuestJoin = () => {
       setError("Tell us what to call you first.");
       return;
     }
-    setGuestSession(code, guestName, found.groupId, found.guestToken);
-    router.push(`/guest/group/${found.groupId}`);
+    completeJoin(guestName, found);
   };
+
+  // A "Look around" link carries ?code=..., so skip the manual code entry and name prompt
+  // entirely — there's nothing to personalize for a read-only demo. Fill the boxes in too
+  // (cosmetic, for anyone who lands here and watches it happen) but pass autoCode directly
+  // to lookUp rather than relying on that state update having landed yet.
+  useEffect(() => {
+    if (autoCode.length !== CODE_LENGTH) return;
+    edit(Array.from({ length: CODE_LENGTH }, (_, i) => autoCode[i] ?? ""));
+    lookUp(autoCode);
+    // Only ever run once, from the URL this page was loaded with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (autoCode.length === CODE_LENGTH && found) {
+      completeJoin("Guest", found);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [found]);
 
   return (
     <main className='relative flex min-h-screen flex-col items-center justify-center bg-[#020617] px-[clamp(20px,4vw,48px)] py-[clamp(32px,6vw,72px)] font-[family-name:var(--font-geist-sans)] leading-[normal] text-[#f8fafc]'>
@@ -203,7 +228,7 @@ const GuestJoin = () => {
           <AuthItem index={5} start={0.18}>
             <button
               type='button'
-              onClick={lookUp}
+              onClick={() => lookUp()}
               disabled={loading}
               className={SUBMIT_BUTTON.replace("mt-[6px] ", "")}
             >
