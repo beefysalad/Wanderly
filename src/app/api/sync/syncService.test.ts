@@ -21,8 +21,6 @@ vi.mock("./repository", () => ({
   updateUserFromFirebase: (...a: unknown[]) => mockUpdate(...a),
 }));
 
-const mockSeed = vi.fn();
-vi.mock("./testDataService", () => ({ seedTestData: (...a: unknown[]) => mockSeed(...a) }));
 vi.mock("@/src/lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }));
 
 const { syncUserToDatabaseService } = await import("./syncService");
@@ -49,26 +47,17 @@ describe("syncUserToDatabaseService", () => {
     await expect(syncUserToDatabaseService(token)).rejects.toThrow("Firebase admin not initialized");
   });
 
-  it("returns an existing seeded user without calling Firebase", async () => {
-    const user = { id: "u1", hasSeededTestData: true };
+  it("returns an existing user without calling Firebase", async () => {
+    const user = { id: "u1" };
     mockFind.mockResolvedValue(user);
 
     expect(await syncUserToDatabaseService(token)).toBe(user);
     expect(mockGetUser).not.toHaveBeenCalled();
-    expect(mockSeed).not.toHaveBeenCalled();
   });
 
-  it("seeds an existing user who was never seeded", async () => {
-    mockFind.mockResolvedValue({ id: "u1", hasSeededTestData: false });
-
-    await syncUserToDatabaseService(token);
-
-    expect(mockSeed).toHaveBeenCalledWith("u1");
-  });
-
-  it("creates a new user from the Firebase profile, then seeds them", async () => {
+  it("creates a new user from the Firebase profile", async () => {
     mockFind.mockResolvedValue(null);
-    mockCreate.mockResolvedValue({ id: "u2", hasSeededTestData: false });
+    mockCreate.mockResolvedValue({ id: "u2" });
 
     const result = await syncUserToDatabaseService(token);
 
@@ -78,8 +67,7 @@ describe("syncUserToDatabaseService", () => {
       imageUrl: "",
       disabled: false,
     });
-    expect(mockSeed).toHaveBeenCalledWith("u2");
-    expect(result).toEqual({ id: "u2", hasSeededTestData: false });
+    expect(result).toEqual({ id: "u2" });
   });
 
   it("refuses to attach a new Firebase account to an existing user through an unverified email", async () => {
@@ -89,7 +77,6 @@ describe("syncUserToDatabaseService", () => {
     await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockUpdate).not.toHaveBeenCalled();
-    expect(mockSeed).not.toHaveBeenCalled();
   });
 
   it("links an existing user to a new Firebase account when the email is verified", async () => {
@@ -102,12 +89,12 @@ describe("syncUserToDatabaseService", () => {
       photoURL: null,
       disabled: false,
     });
-    mockUpdate.mockResolvedValue({ id: "u3", hasSeededTestData: true });
+    mockUpdate.mockResolvedValue({ id: "u3" });
 
     const result = await syncUserToDatabaseService(token);
 
     expect(mockUpdate).toHaveBeenCalledWith("u3", "f1", expect.objectContaining({ email: "a@x.com" }));
-    expect(result).toEqual({ id: "u3", hasSeededTestData: true });
+    expect(result).toEqual({ id: "u3" });
   });
 
   it("rejects a Firebase account without an email address", async () => {
@@ -120,7 +107,7 @@ describe("syncUserToDatabaseService", () => {
   });
 
   it("returns the row a concurrent first sign-in created instead of failing on the unique constraint", async () => {
-    const createdByOtherRequest = { id: "u2", hasSeededTestData: true };
+    const createdByOtherRequest = { id: "u2" };
     mockFind.mockResolvedValueOnce(null).mockResolvedValueOnce(createdByOtherRequest);
     mockCreate.mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -132,7 +119,7 @@ describe("syncUserToDatabaseService", () => {
     expect(await syncUserToDatabaseService(token)).toBe(createdByOtherRequest);
   });
 
-  it("refuses to register a sample-data member email, even when no row exists for it yet", async () => {
+  it("refuses to register a legacy sample-data member email, even when no row exists for it yet", async () => {
     mockFind.mockResolvedValue(null);
     mockGetUser.mockResolvedValue({
       email: "steve.dummy@example.com",
@@ -147,15 +134,28 @@ describe("syncUserToDatabaseService", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it("refuses a legacy sample-data member email regardless of casing", async () => {
+    mockFind.mockResolvedValue(null);
+    mockGetUser.mockResolvedValue({
+      email: "Eleven.Dummy@Example.com",
+      emailVerified: false,
+      displayName: "Eleven",
+      photoURL: null,
+      disabled: false,
+    });
+
+    await expect(syncUserToDatabaseService(token)).rejects.toMatchObject({ status: 403 });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("force sync refreshes the caller's own row, keeping its Firebase id", async () => {
-    mockFind.mockResolvedValue({ id: "u1", hasSeededTestData: true });
-    mockUpdate.mockResolvedValue({ id: "u1", hasSeededTestData: true });
+    mockFind.mockResolvedValue({ id: "u1" });
+    mockUpdate.mockResolvedValue({ id: "u1" });
 
     await syncUserToDatabaseService(token, true);
 
     expect(mockGetUser).toHaveBeenCalledWith("f1");
     expect(mockFindByEmail).not.toHaveBeenCalled();
     expect(mockUpdate).toHaveBeenCalledWith("u1", "f1", expect.objectContaining({ email: "a@x.com" }));
-    expect(mockSeed).not.toHaveBeenCalled();
   });
 });

@@ -10,16 +10,15 @@ import {
   updateUserFromFirebase,
   type FirebaseProfile,
 } from "./repository";
-import { DUMMY_USERS } from "./sampleTripData";
 
-// Loaded lazily: the seeding module is only needed for brand-new users.
-async function seedIfNeeded(user: { id: string; hasSeededTestData: boolean }) {
-  if (!user.hasSeededTestData) {
-    const { seedTestData } = await import("./testDataService");
-    // Awaited so the first screen a new user sees already has the sample trip.
-    await seedTestData(user.id);
-  }
-}
+// Shared across every account seeded before this feature was removed (see issue #237). Kept as a
+// guard until scripts/cleanup-legacy-seeded-data.ts has actually been run against production and
+// these rows no longer exist; safe to delete this check afterward.
+const LEGACY_SEEDED_EMAILS = new Set([
+  "eleven.dummy@example.com",
+  "mike.dummy@example.com",
+  "steve.dummy@example.com",
+]);
 
 /**
  * Returns the database user for a Firebase token, creating or refreshing it from Firebase when
@@ -40,8 +39,6 @@ export async function syncUserToDatabaseService(
   const existingUser = await findUserByFirebaseId(token.uid);
 
   if (existingUser && !forceSync) {
-    // CRITICAL: users who signed up before seeding existed still need their sample data.
-    await seedIfNeeded(existingUser);
     return existingUser;
   }
 
@@ -66,15 +63,12 @@ export async function syncUserToDatabaseService(
     ? await updateUserFromFirebase(existingUser.id, token.uid, profile)
     : await createOrLinkUser(token.uid, profile, firebaseUser.emailVerified);
 
-  await seedIfNeeded(result);
-
   logger.info("✅ User synced to database");
   return result;
 }
 
 async function createOrLinkUser(firebaseId: string, profile: FirebaseProfile, emailVerified: boolean) {
-  // The sample-data members are shared by every seeded group, so nobody may own their emails.
-  if (DUMMY_USERS.some((d) => d.email === profile.email.toLowerCase())) {
+  if (LEGACY_SEEDED_EMAILS.has(profile.email.toLowerCase())) {
     throw new ForbiddenError("This email address can't be used");
   }
 
