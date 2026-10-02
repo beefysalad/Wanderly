@@ -32,12 +32,11 @@ export interface ResourceUsage {
   } | null;
 }
 
-/** Loads the admin database stats/usage snapshot and runs the "clean test data" maintenance action. */
+/** Loads the admin database stats/usage snapshot. */
 export function useDbStats() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DBStats | null>(null);
   const [usage, setUsage] = useState<ResourceUsage | null>(null);
-  const [maintaining, setMaintaining] = useState(false);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -57,23 +56,5 @@ export function useDbStats() {
     fetchStats();
   }, []);
 
-  const handleCleanTestData = async () => {
-    if (!confirm("Are you sure you want to clean all test data? This will delete users and associated data marked as seeded test data.")) {
-      return;
-    }
-
-    setMaintaining(true);
-    try {
-      const response = await api.post("/admin/db/maintenance", { action: "clean-test-data" });
-      toast.success(response.data.message || `Successfully cleaned ${response.data.count} test users`);
-      fetchStats();
-    } catch (error) {
-      logger.error("Maintenance failed", { error });
-      toast.error("Database maintenance failed");
-    } finally {
-      setMaintaining(false);
-    }
-  };
-
-  return { loading, stats, usage, maintaining, fetchStats, handleCleanTestData };
+  return { loading, stats, usage, fetchStats };
 }

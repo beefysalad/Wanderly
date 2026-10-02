@@ -10,7 +10,7 @@ import { useDbStats } from "./useDbStats";
 
 export default function DatabasePage() {
   const router = useRouter();
-  const { loading, stats, usage, maintaining, fetchStats, handleCleanTestData } = useDbStats();
+  const { loading, stats, usage, fetchStats } = useDbStats();
 
   return (
     <main className='min-h-screen bg-slate-950 text-slate-200'>
@@ -90,7 +90,7 @@ export default function DatabasePage() {
                 </div>
               </div>
 
-              <MaintenanceCard maintaining={maintaining} onCleanTestData={handleCleanTestData} />
+              <MaintenanceCard />
             </div>
           </div>
         ) : null}
